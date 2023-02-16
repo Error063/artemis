@@ -212,7 +212,7 @@ class AimedbFactory(Factory):
         log_fmt = logging.Formatter(log_fmt_str)
         self.logger = logging.getLogger("aimedb")
 
-        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.config.server.logs, "aimedb"), when="d", backupCount=10)
+        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.config.server.log_dir, "aimedb"), when="d", backupCount=10)
         fileHandler.setFormatter(log_fmt)
         
         consoleHandler = logging.StreamHandler()

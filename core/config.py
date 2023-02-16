@@ -7,27 +7,27 @@ class ServerConfig:
 
     @property
     def listen_address(self) -> str:
-        return CoreConfig.get_config_field(self.__config, '127.0.0.1', 'core', 'server', 'listen_address')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'listen_address', default='127.0.0.1')
 
     @property
     def allow_user_registration(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, True, 'core', 'server', 'allow_user_registration')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'allow_user_registration', default=True)
 
     @property
     def allow_unregistered_games(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, True, 'core', 'server', 'allow_unregistered_games')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'allow_unregistered_games', default=True)
 
     @property
     def name(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "ARTEMiS", 'core', 'server', 'name')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'name', default="ARTEMiS")
 
     @property
     def is_develop(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, True, 'core', 'server', 'is_develop')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'is_develop', default=True)
 
     @property
     def log_dir(self) -> str:
-        return CoreConfig.get_config_field(self.__config, 'logs', 'core', 'server', 'log_dir')
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'log_dir', default='logs')
 
 class TitleConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -35,15 +35,15 @@ class TitleConfig:
 
     @property
     def loglevel(self) -> int:
-        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, "info", 'core', 'title', 'loglevel'))
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'title', 'loglevel', default="info"))
 
     @property
     def hostname(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "localhost", 'core', 'title', 'hostname')
+        return CoreConfig.get_config_field(self.__config, 'core', 'title', 'hostname', default="localhost")
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 8080, 'core', 'title', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'title', 'port', default=8080)
 
 class DatabaseConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -51,43 +51,43 @@ class DatabaseConfig:
 
     @property
     def host(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "localhost", 'core', 'database', 'host')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'host', default="localhost")
 
     @property
     def username(self) -> str:
-        return CoreConfig.get_config_field(self.__config, 'aime', 'core', 'database', 'username')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'username', default='aime')
 
     @property
     def password(self) -> str:
-        return CoreConfig.get_config_field(self.__config, 'aime', 'core', 'database', 'password')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'password', default='aime')
 
     @property
     def name(self) -> str:
-        return CoreConfig.get_config_field(self.__config, 'aime', 'core', 'database', 'name')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'name', default='aime')
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 3306, 'core', 'database', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'port', default=3306)
 
     @property
     def protocol(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "mysql", 'core', 'database', 'type')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'type', default="mysql")
     
     @property
     def sha2_password(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, False, 'core', 'database', 'sha2_password')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'sha2_password', default=False)
     
     @property
     def loglevel(self) -> int:
-        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, "info", 'core', 'database', 'loglevel'))
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'database', 'loglevel', default="info"))
 
     @property
     def user_table_autoincrement_start(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 10000, 'core', 'database', 'user_table_autoincrement_start')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'user_table_autoincrement_start', default=10000)
     
     @property
     def memcached_host(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "localhost", 'core', 'database', 'memcached_host')
+        return CoreConfig.get_config_field(self.__config, 'core', 'database', 'memcached_host', default="localhost")
 
 class FrontendConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -95,15 +95,15 @@ class FrontendConfig:
 
     @property
     def enable(self) -> int:
-        return CoreConfig.get_config_field(self.__config, False, 'core', 'frontend', 'enable')
+        return CoreConfig.get_config_field(self.__config, 'core', 'frontend', 'enable', default=False)
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 8090, 'core', 'frontend', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'frontend', 'port', default=8090)
     
     @property
     def loglevel(self) -> int:
-        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'frontend', 'loglevel', "info"))
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'frontend', 'loglevel', default="info"))
 
 class AllnetConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -111,15 +111,15 @@ class AllnetConfig:
 
     @property
     def loglevel(self) -> int:
-        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, "info", 'core', 'allnet', 'loglevel'))
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'allnet', 'loglevel', default="info"))
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 80, 'core', 'allnet', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'allnet', 'port', default=80)
     
     @property
     def allow_online_updates(self) -> int:
-        return CoreConfig.get_config_field(self.__config, False, 'core', 'allnet', 'allow_online_updates')
+        return CoreConfig.get_config_field(self.__config, 'core', 'allnet', 'allow_online_updates', default=False)
 
 class BillingConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -127,19 +127,19 @@ class BillingConfig:
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 8443, 'core', 'billing', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'billing', 'port', default=8443)
 
     @property
     def ssl_key(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "cert/server.key", 'core', 'billing', 'ssl_key')
+        return CoreConfig.get_config_field(self.__config, 'core', 'billing', 'ssl_key', default="cert/server.key")
 
     @property
     def ssl_cert(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "cert/server.pem", 'core', 'billing', 'ssl_cert')
+        return CoreConfig.get_config_field(self.__config, 'core', 'billing', 'ssl_cert', default="cert/server.pem")
     
     @property
     def signing_key(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "cert/billing.key", 'core', 'billing', 'signing_key')
+        return CoreConfig.get_config_field(self.__config, 'core', 'billing', 'signing_key', default="cert/billing.key")
 
 class AimedbConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
@@ -147,15 +147,15 @@ class AimedbConfig:
     
     @property
     def loglevel(self) -> int:
-        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, "info", 'core', 'aimedb', 'loglevel'))
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'aimedb', 'loglevel', default="info"))
 
     @property
     def port(self) -> int:
-        return CoreConfig.get_config_field(self.__config, 22345, 'core', 'aimedb', 'port')
+        return CoreConfig.get_config_field(self.__config, 'core', 'aimedb', 'port', default=22345)
 
     @property
     def key(self) -> str:
-        return CoreConfig.get_config_field(self.__config, "", 'core', 'aimedb', 'key')
+        return CoreConfig.get_config_field(self.__config, 'core', 'aimedb', 'key', default="")
 
 class CoreConfig(dict):
     def __init__(self) -> None:
@@ -179,8 +179,8 @@ class CoreConfig(dict):
              return logging.INFO
 
     @classmethod
-    def get_config_field(cls, __config: dict, default: Any, *path: str) -> Any:
-        envKey = 'CFG_'
+    def get_config_field(cls, __config: dict, module, *path: str, default: Any = "") -> Any:
+        envKey = f'CFG_{module}_'
         for arg in path:
             envKey += arg + '_'
         

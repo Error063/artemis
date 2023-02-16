@@ -36,7 +36,7 @@ class Data:
 
         # Prevent the logger from adding handlers multiple times
         if not getattr(self.logger, 'handler_set', None):
-            fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.config.server.logs, "db"), encoding="utf-8",
+            fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.config.server.log_dir, "db"), encoding="utf-8",
                 when="d", backupCount=10)
             fileHandler.setFormatter(log_fmt)
             
