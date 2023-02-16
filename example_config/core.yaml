@@ -1,0 +1,45 @@
+server:
+  listen_address: "127.0.0.1"
+  allow_user_registration: True
+  allow_unregistered_games: True
+  name: "ARTEMiS"
+  is_develop: True
+  log_dir: False
+
+title:
+  loglevel: "info"
+  hostname: "localhost"
+  port: 8080
+
+database:
+  host: "localhost"
+  username: "aime"
+  password: "aime"
+  name: "aime"
+  port: 3306
+  protocol: "mysql"
+  sha2_password: False
+  loglevel: "warn"
+  user_table_autoincrement_start: 10000
+  memcached_host: "localhost"
+
+frontend:
+  enable: False
+  port: 8090
+  loglevel: "info"
+
+allnet:
+  loglevel: "info"
+  port: 80
+  allow_online_updates: False
+
+billing:
+  port: 8443
+  ssl_key: "cert/server.key"
+  ssl_cert: "cert/server.pem"
+  signing_key: "cert/billing.key"
+
+aimedb:
+  loglevel: "info"
+  port: 22345
+  key: ""

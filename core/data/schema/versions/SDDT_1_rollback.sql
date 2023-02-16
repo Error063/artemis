@@ -1,0 +1,14 @@
+SET FOREIGN_KEY_CHECKS=0;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechBasicHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechAdvancedHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechExpertHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechMasterHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumTechLunaticHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleBasicHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleAdvancedHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleExpertHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleMasterHighScore int;
+ALTER TABLE ongeki_profile_data MODIFY COLUMN sumBattleLunaticHighScore int;
+SET FOREIGN_KEY_CHECKS=1;
