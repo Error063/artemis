@@ -11,7 +11,7 @@ from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
 
-class AllnetServlet():
+class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):        
         super().__init__()
         self.config = core_cfg

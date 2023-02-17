@@ -25,21 +25,23 @@ class CxbServlet(resource.Resource):
         self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/cxb.yaml")))
 
         self.logger = logging.getLogger("cxb")
-        log_fmt_str = "[%(asctime)s] CXB | %(levelname)s | %(message)s"
-        log_fmt = logging.Formatter(log_fmt_str)
-        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), encoding='utf8',
-            when="d", backupCount=10)
+        if not hasattr(self.logger, "inited"):
+            log_fmt_str = "[%(asctime)s] CXB | %(levelname)s | %(message)s"
+            log_fmt = logging.Formatter(log_fmt_str)
+            fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), encoding='utf8',
+                when="d", backupCount=10)
 
-        fileHandler.setFormatter(log_fmt)
-        
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(log_fmt)
+            fileHandler.setFormatter(log_fmt)
+            
+            consoleHandler = logging.StreamHandler()
+            consoleHandler.setFormatter(log_fmt)
 
-        self.logger.addHandler(fileHandler)
-        self.logger.addHandler(consoleHandler)
-        
-        self.logger.setLevel(self.game_cfg.server.loglevel)
-        coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
+            self.logger.addHandler(fileHandler)
+            self.logger.addHandler(consoleHandler)
+            
+            self.logger.setLevel(self.game_cfg.server.loglevel)
+            coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
+            self.logger.inited = True
         
         self.versions = [
             CxbRev(core_cfg, self.game_cfg),

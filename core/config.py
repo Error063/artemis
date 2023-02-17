@@ -157,6 +157,34 @@ class AimedbConfig:
     def key(self) -> str:
         return CoreConfig.get_config_field(self.__config, 'core', 'aimedb', 'key', default="")
 
+class MuchaConfig:
+    def __init__(self, parent_config: "CoreConfig") -> None:
+        self.__config = parent_config
+
+    @property
+    def enable(self) -> int:
+        return CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'enable', default=False)
+    
+    @property
+    def loglevel(self) -> int:
+        return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'loglevel', default="info"))
+    
+    @property
+    def hostname(self) -> str:
+        return CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'hostname', default="localhost")
+
+    @property
+    def port(self) -> int:
+        return CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'port', default=8444)
+    
+    @property
+    def ssl_cert(self) -> str:
+        return CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'ssl_cert', default="cert/server.pem")
+    
+    @property
+    def signing_key(self) -> str:
+        return CoreConfig.get_config_field(self.__config, 'core', 'mucha', 'signing_key', default="cert/billing.key")
+
 class CoreConfig(dict):
     def __init__(self) -> None:
         self.server = ServerConfig(self)

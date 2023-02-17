@@ -43,3 +43,11 @@ aimedb:
   loglevel: "info"
   port: 22345
   key: ""
+
+mucha:
+  enable: False
+  hostname: "localhost"
+  loglevel: "info"
+  port: 8444
+  ssl_key: "cert/server.key"
+  ssl_cert: "cert/server.pem"

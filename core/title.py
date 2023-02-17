@@ -51,16 +51,25 @@ class TitleServlet():
         self.logger.info(f"Serving {len(globals()['game_registry'])} game codes")
 
     def render_GET(self, request: Request, endpoints: dict) -> bytes:
-        print(endpoints)
+        code = endpoints["game"]
+        if code not in self.title_registry:
+            self.logger.warn(f"Unknown game code {code}")
+        
+        index = self.title_registry[code]
+        if not hasattr(index, "render_GET"):
+            self.logger.warn(f"{code} does not dispatch GET")
+            return b""
+
+        return index.render_GET(request, endpoints["version"], endpoints["endpoint"])
     
     def render_POST(self, request: Request, endpoints: dict) -> bytes:
-        print(endpoints)
         code = endpoints["game"]
         if code not in self.title_registry:
             self.logger.warn(f"Unknown game code {code}")
         
         index = self.title_registry[code]
         if not hasattr(index, "render_POST"):
-            self.logger.warn(f"{code} does not dispatch on POST")
+            self.logger.warn(f"{code} does not dispatch POST")
+            return b""
 
         return index.render_POST(request, endpoints["version"], endpoints["endpoint"])

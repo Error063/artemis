@@ -19,10 +19,14 @@ class HttpDispatcher(resource.Resource):
         
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
+        self.mucha = MuchaServlet(cfg)
 
         self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_downloadorder', '/sys/servlet/DownloadOrder', controller="allnet", action='handle_dlorder', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_billing', '/request', controller="allnet", action='handle_billing_request', conditions=dict(method=['POST']))
+
+        self.map_post.connect('mucha_boardauth', '/mucha/boardauth.do', controller="mucha", action='handle_boardauth', conditions=dict(method=['POST']))
+        self.map_post.connect('mucha_updatacheck', '/mucha/updatacheck.do', controller="mucha", action='handle_updatacheck', conditions=dict(method=['POST']))
 
         self.map_get.connect("title_get", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_GET", requirements=dict(game=R"S..."))
         self.map_post.connect("title_post", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_POST", requirements=dict(game=R"S..."))
