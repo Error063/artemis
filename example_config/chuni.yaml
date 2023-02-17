@@ -1,0 +1,6 @@
+server:
+  enable: True
+  loglevel: "info"
+
+crypto:
+  encrypted_only: False

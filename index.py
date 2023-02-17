@@ -4,10 +4,83 @@ import yaml
 from os import path, mkdir, access, W_OK
 from core import *
 
-from twisted.web import server
+from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
-from txroutes import Dispatcher
+from twisted.web.http import Request
+from routes import Mapper
 
+class HttpDispatcher(resource.Resource):
+    def __init__(self, cfg: CoreConfig, config_dir: str):
+        super().__init__()
+        self.config = cfg
+        self.isLeaf = True
+        self.map_get = Mapper()
+        self.map_post = Mapper()
+        
+        self.allnet = AllnetServlet(cfg, config_dir)
+        self.title = TitleServlet(cfg, config_dir)
+
+        self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
+        self.map_post.connect('allnet_downloadorder', '/sys/servlet/DownloadOrder', controller="allnet", action='handle_dlorder', conditions=dict(method=['POST']))
+        self.map_post.connect('allnet_billing', '/request', controller="allnet", action='handle_billing_request', conditions=dict(method=['POST']))
+
+        self.map_get.connect("title_get", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_GET", requirements=dict(game=R"S..."))
+        self.map_post.connect("title_post", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_POST", requirements=dict(game=R"S..."))
+
+    def render_POST(self, request: Request) -> bytes:    
+        test = self.map_get.match(request.uri.decode())
+        if test is None:
+            return b""
+
+        controller = getattr(self, test["controller"], None)
+        if controller is None:
+            return b""
+        
+        handler = getattr(controller, test["action"], None)
+        if handler is None:
+            return b""
+        
+        url_vars = test
+        url_vars.pop("controller")
+        url_vars.pop("action")
+        
+        if len(url_vars) > 0:
+            ret = handler(request, url_vars)
+        else:
+            ret = handler(request)
+        
+        if type(ret) == str:
+            return ret.encode()
+        elif type(ret) == bytes:
+            return ret
+        else:
+            return b""
+
+    def render_POST(self, request: Request) -> bytes:    
+        test = self.map_post.match(request.uri.decode())
+        if test is None:
+            return b""
+
+        controller = getattr(self, test["controller"], None)
+        if controller is None:
+            return b""
+        
+        handler = getattr(controller, test["action"], None)
+        if handler is None:
+            return b""
+        
+        url_vars = test
+        url_vars.pop("controller")
+        url_vars.pop("action")        
+        ret = handler(request, url_vars)
+        
+        if type(ret) == str:
+            return ret.encode()
+        elif type(ret) == bytes:
+            return ret
+        else:
+            return b""
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ARTEMiS main entry point")
     parser.add_argument("--config", "-c", type=str, default="config", help="Configuration folder")
@@ -42,16 +115,8 @@ if __name__ == "__main__":
         billing_server_str = f"ssl:{cfg.billing.port}:interface={cfg.server.listen_address}"\
             f":privateKey={cfg.billing.ssl_key}:certKey={cfg.billing.ssl_cert}"
     
-    allnet_cls = AllnetServlet(cfg, args.config)
-    title_cls = TitleServlet(cfg, args.config)
+    dispatcher = HttpDispatcher(cfg, args.config)
 
-    dispatcher = Dispatcher()
-    dispatcher.connect('allnet_poweron', '/sys/servlet/PowerOn', allnet_cls, action='handle_poweron', conditions=dict(method=['POST']))
-    dispatcher.connect('allnet_downloadorder', '/sys/servlet/DownloadOrder', allnet_cls, action='handle_dlorder', conditions=dict(method=['POST']))
-    dispatcher.connect('allnet_billing', '/request', allnet_cls, action='handle_billing_request', conditions=dict(method=['POST']))
-    dispatcher.connect("title_get", "/{game}/{version}/{endpoint}", title_cls, action="handle_GET", conditions=dict(method=['GET']))
-    dispatcher.connect("title_post", "/{game}/{version}/{endpoint}", title_cls, action="handle_POST", conditions=dict(method=['POST']))
-    
     endpoints.serverFromString(reactor, allnet_server_str).listen(server.Site(dispatcher))
     endpoints.serverFromString(reactor, adb_server_str).listen(AimedbFactory(cfg))
 

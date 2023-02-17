@@ -1,0 +1,9 @@
+server:
+  enable: True
+  loglevel: "info"
+  hostname: "localhost"
+  ssl_enable: False
+  port: 8082
+  port_secure: 443
+  ssl_cert: "cert/title.crt"
+  ssl_key: "cert/title.key"

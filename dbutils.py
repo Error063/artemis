@@ -1,6 +1,47 @@
+import yaml
 import argparse
+from core.config import CoreConfig
+from core.data import Data
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ARTEMiS main entry point")
-    parser.add_argument("--config", "-c", type=str, default="config", help="Configuration folder")
+if __name__=='__main__':
+    parser = argparse.ArgumentParser(description="Database utilities")
+    parser.add_argument("--config", "-c", type=str, help="Config folder to use", default="config")
+    parser.add_argument("--version", "-v", type=str, help="Version of the database to upgrade/rollback to")
+    parser.add_argument("--game", "-g", type=str, help="Game code of the game who's schema will be updated/rolled back. Ex. SDFE")
+    parser.add_argument("action", type=str, help="DB Action, create, recreate, upgrade, or rollback")
     args = parser.parse_args()
+
+    cfg = CoreConfig()
+    cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    data = Data(cfg)
+
+    if args.action == "create":
+        data.create_database()
+        
+    elif args.action == "recreate":
+        data.recreate_database()
+
+    elif args.action == "upgrade" or args.action == "rollback":
+        if args.version is None:
+            print("Must set game and version to migrate to")
+            exit(0)
+
+        if args.game is None:
+            print("No game set, upgrading core schema")
+            data.migrate_database("CORE", int(args.version))
+
+        else:
+            data.migrate_database(args.game, int(args.version), args.action)
+    
+    elif args.action == "migrate":
+        print("Migrating from old schema to new schema")
+        data.restore_from_old_schema()
+    
+    elif args.action == "dump":
+        print("Dumping old schema to migrate to new schema")
+        data.dump_db()
+    
+    elif args.action == "generate":
+        pass
+
+    data.logger.info("Done")

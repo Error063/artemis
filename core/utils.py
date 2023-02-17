@@ -18,4 +18,5 @@ class Utils:
 
                     except ImportError as e:
                         print(f"{dir} - {e}")
+                        raise
             return ret
