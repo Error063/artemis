@@ -3,7 +3,7 @@ wheel
 twisted
 pytz
 pyyaml
-sqlalchemy
+sqlalchemy==1.4.46
 mysqlclient
 pyopenssl
 service_identity
