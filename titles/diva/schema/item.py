@@ -14,20 +14,29 @@ shop = Table(
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
     Column("version", Integer, nullable=False),
     Column("mdl_eqp_ary", String(32)),
+    Column("c_itm_eqp_ary", String(59)),
+    Column("ms_itm_flg_ary", String(59)),
     UniqueConstraint("user", "version", name="diva_profile_shop_uk"),
     mysql_charset='utf8mb4'
 )
 
-class DivaItemData(BaseData):    
-    def put_shop(self, aime_id: int, version: int, mdl_eqp_ary: str) -> None:
+
+class DivaItemData(BaseData):
+    def put_shop(self, aime_id: int, version: int, mdl_eqp_ary: str,
+                 c_itm_eqp_ary: str, ms_itm_flg_ary: str) -> None:
+
         sql = insert(shop).values(
             version=version,
             user=aime_id,
-            mdl_eqp_ary=mdl_eqp_ary
+            mdl_eqp_ary=mdl_eqp_ary,
+            c_itm_eqp_ary=c_itm_eqp_ary,
+            ms_itm_flg_ary=ms_itm_flg_ary
         )
 
         conflict = sql.on_duplicate_key_update(
-            mdl_eqp_ary = sql.inserted.mdl_eqp_ary
+            mdl_eqp_ary=mdl_eqp_ary,
+            c_itm_eqp_ary=c_itm_eqp_ary,
+            ms_itm_flg_ary=ms_itm_flg_ary
         )
 
         result = self.execute(conflict)
@@ -44,7 +53,8 @@ class DivaItemData(BaseData):
                 shop.c.version == version,
                 shop.c.user == aime_id
             ))
-        
+
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()

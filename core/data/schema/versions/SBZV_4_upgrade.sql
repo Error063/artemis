@@ -1,0 +1,2 @@
+ALTER TABLE diva_profile ADD COLUMN passwd_stat INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE diva_profile ADD COLUMN passwd VARCHAR(12) NOT NULL DEFAULT "**********";
