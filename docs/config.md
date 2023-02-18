@@ -2,7 +2,7 @@
 ## Server
 - `listen_address`: IP Address or hostname that the server will listen for connections on. Set to 127.0.0.1 for local only, or 0.0.0.0 for all interfaces. Default `127.0.0.1`
 - `allow_user_registration`: Allows users to register in-game via the AimeDB `register` function. Disable to be able to control who can use cards on your server. Default `True`
-- `allow_unregistered_games`: Allows games that do not have registered keychips to connect and authenticate. Disable to restrict who can connect to your server. Recomended to disable for production setups. Default `True`
+- `allow_unregistered_serials`: Allows games that do not have registered keychips to connect and authenticate. Disable to restrict who can connect to your server. Recomended to disable for production setups. Default `True`
 - `name`: Name for the server, used by some games in their default MOTDs. Default `ARTEMiS`
 - `is_develop`: Flags that the server is a development instance without a proxy standing in front of it. Setting to `False` tells the server not to listen for SSL, because the proxy should be handling all SSL-related things, among other things. Default `True`
 - `log_dir`: Directory to store logs. Server MUST have read and write permissions to this directory or you will have issues. Default `logs`

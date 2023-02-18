@@ -14,8 +14,8 @@ class ServerConfig:
         return CoreConfig.get_config_field(self.__config, 'core', 'server', 'allow_user_registration', default=True)
 
     @property
-    def allow_unregistered_games(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'allow_unregistered_games', default=True)
+    def allow_unregistered_serials(self) -> bool:
+        return CoreConfig.get_config_field(self.__config, 'core', 'server', 'allow_unregistered_serials', default=True)
 
     @property
     def name(self) -> str:

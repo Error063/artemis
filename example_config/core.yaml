@@ -1,7 +1,7 @@
 server:
   listen_address: "127.0.0.1"
   allow_user_registration: True
-  allow_unregistered_games: True
+  allow_unregistered_serials: True
   name: "ARTEMiS"
   is_develop: True
   log_dir: "logs"

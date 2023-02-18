@@ -33,10 +33,9 @@ class TitleServlet():
             coloredlogs.install(level=core_cfg.title.loglevel, logger=self.logger, fmt=log_fmt_str)
             self.logger.initialized = True
         
-        if "game_registry" not in globals():
-            globals()["game_registry"] = Utils.get_all_titles()
+        plugins = Utils.get_all_titles()
         
-        for folder, mod in globals()["game_registry"].items():
+        for folder, mod in plugins.items():
             if hasattr(mod, "game_codes") and hasattr(mod, "index"):
                 handler_cls = mod.index(self.config, self.config_folder)
                 if hasattr(handler_cls, "setup"):
@@ -48,7 +47,7 @@ class TitleServlet():
             else:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py")
         
-        self.logger.info(f"Serving {len(globals()['game_registry'])} game codes")
+        self.logger.info(f"Serving {len(self.title_registry)} game codes on port {core_cfg.title.port}")
 
     def render_GET(self, request: Request, endpoints: dict) -> bytes:
         code = endpoints["game"]
