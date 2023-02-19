@@ -132,11 +132,25 @@ class DivaStaticData(BaseData):
         if result is None: return None
         return result.lastrowid
 
-    def get_enabled_shop(self, version: int) -> Optional[List[Row]]:
-        sql = select(shop).where(and_(shop.c.version == version, shop.c.enabled == True))
+    def get_enabled_shop(self, version: int, shopId: int) -> Optional[Row]:
+        sql = select(shop).where(and_(
+            shop.c.version == version,
+            shop.c.shopId == shopId,
+            shop.c.enabled == True))
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_enabled_shops(self, version: int) -> Optional[List[Row]]:
+        sql = select(shop).where(and_(
+            shop.c.version == version,
+            shop.c.enabled == True))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_items(self, version: int, itemId: int, name: str, type: int, points: int, unknown_0: int, start_date: str, end_date: str) -> Optional[int]:
@@ -158,12 +172,26 @@ class DivaStaticData(BaseData):
         result = self.execute(conflict)
         if result is None: return None
         return result.lastrowid
-    
-    def get_enabled_items(self, version: int) -> Optional[List[Row]]:
-        sql = select(items).where(and_(items.c.version == version, items.c.enabled == True))
+
+    def get_enabled_item(self, version: int, itemId: int) -> Optional[Row]:
+        sql = select(items).where(and_(
+            items.c.version == version,
+            items.c.itemId == itemId,
+            items.c.enabled == True))
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_enabled_items(self, version: int) -> Optional[List[Row]]:
+        sql = select(items).where(and_(
+            items.c.version == version,
+            items.c.enabled == True))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_music(self, version: int, song: int, chart: int, title: str, arranger: str, illustrator: str, 

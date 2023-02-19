@@ -2,3 +2,6 @@ server:
   enable: True
   loglevel: "info"
 
+mods:
+  unlock_all_modules: True
+  unlock_all_items: True
