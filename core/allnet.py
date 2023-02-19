@@ -242,6 +242,8 @@ class AllnetServlet:
                     tmp[kvp[0]] = kvp[1]
 
             ret.append(tmp)
+        
+        return ret
 
     def billing_req_to_dict(self, data: bytes):
         """
