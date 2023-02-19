@@ -28,7 +28,7 @@ class MuchaServlet:
         self.logger.setLevel(logging.INFO)
         coloredlogs.install(level=logging.INFO, logger=self.logger, fmt=log_fmt_str)
 
-    def handle_boardauth(self, request: Request) -> bytes:
+    def handle_boardauth(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         if req_dict is None:
             self.logger.error(f"Error processing mucha request {request.content.getvalue()}")
@@ -41,7 +41,7 @@ class MuchaServlet:
 
         return self.mucha_postprocess(vars(resp))
     
-    def handle_updatecheck(self, request: Request) -> bytes:
+    def handle_updatecheck(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         if req_dict is None:
             self.logger.error(f"Error processing mucha request {request.content.getvalue()}")

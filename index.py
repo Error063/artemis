@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from typing import Dict
 import yaml
 from os import path, mkdir, access, W_OK
 from core import *
@@ -36,46 +37,27 @@ class HttpDispatcher(resource.Resource):
         if test is None:
             return b""
 
-        controller = getattr(self, test["controller"], None)
-        if controller is None:
-            return b""
-        
-        handler = getattr(controller, test["action"], None)
-        if handler is None:
-            return b""
-        
-        url_vars = test
-        url_vars.pop("controller")
-        url_vars.pop("action")
-        
-        if len(url_vars) > 0:
-            ret = handler(request, url_vars)
-        else:
-            ret = handler(request)
-        
-        if type(ret) == str:
-            return ret.encode()
-        elif type(ret) == bytes:
-            return ret
-        else:
-            return b""
+        return self.dispatch(test, request)
 
     def render_POST(self, request: Request) -> bytes:    
         test = self.map_post.match(request.uri.decode())
         if test is None:
             return b""
+        
+        return self.dispatch(test, request)
 
-        controller = getattr(self, test["controller"], None)
+    def dispatch(self, matcher: Dict, request: Request) -> bytes:
+        controller = getattr(self, matcher["controller"], None)
         if controller is None:
             return b""
         
-        handler = getattr(controller, test["action"], None)
+        handler = getattr(controller, matcher["action"], None)
         if handler is None:
             return b""
         
-        url_vars = test
+        url_vars = matcher
         url_vars.pop("controller")
-        url_vars.pop("action")        
+        url_vars.pop("action")
         ret = handler(request, url_vars)
         
         if type(ret) == str:

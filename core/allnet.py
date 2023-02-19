@@ -92,10 +92,10 @@ class AllnetServlet:
                 self.uri_registry[code] = (uri, host)
         self.logger.info(f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}")
 
-    def handle_poweron(self, request: Request):
+    def handle_poweron(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue()))
+            req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
@@ -131,31 +131,35 @@ class AllnetServlet:
         
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            req.country = arcade["country"] if machine["country"] is None else machine["country"]
-            req.place_id = arcade["id"]
-            req.allnet_id = machine["id"]
-            req.name = arcade["name"]
-            req.nickname = arcade["nickname"]
-            req.region0 = arcade["region_id"]
-            req.region_name0 = arcade["country"]
-            req.region_name1 = arcade["state"]
-            req.region_name2 = arcade["city"]
-            req.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
+            resp.country = arcade["country"] if machine["country"] is None else machine["country"]
+            resp.place_id = arcade["id"]
+            resp.allnet_id = machine["id"]
+            resp.name = arcade["name"]
+            resp.nickname = arcade["nickname"]
+            resp.region0 = arcade["region_id"]
+            resp.region_name0 = arcade["country"]
+            resp.region_name1 = arcade["state"]
+            resp.region_name2 = arcade["city"]
+            resp.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
+        
+        int_ver = req.ver.replace(".", "")
+        resp.uri = resp.uri.replace("$v", int_ver)
+        resp.host = resp.host.replace("$v", int_ver)
         
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
         self.logger.info(msg)
 
-        return self.dict_to_http_form_string([vars(resp)])
+        return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
-    def handle_dlorder(self, request: Request):
+    def handle_dlorder(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetDownloadOrderRequest(self.allnet_req_to_dict(request.content.getvalue()))
+            req = AllnetDownloadOrderRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
-            if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
-                raise AllnetRequestException(f"Bad auth request params from {request_ip} - {vars(req)}")
+            if not req.game_id or not req.ver or not req.serial:
+                raise AllnetRequestException(f"Bad download request params from {request_ip} - {vars(req)}")
         
         except AllnetRequestException as e:
             self.logger.error(e)
@@ -163,12 +167,12 @@ class AllnetServlet:
 
         resp = AllnetDownloadOrderResponse()
         if not self.config.allnet.allow_online_updates:
-            return self.dict_to_http_form_string(vars(resp))
+            return self.dict_to_http_form_string([vars(resp)])
         
         else: # TODO: Actual dlorder response
-            return self.dict_to_http_form_string(vars(resp))
+            return self.dict_to_http_form_string([vars(resp)])
 
-    def handle_billing_request(self, request: Request):
+    def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
         request_ip = request.getClientAddress()
         if req_dict is None:
@@ -223,14 +227,14 @@ class AllnetServlet:
 
         resp = BillingResponse(playlimit, playlimit_sig, nearfull, nearfull_sig)
 
-        resp_str = self.dict_to_http_form_string([vars(resp)])
+        resp_str = self.dict_to_http_form_string([vars(resp)], True)
         if resp_str is None:
             self.logger.error(f"Failed to parse response {vars(resp)}")
 
         self.logger.debug(f"response {vars(resp)}")
         return resp_str.encode("utf-8")
 
-    def kvp_to_dict(self, *kvp: str) -> List[Dict[str, Any]]:
+    def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
         ret: List[Dict[str, Any]] = []
         for x in kvp:
             items = x.split('&')
@@ -242,8 +246,10 @@ class AllnetServlet:
                     tmp[kvp[0]] = kvp[1]
 
             ret.append(tmp)
+        
+        return ret
 
-    def allnet_req_to_dict(self, data: bytes):
+    def billing_req_to_dict(self, data: bytes):
         """
         Parses an billing request string into a python dictionary
         """
@@ -252,13 +258,13 @@ class AllnetServlet:
             unzipped = decomp.decompress(data)
             sections = unzipped.decode('ascii').split('\r\n')
             
-            return Utils.kvp_to_dict(sections)
+            return self.kvp_to_dict(sections)
 
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
-    def billing_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
+    def allnet_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
         """
         Parses an allnet request string into a python dictionary
         """    
@@ -267,10 +273,10 @@ class AllnetServlet:
             unzipped = zlib.decompress(zipped)
             sections = unzipped.decode('utf-8').split('\r\n')
             
-            return Utils.kvp_to_dict(sections)
+            return self.kvp_to_dict(sections)
 
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
     def dict_to_http_form_string(self, data:List[Dict[str, Any]], crlf: bool = False, trailing_newline: bool = True) -> Optional[str]:
@@ -297,7 +303,7 @@ class AllnetServlet:
             return urlencode
             
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
 class AllnetPowerOnRequest():
