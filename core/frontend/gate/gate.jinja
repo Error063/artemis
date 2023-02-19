@@ -1,0 +1,17 @@
+{% extends "index.jinja" %}
+{% block content %}
+<h1>Gate</h1>
+{% include "widgets/err_banner.jinja" %}
+<form id="login" style="max-width: 240px; min-width: 10%;" action="/gate/gate.login" method="post">
+    <div class="form-group row">
+        <label for="access_code">Card Access Code</label><br>
+        <input form="login" class="form-control" name="access_code" id="access_code" type="text" placeholder="00000000000000000000" maxlength="20" required>
+    </div>
+    <div class="form-group row">
+        <label for="passwd">Password</label><br>
+        <input id="passwd" class="form-control" name="passwd" type="password" placeholder="password">
+    </div>
+    <p></p>
+    <input id="submit" class="btn btn-primary" style="display: block; margin: 0 auto;" form="login" type="submit" value="Login">
+</form>
+{% endblock content %}

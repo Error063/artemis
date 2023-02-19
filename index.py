@@ -95,6 +95,7 @@ if __name__ == "__main__":
     allnet_server_str = f"tcp:{cfg.allnet.port}:interface={cfg.server.listen_address}"    
     title_server_str = f"tcp:{cfg.title.port}:interface={cfg.server.listen_address}"
     adb_server_str = f"tcp:{cfg.aimedb.port}:interface={cfg.server.listen_address}"
+    frontend_server_str = f"tcp:{cfg.frontend.port}:interface={cfg.server.listen_address}"
 
     billing_server_str = f"tcp:{cfg.billing.port}:interface={cfg.server.listen_address}"
     if cfg.server.is_develop:
@@ -105,6 +106,9 @@ if __name__ == "__main__":
 
     endpoints.serverFromString(reactor, allnet_server_str).listen(server.Site(dispatcher))
     endpoints.serverFromString(reactor, adb_server_str).listen(AimedbFactory(cfg))
+
+    if cfg.frontend.enable:
+        endpoints.serverFromString(reactor, frontend_server_str).listen(server.Site(FrontendServlet(cfg, args.config)))
 
     if cfg.billing.port > 0:
         endpoints.serverFromString(reactor, billing_server_str).listen(server.Site(dispatcher))

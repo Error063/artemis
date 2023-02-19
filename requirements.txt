@@ -13,3 +13,5 @@ coloredlogs
 pylibmc
 wacky
 Routes
+bcrypt
+jinja2
