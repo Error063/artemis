@@ -261,7 +261,7 @@ class AllnetServlet:
             return self.kvp_to_dict(sections)
 
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
     def allnet_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
@@ -276,7 +276,7 @@ class AllnetServlet:
             return self.kvp_to_dict(sections)
 
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
     def dict_to_http_form_string(self, data:List[Dict[str, Any]], crlf: bool = False, trailing_newline: bool = True) -> Optional[str]:
@@ -303,7 +303,7 @@ class AllnetServlet:
             return urlencode
             
         except Exception as e:
-            print(e)
+            self.logger.error(e)
             return None
 
 class AllnetPowerOnRequest():
