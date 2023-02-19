@@ -230,7 +230,7 @@ class AllnetServlet:
         self.logger.debug(f"response {vars(resp)}")
         return resp_str.encode("utf-8")
 
-    def kvp_to_dict(self, *kvp: str) -> List[Dict[str, Any]]:
+    def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
         ret: List[Dict[str, Any]] = []
         for x in kvp:
             items = x.split('&')
