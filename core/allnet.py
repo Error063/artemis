@@ -92,7 +92,7 @@ class AllnetServlet:
                 self.uri_registry[code] = (uri, host)
         self.logger.info(f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}")
 
-    def handle_poweron(self, request: Request):
+    def handle_poweron(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
             req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue()))
@@ -148,7 +148,7 @@ class AllnetServlet:
 
         return self.dict_to_http_form_string([vars(resp)])
 
-    def handle_dlorder(self, request: Request):
+    def handle_dlorder(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
             req = AllnetDownloadOrderRequest(self.billing_req_to_dict(request.content.getvalue()))
@@ -168,7 +168,7 @@ class AllnetServlet:
         else: # TODO: Actual dlorder response
             return self.dict_to_http_form_string(vars(resp))
 
-    def handle_billing_request(self, request: Request):
+    def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
         request_ip = request.getClientAddress()
         if req_dict is None:
