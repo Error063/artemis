@@ -162,7 +162,10 @@ class DivaBase():
 
         new_vcld_pts = profile["vcld_pts"] - int(data["mdl_price"])
 
-        self.data.profile.update_profile(data["pd_id"], profile["lv_num"], profile["lv_pnt"], new_vcld_pts, profile["hp_vol"], profile["btn_se_vol"], profile["btn_se_vol2"], profile["sldr_se_vol2"], profile["sort_kind"], profile["use_pv_mdl_eqp"], profile["use_mdl_pri"], profile["use_pv_skn_eqp"], profile["use_pv_btn_se_eqp"], profile["use_pv_sld_se_eqp"], profile["use_pv_chn_sld_se_eqp"], profile["use_pv_sldr_tch_se_eqp"], profile["nxt_pv_id"], profile["nxt_dffclty"], profile["nxt_edtn"], profile["dsp_clr_brdr"], profile["dsp_intrm_rnk"], profile["dsp_clr_sts"], profile["rgo_sts"], profile["lv_efct_id"], profile["lv_plt_id"], profile["my_qst_id"], profile["my_qst_sts"])
+        self.data.profile.update_profile(
+            profile["user"],
+            vcld_pts=new_vcld_pts
+        )
         self.data.module.put_module(data["pd_id"], self.version, data["mdl_id"])
 
         # generate the mdl_have string
@@ -214,9 +217,10 @@ class DivaBase():
         new_vcld_pts = profile["vcld_pts"] - int(data["cstmz_itm_price"])
 
         # save new Vocaloid Points balance
-        profile = dict(profile)
-        profile["vcld_pts"] = new_vcld_pts
-        self.data.profile.update_profile(profile)
+        self.data.profile.update_profile(
+            profile["user"],
+            vcld_pts=new_vcld_pts
+        )
 
         self.data.customize.put_customize_item(data["pd_id"], self.version, data["cstmz_itm_id"])
 
@@ -613,21 +617,21 @@ class DivaBase():
         response += f"&lv_pnt_old={int(profile['lv_pnt'])}"
 
         # update the profile and commit changes to the db
-        profile = dict(profile)
-        profile["lv_num"] = new_level
-        profile["lv_pnt"] = new_level_pnt
-        profile["vcld_pts"] = int(data["vcld_pts"])
-        profile["hp_vol"] = int(data["hp_vol"])
-        profile["btn_se_vol"] = int(data["btn_se_vol"])
-        profile["sldr_se_vol2"] = int(data["sldr_se_vol2"])
-        profile["sort_kind"] = int(data["sort_kind"])
-        profile["nxt_pv_id"] = int(data["ply_pv_id"])
-        profile["nxt_dffclty"] = int(data["nxt_dffclty"])
-        profile["nxt_edtn"] = int(data["nxt_edtn"])
-        profile["my_qst_id"] = data["my_qst_id"]
-        profile["my_qst_sts"] = data["my_qst_sts"]
-
-        self.data.profile.update_profile(profile)
+        self.data.profile.update_profile(
+            profile["user"],
+            lv_num=new_level,
+            lv_pnt=new_level_pnt,
+            vcld_pts=int(data["vcld_pts"]),
+            hp_vol=int(data["hp_vol"]),
+            btn_se_vol=int(data["btn_se_vol"]),
+            sldr_se_vol2=int(data["sldr_se_vol2"]),
+            sort_kind=int(data["sort_kind"]),
+            nxt_pv_id=int(data["ply_pv_id"]),
+            nxt_dffclty=int(data["nxt_dffclty"]),
+            nxt_edtn=int(data["nxt_edtn"]),
+            my_qst_id=data["my_qst_id"],
+            my_qst_sts=data["my_qst_sts"]
+        )
 
         response += f"&lv_num={new_level}"
         response += f"&lv_str={profile['lv_str']}"
@@ -664,11 +668,11 @@ class DivaBase():
     def handle_end_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
-        profile = dict(profile)
-        profile["my_qst_id"] = data["my_qst_id"]
-        profile["my_qst_sts"] = data["my_qst_sts"]
-
-        self.data.profile.update_profile(profile)
+        self.data.profile.update_profile(
+            profile["user"],
+            my_qst_id=data["my_qst_id"],
+            my_qst_sts=data["my_qst_sts"]
+        )
         return (f'')
 
     def handle_shop_exit_request(self, data: Dict) -> Dict:
@@ -711,28 +715,33 @@ class DivaBase():
             return "&cd_adm_result=0"
         
         # update the vocaloid points and player name
-        profile = dict(profile)
-        profile["vcld_pts"] -= int(data["chg_name_price"])
-        profile["player_name"] = data["player_name"]
-
-        self.data.profile.update_profile(profile)
+        new_vcld_pts = profile["vcld_pts"] - int(data["chg_name_price"])
+        self.data.profile.update_profile(
+            profile["user"],
+            player_name=data["player_name"],
+            vcld_pts=new_vcld_pts
+        )
 
         response = "&cd_adm_result=1"
         response += "&accept_idx=100"
         response += f"&pd_id={profile['user']}"
-        response += f"&player_name={profile['player_name']}"
+        response += f"&player_name={data['player_name']}"
 
         return response
     
     def handle_change_passwd_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
-        # set password to true and update the saved password
-        profile = dict(profile)
-        profile["passwd_stat"] = 1
-        profile["passwd"] = data["new_passwd"]
+        # TODO: return correct error number instead of 0
+        if (data["passwd"] != profile["passwd"]):
+            return "&cd_adm_result=0"
 
-        self.data.profile.update_profile(profile)
+        # set password to true and update the saved password
+        self.data.profile.update_profile(
+            profile["user"],
+            passwd_stat=1,
+            passwd=data["new_passwd"]
+        )
 
         response = "&cd_adm_result=1"
         response += "&accept_idx=100"

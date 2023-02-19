@@ -76,36 +76,17 @@ class DivaProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def update_profile(self, profile_updated: Dict) -> None:
-        sql = profile.update(profile.c.user == profile_updated["user"]).values(
-            player_name=profile_updated["player_name"],
-            lv_num=profile_updated["lv_num"],
-            lv_pnt=profile_updated["lv_pnt"],
-            vcld_pts=profile_updated["vcld_pts"],
-            hp_vol=profile_updated["hp_vol"],
-            btn_se_vol=profile_updated["btn_se_vol"],
-            btn_se_vol2=profile_updated["btn_se_vol2"],
-            sldr_se_vol2=profile_updated["sldr_se_vol2"],
-            sort_kind=profile_updated["sort_kind"],
-            nxt_pv_id=profile_updated["nxt_pv_id"],
-            nxt_dffclty=profile_updated["nxt_dffclty"],
-            nxt_edtn=profile_updated["nxt_edtn"],
-            dsp_clr_brdr=profile_updated["dsp_clr_brdr"],
-            dsp_intrm_rnk=profile_updated["dsp_intrm_rnk"],
-            dsp_clr_sts=profile_updated["dsp_clr_sts"],
-            rgo_sts=profile_updated["rgo_sts"],
-            lv_efct_id=profile_updated["lv_efct_id"],
-            lv_plt_id=profile_updated["lv_plt_id"],
-            my_qst_id=profile_updated["my_qst_id"],
-            my_qst_sts=profile_updated["my_qst_sts"],
-            passwd_stat=profile_updated["passwd_stat"],
-            passwd=profile_updated["passwd"]
-        )
+    def update_profile(self, aime_id: int, **profile_args) -> None:
+        """
+        Given an aime_id update the profile corresponding to the arguments
+        which are the diva_profile Columns
+        """
+        sql = profile.update(profile.c.user == aime_id).values(**profile_args)
 
         result = self.execute(sql)
         if result is None:
             self.logger.error(
-                f"update_profile: failed to update profile! profile: {profile_id}")
+                f"update_profile: failed to update profile! profile: {aime_id}")
         return None
 
     def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
