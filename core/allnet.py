@@ -158,8 +158,8 @@ class AllnetServlet:
             req = AllnetDownloadOrderRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
-            if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
-                raise AllnetRequestException(f"Bad auth request params from {request_ip} - {vars(req)}")
+            if not req.game_id or not req.ver or not req.serial:
+                raise AllnetRequestException(f"Bad download request params from {request_ip} - {vars(req)}")
         
         except AllnetRequestException as e:
             self.logger.error(e)
