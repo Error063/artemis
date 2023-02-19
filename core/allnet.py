@@ -95,7 +95,7 @@ class AllnetServlet:
     def handle_poweron(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue()))
+            req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
@@ -151,7 +151,7 @@ class AllnetServlet:
     def handle_dlorder(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetDownloadOrderRequest(self.billing_req_to_dict(request.content.getvalue()))
+            req = AllnetDownloadOrderRequest(self.billing_req_to_dict(request.content.getvalue())[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
