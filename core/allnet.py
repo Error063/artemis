@@ -142,11 +142,15 @@ class AllnetServlet:
             req.region_name2 = arcade["city"]
             req.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
         
+        int_ver = req.ver.replace(".", "")
+        req.uri = req.uri.replace("$v", int_ver)
+        req.host = req.host.replace("$v", int_ver)
+        
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
         self.logger.info(msg)
 
-        return self.dict_to_http_form_string([vars(resp)])
+        return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
     def handle_dlorder(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
