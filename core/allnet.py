@@ -167,10 +167,10 @@ class AllnetServlet:
 
         resp = AllnetDownloadOrderResponse()
         if not self.config.allnet.allow_online_updates:
-            return self.dict_to_http_form_string(vars(resp))
+            return self.dict_to_http_form_string([vars(resp)])
         
         else: # TODO: Actual dlorder response
-            return self.dict_to_http_form_string(vars(resp))
+            return self.dict_to_http_form_string([vars(resp)])
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
