@@ -151,7 +151,7 @@ class AllnetServlet:
     def handle_dlorder(self, request: Request):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetDownloadOrderRequest(self.allnet_req_to_dict(request.content.getvalue()))
+            req = AllnetDownloadOrderRequest(self.billing_req_to_dict(request.content.getvalue()))
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
@@ -243,7 +243,7 @@ class AllnetServlet:
 
             ret.append(tmp)
 
-    def allnet_req_to_dict(self, data: bytes):
+    def billing_req_to_dict(self, data: bytes):
         """
         Parses an billing request string into a python dictionary
         """
@@ -258,7 +258,7 @@ class AllnetServlet:
             print(e)
             return None
 
-    def billing_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
+    def allnet_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
         """
         Parses an allnet request string into a python dictionary
         """    
