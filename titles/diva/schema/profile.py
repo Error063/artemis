@@ -14,7 +14,7 @@ profile = Table(
     Column("user", ForeignKey("aime_user.id", ondelete="cascade",
            onupdate="cascade"), nullable=False),
     Column("version", Integer, nullable=False),
-    Column("player_name", String(8), nullable=False),
+    Column("player_name", String(10), nullable=False),
     Column("lv_str", String(24), nullable=False, server_default="Dab on 'em"),
     Column("lv_num", Integer, nullable=False, server_default="0"),
     Column("lv_pnt", Integer, nullable=False, server_default="0"),
