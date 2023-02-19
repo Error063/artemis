@@ -131,20 +131,20 @@ class AllnetServlet:
         
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            req.country = arcade["country"] if machine["country"] is None else machine["country"]
-            req.place_id = arcade["id"]
-            req.allnet_id = machine["id"]
-            req.name = arcade["name"]
-            req.nickname = arcade["nickname"]
-            req.region0 = arcade["region_id"]
-            req.region_name0 = arcade["country"]
-            req.region_name1 = arcade["state"]
-            req.region_name2 = arcade["city"]
-            req.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
+            resp.country = arcade["country"] if machine["country"] is None else machine["country"]
+            resp.place_id = arcade["id"]
+            resp.allnet_id = machine["id"]
+            resp.name = arcade["name"]
+            resp.nickname = arcade["nickname"]
+            resp.region0 = arcade["region_id"]
+            resp.region_name0 = arcade["country"]
+            resp.region_name1 = arcade["state"]
+            resp.region_name2 = arcade["city"]
+            resp.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
         
         int_ver = req.ver.replace(".", "")
-        req.uri = req.uri.replace("$v", int_ver)
-        req.host = req.host.replace("$v", int_ver)
+        resp.uri = resp.uri.replace("$v", int_ver)
+        resp.host = resp.host.replace("$v", int_ver)
         
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
@@ -227,7 +227,7 @@ class AllnetServlet:
 
         resp = BillingResponse(playlimit, playlimit_sig, nearfull, nearfull_sig)
 
-        resp_str = self.dict_to_http_form_string([vars(resp)])
+        resp_str = self.dict_to_http_form_string([vars(resp)], True)
         if resp_str is None:
             self.logger.error(f"Failed to parse response {vars(resp)}")
 
