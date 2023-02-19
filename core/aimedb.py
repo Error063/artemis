@@ -164,7 +164,7 @@ class AimedbProtocol(Protocol):
 
     def handle_register(self, data: bytes) -> bytes:        
         luid = data[0x20: 0x2a].hex()
-        if self.config.server.allow_registration:
+        if self.config.server.allow_user_registration:
             user_id = self.data.user.create_user()
 
             if user_id is None: 
