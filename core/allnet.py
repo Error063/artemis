@@ -252,7 +252,7 @@ class AllnetServlet:
             unzipped = decomp.decompress(data)
             sections = unzipped.decode('ascii').split('\r\n')
             
-            return Utils.kvp_to_dict(sections)
+            return self.kvp_to_dict(sections)
 
         except Exception as e:
             print(e)
@@ -267,7 +267,7 @@ class AllnetServlet:
             unzipped = zlib.decompress(zipped)
             sections = unzipped.decode('utf-8').split('\r\n')
             
-            return Utils.kvp_to_dict(sections)
+            return self.kvp_to_dict(sections)
 
         except Exception as e:
             print(e)
