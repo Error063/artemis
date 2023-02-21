@@ -1,5 +1,5 @@
 import logging, coloredlogs
-from typing import Any, Dict
+from typing import Any, Dict, List
 from twisted.web import resource
 from twisted.web.util import redirectTo
 from twisted.web.http import Request
@@ -12,7 +12,6 @@ from core.data import Data
 from core.utils import Utils
 
 class FrontendServlet(resource.Resource):
-    children: Dict[str, Any] = {}
     def getChild(self, name: bytes, request: Request):
         self.logger.debug(f"{request.getClientIP()} -> {name.decode()}")
         if name == b'':
@@ -24,7 +23,9 @@ class FrontendServlet(resource.Resource):
         log_fmt_str = "[%(asctime)s] Frontend | %(levelname)s | %(message)s"
         log_fmt = logging.Formatter(log_fmt_str)
         self.logger = logging.getLogger("frontend")
-        self.environment = jinja2.Environment(loader=jinja2.FileSystemLoader("core/frontend"))
+        self.environment = jinja2.Environment(loader=jinja2.FileSystemLoader("."))
+        self.game_list: List[Dict[str, str]] = []
+        self.children: Dict[str, Any] = {}
 
         fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.config.server.log_dir, "frontend"), when="d", backupCount=10)
         fileHandler.setFormatter(log_fmt)
@@ -43,10 +44,13 @@ class FrontendServlet(resource.Resource):
         for game_dir, game_mod in games.items():
             if hasattr(game_mod, "frontend"):
                 try:
-                    fe_game.putChild(game_dir.encode(), game_mod.frontend(cfg, self.environment, config_dir))
+                    game_fe = game_mod.frontend(cfg, self.environment, config_dir)
+                    self.game_list.append({"url": game_dir, "name": game_fe.nav_name})
+                    fe_game.putChild(game_dir.encode(), game_fe)
                 except:
                     raise
-
+        
+        self.environment.globals["game_list"] = self.game_list
         self.putChild(b"gate", FE_Gate(cfg, self.environment))
         self.putChild(b"user", FE_User(cfg, self.environment))
         self.putChild(b"game", fe_game)
@@ -55,8 +59,8 @@ class FrontendServlet(resource.Resource):
 
     def render_GET(self, request):
         self.logger.debug(f"{request.getClientIP()} -> {request.uri.decode()}")
-        template = self.environment.get_template("index.jinja")        
-        return template.render(server_name=self.config.server.name, title=self.config.server.name).encode("utf-16")
+        template = self.environment.get_template("core/frontend/index.jinja")        
+        return template.render(server_name=self.config.server.name, title=self.config.server.name, game_list=self.game_list).encode("utf-16")
 
 class FE_Base(resource.Resource):
     """
@@ -65,11 +69,12 @@ class FE_Base(resource.Resource):
     It is expected that game implementations of this class overwrite many of these
     """
     isLeaf = True    
-    def __init__(self, cfg: CoreConfig, environment: jinja2.Environment, cfg_dir: str = None) -> None:
+    def __init__(self, cfg: CoreConfig, environment: jinja2.Environment) -> None:
         self.core_config = cfg
         self.data = Data(cfg)
         self.logger = logging.getLogger('frontend')
         self.environment = environment
+        self.nav_name = "nav_name"
 
 class FE_Gate(FE_Base):
     def render_GET(self, request: Request):        
@@ -86,7 +91,7 @@ class FE_Gate(FE_Base):
 
         else: err = 0
 
-        template = self.environment.get_template("gate/gate.jinja")        
+        template = self.environment.get_template("core/frontend/gate/gate.jinja")        
         return template.render(title=f"{self.core_config.server.name} | Login Gate", error=err).encode("utf-16")
     
     def render_POST(self, request: Request):
@@ -153,12 +158,12 @@ class FE_Gate(FE_Base):
 
         ac = request.args[b'ac'][0].decode()
         
-        template = self.environment.get_template("gate/create.jinja")        
+        template = self.environment.get_template("core/frontend/gate/create.jinja")        
         return template.render(title=f"{self.core_config.server.name} | Create User", code=ac).encode("utf-16")
 
 class FE_User(FE_Base):
     def render_GET(self, request: Request):
-        template = self.environment.get_template("user/index.jinja")
+        template = self.environment.get_template("core/frontend/user/index.jinja")
         return template.render().encode("utf-16")
         if b'session' not in request.cookies:
             return redirectTo(b"/gate", request)

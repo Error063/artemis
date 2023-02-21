@@ -1,7 +1,7 @@
-{% extends "index.jinja" %}
+{% extends "core/frontend/index.jinja" %}
 {% block content %}
 <h1>Gate</h1>
-{% include "widgets/err_banner.jinja" %}
+{% include "core/frontend/widgets/err_banner.jinja" %}
 <form id="login" style="max-width: 240px; min-width: 10%;" action="/gate/gate.login" method="post">
     <div class="form-group row">
         <label for="access_code">Card Access Code</label><br>
