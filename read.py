@@ -85,7 +85,7 @@ if __name__ == "__main__":
     log_fmt = logging.Formatter(log_fmt_str)
     logger = logging.getLogger("reader")
 
-    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(config.server.logs, "reader"), when="d", backupCount=10)
+    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(config.server.log_dir, "reader"), when="d", backupCount=10)
     fileHandler.setFormatter(log_fmt)
     
     consoleHandler = logging.StreamHandler()
