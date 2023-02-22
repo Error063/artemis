@@ -15,3 +15,4 @@ wacky
 Routes
 bcrypt
 jinja2
+protobuf
