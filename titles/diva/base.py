@@ -127,31 +127,56 @@ class DivaBase():
     def handle_shop_catalog_request(self, data: Dict) -> Dict:
         catalog = ""
 
-        shopList = self.data.static.get_enabled_shop(self.version)
+        shopList = self.data.static.get_enabled_shops(self.version)
         if not shopList:
             with open(r"titles/diva/data/ShopCatalog.dat", encoding="utf-8") as shop:
                 lines = shop.readlines()
                 for line in lines:
                     line = urllib.parse.quote(line) + ","
                     catalog += f"{urllib.parse.quote(line)}"
-            catalog = catalog.replace("+", "%20")
 
-            response = ""
-            response += f"&shp_ctlg_lut={self.time_lut}"
-            response += f"&shp_ctlg={catalog[:-3]}"
         else:
             for shop in shopList:
                 line = str(shop["shopId"]) + "," + str(shop['unknown_0']) + "," + shop['name'] + "," + str(shop['points']) + "," + shop['start_date'] + "," + shop['end_date'] + "," + str(shop["type"])
                 line = urllib.parse.quote(line) + ","
                 catalog += f"{urllib.parse.quote(line)}"
 
-            catalog = catalog.replace("+", "%20")
-                
-            response = ""
-            response += f"&shp_ctlg_lut={self.time_lut}"
-            response += f"&shp_ctlg={catalog[:-3]}"
+        catalog = catalog.replace("+", "%20")
+
+        response = f"&shp_ctlg_lut={self.time_lut}"
+        response += f"&shp_ctlg={catalog[:-3]}"
 
         return ( response )
+
+    def handle_buy_module_request(self, data: Dict) -> Dict:
+        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        module = self.data.static.get_enabled_shop(self.version, int(data["mdl_id"]))
+
+        # make sure module is available to purchase
+        if not module:
+            return f"&shp_rslt=0&vcld_pts={profile['vcld_pts']}"
+
+        # make sure player has enough vocaloid points to buy module
+        if profile["vcld_pts"] < int(data["mdl_price"]):
+            return f"&shp_rslt=0&vcld_pts={profile['vcld_pts']}"
+
+        new_vcld_pts = profile["vcld_pts"] - int(data["mdl_price"])
+
+        self.data.profile.update_profile(
+            profile["user"],
+            vcld_pts=new_vcld_pts
+        )
+        self.data.module.put_module(data["pd_id"], self.version, data["mdl_id"])
+
+        # generate the mdl_have string
+        mdl_have = self.data.module.get_modules_have_string(data["pd_id"], self.version)
+
+        response = "&shp_rslt=1"
+        response += f"&mdl_id={data['mdl_id']}"
+        response += f"&mdl_have={mdl_have}"
+        response += f"&vcld_pts={new_vcld_pts}"
+
+        return response
 
     def handle_cstmz_itm_ctlg_request(self, data: Dict) -> Dict:
         catalog = ""
@@ -163,24 +188,51 @@ class DivaBase():
                 for line in lines:
                     line = urllib.parse.quote(line) + ","
                     catalog += f"{urllib.parse.quote(line)}"
-            catalog = catalog.replace("+", "%20")
 
-            response = ""
-            response += f"&cstmz_itm_ctlg_lut={self.time_lut}"
-            response += f"&cstmz_itm_ctlg={catalog[:-3]}"
         else:
             for item in itemList:
                 line = str(item["itemId"]) + "," + str(item['unknown_0']) + "," + item['name'] + "," + str(item['points']) + "," + item['start_date'] + "," + item['end_date'] + "," + str(item["type"])
                 line = urllib.parse.quote(line) + ","
                 catalog += f"{urllib.parse.quote(line)}"
 
-            catalog = catalog.replace("+", "%20")
+        catalog = catalog.replace("+", "%20")
 
-            response = ""
-            response += f"&cstmz_itm_ctlg_lut={self.time_lut}"
-            response += f"&cstmz_itm_ctlg={catalog[:-3]}"
+        response = f"&cstmz_itm_ctlg_lut={self.time_lut}"
+        response += f"&cstmz_itm_ctlg={catalog[:-3]}"
 
         return ( response )
+
+    def handle_buy_cstmz_itm_request(self, data: Dict) -> Dict:
+        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        item = self.data.static.get_enabled_item(self.version, int(data["cstmz_itm_id"]))
+
+        # make sure module is available to purchase
+        if not item:
+            return f"&shp_rslt=0&vcld_pts={profile['vcld_pts']}"
+
+        # make sure player has enough vocaloid points to buy the customize item
+        if profile["vcld_pts"] < int(data["cstmz_itm_price"]):
+            return f"&shp_rslt=0&vcld_pts={profile['vcld_pts']}"
+
+        new_vcld_pts = profile["vcld_pts"] - int(data["cstmz_itm_price"])
+
+        # save new Vocaloid Points balance
+        self.data.profile.update_profile(
+            profile["user"],
+            vcld_pts=new_vcld_pts
+        )
+
+        self.data.customize.put_customize_item(data["pd_id"], self.version, data["cstmz_itm_id"])
+
+        # generate the cstmz_itm_have string
+        cstmz_itm_have = self.data.customize.get_customize_items_have_string(data["pd_id"], self.version)
+
+        response = "&shp_rslt=1"
+        response += f"&cstmz_itm_id={data['cstmz_itm_id']}"
+        response += f"&cstmz_itm_have={cstmz_itm_have}"
+        response += f"&vcld_pts={new_vcld_pts}"
+
+        return response
 
     def handle_festa_info_request(self, data: Dict) -> Dict:
         encoded = "&"
@@ -191,7 +243,7 @@ class DivaBase():
             'fi_difficulty': '-1,-1',
             'fi_pv_id_lst': 'ALL,ALL',
             'fi_attr': '7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-            'fi_add_vp': '10,0',
+            'fi_add_vp': '20,0',
             'fi_mul_vp': '1,1',
             'fi_st': '2022-06-17 17:00:00.0,2014-07-08 18:10:11.0',
             'fi_et': '2029-01-01 10:00:00.0,2014-07-08 18:10:11.0',
@@ -278,48 +330,68 @@ class DivaBase():
     def handle_pstd_item_ng_lst_request(self, data: Dict) -> Dict:
         return ( f'' )
         
-    def handle_pre_start_request(self, data: Dict) -> Dict:
+    def handle_pre_start_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["aime_id"], self.version)
         profile_shop = self.data.item.get_shop(data["aime_id"], self.version)
+
         if profile is None:
-            return ( f"&ps_result=-3")
+            return f"&ps_result=-3"
         else:
-            response = ""
-            response += "&ps_result=1"
-            response += f"&pd_id={data['aime_id']}"
+            response = "&ps_result=1"
+            response += "&accept_idx=100"
             response += "&nblss_ltt_stts=-1"
             response += "&nblss_ltt_tckt=-1"
             response += "&nblss_ltt_is_opn=-1"
-            response += f"&vcld_pts={profile['vcld_pts']}"
+            response += f"&pd_id={data['aime_id']}"
             response += f"&player_name={profile['player_name']}"
+            response += f"&sort_kind={profile['player_name']}"
             response += f"&lv_efct_id={profile['lv_efct_id']}"
             response += f"&lv_plt_id={profile['lv_plt_id']}"
             response += f"&lv_str={profile['lv_str']}"
             response += f"&lv_num={profile['lv_num']}"
             response += f"&lv_pnt={profile['lv_pnt']}"
+            response += f"&vcld_pts={profile['vcld_pts']}"
+            response += f"&skn_eqp={profile['use_pv_skn_eqp']}"
+            response += f"&btn_se_eqp={profile['use_pv_btn_se_eqp']}"
+            response += f"&sld_se_eqp={profile['use_pv_sld_se_eqp']}"
+            response += f"&chn_sld_se_eqp={profile['use_pv_chn_sld_se_eqp']}"
+            response += f"&sldr_tch_se_eqp={profile['use_pv_sldr_tch_se_eqp']}"
+            response += f"&passwd_stat={profile['passwd_stat']}"
 
-            #Store stuff to add to rework
+            # Store stuff to add to rework
             response += f"&mdl_eqp_tm={self.time_lut}"
 
+            mdl_eqp_ary = "-999,-999,-999"
+
+            # get the common_modules from the profile shop
             if profile_shop:
-                response += f"&mdl_eqp_ary={profile_shop['mdl_eqp_ary']}"
+                mdl_eqp_ary = profile_shop["mdl_eqp_ary"]
 
-            response += f"&c_itm_eqp_ary=-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999"
-            response += f"&ms_itm_flg_ary=1,1,1,1,1,1,1,1,1,1,1,1"
+            response += f"&mdl_eqp_ary={mdl_eqp_ary}"
 
-            return ( response )
-            
-    def handle_registration_request(self, data: Dict) -> Dict: #DONE
+            return response
+
+    def handle_registration_request(self, data: Dict) -> Dict:
         self.data.profile.create_profile(self.version, data["aime_id"], data["player_name"])
-        return ( f"&cd_adm_result=1&pd_id={data['aime_id']}")
-        
+        return (f"&cd_adm_result=1&pd_id={data['aime_id']}")
+
     def handle_start_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
         profile_shop = self.data.item.get_shop(data["pd_id"], self.version)
-        if profile is None: return
-        
-        response = ""
-        response += f"&pd_id={data['pd_id']}"
+        if profile is None:
+            return
+
+        mdl_have = "F" * 250
+        # generate the mdl_have string if "unlock_all_modules" is disabled
+        if not self.game_config.mods.unlock_all_modules:
+            mdl_have = self.data.module.get_modules_have_string(data["pd_id"], self.version)
+
+        cstmz_itm_have = "F" * 250
+        # generate the cstmz_itm_have string if "unlock_all_items" is disabled
+        if not self.game_config.mods.unlock_all_items:
+            cstmz_itm_have = self.data.customize.get_customize_items_have_string(data["pd_id"], self.version)
+
+        response = f"&pd_id={data['pd_id']}"
         response += "&start_result=1"
 
         response += "&accept_idx=100"
@@ -333,13 +405,15 @@ class DivaBase():
         response += f"&lv_pnt={profile['lv_pnt']}"
         response += f"&lv_efct_id={profile['lv_efct_id']}"
         response += f"&lv_plt_id={profile['lv_plt_id']}"
-        response += "&mdl_have=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        response += "&cstmz_itm_have=FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
-        response += f"&use_pv_mdl_eqp={profile['use_pv_mdl_eqp']}"
-        response += f"&use_pv_btn_se_eqp={profile['use_pv_btn_se_eqp']}"
-        response += f"&use_pv_sld_se_eqp={profile['use_pv_sld_se_eqp']}"
-        response += f"&use_pv_chn_sld_se_eqp={profile['use_pv_chn_sld_se_eqp']}"
-        response += f"&use_pv_sldr_tch_se_eqp={profile['use_pv_sldr_tch_se_eqp']}"
+        response += f"&mdl_have={mdl_have}"
+        response += f"&cstmz_itm_have={cstmz_itm_have}"
+        response += f"&use_pv_mdl_eqp={int(profile['use_pv_mdl_eqp'])}"
+        response += f"&use_mdl_pri={int(profile['use_mdl_pri'])}"
+        response += f"&use_pv_skn_eqp={int(profile['use_pv_skn_eqp'])}"
+        response += f"&use_pv_btn_se_eqp={int(profile['use_pv_btn_se_eqp'])}"
+        response += f"&use_pv_sld_se_eqp={int(profile['use_pv_sld_se_eqp'])}"
+        response += f"&use_pv_chn_sld_se_eqp={int(profile['use_pv_chn_sld_se_eqp'])}"
+        response += f"&use_pv_sldr_tch_se_eqp={int(profile['use_pv_sldr_tch_se_eqp'])}"
         response += f"&vcld_pts={profile['lv_efct_id']}"
         response += f"&nxt_pv_id={profile['nxt_pv_id']}"
         response += f"&nxt_dffclty={profile['nxt_dffclty']}"
@@ -349,7 +423,7 @@ class DivaBase():
         response += f"&dsp_clr_sts={profile['dsp_clr_sts']}"
         response += f"&rgo_sts={profile['rgo_sts']}"
 
-        #To be fully fixed
+        # To be fully fixed
         if "my_qst_id" not in profile:
             response += f"&my_qst_id=-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
             response += f"&my_qst_sts=0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
@@ -361,14 +435,23 @@ class DivaBase():
         response += f"&my_qst_et=2022-06-19%2010%3A28%3A52.0,2022-06-19%2010%3A28%3A52.0,2022-06-19%2010%3A28%3A52.0,2100-01-01%2008%3A59%3A59.0,2100-01-01%2008%3A59%3A59.0,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx"
         response += f"&clr_sts=0,0,0,0,0,0,0,0,56,52,35,6,6,3,1,0,0,0,0,0"
 
-        #Store stuff to add to rework
+        # Store stuff to add to rework
         response += f"&mdl_eqp_tm={self.time_lut}"
 
-        if profile_shop:
-            response += f"&mdl_eqp_ary={profile_shop['mdl_eqp_ary']}"
+        mdl_eqp_ary = "-999,-999,-999"
+        c_itm_eqp_ary = "-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999"
+        ms_itm_flg_ary = "1,1,1,1,1,1,1,1,1,1,1,1"
 
-        response += f"&c_itm_eqp_ary=-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999"
-        response += f"&ms_itm_flg_ary=1,1,1,1,1,1,1,1,1,1,1,1"
+        # get the common_modules, customize_items and customize_item_flags
+        # from the profile shop
+        if profile_shop:
+            mdl_eqp_ary = profile_shop["mdl_eqp_ary"]
+            c_itm_eqp_ary = profile_shop["c_itm_eqp_ary"]
+            ms_itm_flg_ary = profile_shop["ms_itm_flg_ary"]
+
+        response += f"&mdl_eqp_ary={mdl_eqp_ary}"
+        response += f"&c_itm_eqp_ary={c_itm_eqp_ary}"
+        response += f"&ms_itm_flg_ary={ms_itm_flg_ary}"
         
         return ( response )
 
@@ -390,22 +473,89 @@ class DivaBase():
 
         return ( response )
 
+    def _get_pv_pd_result(self, song: int, pd_db_song: Dict, pd_db_ranking: Dict,
+                          pd_db_customize: Dict, edition: int) -> str:
+        """
+        Helper function to generate the pv_result string for every song, ranking and edition
+        """
+        global_ranking = -1
+        if pd_db_ranking:
+            # make sure there are enough max scores to calculate a ranking
+            if pd_db_ranking["ranking"] != 0:
+                global_ranking = pd_db_ranking["ranking"]
+    
+        # pv_no
+        pv_result = f"{song},"
+        # edition
+        pv_result += f"{edition},"
+        # rslt
+        pv_result += f"{pd_db_song['clr_kind']}," if pd_db_song else "-1,"
+        # max_score
+        pv_result += f"{pd_db_song['score']}," if pd_db_song else "-1,"
+        # max_atn_pnt
+        pv_result += f"{pd_db_song['atn_pnt']}," if pd_db_song else "-1,"
+        # challenge_kind
+        pv_result += f"{pd_db_song['sort_kind']}," if pd_db_song else "0,"
+
+        module_eqp = "-999,-999,-999"
+        customize_eqp = "-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999"
+        customize_flag = "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
+        # skin, btn_se, sld_se, chsld_se, sldtch_se
+        pv_settings = "-1,-1,-1,-1,-1"
+        if pd_db_customize:
+            module_eqp = pd_db_customize["mdl_eqp_ary"]
+            customize_eqp = pd_db_customize["c_itm_eqp_ary"]
+            customize_flag = pd_db_customize["ms_itm_flg_ary"]
+            pv_settings = (
+                f"{pd_db_customize['skin']},"
+                f"{pd_db_customize['btn_se']},"
+                f"{pd_db_customize['sld_se']},"
+                f"{pd_db_customize['chsld_se']},"
+                f"{pd_db_customize['sldtch_se']}"
+            )
+        
+        pv_result += f"{module_eqp},"
+        pv_result += f"{customize_eqp},"
+        pv_result += f"{customize_flag},"
+        pv_result += f"{pv_settings},"
+        # rvl_pd_id, rvl_score, rvl_attn_pnt, -1, -1
+        pv_result += "-1,-1,-1,-1,-1,"
+        # countrywide_ranking
+        pv_result += f"{global_ranking},"
+        # rgo_purchased
+        pv_result += "1,1,1,"
+        # rgo_played
+        pv_result += "0,0,0"
+
+        return pv_result
+
     def handle_get_pv_pd_request(self, data: Dict) -> Dict:
         song_id = data["pd_pv_id_lst"].split(",")
         pv = ""
 
         for song in song_id:
             if int(song) > 0:
-                pd_db_song = self.data.score.get_best_score(data["pd_id"], int(song), data["difficulty"])
-                if pd_db_song is not None:
-
-                    pv += urllib.parse.quote(f"{song},0,{pd_db_song['clr_kind']},{pd_db_song['score']},{pd_db_song['atn_pnt']},{pd_db_song['sort_kind']},-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,1,1,1,1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1337,1,1,1,0,0,0")
-
-                else:
-                    #self.logger.debug(f"No score saved for ID: {song}!")
-                    pv += urllib.parse.quote(f"{song},0,-1,-1,-1,0,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,1,1,1,1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,1,1,1,0,0,0")
+                # the request do not send a edition so just perform a query best score and ranking for each edition.
+                # 0=ORIGINAL, 1=EXTRA
+                pd_db_song_0 = self.data.score.get_best_user_score(data["pd_id"], int(song), data["difficulty"], edition=0)
+                pd_db_song_1 = self.data.score.get_best_user_score(data["pd_id"], int(song), data["difficulty"], edition=1)
                 
-                #pv_no, edition, rslt, max_score, max_atn_pnt, challenge_kind, module_eqp[-999,-999,-999], customize_eqp[-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999,-999], customize_flag[1,1,1,1,1,1,1,1,1,1,1,1], skin, btn_se, sld_se, chsld_se, sldtch_se, rvl_pd_id, rvl_score, rvl_attn_pnt, countrywide_ranking, rgo_hispeed, rgo_hidden, rgo_sudden, rgo_hispeed_cleared, rgo_hidden_cleared, rgo_sudden_cleared, chain_challenge_num, chain_challenge_max, chain_challenge_open, version
+                pd_db_ranking_0, pd_db_ranking_1 = None, None
+                if pd_db_song_0:
+                    pd_db_ranking_0 = self.data.score.get_global_ranking(data["pd_id"], int(song), data["difficulty"], edition=0)
+
+                if pd_db_song_1:
+                    pd_db_ranking_1 = self.data.score.get_global_ranking(data["pd_id"], int(song), data["difficulty"], edition=1)
+
+                pd_db_customize = self.data.pv_customize.get_pv_customize(data["pd_id"], int(song))
+                
+                # generate the pv_result string with the ORIGINAL edition and the EXTRA edition appended
+                pv_result = self._get_pv_pd_result(int(song), pd_db_song_0, pd_db_ranking_0, pd_db_customize, edition=0)
+                pv_result += "," + self._get_pv_pd_result(int(song), pd_db_song_1, pd_db_ranking_1, pd_db_customize, edition=1)
+
+                self.logger.debug(f"pv_result = {pv_result}")
+
+                pv += urllib.parse.quote(pv_result)
             else:
                 pv += urllib.parse.quote(f"{song}***")
             pv += ","
@@ -426,6 +576,7 @@ class DivaBase():
 
         pd_song_list = data["stg_ply_pv_id"].split(",")
         pd_song_difficulty = data["stg_difficulty"].split(",")
+        pd_song_edition = data["stg_edtn"].split(",")
         pd_song_max_score = data["stg_score"].split(",")
         pd_song_max_atn_pnt = data["stg_atn_pnt"].split(",")
         pd_song_ranking = data["stg_clr_kind"].split(",")
@@ -439,31 +590,52 @@ class DivaBase():
 
         for index, value in enumerate(pd_song_list):
             if "-1" not in pd_song_list[index]:
-                profile_pd_db_song = self.data.score.get_best_score(data["pd_id"], pd_song_list[index], pd_song_difficulty[index])
+                profile_pd_db_song = self.data.score.get_best_user_score(data["pd_id"], pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index])
                 if profile_pd_db_song is None:
-                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
                 elif int(pd_song_max_score[index]) >= int(profile_pd_db_song["score"]):
-                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
                 elif int(pd_song_max_score[index]) != int(profile_pd_db_song["score"]):
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
 
         # Profile saving based on registration list
 
-        old_level = int(profile['lv_num'])
-        new_level = (int(data["ttl_vp_add"]) + int(profile["lv_pnt"])) / 12
+        # Calculate new level
+        best_scores = self.data.score.get_best_scores(data["pd_id"])
 
-        self.data.profile.update_profile(data["pd_id"], int(new_level), int(profile["lv_pnt"]) + int(data["ttl_vp_add"]), int(data["vcld_pts"]), int(data["hp_vol"]), int(data["btn_se_vol"]), int(data["btn_se_vol2"]), int(data["sldr_se_vol2"]), int(data["sort_kind"]), int(data["use_pv_mdl_eqp"]), profile["use_pv_btn_se_eqp"], profile["use_pv_sld_se_eqp"], profile["use_pv_chn_sld_se_eqp"], profile["use_pv_sldr_tch_se_eqp"], int(data["ply_pv_id"]), int(data["nxt_dffclty"]), int(data["nxt_edtn"]), profile["dsp_clr_brdr"], profile["dsp_intrm_rnk"], profile["dsp_clr_sts"], profile["rgo_sts"], profile["lv_efct_id"], profile["lv_plt_id"], data["my_qst_id"], data["my_qst_sts"])
+        total_atn_pnt = 0
+        for best_score in best_scores:
+            total_atn_pnt += best_score["atn_pnt"]
+        
+        new_level = (total_atn_pnt // 13979) + 1
+        new_level_pnt = round((total_atn_pnt % 13979) / 13979 * 100)
 
-        response = ""
-
-        response += "&chllng_kind=-1"
-        response += f"&lv_num_old={int(old_level)}"
+        response = "&chllng_kind=-1"
+        response += f"&lv_num_old={int(profile['lv_num'])}"
         response += f"&lv_pnt_old={int(profile['lv_pnt'])}"
-        response += f"&lv_num={int(profile['lv_num'])}"
+
+        # update the profile and commit changes to the db
+        self.data.profile.update_profile(
+            profile["user"],
+            lv_num=new_level,
+            lv_pnt=new_level_pnt,
+            vcld_pts=int(data["vcld_pts"]),
+            hp_vol=int(data["hp_vol"]),
+            btn_se_vol=int(data["btn_se_vol"]),
+            sldr_se_vol2=int(data["sldr_se_vol2"]),
+            sort_kind=int(data["sort_kind"]),
+            nxt_pv_id=int(data["ply_pv_id"]),
+            nxt_dffclty=int(data["nxt_dffclty"]),
+            nxt_edtn=int(data["nxt_edtn"]),
+            my_qst_id=data["my_qst_id"],
+            my_qst_sts=data["my_qst_sts"]
+        )
+
+        response += f"&lv_num={new_level}"
         response += f"&lv_str={profile['lv_str']}"
-        response += f"&lv_pnt={int(profile['lv_pnt']) + int(data['ttl_vp_add'])}"
+        response += f"&lv_pnt={new_level_pnt}"
         response += f"&lv_efct_id={int(profile['lv_efct_id'])}"
         response += f"&lv_plt_id={int(profile['lv_plt_id'])}"
         response += f"&vcld_pts={int(data['vcld_pts'])}"
@@ -495,12 +667,84 @@ class DivaBase():
 
     def handle_end_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        self.data.profile.update_profile(data["pd_id"], profile["lv_num"], profile["lv_pnt"], profile["vcld_pts"], profile["hp_vol"], profile["btn_se_vol"], profile["btn_se_vol2"], profile["sldr_se_vol2"], profile["sort_kind"], profile["use_pv_mdl_eqp"], profile["use_pv_btn_se_eqp"], profile["use_pv_sld_se_eqp"], profile["use_pv_chn_sld_se_eqp"], profile["use_pv_sldr_tch_se_eqp"], profile["nxt_pv_id"], profile["nxt_dffclty"], profile["nxt_edtn"], profile["dsp_clr_brdr"], profile["dsp_intrm_rnk"], profile["dsp_clr_sts"], profile["rgo_sts"], profile["lv_efct_id"], profile["lv_plt_id"], data["my_qst_id"], data["my_qst_sts"])
-        return ( f'' )
+
+        self.data.profile.update_profile(
+            profile["user"],
+            my_qst_id=data["my_qst_id"],
+            my_qst_sts=data["my_qst_sts"]
+        )
+        return (f'')
 
     def handle_shop_exit_request(self, data: Dict) -> Dict:
-        self.data.item.put_shop(data["pd_id"], self.version, data["mdl_eqp_cmn_ary"])
+        self.data.item.put_shop(data["pd_id"], self.version, data["mdl_eqp_cmn_ary"], data["c_itm_eqp_cmn_ary"], data["ms_itm_flg_cmn_ary"])
+        if int(data["use_pv_mdl_eqp"]) == 1:
+            self.data.pv_customize.put_pv_customize(data["pd_id"], self.version, data["ply_pv_id"],
+                                                    data["mdl_eqp_pv_ary"], data["c_itm_eqp_pv_ary"], data["ms_itm_flg_pv_ary"])
+        else:
+            self.data.pv_customize.put_pv_customize(data["pd_id"], self.version, data["ply_pv_id"],
+                                                    "-1,-1,-1", "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1", "1,1,1,1,1,1,1,1,1,1,1,1")
 
-        response = ""
-        response += "&shp_rslt=1"
+        response = "&shp_rslt=1"
         return ( response )
+
+    def handle_card_procedure_request(self, data: Dict) -> str:
+        profile = self.data.profile.get_profile(data["aime_id"], self.version)
+        if profile is None:
+            return "&cd_adm_result=0"
+        
+        response = "&cd_adm_result=1"
+        response += "&chg_name_price=100"
+        response += "&accept_idx=100"
+        response += f"&pd_id={profile['user']}"
+        response += f"&player_name={profile['player_name']}"
+        response += f"&lv_num={profile['lv_num']}"
+        response += f"&lv_pnt={profile['lv_pnt']}"
+        response += f"&lv_str={profile['lv_str']}"
+        response += f"&lv_efct_id={profile['lv_efct_id']}"
+        response += f"&lv_plt_id={profile['lv_plt_id']}"
+        response += f"&vcld_pts={profile['vcld_pts']}"
+        response += f"&passwd_stat={profile['passwd_stat']}"
+
+        return response
+    
+    def handle_change_name_request(self, data: Dict) -> str:
+        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+
+        # make sure user has enough Vocaloid Points
+        if profile["vcld_pts"] < int(data["chg_name_price"]):
+            return "&cd_adm_result=0"
+        
+        # update the vocaloid points and player name
+        new_vcld_pts = profile["vcld_pts"] - int(data["chg_name_price"])
+        self.data.profile.update_profile(
+            profile["user"],
+            player_name=data["player_name"],
+            vcld_pts=new_vcld_pts
+        )
+
+        response = "&cd_adm_result=1"
+        response += "&accept_idx=100"
+        response += f"&pd_id={profile['user']}"
+        response += f"&player_name={data['player_name']}"
+
+        return response
+    
+    def handle_change_passwd_request(self, data: Dict) -> str:
+        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+
+        # TODO: return correct error number instead of 0
+        if (data["passwd"] != profile["passwd"]):
+            return "&cd_adm_result=0"
+
+        # set password to true and update the saved password
+        self.data.profile.update_profile(
+            profile["user"],
+            passwd_stat=1,
+            passwd=data["new_passwd"]
+        )
+
+        response = "&cd_adm_result=1"
+        response += "&accept_idx=100"
+        response += f"&pd_id={profile['user']}"
+
+        return response
