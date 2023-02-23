@@ -30,6 +30,6 @@ class WaccaS(WaccaBase):
         super().__init__(cfg, game_cfg)
         self.version = WaccaConstants.VER_WACCA_S
     
-    def handle_advertise_GetNews_request(self, data: Dict) -> List[Any]:
+    def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
         resp = GetNewsResponseV2()
         return resp.make()

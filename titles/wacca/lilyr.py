@@ -35,7 +35,7 @@ class WaccaLilyR(WaccaLily):
             (210003, 0),
         ]
 
-    def handle_user_status_create_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_create_request(self, data: Dict)-> Dict:
         req = UserStatusCreateRequest(data)
         resp = super().handle_user_status_create_request(data)
 
@@ -50,5 +50,5 @@ class WaccaLilyR(WaccaLily):
         
         return resp
 
-    def handle_user_status_logout_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_logout_request(self, data: Dict)-> Dict:
         return BaseResponse().make()

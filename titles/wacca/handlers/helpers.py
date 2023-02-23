@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Optional, Any
 from enum import Enum
 
 from titles.wacca.const import WaccaConstants
@@ -41,9 +41,6 @@ class Notice():
         int(self.showWelcomeScreen), self.startTime, self.endTime, self.voiceline]
 
 class UserOption():
-    opt_id: int
-    opt_val: Any
-
     def __init__(self, opt_id: int = 0, opt_val: Any = 0) -> None:
         self.opt_id = opt_id
         self.opt_val = opt_val
@@ -53,7 +50,7 @@ class UserOption():
 
 class UserStatusV1():
     def __init__(self) -> None:
-        self.userId: int = -1
+        self.userId: int = 0
         self.username: str = ""
         self.userType: int = 1
         self.xp: int = 0
@@ -62,10 +59,6 @@ class UserStatusV1():
         self.wp: int = 0
         self.titlePartIds: List[int] = [0, 0, 0]
         self.useCount: int = 0
-        self.loginDays: int = 0
-        self.loginConsecutive: int = 0
-        self.loginConsecutiveDays: int = 0
-        self.vipExpireTime: int = 0
 
     def make(self) -> List:
         return [
@@ -78,21 +71,25 @@ class UserStatusV1():
             self.wp,
             self.titlePartIds,
             self.useCount,
-            self.loginDays,
-            self.loginConsecutive,
-            self.loginConsecutiveDays,
-            self.vipExpireTime
         ]
 
 class UserStatusV2(UserStatusV1):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__()        
+        self.loginDays: int = 0
+        self.loginConsecutive: int = 0
+        self.loginConsecutiveDays: int = 0
         self.loginsToday: int = 0
-        self.rating: int = 0
+        self.rating: int = 0        
+        self.vipExpireTime: int = 0
 
     def make(self) -> List:
         ret = super().make()
-
+        
+        ret.append(self.loginDays)
+        ret.append(self.loginConsecutive)
+        ret.append(self.loginConsecutiveDays)
+        ret.append(self.vipExpireTime)
         ret.append(self.loginsToday)
         ret.append(self.rating)
 
@@ -336,7 +333,7 @@ class UserItemInfoV3(UserItemInfoV2):
 
 class SongDetailClearCounts():    
     def __init__(self, play_ct: int = 0, clear_ct: int = 0, ml_ct: int = 0, fc_ct: int = 0,
-        am_ct: int = 0, counts: List[int] = None) -> None:
+        am_ct: int = 0, counts: Optional[List[int]] = None) -> None:
         if counts is None:
             self.playCt = play_ct
             self.clearCt = clear_ct
@@ -367,7 +364,7 @@ class SongDetailGradeCountsV1():
     masterCt: int
 
     def __init__(self, d: int = 0, c: int = 0, b: int = 0, a: int = 0, aa: int = 0, aaa: int = 0, s: int = 0,
-        ss: int = 0, sss: int = 0, master: int = 0, counts: List[int] = None) -> None:
+        ss: int = 0, sss: int = 0, master: int = 0, counts: Optional[List[int]] = None) -> None:
         if counts is None:
             self.dCt = d
             self.cCt = c
@@ -401,7 +398,7 @@ class SongDetailGradeCountsV2(SongDetailGradeCountsV1):
     ssspCt: int
 
     def __init__(self, d: int = 0, c: int = 0, b: int = 0, a: int = 0, aa: int = 0, aaa: int = 0, s: int = 0, 
-    ss: int = 0, sss: int = 0, master: int = 0, sp: int = 0, ssp: int = 0, sssp: int = 0, counts: List[int] = None, ) -> None:
+    ss: int = 0, sss: int = 0, master: int = 0, sp: int = 0, ssp: int = 0, sssp: int = 0, counts: Optional[List[int]] = None) -> None:
         super().__init__(d, c, b, a, aa, aaa, s, ss, sss, master, counts)
         if counts is None:
             self.spCt = sp
@@ -464,25 +461,8 @@ class SongUpdateJudgementCounts():
     def make(self) -> List:
         return [self.marvCt, self.greatCt, self.goodCt, self.missCt]
 
-class SongUpdateDetail():
-    songId: int
-    difficulty: int
-    level: float
-    score: int
-    judgements: SongUpdateJudgementCounts
-    maxCombo: int
-    grade: WaccaConstants.GRADES
-    flagCleared: bool
-    flagMissless: bool
-    flagFullcombo: bool
-    flagAllMarvelous: bool
-    flagGiveUp: bool
-    skillPt: int
-    fastCt: int
-    slowCt: int
-    flagNewRecord: bool
-
-    def __init__(self, data: List = None) -> None:
+class SongUpdateDetailV1():
+    def __init__(self, data: List) -> None:        
         if data is not None:
             self.songId = data[0]
             self.difficulty = data[1]
@@ -498,8 +478,15 @@ class SongUpdateDetail():
             self.flagFullcombo = False if data[9] == 0 else True
             self.flagAllMarvelous = False if data[10] == 0 else True
             self.flagGiveUp = False if data[11] == 0 else True
+            self.skillPt = data[12]            
+            self.fastCt = 0
+            self.slowCt = 0
+            self.flagNewRecord = False
 
-            self.skillPt = data[12]
+class SongUpdateDetailV2(SongUpdateDetailV1):
+    def __init__(self, data: List) -> None:
+        super().__init__(data)
+        if data is not None:
             self.fastCt = data[13]
             self.slowCt = data[14]
             self.flagNewRecord = False if data[15] == 0 else True
@@ -583,7 +570,7 @@ class GateDetailV2(GateDetailV1):
         return super().make() + [self.missionFlg]
 
 class GachaInfo():
-    def make() -> List:
+    def make(self) -> List:
         return []
 
 class LastSongDetail():
@@ -608,17 +595,6 @@ class LastSongDetail():
 class FriendDetail():
     def make(self) -> List:
         return []
-
-class UserOption():
-    id = 1
-    val = 1
-
-    def __init__(self, id: int = 1, val: int = val) -> None:
-        self.id = id
-        self.val = val
-    
-    def make(self) -> List:
-        return [self.id, self.val]
 
 class LoginBonusInfo():
     def __init__(self) -> None:
@@ -682,19 +658,6 @@ class PlayType(Enum):
     PlayTypeCoop = 3
     PlayTypeStageup = 4
 
-class SongRatingUpdate():
-    song_id = 0
-    difficulty = 0
-    rating = 0
-
-    def __init__(self, song: int = 0, difficulty: int = 0, rating: int = 0) -> None:
-        self.song_id = song
-        self.difficulty = difficulty
-        self.rating = rating
-    
-    def make(self) -> List:
-        return [self.song_id, self.difficulty, self.rating]
-
 class StageInfo():
     danId: int = 0
     danLevel: int = 0
@@ -740,7 +703,6 @@ class MusicUpdateDetailV1():
         self.lowestMissCount = 0
         self.maxSkillPts = 0
         self.locked = 0
-        self.rating = 0
     
     def make(self) -> List:
         return [
@@ -753,10 +715,17 @@ class MusicUpdateDetailV1():
             self.lowestMissCount,
             self.maxSkillPts,
             self.locked,
-            self.rating
         ]
 
 class MusicUpdateDetailV2(MusicUpdateDetailV1):
+    def __init__(self) -> None:
+        super().__init__()
+        self.rating = 0
+    
+    def make(self) -> List:
+        return super().make() + [self.rating]
+
+class MusicUpdateDetailV3(MusicUpdateDetailV2):
     def __init__(self) -> None:
         super().__init__()
         self.grades = SongDetailGradeCountsV2()

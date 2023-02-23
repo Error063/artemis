@@ -35,8 +35,28 @@ class WaccaLily(WaccaS):
             (210002, 0),
             (210003, 0),
         ]
+    
+    def handle_advertise_GetNews_request(self, data: Dict)-> Dict:
+        resp = GetNewsResponseV3()
+        return resp.make()
 
-    def handle_user_status_get_request(self, data: Dict) -> List[Any]:
+    def handle_housing_start_request(self, data: Dict) -> Dict:
+        req = HousingStartRequestV2(data)
+
+        resp = HousingStartResponseV1(
+            1, 
+            [ # Recomended songs
+                1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
+                1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
+                1104,1070,1047,1044,1027,1004,1001,24,2068,2062,2021,1275,
+                1249,1207,1203,1107,1021,1009,9,4,3,23,22,2014,13,1276,1247,
+                1240,1237,1128,1114,1110,1109,1102,1045,1043,1036,1035,1030,
+                1023,1015
+            ]
+        )
+        return resp.make()
+
+    def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
         ver_split = req.appVersion.split(".")
@@ -115,7 +135,7 @@ class WaccaLily(WaccaS):
         
         return resp.make()
 
-    def handle_user_status_login_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_login_request(self, data: Dict)-> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV2()
         is_new_day = False
@@ -156,7 +176,7 @@ class WaccaLily(WaccaS):
         
         return resp.make()
     
-    def handle_user_status_getDetail_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_getDetail_request(self, data: Dict)-> Dict:
         req = UserStatusGetDetailRequest(data)
         ver_split = req.appVersion.split(".")
         if int(ver_split[1]) >= 53:
@@ -255,13 +275,9 @@ class WaccaLily(WaccaS):
         for unlock in profile_song_unlocks:
             for x in range(1, unlock["highest_difficulty"] + 1):
                 resp.userItems.songUnlocks.append(SongUnlock(unlock["song_id"], x, 0, int(unlock["acquire_date"].timestamp())))
-                if x > 2:
-                    resp.scores.append(BestScoreDetailV1(unlock["song_id"], x))
         
-        empty_scores = len(resp.scores)
         for song in profile_scores:
             resp.seasonInfo.cumulativeScore += song["score"]
-            empty_score_idx = resp.find_score_idx(song["song_id"], song["chart_id"], 0, empty_scores)
             
             clear_cts = SongDetailClearCounts(
                 song["play_ct"],
@@ -277,24 +293,16 @@ class WaccaLily(WaccaS):
                 song["grade_master_ct"]
             )
 
-            if empty_score_idx is not None:
-                resp.scores[empty_score_idx].clearCounts = clear_cts                
-                resp.scores[empty_score_idx].clearCountsSeason = clear_cts
-                resp.scores[empty_score_idx].gradeCounts = grade_cts
-                resp.scores[empty_score_idx].score = song["score"]
-                resp.scores[empty_score_idx].bestCombo = song["best_combo"]
-                resp.scores[empty_score_idx].lowestMissCtMaybe = song["lowest_miss_ct"]
-                resp.scores[empty_score_idx].rating = song["rating"]
-            
-            else:
-                deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
-                deets.clearCounts = clear_cts                
-                deets.clearCountsSeason = clear_cts
-                deets.gradeCounts = grade_cts
-                deets.score = song["score"]
-                deets.bestCombo = song["best_combo"]
-                deets.lowestMissCtMaybe = song["lowest_miss_ct"]
-                deets.rating = song["rating"]
+            deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
+            deets.clearCounts = clear_cts                
+            deets.clearCountsSeason = clear_cts
+            deets.gradeCounts = grade_cts
+            deets.score = song["score"]
+            deets.bestCombo = song["best_combo"]
+            deets.lowestMissCtMaybe = song["lowest_miss_ct"]
+            deets.rating = song["rating"]
+
+            resp.scores.append(deets)
         
         for trophy in profile_trophies:
             resp.userItems.trophies.append(TrophyItem(trophy["trophy_id"], trophy["season"], trophy["progress"], trophy["badge_type"]))
@@ -349,3 +357,13 @@ class WaccaLily(WaccaS):
         resp.seasonInfo.platesObtained = len(resp.userItems.plates)
 
         return resp.make()
+
+    def handle_user_info_getMyroom_request(self, data: Dict)-> Dict:
+        return UserInfogetMyroomResponseV2().make()
+
+    def handle_user_status_update_request(self, data: Dict)-> Dict:
+        super().handle_user_status_update_request(data)
+        req = UserStatusUpdateRequestV2(data)        
+        self.data.profile.update_profile_lastplayed(req.profileId, req.lastSongInfo.lastSongId, req.lastSongInfo.lastSongDiff, 
+            req.lastSongInfo.lastFolderOrd, req.lastSongInfo.lastFolderId, req.lastSongInfo.lastSongOrd)
+        return BaseResponse().make()

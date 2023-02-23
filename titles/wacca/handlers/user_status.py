@@ -65,11 +65,11 @@ class UserStatusGetDetailResponseV1(BaseResponse):
         self.userItems: UserItemInfoV1 = UserItemInfoV1()
         self.scores: List[BestScoreDetailV1] = []
         self.songPlayStatus: List[int] = [0,0]
-        self.seasonInfo: SeasonalInfoV1 = []
+        self.seasonInfo: SeasonalInfoV1 = SeasonalInfoV1()
         self.playAreaList: List = [ [0],[0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0],[0,0,0,0],[0,0,0,0,0,0,0],[0] ]
         self.songUpdateTime: int = 0
 
-    def make(self) -> List:
+    def make(self)-> Dict:
         opts = []
         play_modes = []
         scores = []
@@ -97,7 +97,7 @@ class UserStatusGetDetailResponseV1(BaseResponse):
 
         return super().make()
     
-    def find_score_idx(self, song_id: int, difficulty: int = 1, start_idx: int = 0, stop_idx: int = None) -> Optional[int]:
+    def find_score_idx(self, song_id: int, difficulty: int = 1, start_idx: int = 0, stop_idx: Optional[int] = None) -> Optional[int]:
         if stop_idx is None or stop_idx > len(self.scores):
             stop_idx = len(self.scores)
 
@@ -122,7 +122,7 @@ class UserStatusGetDetailResponseV2(UserStatusGetDetailResponseV1):
         self.gatchaInfo: List[GachaInfo] = []
         self.friendList: List[FriendDetail] = []
 
-    def make(self) -> List:
+    def make(self)-> Dict:
         super().make()
         gates = []
         friends = []
@@ -164,7 +164,7 @@ class UserStatusGetDetailResponseV4(UserStatusGetDetailResponseV3):
         self.bingoStatus: BingoDetail = BingoDetail(0)
         self.scores: List[BestScoreDetailV2] = []
 
-    def make(self) -> List:
+    def make(self)-> Dict:
         super().make()
         self.params.append(self.bingoStatus.make())
 
@@ -187,7 +187,8 @@ class UserStatusLoginResponseV1(BaseResponse):
         self.firstLoginDaily = is_first_login_daily
         self.lastLoginDate = last_login_date
 
-    def make(self) -> List:
+    def make(self)-> Dict:
+        super().make()
         daily = []
         consec = []
         other = []
@@ -205,25 +206,24 @@ class UserStatusLoginResponseV1(BaseResponse):
         return super().make()
 
 class UserStatusLoginResponseV2(UserStatusLoginResponseV1):
-    vipInfo: VipInfo
-    lastLoginDate: int = 0
-
     def __init__(self, is_first_login_daily: bool = False, last_login_date: int = 0) -> None:
         super().__init__(is_first_login_daily)
         self.lastLoginDate = last_login_date
 
         self.vipInfo = VipInfo()
     
-    def make(self) -> List:
+    def make(self)-> Dict:
         super().make()
         self.params.append(self.vipInfo.make())
         self.params.append(self.lastLoginDate)
         return super(UserStatusLoginResponseV1, self).make()
 
 class UserStatusLoginResponseV3(UserStatusLoginResponseV2):
-    unk: List = []
+    def __init__(self, is_first_login_daily: bool = False, last_login_date: int = 0) -> None:
+        super().__init__(is_first_login_daily, last_login_date)
+        self.unk: List = []
 
-    def make(self) -> List:
+    def make(self)-> Dict:
         super().make()
         self.params.append(self.unk)
         return super(UserStatusLoginResponseV1, self).make()
@@ -242,7 +242,7 @@ class UserStatusCreateResponseV1(BaseResponse):
         self.userStatus.userId = userId
         self.userStatus.username = username
     
-    def make(self) -> List:
+    def make(self)-> Dict:
         self.params = [
             self.userStatus.make()
         ]

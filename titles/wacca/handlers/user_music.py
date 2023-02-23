@@ -1,21 +1,27 @@
 from typing import List, Dict
 
 from titles.wacca.handlers.base import BaseRequest, BaseResponse
-from titles.wacca.handlers.helpers import GenericItemRecv, SongUpdateDetail, TicketItem
-from titles.wacca.handlers.helpers import MusicUpdateDetailV1, MusicUpdateDetailV2
-from titles.wacca.handlers.helpers import SeasonalInfoV2, SeasonalInfoV1
+from titles.wacca.handlers.helpers import GenericItemRecv, SongUpdateDetailV2, TicketItem
+from titles.wacca.handlers.helpers import MusicUpdateDetailV2, MusicUpdateDetailV3
+from titles.wacca.handlers.helpers import SeasonalInfoV2, SeasonalInfoV1, SongUpdateDetailV1
+from titles.wacca.handlers.helpers import MusicUpdateDetailV1
 
 # ---user/music/update---
-class UserMusicUpdateRequest(BaseRequest):
+class UserMusicUpdateRequestV1(BaseRequest):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.profileId: int = self.params[0]
         self.songNumber: int = self.params[1]
-        self.songDetail = SongUpdateDetail(self.params[2])
+        self.songDetail = SongUpdateDetailV1(self.params[2])
         self.itemsObtained: List[GenericItemRecv] = []
 
         for itm in data["params"][3]:
             self.itemsObtained.append(GenericItemRecv(itm[0], itm[1], itm[2]))
+
+class UserMusicUpdateRequestV2(UserMusicUpdateRequestV1):
+    def __init__(self, data: Dict) -> None:
+        super().__init__(data)
+        self.songDetail = SongUpdateDetailV2(self.params[2])
 
 class UserMusicUpdateResponseV1(BaseResponse):
     def __init__(self) -> None:
@@ -37,21 +43,22 @@ class UserMusicUpdateResponseV1(BaseResponse):
 class UserMusicUpdateResponseV2(UserMusicUpdateResponseV1):
     def __init__(self) -> None:
         super().__init__()
+        self.songDetail = MusicUpdateDetailV2()
         self.seasonInfo = SeasonalInfoV2()
 
 class UserMusicUpdateResponseV3(UserMusicUpdateResponseV2):
     def __init__(self) -> None:
         super().__init__()
-        self.songDetail = MusicUpdateDetailV2()
+        self.songDetail = MusicUpdateDetailV3()
 
 # ---user/music/updateCoop---
-class UserMusicUpdateCoopRequest(UserMusicUpdateRequest):
+class UserMusicUpdateCoopRequest(UserMusicUpdateRequestV2):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.coopData = self.params[4]
 
 # ---user/music/updateVs---
-class UserMusicUpdateVsRequest(UserMusicUpdateRequest):
+class UserMusicUpdateVsRequest(UserMusicUpdateRequestV2):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.vsData = self.params[4]
@@ -77,7 +84,7 @@ class UserMusicUnlockResponse(BaseResponse):
         for ticket in tickets_remaining:
             self.tickets.append(TicketItem(ticket[0], ticket[1], ticket[2]))
     
-    def make(self) -> List:
+    def make(self)-> Dict:
         tickets = []
 
         for ticket in self.tickets:
