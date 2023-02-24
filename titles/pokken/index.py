@@ -42,7 +42,7 @@ class PokkenServlet(resource.Resource):
     
     def setup(self):
         if self.game_cfg.server.enable:
-            if self.core_cfg.server.is_develop:
+            if self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable:
                 endpoints.serverFromString(reactor, f"ssl:{self.game_cfg.server.port}"\
                     f":interface={self.game_cfg.server.hostname}:privateKey={self.game_cfg.server.ssl_key}:"\
                         f"certKey={self.game_cfg.server.ssl_cert}")\
