@@ -95,14 +95,19 @@ class AllnetServlet:
     def handle_poweron(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetPowerOnRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
+            req_dict = self.allnet_req_to_dict(request.content.getvalue())
+            if req_dict is None:
+                raise AllnetRequestException()
+
+            req = AllnetPowerOnRequest(req_dict[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.token or not req.serial or not req.ip:
                 raise AllnetRequestException(f"Bad auth request params from {request_ip} - {vars(req)}")
         
         except AllnetRequestException as e:
-            self.logger.error(e)
+            if e.message != "":
+                self.logger.error(e)
             return b""
         
         if req.format_ver == 3:
@@ -155,14 +160,19 @@ class AllnetServlet:
     def handle_dlorder(self, request: Request, _: Dict):
         request_ip = request.getClientAddress().host
         try:
-            req = AllnetDownloadOrderRequest(self.allnet_req_to_dict(request.content.getvalue())[0])
+            req_dict = self.allnet_req_to_dict(request.content.getvalue())
+            if req_dict is None:
+                raise AllnetRequestException()
+
+            req = AllnetDownloadOrderRequest(req_dict[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
             if not req.game_id or not req.ver or not req.serial:
                 raise AllnetRequestException(f"Bad download request params from {request_ip} - {vars(req)}")
         
         except AllnetRequestException as e:
-            self.logger.error(e)
+            if e.message != "":
+                self.logger.error(e)
             return b""
 
         resp = AllnetDownloadOrderResponse()
@@ -265,7 +275,7 @@ class AllnetServlet:
             return self.kvp_to_dict(sections)
 
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"billing_req_to_dict: {e} while parsing {data}")
             return None
 
     def allnet_req_to_dict(self, data: str) -> Optional[List[Dict[str, Any]]]:
@@ -280,7 +290,7 @@ class AllnetServlet:
             return self.kvp_to_dict(sections)
 
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"allnet_req_to_dict: {e} while parsing {data}")
             return None
 
     def dict_to_http_form_string(self, data:List[Dict[str, Any]], crlf: bool = False, trailing_newline: bool = True) -> Optional[str]:
@@ -307,7 +317,7 @@ class AllnetServlet:
             return urlencode
             
         except Exception as e:
-            self.logger.error(e)
+            self.logger.error(f"dict_to_http_form_string: {e} while parsing {data}")
             return None
 
 class AllnetPowerOnRequest():
@@ -407,6 +417,6 @@ class BillingResponse():
         # YYYY -> 4 digit year, MM -> 2 digit month, C -> Playcount during that period
 
 class AllnetRequestException(Exception):
-    def __init__(self, message="Allnet Request Error") -> None:
+    def __init__(self, message="") -> None:
         self.message = message
         super().__init__(self.message)

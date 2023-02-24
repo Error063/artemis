@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import logging, coloredlogs
+from logging.handlers import TimedRotatingFileHandler
 from typing import Dict
 import yaml
 from os import path, mkdir, access, W_OK
@@ -17,6 +19,7 @@ class HttpDispatcher(resource.Resource):
         self.isLeaf = True
         self.map_get = Mapper()
         self.map_post = Mapper()
+        self.logger = logging.getLogger("core")
         
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
@@ -33,28 +36,36 @@ class HttpDispatcher(resource.Resource):
         self.map_get.connect("title_get", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_GET", conditions=dict(method=['GET']), requirements=dict(game=R"S..."))
         self.map_post.connect("title_post", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_POST", conditions=dict(method=['POST']), requirements=dict(game=R"S..."))
 
-    def render_POST(self, request: Request) -> bytes:    
+    def render_GET(self, request: Request) -> bytes:    
         test = self.map_get.match(request.uri.decode())
         if test is None:
-            return b""
+            self.logger.debug(f"Unknown GET endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
 
         return self.dispatch(test, request)
 
     def render_POST(self, request: Request) -> bytes:    
         test = self.map_post.match(request.uri.decode())
         if test is None:
-            return b""
+            self.logger.debug(f"Unknown POST endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         return self.dispatch(test, request)
 
     def dispatch(self, matcher: Dict, request: Request) -> bytes:
         controller = getattr(self, matcher["controller"], None)
         if controller is None:
-            return b""
+            self.logger.error(f"Controller {matcher['controller']} not found via endpoint {request.uri.decode()}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         handler = getattr(controller, matcher["action"], None)
         if handler is None:
-            return b""
+            self.logger.error(f"Action {matcher['action']} not found in controller {matcher['controller']} via endpoint {request.uri.decode()}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         url_vars = matcher
         url_vars.pop("controller")
@@ -80,18 +91,37 @@ if __name__ == "__main__":
     cfg: CoreConfig = CoreConfig()
     cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
+    logger = logging.getLogger("core")
+    if not hasattr(logger, "initialized"):
+        log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
+        log_fmt = logging.Formatter(log_fmt_str)        
+
+        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(cfg.server.log_dir, "core"), when="d", backupCount=10)
+        fileHandler.setFormatter(log_fmt)
+        
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setFormatter(log_fmt)
+
+        logger.addHandler(fileHandler)
+        logger.addHandler(consoleHandler)
+        
+        # TODO: Add log level for core to config
+        logger.setLevel(cfg.allnet.loglevel)
+        coloredlogs.install(level=cfg.allnet.loglevel, logger=logger, fmt=log_fmt_str)
+        logger.initialized = True
+
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
     
     if not access(cfg.server.log_dir, W_OK):
-        print(f"Log directory {cfg.server.log_dir} NOT writable, please check permissions")
+        logger.error(f"Log directory {cfg.server.log_dir} NOT writable, please check permissions")
         exit(1)
 
     if not cfg.aimedb.key:
-        print("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")
+        logger.error("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")
         exit(1)
     
-    print(f"ARTEMiS starting in {'develop' if cfg.server.is_develop else 'production'} mode")
+    logger.info(f"ARTEMiS starting in {'develop' if cfg.server.is_develop else 'production'} mode")
 
     allnet_server_str = f"tcp:{cfg.allnet.port}:interface={cfg.server.listen_address}"    
     title_server_str = f"tcp:{cfg.title.port}:interface={cfg.server.listen_address}"
