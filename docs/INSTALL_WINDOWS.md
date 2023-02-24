@@ -34,7 +34,7 @@ exit;
 
 ## Install Python modules
 1. Change your work path to the artemis-master folder using 'cd' and install the requirements:
-> pip install -r requirements_win.txt
+> pip install -r requirements.txt
 
 ## Copy/Rename the folder example_config to config
 
@@ -76,9 +76,8 @@ Make sure the following ports are open both on your router and local Windows fir
 1. Double check your AimeDB key under core.yaml, it is incorrect.
 
 ## AttributeError: module 'collections' has no attribute 'Hashable'
-1. This means the pyYAML module is obsolete, simply make sure to update pip and then reinstall the requirements
+1. This means the pyYAML module is obsolete, simply rerun pip with the -U (force update) flag, as shown below.
     - Change your work path to the artemis-master (or artemis-develop) folder using 'cd' and run the following commands:
 ```
-python -m pip install --upgrade pip
-pip install -r requirements_win.txt
+pip install -r requirements.txt -U
 ```
