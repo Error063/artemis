@@ -10,7 +10,7 @@ service_identity
 PyCryptodome
 inflection
 coloredlogs
-pylibmc
+pylibmc; platform_system != "Windows"
 wacky
 Routes
 protobuf
