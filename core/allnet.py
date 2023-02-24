@@ -234,6 +234,10 @@ class AllnetServlet:
         self.logger.debug(f"response {vars(resp)}")
         return resp_str.encode("utf-8")
 
+    def handle_naomitest(self, request: Request, _: Dict) -> bytes:
+        self.logger.info(f"Ping from {request.getClientAddress().host}")
+        return b"naomi ok"
+
     def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
         ret: List[Dict[str, Any]] = []
         for x in kvp:
