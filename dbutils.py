@@ -23,22 +23,22 @@ if __name__=='__main__':
 
     elif args.action == "upgrade" or args.action == "rollback":
         if args.version is None:
-            print("Must set game and version to migrate to")
+            data.logger.error("Must set game and version to migrate to")
             exit(0)
 
         if args.game is None:
-            print("No game set, upgrading core schema")
+            data.logger.info("No game set, upgrading core schema")
             data.migrate_database("CORE", int(args.version))
 
         else:
             data.migrate_database(args.game, int(args.version), args.action)
     
     elif args.action == "migrate":
-        print("Migrating from old schema to new schema")
+        data.logger.info("Migrating from old schema to new schema")
         data.restore_from_old_schema()
     
     elif args.action == "dump":
-        print("Dumping old schema to migrate to new schema")
+        data.logger.info("Dumping old schema to migrate to new schema")
         data.dump_db()
     
     elif args.action == "generate":

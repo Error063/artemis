@@ -1,6 +1,6 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 from types import ModuleType
-import zlib, base64
+import logging
 import importlib
 from os import walk
 
@@ -17,6 +17,6 @@ class Utils:
                         ret[dir] = mod
 
                     except ImportError as e:
-                        print(f"{dir} - {e}")
+                        logging.getLogger("core").error(f"get_all_titles: {dir} - {e}")
                         raise
             return ret
