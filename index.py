@@ -92,23 +92,21 @@ if __name__ == "__main__":
     cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
     logger = logging.getLogger("core")
-    if not hasattr(logger, "initialized"):
-        log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
-        log_fmt = logging.Formatter(log_fmt_str)        
+    log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
+    log_fmt = logging.Formatter(log_fmt_str)        
 
-        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(cfg.server.log_dir, "core"), when="d", backupCount=10)
-        fileHandler.setFormatter(log_fmt)
-        
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(log_fmt)
+    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(cfg.server.log_dir, "core"), when="d", backupCount=10)
+    fileHandler.setFormatter(log_fmt)
+    
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(log_fmt)
 
-        logger.addHandler(fileHandler)
-        logger.addHandler(consoleHandler)
-        
-        log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
-        logger.setLevel(log_lv)
-        coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
-        logger.initialized = True
+    logger.addHandler(fileHandler)
+    logger.addHandler(consoleHandler)
+    
+    log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
+    logger.setLevel(log_lv)
+    coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
 
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
