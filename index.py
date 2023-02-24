@@ -105,9 +105,9 @@ if __name__ == "__main__":
         logger.addHandler(fileHandler)
         logger.addHandler(consoleHandler)
         
-        # TODO: Add log level for core to config
-        logger.setLevel(cfg.allnet.loglevel)
-        coloredlogs.install(level=cfg.allnet.loglevel, logger=logger, fmt=log_fmt_str)
+        log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
+        logger.setLevel(log_lv)
+        coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
         logger.initialized = True
 
     if not path.exists(cfg.server.log_dir):

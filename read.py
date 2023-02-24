@@ -94,8 +94,9 @@ if __name__ == "__main__":
     logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
     
-    logger.setLevel(logging.INFO)
-    coloredlogs.install(level=logging.INFO, logger=logger, fmt=log_fmt_str)
+    log_lv = logging.DEBUG if config.server.is_develop else logging.INFO
+    logger.setLevel(log_lv)
+    coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
 
     if args.series is None or args.version is None:
         logger.error("Game or version not specified")
