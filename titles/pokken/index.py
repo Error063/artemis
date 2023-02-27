@@ -5,7 +5,7 @@ import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from titles.pokken.proto import jackal_pb2
-from google.protobuf import text_format
+from os import path
 
 from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
@@ -42,12 +42,19 @@ class PokkenServlet(resource.Resource):
     
     def setup(self):
         if self.game_cfg.server.enable:
-            if self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable:
+            key_exists = path.exists(self.game_cfg.server.ssl_key)
+            cert_exists = path.exists(self.game_cfg.server.ssl_cert)
+
+            if self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable and key_exists and cert_exists:
                 endpoints.serverFromString(reactor, f"ssl:{self.game_cfg.server.port}"\
                     f":interface={self.game_cfg.server.hostname}:privateKey={self.game_cfg.server.ssl_key}:"\
                         f"certKey={self.game_cfg.server.ssl_cert}")\
                         .listen(server.Site(PokkenServlet(self.core_cfg, self.config_dir)))
 
+            elif self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable:
+                self.logger.error(f"Could not find cert at {self.game_cfg.server.ssl_key} or key at {self.game_cfg.server.ssl_cert}, Pokken not running.")
+                return
+            
             else:
                 endpoints.serverFromString(reactor, f"tcp:{self.game_cfg.server.port}"\
                     f":interface={self.game_cfg.server.hostname}")\
