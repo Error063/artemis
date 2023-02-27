@@ -51,7 +51,7 @@ sudo apt install -f mysql-client=5.7* mysql-community-server=5.7* mysql-server=5
 ```
 CREATE USER 'aime'@'localhost' IDENTIFIED BY 'MyStrongPass.';
 CREATE DATABASE aime;
-GRANT Alter,Create,Delete,Drop,Insert,References,Select,Update ON aime.* TO 'aime'@'localhost';
+GRANT Alter,Create,Delete,Drop,Index,Insert,References,Select,Update ON aime.* TO 'aime'@'localhost';
 FLUSH PRIVILEGES;
 exit;
 ```

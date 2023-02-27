@@ -27,7 +27,7 @@ This step-by-step guide assumes that you are using a fresh install of Windows 10
 ```
 CREATE USER 'aime'@'localhost' IDENTIFIED BY 'MyStrongPass.';
 CREATE DATABASE aime;
-GRANT Alter,Create,Delete,Drop,Insert,References,Select,Update ON aime.* TO 'aime'@'localhost';
+GRANT Alter,Create,Delete,Drop,Index,Insert,References,Select,Update ON aime.* TO 'aime'@'localhost';
 FLUSH PRIVILEGES;
 exit;
 ```

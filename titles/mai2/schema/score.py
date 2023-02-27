@@ -135,6 +135,7 @@ playlog = Table(
     Column("isNewFree", Boolean),
     Column("extNum1", Integer),
     Column("extNum2", Integer),
+    Column("trialPlayAchievement", Integer),
     mysql_charset='utf8mb4'
 )
 

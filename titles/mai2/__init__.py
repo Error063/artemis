@@ -15,4 +15,4 @@ trailing_slash = True
 use_default_host = False
 host = ""
 
-current_schema_version = 1
+current_schema_version = 2
