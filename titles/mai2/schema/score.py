@@ -161,6 +161,7 @@ course = Table(
 
 class Mai2ScoreData(BaseData):
     def put_best_score(self, user_id: int, score_data: Dict) -> Optional[int]:
+        score_data["user"] = user_id
         sql = insert(best_score).values(**score_data)
 
         conflict = sql.on_duplicate_key_update(**score_data)
@@ -197,6 +198,7 @@ class Mai2ScoreData(BaseData):
         return result.fetchone()
 
     def put_playlog(self, user_id: int, playlog_data: Dict) -> Optional[int]:
+        playlog_data["user"] = user_id
         sql = insert(playlog).values(**playlog_data)
 
         conflict = sql.on_duplicate_key_update(**playlog_data)
@@ -208,6 +210,7 @@ class Mai2ScoreData(BaseData):
         return result.lastrowid
     
     def put_course(self, user_id: int, course_data: Dict) -> Optional[int]:
+        course_data["user"] = user_id
         sql = insert(course).values(**course_data)
 
         conflict = sql.on_duplicate_key_update(**course_data)
