@@ -15,12 +15,22 @@ class HousingGetResponse(BaseResponse):
         return super().make()
 
 # ---housing/start----
-class HousingStartRequest(BaseRequest):
+class HousingStartRequestV1(BaseRequest):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.unknown0: str = self.params[0]
         self.errorLog: str = self.params[1]
-        self.unknown2: str = self.params[2]
+        self.info: List[HousingInfo] = []
+
+        for info in self.params[2]:
+            self.info.append(HousingInfo(info[0], info[1]))
+
+class HousingStartRequestV2(HousingStartRequestV1):
+    def __init__(self, data: Dict) -> None:
+        super(HousingStartRequestV1, self).__init__(data)
+        self.unknown0: str = self.params[0]
+        self.errorLog: str = self.params[1]
+        self.creditLog: str = self.params[2]
         self.info: List[HousingInfo] = []
 
         for info in self.params[3]:

@@ -23,13 +23,36 @@ class UserInfogetMyroomRequest(BaseRequest):
         super().__init__(data)
         self.game_id = int(self.params[0])
 
-class UserInfogetMyroomResponse(BaseResponse):
+class UserInfogetMyroomResponseV1(BaseResponse):
+    def __init__(self) -> None:
+        super().__init__()
+        self.titleViewBadge = 0
+        self.iconViewBadge = 0
+        self.trophyViewBadge = 0
+        self.noteColorViewBadge = 0
+        self.noteSoundViewBadge = 0
+        self.userViewingInfo = []
+
     def make(self) -> Dict:
         self.params = [
-            0,0,0,0,0,[],0,0,0
+            self.titleViewBadge,
+            self.iconViewBadge,
+            self.trophyViewBadge,
+            self.noteColorViewBadge,
+            self.noteSoundViewBadge,
+            self.userViewingInfo,
         ]
 
         return super().make()
+
+class UserInfogetMyroomResponseV2(UserInfogetMyroomResponseV1):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make(self) -> Dict:
+        super().make()
+        self.params += [0, 0, 0]
+        return super(UserInfogetMyroomResponseV1, self).make()
 
 # ---user/info/getRanking---
 class UserInfogetRankingRequest(BaseRequest):

@@ -194,6 +194,7 @@ class CoreConfig(dict):
         self.allnet = AllnetConfig(self)
         self.billing = BillingConfig(self)
         self.aimedb = AimedbConfig(self)
+        self.mucha = MuchaConfig(self)
 
     @classmethod
     def str_to_loglevel(cls, level_str: str):

@@ -35,9 +35,14 @@ class MuchaServlet:
             return b""
 
         req = MuchaAuthRequest(req_dict)
-        self.logger.info(f"Mucha request {vars(req)}")
-        resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
-        self.logger.info(f"Mucha response {vars(resp)}")
+        self.logger.debug(f"Mucha request {vars(req)}")
+
+        if self.config.server.is_develop:
+            resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
+        else:
+            resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}")
+
+        self.logger.debug(f"Mucha response {vars(resp)}")
 
         return self.mucha_postprocess(vars(resp))
     
@@ -48,9 +53,14 @@ class MuchaServlet:
             return b""
 
         req = MuchaUpdateRequest(req_dict)
-        self.logger.info(f"Mucha request {vars(req)}")
-        resp = MuchaUpdateResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
-        self.logger.info(f"Mucha response {vars(resp)}")
+        self.logger.debug(f"Mucha request {vars(req)}")
+
+        if self.config.server.is_develop:
+            resp = MuchaUpdateResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
+        else:
+            resp = MuchaUpdateResponse(mucha_url=f"{self.config.mucha.hostname}")
+
+        self.logger.debug(f"Mucha response {vars(resp)}")
 
         return self.mucha_postprocess(vars(resp))
 

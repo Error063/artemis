@@ -10,8 +10,9 @@ service_identity
 PyCryptodome
 inflection
 coloredlogs
-pylibmc
+pylibmc; platform_system != "Windows"
 wacky
 Routes
 bcrypt
 jinja2
+protobuf

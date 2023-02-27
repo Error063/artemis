@@ -71,4 +71,4 @@ class TitleServlet():
             self.logger.warn(f"{code} does not dispatch POST")
             return b""
 
-        return index.render_POST(request, endpoints["version"], endpoints["endpoint"])
+        return index.render_POST(request, int(endpoints["version"]), endpoints["endpoint"])

@@ -85,7 +85,7 @@ if __name__ == "__main__":
     log_fmt = logging.Formatter(log_fmt_str)
     logger = logging.getLogger("reader")
 
-    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(config.server.logs, "reader"), when="d", backupCount=10)
+    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(config.server.log_dir, "reader"), when="d", backupCount=10)
     fileHandler.setFormatter(log_fmt)
     
     consoleHandler = logging.StreamHandler()
@@ -94,8 +94,9 @@ if __name__ == "__main__":
     logger.addHandler(fileHandler)
     logger.addHandler(consoleHandler)
     
-    logger.setLevel(logging.INFO)
-    coloredlogs.install(level=logging.INFO, logger=logger, fmt=log_fmt_str)
+    log_lv = logging.DEBUG if config.server.is_develop else logging.INFO
+    logger.setLevel(log_lv)
+    coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
 
     if args.series is None or args.version is None:
         logger.error("Game or version not specified")
