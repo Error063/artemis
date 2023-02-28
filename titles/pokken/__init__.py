@@ -1,7 +1,9 @@
 from titles.pokken.index import PokkenServlet
 from titles.pokken.const import PokkenConstants
+from titles.pokken.database import PokkenData
 
 index = PokkenServlet
+database = PokkenData
 
 use_default_title = True
 include_protocol = True
