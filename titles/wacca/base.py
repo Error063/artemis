@@ -810,9 +810,9 @@ class WaccaBase():
         if "always_vip" in profile and profile["always_vip"] or self.game_config.mods.always_vip:            
             return UserVipStartResponse(int((self.srvtime + timedelta(days=req.days)).timestamp())).make()
 
-        profile["vip_expire_time"] = int((self.srvtime + timedelta(days=req.days)).timestamp())
-        self.data.profile.update_vip_time(req.profileId, self.srvtime + timedelta(days=req.days))
-        return UserVipStartResponse(profile["vip_expire_time"]).make()
+        vip_exp_time = (self.srvtime + timedelta(days=req.days))
+        self.data.profile.update_vip_time(req.profileId, vip_exp_time)
+        return UserVipStartResponse(int(vip_exp_time.timestamp())).make()
 
     def util_put_items(self, profile_id: int, user_id: int, items_obtained: List[GenericItemRecv]) -> None:
         if user_id is None or profile_id <= 0:
