@@ -13,14 +13,6 @@ class PokkenServerConfig():
         return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'pokken', 'server', 'loglevel', default="info"))
 
     @property
-    def hostname(self) -> str:
-        return CoreConfig.get_config_field(self.__config, 'pokken', 'server', 'hostname', default="localhost")
-
-    @property
-    def ssl_enable(self) -> bool:
-        return CoreConfig.get_config_field(self.__config, 'pokken', 'server', 'ssl_enable', default=False)
-
-    @property
     def port(self) -> int:
         return CoreConfig.get_config_field(self.__config, 'pokken', 'server', 'port', default=9000)
 

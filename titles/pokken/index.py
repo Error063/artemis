@@ -6,6 +6,7 @@ import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from titles.pokken.proto import jackal_pb2
 from os import path
+from google.protobuf.message import DecodeError
 
 from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
@@ -41,34 +42,46 @@ class PokkenServlet(resource.Resource):
         self.base = PokkenBase(core_cfg, self.game_cfg)
     
     def setup(self):
-        if self.game_cfg.server.enable:
+        """
+        There's currently no point in having this server on because Twisted
+        won't play ball with both the fact that it's TLSv1.1, and because the 
+        types of certs that pokken will accept are too flimsy for Twisted
+        so it will throw a fit. Currently leaving this here in case a bypass
+        is discovered in the future, but it's unlikly. For now, just use NGINX.
+        """
+        if self.game_cfg.server.enable and self.core_cfg.server.is_develop:    
             key_exists = path.exists(self.game_cfg.server.ssl_key)
             cert_exists = path.exists(self.game_cfg.server.ssl_cert)
-
-            if self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable and key_exists and cert_exists:
-                endpoints.serverFromString(reactor, f"ssl:{self.game_cfg.server.port}"\
-                    f":interface={self.game_cfg.server.hostname}:privateKey={self.game_cfg.server.ssl_key}:"\
-                        f"certKey={self.game_cfg.server.ssl_cert}")\
-                        .listen(server.Site(PokkenServlet(self.core_cfg, self.config_dir)))
-
-            elif self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable:
-                self.logger.error(f"Could not find cert at {self.game_cfg.server.ssl_key} or key at {self.game_cfg.server.ssl_cert}, Pokken not running.")
-                return
             
-            else:
-                endpoints.serverFromString(reactor, f"tcp:{self.game_cfg.server.port}"\
-                    f":interface={self.game_cfg.server.hostname}")\
-                        .listen(server.Site(PokkenServlet(self.core_cfg, self.config_dir)))
+            if key_exists and cert_exists:
+                endpoints.serverFromString(reactor, f"ssl:{self.game_cfg.server.port}"\
+                    f":interface={self.core_cfg.server.listen_address}:privateKey={self.game_cfg.server.ssl_key}:"\
+                        f"certKey={self.game_cfg.server.ssl_cert}")\
+                        .listen(server.Site(self))
+                
+                self.logger.info(f"Pokken title server ready on port {self.game_cfg.server.port}")
 
-            self.logger.info(f"Pokken title server ready on port {self.game_cfg.server.port}")
-    
-    def render_POST(self, request: Request, version: int, endpoints: str) -> bytes:
-        req_url = request.uri.decode()
-        if req_url == "/matching":
+            else:
+                self.logger.error(f"Could not find cert at {self.game_cfg.server.ssl_key} or key at {self.game_cfg.server.ssl_cert}, Pokken not running.")
+
+    def render_POST(self, request: Request, version: int = 0, endpoints: str = "") -> bytes:
+        if endpoints == "":
+            endpoints = request.uri.decode()
+        if endpoints.startswith("/matching"):
             self.logger.info("Matching request")
+        
+        content = request.content.getvalue()
+        if content == b"":
+            self.logger.info("Empty request")
+            return b""
 
         pokken_request = jackal_pb2.Request()
-        pokken_request.ParseFromString(request.content.getvalue())
+        try:
+            pokken_request.ParseFromString(content)
+        except DecodeError as e:
+            self.logger.warn(f"{e} {content}")
+            return b""
+
         endpoint = jackal_pb2.MessageType(pokken_request.type).name.lower()
         
         self.logger.info(f"{endpoint} request")
