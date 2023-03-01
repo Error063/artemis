@@ -16,8 +16,8 @@ class ChuniNewPlus(ChuniNew):
         ret = super().handle_get_game_setting_api_request(data)
         ret["gameSetting"]["romVersion"] = "2.05.00"
         ret["gameSetting"]["dataVersion"] = "2.05.00"
-        ret["gameSetting"]["matchingUri"] = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
-        ret["gameSetting"]["matchingUriX"] = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
-        ret["gameSetting"]["udpHolePunchUri"] = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
-        ret["gameSetting"]["reflectorUri"] = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ret["gameSetting"]["matchingUri"] = f"http://{self.core_cfg.server.listen_address}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ret["gameSetting"]["matchingUriX"] = f"http://{self.core_cfg.server.listen_address}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ret["gameSetting"]["udpHolePunchUri"] = f"http://{self.core_cfg.server.listen_address}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ret["gameSetting"]["reflectorUri"] = f"http://{self.core_cfg.server.listen_address}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
         return ret
