@@ -34,7 +34,7 @@ music = Table(
     Column("level", Float),
     Column("genre", String(255)),
     Column("jacketPath", String(255)),
-    Column("worldsEndTag", String(20)),
+    Column("worldsEndTag", String(7)),
     UniqueConstraint("version", "songId", "chartId", name="chuni_static_music_uk"),
     mysql_charset='utf8mb4'
 )
