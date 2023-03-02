@@ -29,10 +29,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
 - memcached (for non-windows platforms)
 - mysql/mariadb server
 
-## Quick start guide
-1) Clone this repository
-2) Install requirements (see the platform-specific guides for instructions)
-3) Install python libraries via `pip`
-4) Copy the example configuration files into another folder (by default the server looks for the `config` directory)
-5) Edit the newly copied configuration files to your liking, using [this](docs/config.md) doc as a guide.
-6) Run the server by invoking `index.py` ex. `python3 index.py`
+## Setup guides
+Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md) and [ubuntu](docs/INSTALL_UBUNTU.md) to setup and run the server.
+
+## Production guide
+See the [production guide](docs/prod.md) for running a production server.
