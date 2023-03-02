@@ -17,29 +17,43 @@ class WaccaLily(WaccaS):
 
         self.OPTIONS_DEFAULTS["set_nav_id"] = 210002
         self.allowed_stages = [
-            (2001, 1),
-            (2002, 2),
-            (2003, 3),
-            (2004, 4),
-            (2005, 5),
-            (2006, 6),
-            (2007, 7),
-            (2008, 8),
-            (2009, 9),
-            (2010, 10),
-            (2011, 11),
-            (2012, 12),
-            (2013, 13),
             (2014, 14),
+            (2013, 13),
+            (2012, 12),
+            (2011, 11),
+            (2010, 10),
+            (2009, 9),
+            (2008, 8),
+            (2007, 7),
+            (2006, 6),
+            (2005, 5),
+            (2004, 4),
+            (2003, 3),
+            (2002, 2),
+            (2001, 1),
             (210001, 0),
             (210002, 0),
             (210003, 0),
         ]
+    
+    def handle_advertise_GetNews_request(self, data: Dict)-> Dict:
+        resp = GetNewsResponseV3()
+        return resp.make()
 
-    def handle_user_status_get_request(self, data: Dict) -> List[Any]:
+    def handle_housing_start_request(self, data: Dict) -> Dict:
+        req = HousingStartRequestV2(data)
+        
+        if req.appVersion.country != "JPN" and req.appVersion.country in [region.name for region in WaccaConstants.Region]:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+        else:
+            region_id = self.region_id
+
+        resp = HousingStartResponseV1(region_id)
+        return resp.make()
+
+    def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
-        ver_split = req.appVersion.split(".")
 
         profile = self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
@@ -49,11 +63,9 @@ class WaccaLily(WaccaS):
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
         else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
         
         resp.userStatus.userId = profile["id"]
         resp.userStatus.username = profile["username"]
@@ -83,26 +95,11 @@ class WaccaLily(WaccaS):
         if profile["last_login_date"].timestamp() < int((datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)).timestamp()):
             resp.userStatus.loginConsecutiveDays = 0
 
-        if int(ver_split[0]) > int(profile_ver_split[0]):
+        if req.appVersion > resp.lastGameVersion:
             resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
         if profile["vip_expire_time"] is not None:
             resp.userStatus.vipExpireTime = int(profile["vip_expire_time"].timestamp())
@@ -115,7 +112,7 @@ class WaccaLily(WaccaS):
         
         return resp.make()
 
-    def handle_user_status_login_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_login_request(self, data: Dict)-> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV2()
         is_new_day = False
@@ -156,10 +153,9 @@ class WaccaLily(WaccaS):
         
         return resp.make()
     
-    def handle_user_status_getDetail_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_getDetail_request(self, data: Dict)-> Dict:
         req = UserStatusGetDetailRequest(data)
-        ver_split = req.appVersion.split(".")
-        if int(ver_split[1]) >= 53:
+        if req.appVersion.minor >= 53:
             resp = UserStatusGetDetailResponseV3()
         else:
             resp = UserStatusGetDetailResponseV2()
@@ -232,7 +228,7 @@ class WaccaLily(WaccaS):
 
             for user_gate in profile_gates:
                 if user_gate["gate_id"] == gate:
-                    if int(ver_split[1]) >= 53:
+                    if req.appVersion.minor >= 53:
                         resp.gateInfo.append(GateDetailV2(user_gate["gate_id"],user_gate["page"],user_gate["progress"],
                         user_gate["loops"],int(user_gate["last_used"].timestamp()),user_gate["mission_flag"]))
                     
@@ -246,7 +242,7 @@ class WaccaLily(WaccaS):
                     break
 
             if not added_gate:
-                if int(ver_split[1]) >= 53:
+                if req.appVersion.minor >= 53:
                     resp.gateInfo.append(GateDetailV2(gate))
                 
                 else:
@@ -255,13 +251,9 @@ class WaccaLily(WaccaS):
         for unlock in profile_song_unlocks:
             for x in range(1, unlock["highest_difficulty"] + 1):
                 resp.userItems.songUnlocks.append(SongUnlock(unlock["song_id"], x, 0, int(unlock["acquire_date"].timestamp())))
-                if x > 2:
-                    resp.scores.append(BestScoreDetailV1(unlock["song_id"], x))
         
-        empty_scores = len(resp.scores)
         for song in profile_scores:
             resp.seasonInfo.cumulativeScore += song["score"]
-            empty_score_idx = resp.find_score_idx(song["song_id"], song["chart_id"], 0, empty_scores)
             
             clear_cts = SongDetailClearCounts(
                 song["play_ct"],
@@ -277,24 +269,16 @@ class WaccaLily(WaccaS):
                 song["grade_master_ct"]
             )
 
-            if empty_score_idx is not None:
-                resp.scores[empty_score_idx].clearCounts = clear_cts                
-                resp.scores[empty_score_idx].clearCountsSeason = clear_cts
-                resp.scores[empty_score_idx].gradeCounts = grade_cts
-                resp.scores[empty_score_idx].score = song["score"]
-                resp.scores[empty_score_idx].bestCombo = song["best_combo"]
-                resp.scores[empty_score_idx].lowestMissCtMaybe = song["lowest_miss_ct"]
-                resp.scores[empty_score_idx].rating = song["rating"]
-            
-            else:
-                deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
-                deets.clearCounts = clear_cts                
-                deets.clearCountsSeason = clear_cts
-                deets.gradeCounts = grade_cts
-                deets.score = song["score"]
-                deets.bestCombo = song["best_combo"]
-                deets.lowestMissCtMaybe = song["lowest_miss_ct"]
-                deets.rating = song["rating"]
+            deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
+            deets.clearCounts = clear_cts                
+            deets.clearCountsSeason = clear_cts
+            deets.gradeCounts = grade_cts
+            deets.score = song["score"]
+            deets.bestCombo = song["best_combo"]
+            deets.lowestMissCtMaybe = song["lowest_miss_ct"]
+            deets.rating = song["rating"]
+
+            resp.scores.append(deets)
         
         for trophy in profile_trophies:
             resp.userItems.trophies.append(TrophyItem(trophy["trophy_id"], trophy["season"], trophy["progress"], trophy["badge_type"]))
@@ -349,3 +333,13 @@ class WaccaLily(WaccaS):
         resp.seasonInfo.platesObtained = len(resp.userItems.plates)
 
         return resp.make()
+
+    def handle_user_info_getMyroom_request(self, data: Dict)-> Dict:
+        return UserInfogetMyroomResponseV2().make()
+
+    def handle_user_status_update_request(self, data: Dict)-> Dict:
+        super().handle_user_status_update_request(data)
+        req = UserStatusUpdateRequestV2(data)        
+        self.data.profile.update_profile_lastplayed(req.profileId, req.lastSongInfo.lastSongId, req.lastSongInfo.lastSongDiff, 
+            req.lastSongInfo.lastFolderOrd, req.lastSongInfo.lastFolderId, req.lastSongInfo.lastSongOrd)
+        return BaseResponse().make()

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import logging, coloredlogs
+from logging.handlers import TimedRotatingFileHandler
 from typing import Dict
 import yaml
 from os import path, mkdir, access, W_OK
@@ -17,11 +19,13 @@ class HttpDispatcher(resource.Resource):
         self.isLeaf = True
         self.map_get = Mapper()
         self.map_post = Mapper()
+        self.logger = logging.getLogger("core")
         
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
         self.mucha = MuchaServlet(cfg)
 
+        self.map_post.connect('allnet_ping', '/naomitest.html', controller="allnet", action='handle_naomitest', conditions=dict(method=['GET']))
         self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_downloadorder', '/sys/servlet/DownloadOrder', controller="allnet", action='handle_dlorder', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_billing', '/request', controller="allnet", action='handle_billing_request', conditions=dict(method=['POST']))
@@ -29,31 +33,39 @@ class HttpDispatcher(resource.Resource):
         self.map_post.connect('mucha_boardauth', '/mucha/boardauth.do', controller="mucha", action='handle_boardauth', conditions=dict(method=['POST']))
         self.map_post.connect('mucha_updatacheck', '/mucha/updatacheck.do', controller="mucha", action='handle_updatacheck', conditions=dict(method=['POST']))
 
-        self.map_get.connect("title_get", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_GET", requirements=dict(game=R"S..."))
-        self.map_post.connect("title_post", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_POST", requirements=dict(game=R"S..."))
+        self.map_get.connect("title_get", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_GET", conditions=dict(method=['GET']), requirements=dict(game=R"S..."))
+        self.map_post.connect("title_post", "/{game}/{version}/{endpoint:.*?}", controller="title", action="render_POST", conditions=dict(method=['POST']), requirements=dict(game=R"S..."))
 
-    def render_POST(self, request: Request) -> bytes:    
+    def render_GET(self, request: Request) -> bytes:    
         test = self.map_get.match(request.uri.decode())
         if test is None:
-            return b""
+            self.logger.debug(f"Unknown GET endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
 
         return self.dispatch(test, request)
 
     def render_POST(self, request: Request) -> bytes:    
         test = self.map_post.match(request.uri.decode())
         if test is None:
-            return b""
+            self.logger.debug(f"Unknown POST endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         return self.dispatch(test, request)
 
     def dispatch(self, matcher: Dict, request: Request) -> bytes:
         controller = getattr(self, matcher["controller"], None)
         if controller is None:
-            return b""
+            self.logger.error(f"Controller {matcher['controller']} not found via endpoint {request.uri.decode()}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         handler = getattr(controller, matcher["action"], None)
         if handler is None:
-            return b""
+            self.logger.error(f"Action {matcher['action']} not found in controller {matcher['controller']} via endpoint {request.uri.decode()}")
+            request.setResponseCode(404)
+            return b"Endpoint not found."
         
         url_vars = matcher
         url_vars.pop("controller")
@@ -79,22 +91,40 @@ if __name__ == "__main__":
     cfg: CoreConfig = CoreConfig()
     cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
+    logger = logging.getLogger("core")
+    log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
+    log_fmt = logging.Formatter(log_fmt_str)        
+
+    fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(cfg.server.log_dir, "core"), when="d", backupCount=10)
+    fileHandler.setFormatter(log_fmt)
+    
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(log_fmt)
+
+    logger.addHandler(fileHandler)
+    logger.addHandler(consoleHandler)
+    
+    log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
+    logger.setLevel(log_lv)
+    coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
+
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
     
     if not access(cfg.server.log_dir, W_OK):
-        print(f"Log directory {cfg.server.log_dir} NOT writable, please check permissions")
+        logger.error(f"Log directory {cfg.server.log_dir} NOT writable, please check permissions")
         exit(1)
 
     if not cfg.aimedb.key:
-        print("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")
+        logger.error("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")
         exit(1)
     
-    print(f"ARTEMiS starting in {'develop' if cfg.server.is_develop else 'production'} mode")
+    logger.info(f"ARTEMiS starting in {'develop' if cfg.server.is_develop else 'production'} mode")
 
     allnet_server_str = f"tcp:{cfg.allnet.port}:interface={cfg.server.listen_address}"    
     title_server_str = f"tcp:{cfg.title.port}:interface={cfg.server.listen_address}"
     adb_server_str = f"tcp:{cfg.aimedb.port}:interface={cfg.server.listen_address}"
+    frontend_server_str = f"tcp:{cfg.frontend.port}:interface={cfg.server.listen_address}"
 
     billing_server_str = f"tcp:{cfg.billing.port}:interface={cfg.server.listen_address}"
     if cfg.server.is_develop:
@@ -105,6 +135,9 @@ if __name__ == "__main__":
 
     endpoints.serverFromString(reactor, allnet_server_str).listen(server.Site(dispatcher))
     endpoints.serverFromString(reactor, adb_server_str).listen(AimedbFactory(cfg))
+
+    if cfg.frontend.enable:
+        endpoints.serverFromString(reactor, frontend_server_str).listen(server.Site(FrontendServlet(cfg, args.config)))
 
     if cfg.billing.port > 0:
         endpoints.serverFromString(reactor, billing_server_str).listen(server.Site(dispatcher))

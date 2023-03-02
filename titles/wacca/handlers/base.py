@@ -1,10 +1,11 @@
 from typing import Dict, List
+from titles.wacca.handlers.helpers import Version
 from datetime import datetime
 
 class BaseRequest():
     def __init__(self, data: Dict) -> None:
         self.requestNo: int = data["requestNo"]
-        self.appVersion: str = data["appVersion"]
+        self.appVersion: Version = Version(data["appVersion"])
         self.boardId: str = data["boardId"]
         self.chipId: str = data["chipId"]
         self.params: List = data["params"]

@@ -25,7 +25,7 @@ class UserGoodsPurchaseResponse(BaseResponse):
         for ticket in tickets:
             self.tickets.append(TicketItem(ticket[0], ticket[1], ticket[2]))
 
-    def make(self) -> List:
+    def make(self) -> Dict:
         tix = []
         for ticket in self.tickets:
             tix.append(ticket.make())

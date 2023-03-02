@@ -1,9 +1,8 @@
 from typing import Any, List, Dict
 import logging
+import inflection
 from math import floor
-
 from datetime import datetime, timedelta
-
 from core.config import CoreConfig
 from titles.wacca.config import WaccaConfig
 from titles.wacca.const import WaccaConstants
@@ -23,53 +22,60 @@ class WaccaBase():
         self.season = 1
 
         self.OPTIONS_DEFAULTS: Dict[str, Any] = {
-        "note_speed": 5,
-        "field_mask": 0,
-        "note_sound": 105001,
-        "note_color": 203001,
-        "bgm_volume": 10,
-        "bg_video": 0,
-        
-        "mirror": 0,
-        "judge_display_pos": 0,
-        "judge_detail_display": 0,
-        "measure_guidelines": 1,
-        "guideline_mask": 1,
-        "judge_line_timing_adjust": 10,
-        "note_design": 3,
-        "bonus_effect": 1,
-        "chara_voice": 1,
-        "score_display_method": 0,
-        "give_up": 0,
-        "guideline_spacing": 1,
-        "center_display": 1,
-        "ranking_display": 1,
-        "stage_up_icon_display": 1,
-        "rating_display": 1,
-        "player_level_display": 1,
-        "touch_effect": 1,
-        "guide_sound_vol": 3,
-        "touch_note_vol": 8,
-        "hold_note_vol": 8,
-        "slide_note_vol": 8,
-        "snap_note_vol": 8,
-        "chain_note_vol": 8,
-        "bonus_note_vol": 8,
-        "gate_skip": 0,
-        "key_beam_display": 1,
+            "note_speed": 5,
+            "field_mask": 0,
+            "note_sound": 105001,
+            "note_color": 203001,
+            "bgm_volume": 10,
+            "bg_video": 0,
 
-        "left_slide_note_color": 4,
-        "right_slide_note_color": 3,
-        "forward_slide_note_color": 1,
-        "back_slide_note_color": 2,
-        
-        "master_vol": 3,
-        "set_title_id": 104001,
-        "set_icon_id": 102001,
-        "set_nav_id": 210001,
-        "set_plate_id": 211001
-    }
+            "mirror": 0,
+            "judge_display_pos": 0,
+            "judge_detail_display": 0,
+            "measure_guidelines": 1,
+            "guideline_mask": 1,
+            "judge_line_timing_adjust": 10,
+            "note_design": 3,
+            "bonus_effect": 1,
+            "chara_voice": 1,
+            "score_display_method": 0,
+            "give_up": 0,
+            "guideline_spacing": 1,
+            "center_display": 1,
+            "ranking_display": 1,
+            "stage_up_icon_display": 1,
+            "rating_display": 1,
+            "player_level_display": 1,
+            "touch_effect": 1,
+            "guide_sound_vol": 3,
+            "touch_note_vol": 8,
+            "hold_note_vol": 8,
+            "slide_note_vol": 8,
+            "snap_note_vol": 8,
+            "chain_note_vol": 8,
+            "bonus_note_vol": 8,
+            "gate_skip": 0,
+            "key_beam_display": 1,
+
+            "left_slide_note_color": 4,
+            "right_slide_note_color": 3,
+            "forward_slide_note_color": 1,
+            "back_slide_note_color": 2,
+
+            "master_vol": 3,
+            "set_title_id": 104001,
+            "set_icon_id": 102001,
+            "set_nav_id": 210001,
+            "set_plate_id": 211001
+        }
         self.allowed_stages = []
+
+        prefecture_name = inflection.underscore(game_cfg.server.prefecture_name).replace(' ', '_').upper()
+        if prefecture_name not in [region.name for region in WaccaConstants.Region]:
+            self.logger.warning(f"Invalid prefecture name {game_cfg.server.prefecture_name} in config file")
+            self.region_id = WaccaConstants.Region.HOKKAIDO
+        else:
+            self.region_id = WaccaConstants.Region[prefecture_name]
     
     def handle_housing_get_request(self, data: Dict) -> Dict:
         req = BaseRequest(data)
@@ -77,21 +83,20 @@ class WaccaBase():
         self.logger.info(f"{req.chipId} -> {housing_id}")
         resp = HousingGetResponse(housing_id)
         return resp.make()
+    
+    def handle_advertise_GetRanking_request(self, data: Dict) -> Dict:
+        req = AdvertiseGetRankingRequest(data)
+        return AdvertiseGetRankingResponse().make()
 
     def handle_housing_start_request(self, data: Dict) -> Dict:
-        req = HousingStartRequest(data)
+        req = HousingStartRequestV1(data)
 
-        resp = HousingStartResponseV1(
-            1, 
-            [ # Recomended songs
-                1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
-                1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
-                1104,1070,1047,1044,1027,1004,1001,24,2068,2062,2021,1275,
-                1249,1207,1203,1107,1021,1009,9,4,3,23,22,2014,13,1276,1247,
-                1240,1237,1128,1114,1110,1109,1102,1045,1043,1036,1035,1030,
-                1023,1015
-            ]
-        )
+        if req.appVersion.country != "JPN" and req.appVersion.country in [region.name for region in WaccaConstants.Region]:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+        else:
+            region_id = self.region_id
+
+        resp = HousingStartResponseV1(region_id)
         return resp.make()
     
     def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
@@ -103,7 +108,49 @@ class WaccaBase():
         self.logger.info(f"Log out user {req.userId} from {req.chipId}")
         return BaseResponse().make()
 
-    def handle_user_status_login_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_get_request(self, data: Dict)-> Dict:
+        req = UserStatusGetRequest(data)
+        resp = UserStatusGetV1Response()
+
+        profile = self.data.profile.get_profile(aime_id=req.aimeId)
+        if profile is None:
+            self.logger.info(f"No user exists for aime id {req.aimeId}")
+            resp.profileStatus = ProfileStatus.ProfileRegister
+            return resp.make()
+        
+        self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
+        if profile["last_game_ver"] is None:
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
+        else:
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
+        
+        resp.userStatus.userId = profile["id"]
+        resp.userStatus.username = profile["username"]
+        resp.userStatus.xp = profile["xp"]
+        resp.userStatus.danLevel = profile["dan_level"]
+        resp.userStatus.danType = profile["dan_type"]
+        resp.userStatus.wp = profile["wp"]
+        resp.userStatus.useCount = profile["login_count"]
+
+        set_title_id = self.data.profile.get_options(WaccaConstants.OPTIONS["set_title_id"], profile["user"])
+        if set_title_id is None:
+            set_title_id = self.OPTIONS_DEFAULTS["set_title_id"]
+        resp.setTitleId = set_title_id
+
+        set_icon_id = self.data.profile.get_options(WaccaConstants.OPTIONS["set_title_id"], profile["user"])
+        if set_icon_id is None:
+            set_icon_id = self.OPTIONS_DEFAULTS["set_icon_id"]
+        resp.setIconId = set_icon_id            
+        
+        if req.appVersion > resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionUpgrade
+        
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
+        
+        return resp.make()
+
+    def handle_user_status_login_request(self, data: Dict)-> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV1()
         is_new_day = False
@@ -139,120 +186,8 @@ class WaccaBase():
             resp.firstLoginDaily = int(is_new_day)
         
         return resp.make()
-
-    def handle_user_status_get_request(self, data: Dict) -> List[Any]:
-        req = UserStatusGetRequest(data)
-        resp = UserStatusGetV1Response()
-        ver_split = req.appVersion.split(".")
-
-        profile = self.data.profile.get_profile(aime_id=req.aimeId)
-        if profile is None:
-            self.logger.info(f"No user exists for aime id {req.aimeId}")
-            return resp.make()
-        
-        
-        self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
-        if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
-        else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
-        
-        resp.userStatus.userId = profile["id"]
-        resp.userStatus.username = profile["username"]
-        resp.userStatus.xp = profile["xp"]
-        resp.userStatus.danLevel = profile["dan_level"]
-        resp.userStatus.danType = profile["dan_type"]
-        resp.userStatus.wp = profile["wp"]
-        resp.userStatus.useCount = profile["login_count"]
-        resp.userStatus.loginDays = profile["login_count_days"]
-        resp.userStatus.loginConsecutiveDays = profile["login_count_days_consec"]
-
-        set_title_id = self.data.profile.get_options(WaccaConstants.OPTIONS["set_title_id"], profile["user"])
-        if set_title_id is None:
-            set_title_id = self.OPTIONS_DEFAULTS["set_title_id"]
-        resp.setTitleId = set_title_id
-
-        set_icon_id = self.data.profile.get_options(WaccaConstants.OPTIONS["set_title_id"], profile["user"])
-        if set_icon_id is None:
-            set_icon_id = self.OPTIONS_DEFAULTS["set_icon_id"]
-        resp.setIconId = set_icon_id            
-        
-        if profile["last_login_date"].timestamp() < int((datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)).timestamp()):
-            resp.userStatus.loginConsecutiveDays = 0
-
-        if int(ver_split[0]) > int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
-        
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
-
-        if profile["always_vip"]:
-            resp.userStatus.vipExpireTime = int((datetime.now() + timedelta(days=30)).timestamp())
-        
-        elif profile["vip_expire_time"] is not None:
-            resp.userStatus.vipExpireTime = int(profile["vip_expire_time"].timestamp())
-        
-        return resp.make()
-
-    def handle_user_status_login_request(self, data: Dict) -> List[Any]:
-        req = UserStatusLoginRequest(data)
-        resp = UserStatusLoginResponseV2()
-        is_new_day = False
-        is_consec_day = False
-        is_consec_day = True
-
-        if req.userId == 0:
-            self.logger.info(f"Guest login on {req.chipId}")
-            resp.lastLoginDate = 0
-        
-        else:
-            profile = self.data.profile.get_profile(req.userId)
-            if profile is None:
-                self.logger.warn(f"Unknown user id {req.userId} attempted login from {req.chipId}")
-                return resp.make()
-
-            self.logger.info(f"User {req.userId} login on {req.chipId}")
-            last_login_time = int(profile["last_login_date"].timestamp())
-            resp.lastLoginDate = last_login_time
-                
-                # If somebodies login timestamp < midnight of current day, then they are logging in for the first time today
-            if last_login_time < int(datetime.now().replace(hour=0,minute=0,second=0,microsecond=0).timestamp()):
-                is_new_day = True
-                is_consec_day = True
-
-                # If somebodies login timestamp > midnight of current day + 1 day, then they broke their daily login streak
-            elif last_login_time > int((datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) + timedelta(days=1)).timestamp()):
-                is_consec_day = False
-                # else, they are simply logging in again on the same day, and we don't need to do anything for that
-            
-            self.data.profile.session_login(req.userId, is_new_day, is_consec_day)
-            resp.vipInfo.pageYear = datetime.now().year
-            resp.vipInfo.pageMonth = datetime.now().month
-            resp.vipInfo.pageDay = datetime.now().day
-            resp.vipInfo.numItem = 1
-
-            resp.firstLoginDaily = int(is_new_day)
-        
-        return resp.make()
     
-    def handle_user_status_create_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_create_request(self, data: Dict)-> Dict:
         req = UserStatusCreateRequest(data)
 
         profileId = self.data.profile.create_profile(req.aimeId, req.username, self.version)
@@ -284,7 +219,7 @@ class WaccaBase():
         
         return UserStatusCreateResponseV2(profileId, req.username).make()
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_getDetail_request(self, data: Dict)-> Dict:
         req = UserStatusGetDetailRequest(data)
         resp = UserStatusGetDetailResponseV1()
 
@@ -301,16 +236,7 @@ class WaccaBase():
         profile_song_unlocks = self.data.item.get_song_unlocks(user_id)
         profile_options = self.data.profile.get_options(user_id)
         profile_trophies = self.data.item.get_trophies(user_id)
-        profile_tickets = self.data.item.get_tickets(user_id)
-
-        if profile["vip_expire_time"] is None:
-            resp.userStatus.vipExpireTime = 0
-        
-        else:
-            resp.userStatus.vipExpireTime = int(profile["vip_expire_time"].timestamp())        
-        
-        if profile["always_vip"] or self.game_config.mods.always_vip:
-            resp.userStatus.vipExpireTime = int((self.srvtime + timedelta(days=31)).timestamp())   
+        profile_tickets = self.data.item.get_tickets(user_id)  
 
         resp.songUpdateTime = int(profile["last_login_date"].timestamp())
         resp.songPlayStatus = [profile["last_song_id"], 1]
@@ -322,8 +248,6 @@ class WaccaBase():
         resp.userStatus.danType = profile["dan_type"]
         resp.userStatus.wp = profile["wp"]
         resp.userStatus.useCount = profile["login_count"]
-        resp.userStatus.loginDays = profile["login_count_days"]
-        resp.userStatus.loginConsecutiveDays = profile["login_count_days_consec"]
 
         if self.game_config.mods.infinite_wp:
             resp.userStatus.wp = 999999
@@ -346,13 +270,9 @@ class WaccaBase():
         for unlock in profile_song_unlocks:
             for x in range(1, unlock["highest_difficulty"] + 1):
                 resp.userItems.songUnlocks.append(SongUnlock(unlock["song_id"], x, 0, int(unlock["acquire_date"].timestamp())))
-                if x > 2:
-                    resp.scores.append(BestScoreDetailV1(unlock["song_id"], x))
         
-        empty_scores = len(resp.scores)
         for song in profile_scores:
             resp.seasonInfo.cumulativeScore += song["score"]
-            empty_score_idx = resp.find_score_idx(song["song_id"], song["chart_id"], 0, empty_scores)
             
             clear_cts = SongDetailClearCounts(
                 song["play_ct"],
@@ -368,24 +288,16 @@ class WaccaBase():
                 song["grade_master_ct"]
             )
 
-            if empty_score_idx is not None:
-                resp.scores[empty_score_idx].clearCounts = clear_cts                
-                resp.scores[empty_score_idx].clearCountsSeason = clear_cts
-                resp.scores[empty_score_idx].gradeCounts = grade_cts
-                resp.scores[empty_score_idx].score = song["score"]
-                resp.scores[empty_score_idx].bestCombo = song["best_combo"]
-                resp.scores[empty_score_idx].lowestMissCtMaybe = song["lowest_miss_ct"]
-                resp.scores[empty_score_idx].rating = song["rating"]
-            
-            else:
-                deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
-                deets.clearCounts = clear_cts                
-                deets.clearCountsSeason = clear_cts
-                deets.gradeCounts = grade_cts
-                deets.score = song["score"]
-                deets.bestCombo = song["best_combo"]
-                deets.lowestMissCtMaybe = song["lowest_miss_ct"]
-                deets.rating = song["rating"]
+            deets = BestScoreDetailV1(song["song_id"], song["chart_id"])
+            deets.clearCounts = clear_cts                
+            deets.clearCountsSeason = clear_cts
+            deets.gradeCounts = grade_cts
+            deets.score = song["score"]
+            deets.bestCombo = song["best_combo"]
+            deets.lowestMissCtMaybe = song["lowest_miss_ct"]
+            deets.rating = song["rating"]
+
+            resp.scores.append(deets)
         
         for trophy in profile_trophies:
             resp.userItems.trophies.append(TrophyItem(trophy["trophy_id"], trophy["season"], trophy["progress"], trophy["badge_type"]))
@@ -434,7 +346,7 @@ class WaccaBase():
 
         return resp.make()
     
-    def handle_user_trial_get_request(self, data: Dict) -> List[Any]:
+    def handle_user_trial_get_request(self, data: Dict)-> Dict:
         req = UserTrialGetRequest(data)
         resp = UserTrialGetResponse()
         
@@ -444,16 +356,12 @@ class WaccaBase():
             return resp.make()
 
         self.logger.info(f"Get trial info for user {req.profileId}")
-        
-        for d in self.allowed_stages:
-            if d[1] > 0 and d[1] < 10:
-                resp.stageList.append(StageInfo(d[0], d[1]))
-
         stages = self.data.score.get_stageup(user_id, self.version)
         if stages is None:
             stages = []
         
-        add_next = True
+        tmp: List[StageInfo] = []
+
         for d in self.allowed_stages:
             stage_info = StageInfo(d[0], d[1])
             
@@ -466,15 +374,17 @@ class WaccaBase():
                     stage_info.song3BestScore = score["song3_score"]
                     break
                     
-            if add_next or stage_info.danLevel < 9:
-                resp.stageList.append(stage_info)
+            tmp.append(stage_info)
 
-            if stage_info.danLevel >= 9 and stage_info.clearStatus < 1:
-                add_next = False
+        for x in range(len(tmp)):
+            if tmp[x].danLevel >= 10 and (tmp[x + 1].clearStatus >= 1 or tmp[x].clearStatus >= 1):
+                resp.stageList.append(tmp[x])
+            elif tmp[x].danLevel < 10:
+                resp.stageList.append(tmp[x])
 
         return resp.make()
 
-    def handle_user_trial_update_request(self, data: Dict) -> List[Any]:
+    def handle_user_trial_update_request(self, data: Dict)-> Dict:
         req = UserTrialUpdateRequest(data)
 
         total_score = 0
@@ -496,8 +406,8 @@ class WaccaBase():
             # We only care about total score for best of, even if one score happens to be lower (I think)
             if total_score > (old_stage["song1_score"] + old_stage["song2_score"] + old_stage["song3_score"]):
                 best_score1 = req.songScores[0]
-                best_score2 = req.songScores[2]
-                best_score3 = req.songScores[3]
+                best_score2 = req.songScores[1]
+                best_score3 = req.songScores[2]
             else:
                 best_score1 = old_stage["song1_score"]
                 best_score2 = old_stage["song2_score"]
@@ -528,9 +438,9 @@ class WaccaBase():
         self.data.item.put_item(user_id, WaccaConstants.ITEM_TYPES["icon"], current_icon)
         self.data.item.put_item(user_id, WaccaConstants.ITEM_TYPES["navigator"], current_nav)
         self.data.profile.update_profile_playtype(req.profileId, 4, data["appVersion"][:7])
-        return BaseResponse.make()
+        return BaseResponse().make()
     
-    def handle_user_sugoroku_update_request(self, data: Dict) -> List[Any]:
+    def handle_user_sugoroku_update_request(self, data: Dict)-> Dict:
         ver_split = data["appVersion"].split(".")
         resp = BaseResponse()
 
@@ -552,10 +462,10 @@ class WaccaBase():
         self.data.profile.update_gate(user_id, req.gateId, req.page, req.progress, req.loops, mission_flg, req.totalPts)
         return resp.make()
       
-    def handle_user_info_getMyroom_request(self, data: Dict) -> List[Any]:
-        return UserInfogetMyroomResponse().make()
+    def handle_user_info_getMyroom_request(self, data: Dict)-> Dict:
+        return UserInfogetMyroomResponseV1().make()
     
-    def handle_user_music_unlock_request(self, data: Dict) -> List[Any]:
+    def handle_user_music_unlock_request(self, data: Dict)-> Dict:
         req = UserMusicUnlockRequest(data)
 
         profile = self.data.profile.get_profile(req.profileId)
@@ -605,29 +515,35 @@ class WaccaBase():
 
         return UserMusicUnlockResponse(current_wp, new_tickets).make()
         
-    def handle_user_info_getRanking_request(self, data: Dict) -> List[Any]:
+    def handle_user_info_getRanking_request(self, data: Dict)-> Dict:
         # total score, high score by song, cumulative socre, stage up score, other score, WP ranking
         # This likely requies calculating standings at regular intervals and caching the results
         return UserInfogetRankingResponse().make()
     
-    def handle_user_music_update_request(self, data: Dict) -> List[Any]:
-        req = UserMusicUpdateRequest(data)
-        ver_split = req.appVersion.split(".")
+    def handle_user_music_update_request(self, data: Dict)-> Dict:
+        ver_split = data["appVersion"].split(".")
         if int(ver_split[0]) >= 3:
             resp = UserMusicUpdateResponseV3()
+            req = UserMusicUpdateRequestV2(data)
         elif int(ver_split[0]) >= 2:
             resp = UserMusicUpdateResponseV2()
+            req = UserMusicUpdateRequestV2(data)
         else:
             resp = UserMusicUpdateResponseV1()
+            req = UserMusicUpdateRequestV1(data)
 
         resp.songDetail.songId = req.songDetail.songId
         resp.songDetail.difficulty = req.songDetail.difficulty
+
+        if req.profileId == 0:
+            self.logger.info(f"Guest score for song {req.songDetail.songId} difficulty {req.songDetail.difficulty}")
+            return resp.make()
         
         profile = self.data.profile.get_profile(req.profileId)
         
         if profile is None:
             self.logger.warn(f"handle_user_music_update_request: No profile for game_id {req.profileId}")
-            return BaseResponse().make()
+            return resp.make()
         
         user_id = profile["user"]
         self.util_put_items(req.profileId, user_id, req.itemsObtained)
@@ -715,18 +631,18 @@ class WaccaBase():
         return resp.make()
     
     #TODO: Coop and vs data
-    def handle_user_music_updateCoop_request(self, data: Dict) -> List[Any]:
+    def handle_user_music_updateCoop_request(self, data: Dict)-> Dict:
         coop_info = data["params"][4]
         return self.handle_user_music_update_request(data)
 
-    def handle_user_music_updateVersus_request(self, data: Dict) -> List[Any]:
+    def handle_user_music_updateVersus_request(self, data: Dict)-> Dict:
         vs_info = data["params"][4]
         return self.handle_user_music_update_request(data)
     
-    def handle_user_music_updateTrial_request(self, data: Dict) -> List[Any]:
+    def handle_user_music_updateTrial_request(self, data: Dict)-> Dict:
         return self.handle_user_music_update_request(data)
 
-    def handle_user_mission_update_request(self, data: Dict) -> List[Any]:
+    def handle_user_mission_update_request(self, data: Dict)-> Dict:
         req = UserMissionUpdateRequest(data)
         page_status = req.params[1][1]
 
@@ -742,7 +658,7 @@ class WaccaBase():
 
         return BaseResponse().make()
 
-    def handle_user_goods_purchase_request(self, data: Dict) -> List[Any]:
+    def handle_user_goods_purchase_request(self, data: Dict)-> Dict:
         req = UserGoodsPurchaseRequest(data)
         resp = UserGoodsPurchaseResponse()
 
@@ -775,13 +691,13 @@ class WaccaBase():
 
         return resp.make()
 
-    def handle_competition_status_login_request(self, data: Dict) -> List[Any]:
+    def handle_competition_status_login_request(self, data: Dict)-> Dict:
         return BaseResponse().make()
 
-    def handle_competition_status_update_request(self, data: Dict) -> List[Any]:
+    def handle_competition_status_update_request(self, data: Dict)-> Dict:
         return BaseResponse().make()
 
-    def handle_user_rating_update_request(self, data: Dict) -> List[Any]:
+    def handle_user_rating_update_request(self, data: Dict)-> Dict:
         req = UserRatingUpdateRequest(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
@@ -797,8 +713,8 @@ class WaccaBase():
 
         return BaseResponse().make()
     
-    def handle_user_status_update_request(self, data: Dict) -> List[Any]:
-        req = UserStatusUpdateRequestV2(data)
+    def handle_user_status_update_request(self, data: Dict)-> Dict:
+        req = UserStatusUpdateRequestV1(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
         if user_id is None:
@@ -807,8 +723,6 @@ class WaccaBase():
         
         self.util_put_items(req.profileId, user_id, req.itemsRecieved)
         self.data.profile.update_profile_playtype(req.profileId, req.playType.value, data["appVersion"][:7])
-        self.data.profile.update_profile_lastplayed(req.profileId, req.lastSongInfo.lastSongId, req.lastSongInfo.lastSongDiff, 
-            req.lastSongInfo.lastFolderOrd, req.lastSongInfo.lastFolderId, req.lastSongInfo.lastSongOrd)
         
         current_icon = self.data.profile.get_options(user_id, WaccaConstants.OPTIONS["set_icon_id"])
         current_nav = self.data.profile.get_options(user_id, WaccaConstants.OPTIONS["set_nav_id"])
@@ -826,7 +740,7 @@ class WaccaBase():
         self.data.item.put_item(user_id, WaccaConstants.ITEM_TYPES["navigator"], current_nav)
         return BaseResponse().make()
 
-    def handle_user_info_update_request(self, data: Dict) -> List[Any]:
+    def handle_user_info_update_request(self, data: Dict)-> Dict:
         req = UserInfoUpdateRequest(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
@@ -845,7 +759,7 @@ class WaccaBase():
 
         return BaseResponse().make()
     
-    def handle_user_vip_get_request(self, data: Dict) -> List[Any]:
+    def handle_user_vip_get_request(self, data: Dict)-> Dict:
         req = UserVipGetRequest(data)
         resp = UserVipGetResponse()
 
@@ -868,7 +782,7 @@ class WaccaBase():
         
         return resp.make()
     
-    def handle_user_vip_start_request(self, data: Dict) -> List[Any]:
+    def handle_user_vip_start_request(self, data: Dict)-> Dict:
         req = UserVipStartRequest(data)
 
         profile = self.data.profile.get_profile(req.profileId)
@@ -879,9 +793,9 @@ class WaccaBase():
         if "always_vip" in profile and profile["always_vip"] or self.game_config.mods.always_vip:            
             return UserVipStartResponse(int((self.srvtime + timedelta(days=req.days)).timestamp())).make()
 
-        profile["vip_expire_time"] = int((self.srvtime + timedelta(days=req.days)).timestamp())
-        self.data.profile.update_vip_time(req.profileId, self.srvtime + timedelta(days=req.days))
-        return UserVipStartResponse(profile["vip_expire_time"]).make()
+        vip_exp_time = (self.srvtime + timedelta(days=req.days))
+        self.data.profile.update_vip_time(req.profileId, vip_exp_time)
+        return UserVipStartResponse(int(vip_exp_time.timestamp())).make()
 
     def util_put_items(self, profile_id: int, user_id: int, items_obtained: List[GenericItemRecv]) -> None:
         if user_id is None or profile_id <= 0:

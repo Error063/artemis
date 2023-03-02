@@ -18,6 +18,7 @@ from titles.wacca.lily import WaccaLily
 from titles.wacca.s import WaccaS
 from titles.wacca.base import WaccaBase
 from titles.wacca.handlers.base import BaseResponse
+from titles.wacca.handlers.helpers import Version
 
 class WaccaServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -55,12 +56,10 @@ class WaccaServlet():
             hash = md5(json.dumps(resp, ensure_ascii=False).encode()).digest()
             request.responseHeaders.addRawHeader(b"X-Wacca-Hash", hash.hex().encode())
             return json.dumps(resp).encode()
-
-        version_full = []
         
         try:
             req_json = json.loads(request.content.getvalue())
-            version_full = req_json["appVersion"].split(".")
+            version_full = Version(req_json["appVersion"])
         except:
             self.logger.error(f"Failed to parse request toi {request.uri} -> {request.content.getvalue()}")
             resp = BaseResponse()
@@ -76,7 +75,7 @@ class WaccaServlet():
             func_to_find += f"{url_split[x + start_req_idx]}_"
         func_to_find += "request"
 
-        ver_search = (int(version_full[0]) * 10000) + (int(version_full[1]) * 100) + int(version_full[2])
+        ver_search = int(version_full)
 
         if ver_search < 15000:
             internal_ver = WaccaConstants.VER_WACCA

@@ -16,26 +16,26 @@ class WaccaLilyR(WaccaLily):
 
         self.OPTIONS_DEFAULTS["set_nav_id"] = 210002
         self.allowed_stages = [
-            (2501, 1),
-            (2502, 2),
-            (2503, 3),
-            (2504, 4),
-            (2505, 5),
-            (2506, 6),
-            (2507, 7),
-            (2508, 8),
-            (2509, 9),
-            (2510, 10),
-            (2511, 11),
-            (2512, 12),
-            (2513, 13),
             (2514, 14),
+            (2513, 13),
+            (2512, 12),
+            (2511, 11),
+            (2510, 10),
+            (2509, 9),
+            (2508, 8),
+            (2507, 7),
+            (2506, 6),
+            (2505, 5),
+            (2504, 4),
+            (2503, 3),
+            (2501, 2),
+            (2501, 1),
             (210001, 0),
             (210002, 0),
             (210003, 0),
         ]
 
-    def handle_user_status_create_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_create_request(self, data: Dict)-> Dict:
         req = UserStatusCreateRequest(data)
         resp = super().handle_user_status_create_request(data)
 
@@ -50,5 +50,5 @@ class WaccaLilyR(WaccaLily):
         
         return resp
 
-    def handle_user_status_logout_request(self, data: Dict) -> List[Any]:
+    def handle_user_status_logout_request(self, data: Dict)-> Dict:
         return BaseResponse().make()

@@ -13,6 +13,10 @@ class WaccaServerConfig():
     def loglevel(self) -> int:
         return CoreConfig.str_to_loglevel(CoreConfig.get_config_field(self.__config, 'wacca', 'server', 'loglevel', default="info"))
 
+    @property
+    def prefecture_name(self) -> str:
+        return CoreConfig.get_config_field(self.__config, 'wacca', 'server', 'prefecture_name', default="Hokkaido")
+
 class WaccaModsConfig():
     def __init__(self, parent_config: "WaccaConfig") -> None:
         self.__config = parent_config
