@@ -73,9 +73,9 @@ class WaccaBase():
         prefecture_name = inflection.underscore(game_cfg.server.prefecture_name).replace(' ', '_').upper()
         if prefecture_name not in [region.name for region in WaccaConstants.Region]:
             self.logger.warning(f"Invalid prefecture name {game_cfg.server.prefecture_name} in config file")
-            self.region_id = 1
+            self.region_id = WaccaConstants.Region.HOKKAIDO
         else:
-            self.region_id = int(WaccaConstants.Region[prefecture_name].value)
+            self.region_id = WaccaConstants.Region[prefecture_name]
     
     def handle_housing_get_request(self, data: Dict) -> Dict:
         req = BaseRequest(data)
@@ -91,17 +91,12 @@ class WaccaBase():
     def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV1(data)
 
-        resp = HousingStartResponseV1(
-            self.region_id,
-            [ # Recomended songs
-                1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
-                1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
-                1104,1070,1047,1044,1027,1004,1001,24,2068,2062,2021,1275,
-                1249,1207,1203,1107,1021,1009,9,4,3,23,22,2014,13,1276,1247,
-                1240,1237,1128,1114,1110,1109,1102,1045,1043,1036,1035,1030,
-                1023,1015
-            ]
-        )
+        if req.appVersion.country != "JPN" and req.appVersion.country in [region.name for region in WaccaConstants.Region]:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+        else:
+            region_id = self.region_id
+
+        resp = HousingStartResponseV1(region_id)
         return resp.make()
     
     def handle_advertise_GetNews_request(self, data: Dict) -> Dict:

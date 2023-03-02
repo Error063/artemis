@@ -153,9 +153,13 @@ class WaccaConstants():
         UNITED_STATES = 48
         USA = 48
         TAIWAN = 49
+        TWN = 49
         HONG_KONG = 50
+        HKG = 50
         SINGAPORE = 51
+        SGP = 51
         KOREA = 52
+        KOR = 52
     
     VALID_COUNTRIES = set(["JPN", "USA", "KOR", "HKG", "SGP"])
 
