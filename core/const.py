@@ -89,6 +89,3 @@ class AllnetJapanRegionId(Enum):
     YAMAGUCHI = 45
     YAMANASHI = 46
     WAKAYAMA = 47
-
-class RegionIDs(Enum):
-    pass
