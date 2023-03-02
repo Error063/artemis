@@ -3,6 +3,94 @@ from enum import Enum
 
 from titles.wacca.const import WaccaConstants
 
+class ShortVersion:
+    def __init__(self, version: str = "", major = 1, minor = 0, patch = 0) -> None:
+        split = version.split(".")
+        if len(split) >= 3:
+            self.major = int(split[0])
+            self.minor = int(split[1])
+            self.patch = int(split[2])
+        
+        else:            
+            self.major = major
+            self.minor = minor
+            self.patch = patch
+    
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+    
+    def __int__(self) -> int:
+        return (self.major * 10000) + (self.minor * 100) + self.patch
+    
+    def __eq__(self, other: "ShortVersion"):
+        return self.major == other.major and self.minor == other.minor and self.patch == other.patch
+    
+    def __gt__(self, other: "ShortVersion"):
+        if self.major > other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor > other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch > other.patch:
+                    return True
+        
+        return False
+    
+    def __ge__(self, other: "ShortVersion"):
+        if self.major > other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor > other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch > other.patch or self.patch == other.patch:
+                    return True
+        
+        return False
+    
+    def __lt__(self, other: "ShortVersion"):
+        if self.major < other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor < other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch < other.patch:
+                    return True
+        
+        return False
+    
+    def __le__(self, other: "ShortVersion"):
+        if self.major < other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor < other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch < other.patch or self.patch == other.patch:
+                    return True
+        
+        return False
+
+class Version(ShortVersion):
+    def __init__(self, version = "", major = 1, minor = 0, patch = 0, country = "JPN", build = 0, role = "C") -> None:
+        super().__init__(version, major, minor, patch)
+        split = version.split(".")
+        if len(split) >= 6:
+            self.country = split[3]            
+            self.build = int(split[4])
+            self.role = split[5]
+        
+        else:
+            self.country = country
+            self.build = build
+            self.role = role
+    
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}.{self.country}.{self.role}.{self.build}"
+
+
 class HousingInfo():
     """
     1 is lan install role, 2 is country

@@ -110,7 +110,6 @@ class WaccaBase():
     def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV1Response()
-        ver_split = req.appVersion.split(".")
 
         profile = self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
@@ -118,14 +117,11 @@ class WaccaBase():
             resp.profileStatus = ProfileStatus.ProfileRegister
             return resp.make()
         
-        
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
         else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
         
         resp.userStatus.userId = profile["id"]
         resp.userStatus.username = profile["username"]
@@ -145,27 +141,11 @@ class WaccaBase():
             set_icon_id = self.OPTIONS_DEFAULTS["set_icon_id"]
         resp.setIconId = set_icon_id            
         
-
-        if int(ver_split[0]) > int(profile_ver_split[0]):
+        if req.appVersion > resp.lastGameVersion:
             resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
         return resp.make()
 

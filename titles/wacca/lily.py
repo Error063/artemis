@@ -59,7 +59,6 @@ class WaccaLily(WaccaS):
     def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
-        ver_split = req.appVersion.split(".")
 
         profile = self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
@@ -69,11 +68,9 @@ class WaccaLily(WaccaS):
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
         else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
         
         resp.userStatus.userId = profile["id"]
         resp.userStatus.username = profile["username"]
@@ -103,26 +100,11 @@ class WaccaLily(WaccaS):
         if profile["last_login_date"].timestamp() < int((datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)).timestamp()):
             resp.userStatus.loginConsecutiveDays = 0
 
-        if int(ver_split[0]) > int(profile_ver_split[0]):
+        if req.appVersion > resp.lastGameVersion:
             resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
         if profile["vip_expire_time"] is not None:
             resp.userStatus.vipExpireTime = int(profile["vip_expire_time"].timestamp())
@@ -178,8 +160,7 @@ class WaccaLily(WaccaS):
     
     def handle_user_status_getDetail_request(self, data: Dict)-> Dict:
         req = UserStatusGetDetailRequest(data)
-        ver_split = req.appVersion.split(".")
-        if int(ver_split[1]) >= 53:
+        if req.appVersion.minor >= 53:
             resp = UserStatusGetDetailResponseV3()
         else:
             resp = UserStatusGetDetailResponseV2()
@@ -252,7 +233,7 @@ class WaccaLily(WaccaS):
 
             for user_gate in profile_gates:
                 if user_gate["gate_id"] == gate:
-                    if int(ver_split[1]) >= 53:
+                    if req.appVersion.minor >= 53:
                         resp.gateInfo.append(GateDetailV2(user_gate["gate_id"],user_gate["page"],user_gate["progress"],
                         user_gate["loops"],int(user_gate["last_used"].timestamp()),user_gate["mission_flag"]))
                     
@@ -266,7 +247,7 @@ class WaccaLily(WaccaS):
                     break
 
             if not added_gate:
-                if int(ver_split[1]) >= 53:
+                if req.appVersion.minor >= 53:
                     resp.gateInfo.append(GateDetailV2(gate))
                 
                 else:

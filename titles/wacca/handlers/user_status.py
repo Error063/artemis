@@ -19,7 +19,7 @@ class UserStatusGetV1Response(BaseResponse):
         self.setIconId: int = 0
         self.profileStatus: ProfileStatus = ProfileStatus.ProfileGood
         self.versionStatus: PlayVersionStatus = PlayVersionStatus.VersionGood
-        self.lastGameVersion: str = ""
+        self.lastGameVersion: ShortVersion = ShortVersion()
 
     def make(self) -> Dict:
         self.params = [
@@ -29,7 +29,7 @@ class UserStatusGetV1Response(BaseResponse):
             self.profileStatus.value,
             [
                 self.versionStatus.value,
-                self.lastGameVersion
+                str(self.lastGameVersion)
             ]
         ]
         
