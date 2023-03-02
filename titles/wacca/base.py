@@ -356,7 +356,6 @@ class WaccaBase():
             return resp.make()
 
         self.logger.info(f"Get trial info for user {req.profileId}")
-
         stages = self.data.score.get_stageup(user_id, self.version)
         if stages is None:
             stages = []
@@ -377,10 +376,10 @@ class WaccaBase():
                     
             tmp.append(stage_info)
 
-        for x in range(len(resp.stageList)):
-            if resp.stageList[x].danLevel >= 10 and (resp.stageList[x + 1].clearStatus >= 1 or resp.stageList[x].clearStatus >= 1):
+        for x in range(len(tmp)):
+            if tmp[x].danLevel >= 10 and (tmp[x + 1].clearStatus >= 1 or tmp[x].clearStatus >= 1):
                 resp.stageList.append(tmp[x])
-            elif resp.stageList[x].danLevel < 10:
+            elif tmp[x].danLevel < 10:
                 resp.stageList.append(tmp[x])
 
         return resp.make()
