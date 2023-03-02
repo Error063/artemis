@@ -1,6 +1,7 @@
 server:
   enable: True
   loglevel: "info"
+  prefecture_name: "Hokkaido"
 
 mods:
   always_vip: True

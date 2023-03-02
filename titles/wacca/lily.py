@@ -44,7 +44,7 @@ class WaccaLily(WaccaS):
         req = HousingStartRequestV2(data)
 
         resp = HousingStartResponseV1(
-            1, 
+            self.region_id,
             [ # Recomended songs
                 1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
                 1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
