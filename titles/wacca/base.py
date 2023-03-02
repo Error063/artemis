@@ -1,9 +1,8 @@
 from typing import Any, List, Dict
 import logging
+import inflection
 from math import floor
-
 from datetime import datetime, timedelta
-
 from core.config import CoreConfig
 from titles.wacca.config import WaccaConfig
 from titles.wacca.const import WaccaConstants
@@ -23,53 +22,60 @@ class WaccaBase():
         self.season = 1
 
         self.OPTIONS_DEFAULTS: Dict[str, Any] = {
-        "note_speed": 5,
-        "field_mask": 0,
-        "note_sound": 105001,
-        "note_color": 203001,
-        "bgm_volume": 10,
-        "bg_video": 0,
-        
-        "mirror": 0,
-        "judge_display_pos": 0,
-        "judge_detail_display": 0,
-        "measure_guidelines": 1,
-        "guideline_mask": 1,
-        "judge_line_timing_adjust": 10,
-        "note_design": 3,
-        "bonus_effect": 1,
-        "chara_voice": 1,
-        "score_display_method": 0,
-        "give_up": 0,
-        "guideline_spacing": 1,
-        "center_display": 1,
-        "ranking_display": 1,
-        "stage_up_icon_display": 1,
-        "rating_display": 1,
-        "player_level_display": 1,
-        "touch_effect": 1,
-        "guide_sound_vol": 3,
-        "touch_note_vol": 8,
-        "hold_note_vol": 8,
-        "slide_note_vol": 8,
-        "snap_note_vol": 8,
-        "chain_note_vol": 8,
-        "bonus_note_vol": 8,
-        "gate_skip": 0,
-        "key_beam_display": 1,
+            "note_speed": 5,
+            "field_mask": 0,
+            "note_sound": 105001,
+            "note_color": 203001,
+            "bgm_volume": 10,
+            "bg_video": 0,
 
-        "left_slide_note_color": 4,
-        "right_slide_note_color": 3,
-        "forward_slide_note_color": 1,
-        "back_slide_note_color": 2,
-        
-        "master_vol": 3,
-        "set_title_id": 104001,
-        "set_icon_id": 102001,
-        "set_nav_id": 210001,
-        "set_plate_id": 211001
-    }
+            "mirror": 0,
+            "judge_display_pos": 0,
+            "judge_detail_display": 0,
+            "measure_guidelines": 1,
+            "guideline_mask": 1,
+            "judge_line_timing_adjust": 10,
+            "note_design": 3,
+            "bonus_effect": 1,
+            "chara_voice": 1,
+            "score_display_method": 0,
+            "give_up": 0,
+            "guideline_spacing": 1,
+            "center_display": 1,
+            "ranking_display": 1,
+            "stage_up_icon_display": 1,
+            "rating_display": 1,
+            "player_level_display": 1,
+            "touch_effect": 1,
+            "guide_sound_vol": 3,
+            "touch_note_vol": 8,
+            "hold_note_vol": 8,
+            "slide_note_vol": 8,
+            "snap_note_vol": 8,
+            "chain_note_vol": 8,
+            "bonus_note_vol": 8,
+            "gate_skip": 0,
+            "key_beam_display": 1,
+
+            "left_slide_note_color": 4,
+            "right_slide_note_color": 3,
+            "forward_slide_note_color": 1,
+            "back_slide_note_color": 2,
+
+            "master_vol": 3,
+            "set_title_id": 104001,
+            "set_icon_id": 102001,
+            "set_nav_id": 210001,
+            "set_plate_id": 211001
+        }
         self.allowed_stages = []
+
+        prefecture_name = inflection.underscore(game_cfg.server.prefecture_name).replace(' ', '_').upper()
+        if prefecture_name not in [region.name for region in WaccaConstants.Region]:
+            self.logger.warning(f"Invalid prefecture name {game_cfg.server.prefecture_name} in config file")
+            self.region_id = 1
+        else:
+            self.region_id = int(WaccaConstants.Region[prefecture_name].value)
     
     def handle_housing_get_request(self, data: Dict) -> Dict:
         req = BaseRequest(data)
@@ -86,7 +92,7 @@ class WaccaBase():
         req = HousingStartRequestV1(data)
 
         resp = HousingStartResponseV1(
-            1, 
+            self.region_id,
             [ # Recomended songs
                 1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
                 1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,

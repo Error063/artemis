@@ -151,6 +151,7 @@ class WaccaConstants():
         KAGOSHIMA = 46
         OKINAWA = 47
         UNITED_STATES = 48
+        USA = 48
         TAIWAN = 49
         HONG_KONG = 50
         SINGAPORE = 51
