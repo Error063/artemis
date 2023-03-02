@@ -12,6 +12,12 @@ Artemis requires that the following ports be forwarded to allow internet traffic
 ### A note about external proxy services (cloudflare, etc)
 Due to the way that artemis functions, it is currently not possible to put the server behind something like Cloudflare. Cloudflare only proxies web traffic on the standard ports (80, 443) and, as shown above, this does not work with artemis. Server administrators should seek other means to protect their network (VPS hosting, VPN, etc)
 
+### SSL Certificates
+You will need to generate SSL certificates for some games. The certificates vary in security and validity requirements. Please see the general guide below
+- General Title: The certificate for the general title server should be valid, not self-signed and match the CN that the game will be reaching out to (e.i if your games are reaching out to titles.hostname.here, your ssl certificate should be valid for titles.hostname.here, or *.hostname.here)
+- CXB: Same requires as the title server. It must not be self-signed, and CN must match. Recomended to get a wildcard cert if possible, and use it for both Title and CXB
+- Pokken: Pokken can be self-signed, and the CN doesn't have to match, but it MUST use 2048-bit RSA. Due to the games age, andthing stronger then that will be rejected.
+
 ### Port mappings
 An example config is provided in the `config` folder called `nginx_example.conf`. It is set up for the following:
 `naominet.jp:tcp:80` -> `localhost:tcp:8000` for allnet
