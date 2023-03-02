@@ -28,7 +28,7 @@ An example config is provided in the `config` folder called `nginx_example.conf`
 `pokken.hostname.here:ssl:443` -> `localhost:tcp:8080` for pokken
 `frontend.hostname.here:ssl:443` -> `localhost:tcp:8090` for the frontend, includes https redirection
 
-If you're using this as a guide, be sure to replace your.hostname.here with the hostname you specified in core.yaml under `titles->hostname`. Do *not* change naominet.jp, or allnet/billing will fail. Also remember to specifiy certificat paths correctly, as in the example they are simply placeholders.
+If you're using this as a guide, be sure to replace your.hostname.here with the hostname you specified in core.yaml under `titles->hostname`. Do *not* change naominet.jp, or allnet/billing will fail. Also remember to specifiy certificate paths correctly, as in the example they are simply placeholders.
 
 ### Multi-service ports
 It is possible to use nginx to redirect billing and title server requests to the same port that all.net uses. By setting `port` to 0 under billing and title server, you can change the nginx config to serve the following (entries not shown here should be the same)
