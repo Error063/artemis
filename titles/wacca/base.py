@@ -361,7 +361,8 @@ class WaccaBase():
         if stages is None:
             stages = []
         
-        add_next = True
+        tmp: List[StageInfo] = []
+
         for d in self.allowed_stages:
             stage_info = StageInfo(d[0], d[1])
             
@@ -374,11 +375,13 @@ class WaccaBase():
                     stage_info.song3BestScore = score["song3_score"]
                     break
                     
-            if add_next or stage_info.danLevel < 9:
-                resp.stageList.append(stage_info)
+            tmp.append(stage_info)
 
-            if stage_info.danLevel >= 9 and stage_info.clearStatus < 1:
-                add_next = False
+        for x in range(len(resp.stageList)):
+            if resp.stageList[x].danLevel >= 10 and (resp.stageList[x + 1].clearStatus >= 1 or resp.stageList[x].clearStatus >= 1):
+                resp.stageList.append(tmp[x])
+            elif resp.stageList[x].danLevel < 10:
+                resp.stageList.append(tmp[x])
 
         return resp.make()
 
