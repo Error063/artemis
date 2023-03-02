@@ -53,10 +53,13 @@ class TitleServlet():
         code = endpoints["game"]
         if code not in self.title_registry:
             self.logger.warn(f"Unknown game code {code}")
+            request.setResponseCode(404)
+            return b""
         
         index = self.title_registry[code]
         if not hasattr(index, "render_GET"):
             self.logger.warn(f"{code} does not dispatch GET")
+            request.setResponseCode(405)
             return b""
 
         return index.render_GET(request, endpoints["version"], endpoints["endpoint"])
@@ -65,10 +68,13 @@ class TitleServlet():
         code = endpoints["game"]
         if code not in self.title_registry:
             self.logger.warn(f"Unknown game code {code}")
+            request.setResponseCode(404)
+            return b""
         
         index = self.title_registry[code]
         if not hasattr(index, "render_POST"):
             self.logger.warn(f"{code} does not dispatch POST")
+            request.setResponseCode(405)
             return b""
 
         return index.render_POST(request, int(endpoints["version"]), endpoints["endpoint"])
