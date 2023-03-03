@@ -787,6 +787,10 @@ class OngekiBase():
         if "userChapterList" in upsert:
             for x in upsert["userChapterList"]:
                 self.data.item.put_chapter(user_id, x)
+                
+        if "userMemoryChapterList" in upsert:
+            for x in upsert["userMemoryChapterList"]:
+                self.data.item.put_memorychapter(user_id, x)
         
         if "userItemList" in upsert:
             for x in upsert["userItemList"]:

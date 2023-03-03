@@ -38,6 +38,7 @@ class AllnetCountryCode(Enum):
     HONG_KONG = "HKG"
     SINGAPORE = "SGP"
     SOUTH_KOREA = "KOR"
+    TAIWAN = "TWN"
     CHINA = "CHN"
 
 class AllnetJapanRegionId(Enum):

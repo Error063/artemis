@@ -28,6 +28,7 @@ score_best = Table(
     Column("isLock", Boolean, nullable=False),
     Column("clearStatus", Boolean, nullable=False),
     Column("isStoryWatched", Boolean, nullable=False),
+    Column("platinumScoreMax", Integer),
     UniqueConstraint("user", "musicId", "level", name="ongeki_best_score_uk"),
     mysql_charset='utf8mb4'
 )
@@ -96,6 +97,8 @@ playlog = Table(
     Column("isAllBreak", Boolean),
     Column("playerRating", Integer),
     Column("battlePoint", Integer),
+    Column("platinumScore", Integer),
+    Column("platinumScoreMax", Integer),
     mysql_charset='utf8mb4'
 )
 

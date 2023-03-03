@@ -29,6 +29,7 @@ class HttpDispatcher(resource.Resource):
         self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_downloadorder', '/sys/servlet/DownloadOrder', controller="allnet", action='handle_dlorder', conditions=dict(method=['POST']))
         self.map_post.connect('allnet_billing', '/request', controller="allnet", action='handle_billing_request', conditions=dict(method=['POST']))
+        self.map_post.connect('allnet_billing', '/request/', controller="allnet", action='handle_billing_request', conditions=dict(method=['POST']))
 
         self.map_post.connect('mucha_boardauth', '/mucha/boardauth.do', controller="mucha", action='handle_boardauth', conditions=dict(method=['POST']))
         self.map_post.connect('mucha_updatacheck', '/mucha/updatacheck.do', controller="mucha", action='handle_updatacheck', conditions=dict(method=['POST']))

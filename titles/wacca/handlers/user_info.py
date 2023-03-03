@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 from titles.wacca.handlers.base import BaseRequest, BaseResponse
-from titles.wacca.handlers.helpers import UserOption
+from titles.wacca.handlers.helpers import UserOption, DateUpdate
 
 # ---user/info/update---
 class UserInfoUpdateRequest(BaseRequest):
@@ -9,12 +9,16 @@ class UserInfoUpdateRequest(BaseRequest):
         super().__init__(data)
         self.profileId = int(self.params[0])
         self.optsUpdated: List[UserOption] = []
-        self.datesUpdated: List = self.params[3]
+        self.unknown2: List = self.params[2]
+        self.datesUpdated: List[DateUpdate] = []
         self.favoritesAdded: List[int] = self.params[4]
         self.favoritesRemoved: List[int] = self.params[5]
 
-        for x in self.params[2]:
+        for x in self.params[1]:
             self.optsUpdated.append(UserOption(x[0], x[1]))
+        
+        for x in self.params[3]:
+            self.datesUpdated.append(DateUpdate(x[0], x[1]))
 
 # ---user/info/getMyroom--- TODO: Understand this better
 class UserInfogetMyroomRequest(BaseRequest):
