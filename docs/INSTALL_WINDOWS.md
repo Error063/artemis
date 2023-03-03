@@ -57,7 +57,7 @@ title:
 
 ## Firewall Adjustements 
 Make sure the following ports are open both on your router and local Windows firewall in case you want to use this for public use (NOT recommended):
-> Port 80 (TCP), 443 (TCP), 8443 (TCP), 22345 (TCP), 8090 (TCP) **webui, 8444 (TCP) **mucha, 9000 (TCP)
+> Port 80 (TCP), 443 (TCP), 8443 (TCP), 22345 (TCP), 8080 (TCP), 8090 (TCP) **webui, 8444 (TCP) **mucha
 
 ## Running the ARTEMiS instance
 > python index.py

@@ -96,7 +96,7 @@ sudo ufw allow 8443
 sudo ufw allow 22345
 sudo ufw allow 8090
 sudo ufw allow 8444
-sudo ufw allow 9000
+sudo ufw allow 8080
 ```
 
 ## Running the ARTEMiS instance
