@@ -1,5 +1,7 @@
 from typing import Final, Dict
 from enum import Enum
+
+
 class OngekiConstants():
     GAME_CODE = "SDDT"
 
@@ -34,6 +36,20 @@ class OngekiConstants():
         'AcceptTechChallengeEvent',
         'SilverJewelEvent',
     ])
+
+    class CM_GACHA_KINDS(Enum):
+        Normal = 0
+        Pickup = 1
+        BonusRestored = 2
+        Free = 3
+        PickupBonusRestored = 4
+
+    class RARITY_TYPES(Enum):
+        N = 0
+        R = 1
+        SR = 2
+        SSR = 3
+        SRPlus = 12
 
     # The game expects the server to give Lunatic an ID of 10, while the game uses 4 internally... except in Music.xml
     class DIFF_NAME(Enum):

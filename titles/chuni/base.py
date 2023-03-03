@@ -20,7 +20,10 @@ class ChuniBase():
         self.logger = logging.getLogger("chuni")
         self.game = ChuniConstants.GAME_CODE
         self.version = ChuniConstants.VER_CHUNITHM
-    
+
+    def handle_ping_request(self, data: Dict) -> Dict:
+        return {"returnCode": 1}
+
     def handle_game_login_api_request(self, data: Dict) -> Dict:
         #self.data.base.log_event("chuni", "login", logging.INFO, {"version": self.version, "user": data["userId"]})
         return { "returnCode": 1 }
