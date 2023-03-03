@@ -115,6 +115,7 @@ class AllnetServlet:
         else:
             resp = AllnetPowerOnResponse2()
 
+        self.logger.debug(f"Allnet request: {vars(req)}")
         if req.game_id not in self.uri_registry:
             msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
             self.data.base.log_event("allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg)
@@ -154,6 +155,7 @@ class AllnetServlet:
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
         self.logger.info(msg)
+        self.logger.debug(f"Allnet response: {vars(resp)}")
 
         return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
