@@ -91,10 +91,27 @@ class WaccaBase():
     def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV1(data)
 
-        if req.appVersion.country != "JPN" and req.appVersion.country in [region.name for region in WaccaConstants.Region]:
+        machine = self.data.arcade.get_machine(req.chipId)
+        if machine is not None:
+            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            
+            allnet_region_id = arcade["region_id"]
+
+        if req.appVersion.country == "JPN":
+            if allnet_region_id is not None:
+                region = WaccaConstants.allnet_region_id_to_wacca_region(allnet_region_id)
+                
+                if region is None:
+                    region_id = self.region_id
+            
+            else:
+                region_id = self.region_id
+        
+        elif req.appVersion.country in WaccaConstants.VALID_COUNTRIES:
             region_id = WaccaConstants.Region[req.appVersion.country]
+        
         else:
-            region_id = self.region_id
+            region_id = 0
 
         resp = HousingStartResponseV1(region_id)
         return resp.make()

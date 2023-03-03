@@ -1,4 +1,7 @@
 from enum import Enum
+from typing import Optional
+
+from core.const import AllnetJapanRegionId
 
 class WaccaConstants():
     CONFIG_NAME = "wacca.yaml"
@@ -166,3 +169,21 @@ class WaccaConstants():
     @classmethod
     def game_ver_to_string(cls, ver: int):
         return cls.VERSION_NAMES[ver]
+
+    @classmethod
+    def allnet_region_id_to_wacca_region(cls, region: int) -> Optional[Region]:
+        try:
+            return [
+                cls.Region.NONE, cls.Region.AICHI, cls.Region.AOMORI, cls.Region.AKITA, cls.Region.ISHIKAWA,
+                cls.Region.IBARAKI, cls.Region.IWATE, cls.Region.EHIME, cls.Region.OITA, cls.Region.OSAKA,
+                cls.Region.OKAYAMA, cls.Region.OKINAWA, cls.Region.KAGAWA, cls.Region.KAGOSHIMA, cls.Region.KANAGAWA,
+                cls.Region.GIFU, cls.Region.KYOTO, cls.Region.KUMAMOTO, cls.Region.GUNMA, cls.Region.KOCHI,
+                cls.Region.SAITAMA, cls.Region.SAGA, cls.Region.SHIGA, cls.Region.SHIZUOKA, cls.Region.SHIMANE,
+                cls.Region.CHIBA, cls.Region.TOKYO, cls.Region.TOKUSHIMA, cls.Region.TOCHIGI, cls.Region.TOTTORI,
+                cls.Region.TOYAMA, cls.Region.NAGASAKI, cls.Region.NAGANO, cls.Region.NARA, cls.Region.NIIGATA,
+                cls.Region.HYOGO, cls.Region.HIROSHIMA, cls.Region.FUKUI, cls.Region.FUKUOKA, cls.Region.FUKUSHIMA,
+                cls.Region.HOKKAIDO, cls.Region.MIE, cls.Region.MIYAGI, cls.Region.MIYAZAKI, cls.Region.YAMAGATA,
+                cls.Region.YAMAGUCHI, cls.Region.YAMANASHI, cls.Region.WAKAYAMA,
+            ][region]
+        except: return None
+
