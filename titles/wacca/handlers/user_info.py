@@ -18,7 +18,7 @@ class UserInfoUpdateRequest(BaseRequest):
             self.optsUpdated.append(UserOption(x[0], x[1]))
         
         for x in self.params[3]:
-            self.datesUpdated.append(DateUpdate[x[0], x[1]])
+            self.datesUpdated.append(DateUpdate([x[0], x[1]]))
 
 # ---user/info/getMyroom--- TODO: Understand this better
 class UserInfogetMyroomRequest(BaseRequest):
