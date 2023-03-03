@@ -9,6 +9,7 @@ from titles.wacca.const import WaccaConstants
 from titles.wacca.database import WaccaData
 
 from titles.wacca.handlers import *
+from core.const import AllnetCountryCode
 
 class WaccaBase():
     def __init__(self, cfg: CoreConfig, game_cfg: WaccaConfig) -> None:
@@ -74,6 +75,7 @@ class WaccaBase():
         if prefecture_name not in [region.name for region in WaccaConstants.Region]:
             self.logger.warning(f"Invalid prefecture name {game_cfg.server.prefecture_name} in config file")
             self.region_id = WaccaConstants.Region.HOKKAIDO
+        
         else:
             self.region_id = WaccaConstants.Region[prefecture_name]
     
@@ -94,10 +96,9 @@ class WaccaBase():
         machine = self.data.arcade.get_machine(req.chipId)
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            
             allnet_region_id = arcade["region_id"]
 
-        if req.appVersion.country == "JPN":
+        if req.appVersion.country == AllnetCountryCode.JAPAN.value:
             if allnet_region_id is not None:
                 region = WaccaConstants.allnet_region_id_to_wacca_region(allnet_region_id)
                 

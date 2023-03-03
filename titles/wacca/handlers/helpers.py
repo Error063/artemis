@@ -78,9 +78,9 @@ class Version(ShortVersion):
         super().__init__(version, major, minor, patch)
         split = version.split(".")
         if len(split) >= 6:
-            self.country = split[3]            
+            self.country: str = split[3]            
             self.build = int(split[4])
-            self.role = split[5]
+            self.role: str = split[5]
         
         else:
             self.country = country
