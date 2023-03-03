@@ -103,6 +103,8 @@ class WaccaBase():
                 
                 if region is None:
                     region_id = self.region_id
+                else:
+                    region_id = region
             
             else:
                 region_id = self.region_id
@@ -111,7 +113,7 @@ class WaccaBase():
             region_id = WaccaConstants.Region[req.appVersion.country]
         
         else:
-            region_id = 0
+            region_id = WaccaConstants.Region.NONE
 
         resp = HousingStartResponseV1(region_id)
         return resp.make()
