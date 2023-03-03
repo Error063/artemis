@@ -107,6 +107,27 @@ chapter = Table(
     mysql_charset='utf8mb4'
 )
 
+memorychapter = Table(
+    "ongeki_user_memorychapter",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade")),
+    Column("chapterId", Integer),
+    Column("gaugeId", Integer),
+    Column("gaugeNum", Integer),
+    Column("jewelCount", Integer),
+    Column("isStoryWatched", Boolean),
+    Column("isBossWatched", Boolean),
+    Column("isDialogWatched", Boolean),
+    Column("isEndingWatched", Boolean),
+    Column("isClear", Boolean),
+    Column("lastPlayMusicId", Integer),
+    Column("lastPlayMusicLevel", Integer),
+    Column("lastPlayMusicCategory", Integer),
+    UniqueConstraint("user", "chapterId", name="ongeki_user_memorychapter_uk"),
+    mysql_charset='utf8mb4'
+)
+
 item = Table(
     "ongeki_user_item",
     metadata,
@@ -522,5 +543,24 @@ class OngekiItemData(BaseData):
         sql = select(boss).where(boss.c.user == aime_id)
         result = self.execute(sql)
 
+        if result is None: return None
+        return result.fetchall()
+    
+    def put_memorychapter(self, aime_id: int, memorychapter_data: Dict) -> Optional[int]:
+        memorychapter_data["user"] = aime_id
+
+        sql = insert(memorychapter).values(**memorychapter_data)
+        conflict = sql.on_duplicate_key_update(**memorychapter_data)
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
+            return None
+        return result.lastrowid
+    
+    def get_memorychapters(self, aime_id: int) -> Optional[List[Dict]]:
+        sql = select(memorychapter).where(memorychapter.c.user == aime_id)
+
+        result = self.execute(sql)
         if result is None: return None
         return result.fetchall()

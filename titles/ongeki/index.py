@@ -17,6 +17,7 @@ from titles.ongeki.summerplus import OngekiSummerPlus
 from titles.ongeki.red import OngekiRed
 from titles.ongeki.redplus import OngekiRedPlus
 from titles.ongeki.bright import OngekiBright
+from titles.ongeki.brightmemory import OngekiBrightMemory
 
 class OngekiServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -32,6 +33,7 @@ class OngekiServlet():
             OngekiRed(core_cfg, self.game_cfg),
             OngekiRedPlus(core_cfg, self.game_cfg),
             OngekiBright(core_cfg, self.game_cfg),
+            OngekiBrightMemory(core_cfg, self.game_cfg),
         ]
 
         self.logger = logging.getLogger("ongeki")
@@ -69,8 +71,10 @@ class OngekiServlet():
             internal_ver = OngekiConstants.VER_ONGEKI_RED
         elif version >= 125 and version < 130: # Red Plus
             internal_ver = OngekiConstants.VER_ONGEKI_RED_PLUS
-        elif version >= 130 and version < 135: # Red Plus
+        elif version >= 130 and version < 135: # Bright
             internal_ver = OngekiConstants.VER_ONGEKI_BRIGHT
+        elif version >= 135 and version < 140: # Bright Memory
+            internal_ver = OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're 
