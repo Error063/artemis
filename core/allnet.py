@@ -191,7 +191,7 @@ class AllnetServlet:
         
         self.logger.debug(f"request {req_dict}")
 
-        rsa = RSA.import_key(open(self.config.billing.sign_key, 'rb').read())
+        rsa = RSA.import_key(open(self.config.billing.signing_key, 'rb').read())
         signer = PKCS1_v1_5.new(rsa)
         digest = SHA.new()
 
