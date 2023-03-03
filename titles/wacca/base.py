@@ -1,15 +1,15 @@
 from typing import Any, List, Dict
 import logging
+import inflection
 from math import floor
-
 from datetime import datetime, timedelta
-
 from core.config import CoreConfig
 from titles.wacca.config import WaccaConfig
 from titles.wacca.const import WaccaConstants
 from titles.wacca.database import WaccaData
 
 from titles.wacca.handlers import *
+from core.const import AllnetCountryCode
 
 class WaccaBase():
     def __init__(self, cfg: CoreConfig, game_cfg: WaccaConfig) -> None:
@@ -23,53 +23,61 @@ class WaccaBase():
         self.season = 1
 
         self.OPTIONS_DEFAULTS: Dict[str, Any] = {
-        "note_speed": 5,
-        "field_mask": 0,
-        "note_sound": 105001,
-        "note_color": 203001,
-        "bgm_volume": 10,
-        "bg_video": 0,
-        
-        "mirror": 0,
-        "judge_display_pos": 0,
-        "judge_detail_display": 0,
-        "measure_guidelines": 1,
-        "guideline_mask": 1,
-        "judge_line_timing_adjust": 10,
-        "note_design": 3,
-        "bonus_effect": 1,
-        "chara_voice": 1,
-        "score_display_method": 0,
-        "give_up": 0,
-        "guideline_spacing": 1,
-        "center_display": 1,
-        "ranking_display": 1,
-        "stage_up_icon_display": 1,
-        "rating_display": 1,
-        "player_level_display": 1,
-        "touch_effect": 1,
-        "guide_sound_vol": 3,
-        "touch_note_vol": 8,
-        "hold_note_vol": 8,
-        "slide_note_vol": 8,
-        "snap_note_vol": 8,
-        "chain_note_vol": 8,
-        "bonus_note_vol": 8,
-        "gate_skip": 0,
-        "key_beam_display": 1,
+            "note_speed": 5,
+            "field_mask": 0,
+            "note_sound": 105001,
+            "note_color": 203001,
+            "bgm_volume": 10,
+            "bg_video": 0,
 
-        "left_slide_note_color": 4,
-        "right_slide_note_color": 3,
-        "forward_slide_note_color": 1,
-        "back_slide_note_color": 2,
-        
-        "master_vol": 3,
-        "set_title_id": 104001,
-        "set_icon_id": 102001,
-        "set_nav_id": 210001,
-        "set_plate_id": 211001
-    }
+            "mirror": 0,
+            "judge_display_pos": 0,
+            "judge_detail_display": 0,
+            "measure_guidelines": 1,
+            "guideline_mask": 1,
+            "judge_line_timing_adjust": 10,
+            "note_design": 3,
+            "bonus_effect": 1,
+            "chara_voice": 1,
+            "score_display_method": 0,
+            "give_up": 0,
+            "guideline_spacing": 1,
+            "center_display": 1,
+            "ranking_display": 1,
+            "stage_up_icon_display": 1,
+            "rating_display": 1,
+            "player_level_display": 1,
+            "touch_effect": 1,
+            "guide_sound_vol": 3,
+            "touch_note_vol": 8,
+            "hold_note_vol": 8,
+            "slide_note_vol": 8,
+            "snap_note_vol": 8,
+            "chain_note_vol": 8,
+            "bonus_note_vol": 8,
+            "gate_skip": 0,
+            "key_beam_display": 1,
+
+            "left_slide_note_color": 4,
+            "right_slide_note_color": 3,
+            "forward_slide_note_color": 1,
+            "back_slide_note_color": 2,
+
+            "master_vol": 3,
+            "set_title_id": 104001,
+            "set_icon_id": 102001,
+            "set_nav_id": 210001,
+            "set_plate_id": 211001
+        }
         self.allowed_stages = []
+
+        prefecture_name = inflection.underscore(game_cfg.server.prefecture_name).replace(' ', '_').upper()
+        if prefecture_name not in [region.name for region in WaccaConstants.Region]:
+            self.logger.warning(f"Invalid prefecture name {game_cfg.server.prefecture_name} in config file")
+            self.region_id = WaccaConstants.Region.HOKKAIDO
+        
+        else:
+            self.region_id = WaccaConstants.Region[prefecture_name]
     
     def handle_housing_get_request(self, data: Dict) -> Dict:
         req = BaseRequest(data)
@@ -85,17 +93,30 @@ class WaccaBase():
     def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV1(data)
 
-        resp = HousingStartResponseV1(
-            1, 
-            [ # Recomended songs
-                1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
-                1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
-                1104,1070,1047,1044,1027,1004,1001,24,2068,2062,2021,1275,
-                1249,1207,1203,1107,1021,1009,9,4,3,23,22,2014,13,1276,1247,
-                1240,1237,1128,1114,1110,1109,1102,1045,1043,1036,1035,1030,
-                1023,1015
-            ]
-        )
+        machine = self.data.arcade.get_machine(req.chipId)
+        if machine is not None:
+            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            allnet_region_id = arcade["region_id"]
+
+        if req.appVersion.country == AllnetCountryCode.JAPAN.value:
+            if allnet_region_id is not None:
+                region = WaccaConstants.allnet_region_id_to_wacca_region(allnet_region_id)
+                
+                if region is None:
+                    region_id = self.region_id
+                else:
+                    region_id = region
+            
+            else:
+                region_id = self.region_id
+        
+        elif req.appVersion.country in WaccaConstants.VALID_COUNTRIES:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+        
+        else:
+            region_id = WaccaConstants.Region.NONE
+
+        resp = HousingStartResponseV1(region_id)
         return resp.make()
     
     def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
@@ -110,7 +131,6 @@ class WaccaBase():
     def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV1Response()
-        ver_split = req.appVersion.split(".")
 
         profile = self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
@@ -118,14 +138,11 @@ class WaccaBase():
             resp.profileStatus = ProfileStatus.ProfileRegister
             return resp.make()
         
-        
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
         else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
         
         resp.userStatus.userId = profile["id"]
         resp.userStatus.username = profile["username"]
@@ -145,27 +162,11 @@ class WaccaBase():
             set_icon_id = self.OPTIONS_DEFAULTS["set_icon_id"]
         resp.setIconId = set_icon_id            
         
-
-        if int(ver_split[0]) > int(profile_ver_split[0]):
+        if req.appVersion > resp.lastGameVersion:
             resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
         return resp.make()
 
@@ -375,12 +376,12 @@ class WaccaBase():
             return resp.make()
 
         self.logger.info(f"Get trial info for user {req.profileId}")
-
         stages = self.data.score.get_stageup(user_id, self.version)
         if stages is None:
             stages = []
         
-        add_next = True
+        tmp: List[StageInfo] = []
+
         for d in self.allowed_stages:
             stage_info = StageInfo(d[0], d[1])
             
@@ -393,11 +394,13 @@ class WaccaBase():
                     stage_info.song3BestScore = score["song3_score"]
                     break
                     
-            if add_next or stage_info.danLevel < 9:
-                resp.stageList.append(stage_info)
+            tmp.append(stage_info)
 
-            if stage_info.danLevel >= 9 and stage_info.clearStatus < 1:
-                add_next = False
+        for x in range(len(tmp)):
+            if tmp[x].danLevel >= 10 and (tmp[x + 1].clearStatus >= 1 or tmp[x].clearStatus >= 1):
+                resp.stageList.append(tmp[x])
+            elif tmp[x].danLevel < 10:
+                resp.stageList.append(tmp[x])
 
         return resp.make()
 
@@ -763,7 +766,7 @@ class WaccaBase():
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
 
         for opt in req.optsUpdated:
-            self.data.profile.update_option(user_id, opt.id, opt.val)
+            self.data.profile.update_option(user_id, opt.opt_id, opt.opt_val)
 
         for update in req.datesUpdated:
            pass

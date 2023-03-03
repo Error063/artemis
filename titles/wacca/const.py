@@ -1,4 +1,7 @@
 from enum import Enum
+from typing import Optional
+
+from core.const import AllnetJapanRegionId
 
 class WaccaConstants():
     CONFIG_NAME = "wacca.yaml"
@@ -95,19 +98,92 @@ class WaccaConstants():
         "set_plate_id": 1005, # ID
     }
 
-    DIFFICULTIES = {
-        "Normal": 1,
-        "Hard": 2,
-        "Expert": 3,
-        "Inferno": 4,
-    }
-
     class Difficulty(Enum):
         NORMAL = 1
         HARD = 2
         EXPERT = 3
         INFERNO = 4
+    
+    class Region(Enum):
+        NONE = 0
+        HOKKAIDO = 1
+        AOMORI = 2
+        IWATE = 3
+        MIYAGI = 4
+        AKITA = 5
+        YAMAGATA = 6
+        FUKUSHIMA = 7
+        IBARAKI = 8
+        TOCHIGI = 9
+        GUNMA = 10
+        SAITAMA = 11
+        CHIBA = 12
+        TOKYO = 13
+        KANAGAWA = 14
+        NIIGATA = 15
+        TOYAMA = 16
+        ISHIKAWA = 17
+        FUKUI = 18
+        YAMANASHI = 19
+        NAGANO = 20
+        GIFU = 21
+        SHIZUOKA = 22
+        AICHI = 23
+        MIE = 24
+        SHIGA = 25
+        KYOTO = 26
+        OSAKA = 27
+        HYOGO = 28
+        NARA = 29
+        WAKAYAMA = 30
+        TOTTORI = 31
+        SHIMANE = 32
+        OKAYAMA = 33
+        HIROSHIMA = 34
+        YAMAGUCHI = 35
+        TOKUSHIMA = 36
+        KAGAWA = 37
+        EHIME = 38
+        KOCHI = 39
+        FUKUOKA = 40
+        SAGA = 41
+        NAGASAKI = 42
+        KUMAMOTO = 43
+        OITA = 44
+        MIYAZAKI = 45
+        KAGOSHIMA = 46
+        OKINAWA = 47
+        UNITED_STATES = 48
+        USA = 48
+        TAIWAN = 49
+        TWN = 49
+        HONG_KONG = 50
+        HKG = 50
+        SINGAPORE = 51
+        SGP = 51
+        KOREA = 52
+        KOR = 52
+    
+    VALID_COUNTRIES = set(["JPN", "USA", "KOR", "HKG", "SGP"])
 
     @classmethod
     def game_ver_to_string(cls, ver: int):
         return cls.VERSION_NAMES[ver]
+
+    @classmethod
+    def allnet_region_id_to_wacca_region(cls, region: int) -> Optional[Region]:
+        try:
+            return [
+                cls.Region.NONE, cls.Region.AICHI, cls.Region.AOMORI, cls.Region.AKITA, cls.Region.ISHIKAWA,
+                cls.Region.IBARAKI, cls.Region.IWATE, cls.Region.EHIME, cls.Region.OITA, cls.Region.OSAKA,
+                cls.Region.OKAYAMA, cls.Region.OKINAWA, cls.Region.KAGAWA, cls.Region.KAGOSHIMA, cls.Region.KANAGAWA,
+                cls.Region.GIFU, cls.Region.KYOTO, cls.Region.KUMAMOTO, cls.Region.GUNMA, cls.Region.KOCHI,
+                cls.Region.SAITAMA, cls.Region.SAGA, cls.Region.SHIGA, cls.Region.SHIZUOKA, cls.Region.SHIMANE,
+                cls.Region.CHIBA, cls.Region.TOKYO, cls.Region.TOKUSHIMA, cls.Region.TOCHIGI, cls.Region.TOTTORI,
+                cls.Region.TOYAMA, cls.Region.NAGASAKI, cls.Region.NAGANO, cls.Region.NARA, cls.Region.NIIGATA,
+                cls.Region.HYOGO, cls.Region.HIROSHIMA, cls.Region.FUKUI, cls.Region.FUKUOKA, cls.Region.FUKUSHIMA,
+                cls.Region.HOKKAIDO, cls.Region.MIE, cls.Region.MIYAGI, cls.Region.MIYAZAKI, cls.Region.YAMAGATA,
+                cls.Region.YAMAGUCHI, cls.Region.YAMANASHI, cls.Region.WAKAYAMA,
+            ][region]
+        except: return None
+

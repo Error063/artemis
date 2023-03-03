@@ -3,7 +3,94 @@ from enum import Enum
 
 from titles.wacca.const import WaccaConstants
 
-class HousingInfo():
+class ShortVersion:
+    def __init__(self, version: str = "", major = 1, minor = 0, patch = 0) -> None:
+        split = version.split(".")
+        if len(split) >= 3:
+            self.major = int(split[0])
+            self.minor = int(split[1])
+            self.patch = int(split[2])
+        
+        else:            
+            self.major = major
+            self.minor = minor
+            self.patch = patch
+    
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}"
+    
+    def __int__(self) -> int:
+        return (self.major * 10000) + (self.minor * 100) + self.patch
+    
+    def __eq__(self, other: "ShortVersion"):
+        return self.major == other.major and self.minor == other.minor and self.patch == other.patch
+    
+    def __gt__(self, other: "ShortVersion"):
+        if self.major > other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor > other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch > other.patch:
+                    return True
+        
+        return False
+    
+    def __ge__(self, other: "ShortVersion"):
+        if self.major > other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor > other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch > other.patch or self.patch == other.patch:
+                    return True
+        
+        return False
+    
+    def __lt__(self, other: "ShortVersion"):
+        if self.major < other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor < other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch < other.patch:
+                    return True
+        
+        return False
+    
+    def __le__(self, other: "ShortVersion"):
+        if self.major < other.major:
+            return True
+        elif self.major == other.major:
+            if self.minor < other.minor:
+                return True
+            elif self.minor == other.minor:
+                if self.patch < other.patch or self.patch == other.patch:
+                    return True
+        
+        return False
+
+class Version(ShortVersion):
+    def __init__(self, version = "", major = 1, minor = 0, patch = 0, country = "JPN", build = 0, role = "C") -> None:
+        super().__init__(version, major, minor, patch)
+        split = version.split(".")
+        if len(split) >= 6:
+            self.country: str = split[3]            
+            self.build = int(split[4])
+            self.role: str = split[5]
+        
+        else:
+            self.country = country
+            self.build = build
+            self.role = role
+    
+    def __str__(self) -> str:
+        return f"{self.major}.{self.minor}.{self.patch}.{self.country}.{self.role}.{self.build}"
+
+class HousingInfo:
     """
     1 is lan install role, 2 is country
     """
@@ -17,7 +104,7 @@ class HousingInfo():
     def make(self) -> List:
         return [ self.id, self.val ]
 
-class Notice():
+class Notice:
     name: str = ""
     title: str = ""
     message: str = ""
@@ -40,7 +127,7 @@ class Notice():
         return [ self.name, self.title, self.message, self.unknown3, self.unknown4, int(self.showTitleScreen), 
         int(self.showWelcomeScreen), self.startTime, self.endTime, self.voiceline]
 
-class UserOption():
+class UserOption:
     def __init__(self, opt_id: int = 0, opt_val: Any = 0) -> None:
         self.opt_id = opt_id
         self.opt_val = opt_val
@@ -48,7 +135,7 @@ class UserOption():
     def make(self) -> List:
         return [self.opt_id, self.opt_val]
 
-class UserStatusV1():
+class UserStatusV1:
     def __init__(self) -> None:
         self.userId: int = 0
         self.username: str = ""
@@ -106,7 +193,7 @@ class PlayVersionStatus(Enum):
     VersionTooNew = 1
     VersionUpgrade = 2
 
-class PlayModeCounts():
+class PlayModeCounts:
     seasonId: int = 0
     modeId: int = 0
     playNum: int = 0
@@ -123,7 +210,7 @@ class PlayModeCounts():
             self.playNum
         ]
 
-class SongUnlock():
+class SongUnlock:
     songId: int = 0
     difficulty: int = 0
     whenAppeared: int = 0
@@ -143,7 +230,7 @@ class SongUnlock():
             self.whenUnlocked
         ]
 
-class GenericItemRecv():
+class GenericItemRecv:
     def __init__(self, item_type: int = 1, item_id: int = 1, quantity: int = 1) -> None:
         self.itemId = item_id
         self.itemType = item_type
@@ -152,7 +239,7 @@ class GenericItemRecv():
     def make(self) -> List:
         return [ self.itemType, self.itemId, self.quantity ]
 
-class GenericItemSend():
+class GenericItemSend:
     def __init__(self, itemId: int, itemType: int, whenAcquired: int) -> None:
         self.itemId = itemId
         self.itemType = itemType
@@ -180,7 +267,7 @@ class IconItem(GenericItemSend):
             self.whenAcquired
         ]
 
-class TrophyItem():
+class TrophyItem:
     trophyId: int = 0    
     season: int = 1
     progress: int = 0
@@ -200,7 +287,7 @@ class TrophyItem():
             self.badgeType
         ]
 
-class TicketItem():
+class TicketItem:
     userTicketId: int = 0
     ticketId: int = 0
     whenExpires: int = 0
@@ -233,7 +320,7 @@ class NavigatorItem(IconItem):
             self.usesToday
         ]
 
-class SkillItem():
+class SkillItem:
     skill_type: int
     level: int
     flag: int
@@ -247,7 +334,7 @@ class SkillItem():
             self.badge
         ]
 
-class UserItemInfoV1():
+class UserItemInfoV1:
     def __init__(self) -> None:
         self.songUnlocks: List[SongUnlock] = []
         self.titles: List[GenericItemSend] = []
@@ -331,7 +418,7 @@ class UserItemInfoV3(UserItemInfoV2):
         ret.append(effect)
         return ret
 
-class SongDetailClearCounts():    
+class SongDetailClearCounts:    
     def __init__(self, play_ct: int = 0, clear_ct: int = 0, ml_ct: int = 0, fc_ct: int = 0,
         am_ct: int = 0, counts: Optional[List[int]] = None) -> None:
         if counts is None:
@@ -351,7 +438,7 @@ class SongDetailClearCounts():
     def make(self) -> List:
         return [self.playCt, self.clearCt, self.misslessCt, self.fullComboCt, self.allMarvelousCt]
 
-class SongDetailGradeCountsV1():
+class SongDetailGradeCountsV1:
     dCt: int
     cCt: int
     bCt: int
@@ -413,7 +500,7 @@ class SongDetailGradeCountsV2(SongDetailGradeCountsV1):
     def make(self) -> List:
         return super().make() + [self.spCt, self.sspCt, self.ssspCt]
 
-class BestScoreDetailV1():
+class BestScoreDetailV1:
     songId: int = 0
     difficulty: int = 1
     clearCounts: SongDetailClearCounts = SongDetailClearCounts()
@@ -446,7 +533,7 @@ class BestScoreDetailV1():
 class BestScoreDetailV2(BestScoreDetailV1):
     gradeCounts: SongDetailGradeCountsV2 = SongDetailGradeCountsV2()
 
-class SongUpdateJudgementCounts():
+class SongUpdateJudgementCounts:
     marvCt: int
     greatCt: int
     goodCt: int
@@ -461,7 +548,7 @@ class SongUpdateJudgementCounts():
     def make(self) -> List:
         return [self.marvCt, self.greatCt, self.goodCt, self.missCt]
 
-class SongUpdateDetailV1():
+class SongUpdateDetailV1:
     def __init__(self, data: List) -> None:        
         if data is not None:
             self.songId = data[0]
@@ -491,7 +578,7 @@ class SongUpdateDetailV2(SongUpdateDetailV1):
             self.slowCt = data[14]
             self.flagNewRecord = False if data[15] == 0 else True
 
-class SeasonalInfoV1():
+class SeasonalInfoV1:
     def __init__(self) -> None:
         self.level: int = 0
         self.wpObtained: int = 0
@@ -525,7 +612,7 @@ class SeasonalInfoV2(SeasonalInfoV1):
     def make(self) -> List:
         return super().make() + [self.platesObtained, self.cumulativeGatePts]
 
-class BingoPageStatus():
+class BingoPageStatus:
     id = 0
     location = 1
     progress = 0
@@ -538,7 +625,7 @@ class BingoPageStatus():
     def make(self) -> List:
         return [self.id, self.location, self.progress]
 
-class BingoDetail():
+class BingoDetail:
     def __init__(self, pageNumber: int) -> None:
         self.pageNumber = pageNumber
         self.pageStatus: List[BingoPageStatus] = []
@@ -553,7 +640,7 @@ class BingoDetail():
             status
         ]
 
-class GateDetailV1():
+class GateDetailV1:
     def __init__(self, gate_id: int = 1, page: int = 1, progress: int = 0, loops: int = 0, last_used: int = 0, mission_flg = 0) -> None:
         self.id = gate_id
         self.page = page
@@ -569,11 +656,11 @@ class GateDetailV2(GateDetailV1):
     def make(self) -> List:
         return super().make() + [self.missionFlg]
 
-class GachaInfo():
+class GachaInfo:
     def make(self) -> List:
         return []
 
-class LastSongDetail():
+class LastSongDetail:
     lastSongId = 90
     lastSongDiff = 1
     lastFolderOrd = 1
@@ -592,11 +679,11 @@ class LastSongDetail():
         return [self.lastSongId, self.lastSongDiff, self.lastFolderOrd, self.lastFolderId, 
         self.lastSongOrd]
 
-class FriendDetail():
+class FriendDetail:
     def make(self) -> List:
         return []
 
-class LoginBonusInfo():
+class LoginBonusInfo:
     def __init__(self) -> None:
         self.tickets: List[TicketItem] = []
         self.items: List[GenericItemRecv] = []
@@ -614,7 +701,7 @@ class LoginBonusInfo():
         
         return [ tks, itms, self.message ]
 
-class VipLoginBonus():
+class VipLoginBonus:
     id = 1
     unknown = 0
     item: GenericItemRecv
@@ -627,7 +714,7 @@ class VipLoginBonus():
     def make(self) -> List:
         return [ self.id, self.unknown, self.item.make() ]
 
-class VipInfo():
+class VipInfo:
     def __init__(self, year: int = 2019, month: int = 1, day: int = 1, num_item: int = 1) -> None:
         self.pageYear = year
         self.pageMonth = month
@@ -658,7 +745,7 @@ class PlayType(Enum):
     PlayTypeCoop = 3
     PlayTypeStageup = 4
 
-class StageInfo():
+class StageInfo:
     danId: int = 0
     danLevel: int = 0
     clearStatus: int = 0
@@ -692,7 +779,7 @@ class StageupClearType(Enum):
     CLEAR_SILVER = 2
     CLEAR_GOLD = 3
 
-class MusicUpdateDetailV1():
+class MusicUpdateDetailV1:
     def __init__(self) -> None:
         self.songId = 0
         self.difficulty = 1
@@ -730,7 +817,7 @@ class MusicUpdateDetailV3(MusicUpdateDetailV2):
         super().__init__()
         self.grades = SongDetailGradeCountsV2()
 
-class SongRatingUpdate():
+class SongRatingUpdate:
     def __init__(self, song_id: int = 0, difficulty: int = 1, new_rating: int = 0) -> None:
         self.songId = song_id
         self.difficulty = difficulty
@@ -743,7 +830,7 @@ class SongRatingUpdate():
             self.rating,
         ]
 
-class GateTutorialFlag():
+class GateTutorialFlag:
     def __init__(self, tutorial_id: int = 1, flg_watched: bool = False) -> None:
         self.tutorialId = tutorial_id
         self.flagWatched = flg_watched
@@ -753,3 +840,11 @@ class GateTutorialFlag():
             self.tutorialId,
             int(self.flagWatched)
         ]
+
+class DateUpdate:
+    def __init__(self, date_id: int = 0, timestamp: int = 0) -> None:
+        self.id = date_id
+        self.timestamp = timestamp
+    
+    def make(self) -> List:
+        return [self.id, self.timestamp]

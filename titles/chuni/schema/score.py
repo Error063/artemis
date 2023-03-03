@@ -29,6 +29,9 @@ course = Table(
     Column("param3", Integer),
     Column("param4", Integer),
     Column("isClear", Boolean),
+    Column("theoryCount", Integer),
+    Column("orderId", Integer),
+    Column("playerRating", Integer),
     UniqueConstraint("user", "courseId", name="chuni_score_course_uk"),
     mysql_charset='utf8mb4'
 )

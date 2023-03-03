@@ -135,7 +135,8 @@ class ChuniServlet():
         
         req_data = json.loads(unzip)
         
-        self.logger.info(f"v{version} {endpoint} request - {req_data}")
+        self.logger.info(f"v{version} {endpoint} request from {request.getClientAddress().host}")
+        self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
 
@@ -154,7 +155,7 @@ class ChuniServlet():
         if resp == None:
             resp = {'returnCode': 1}
         
-        self.logger.info(f"Response {resp}")
+        self.logger.debug(f"Response {resp}")
         
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
         

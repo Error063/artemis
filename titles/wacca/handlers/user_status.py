@@ -19,7 +19,7 @@ class UserStatusGetV1Response(BaseResponse):
         self.setIconId: int = 0
         self.profileStatus: ProfileStatus = ProfileStatus.ProfileGood
         self.versionStatus: PlayVersionStatus = PlayVersionStatus.VersionGood
-        self.lastGameVersion: str = ""
+        self.lastGameVersion: ShortVersion = ShortVersion()
 
     def make(self) -> Dict:
         self.params = [
@@ -29,7 +29,7 @@ class UserStatusGetV1Response(BaseResponse):
             self.profileStatus.value,
             [
                 self.versionStatus.value,
-                self.lastGameVersion
+                str(self.lastGameVersion)
             ]
         ]
         
@@ -275,11 +275,6 @@ class UserStatusUpdateRequestV1(BaseRequest):
             self.itemsRecieved.append(GenericItemRecv(itm[0], itm[1], itm[2]))
 
 class UserStatusUpdateRequestV2(UserStatusUpdateRequestV1):
-    isContinue = False
-    isFirstPlayFree = False
-    itemsUsed = []
-    lastSongInfo: LastSongDetail
-
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.isContinue = bool(data["params"][3])

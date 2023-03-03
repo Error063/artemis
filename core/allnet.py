@@ -14,6 +14,7 @@ from time import strptime
 from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
+from core.const import *
 
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):        
@@ -115,6 +116,7 @@ class AllnetServlet:
         else:
             resp = AllnetPowerOnResponse2()
 
+        self.logger.debug(f"Allnet request: {vars(req)}")
         if req.game_id not in self.uri_registry:
             msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
             self.data.base.log_event("allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg)
@@ -136,15 +138,19 @@ class AllnetServlet:
         
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            resp.country = arcade["country"] if machine["country"] is None else machine["country"]
+            country = arcade["country"] if machine["country"] is None else machine["country"]
+            if country is None:
+                country = AllnetCountryCode.JAPAN.value
+
+            resp.country = country
             resp.place_id = arcade["id"]
             resp.allnet_id = machine["id"]
-            resp.name = arcade["name"]
-            resp.nickname = arcade["nickname"]
-            resp.region0 = arcade["region_id"]
-            resp.region_name0 = arcade["country"]
-            resp.region_name1 = arcade["state"]
-            resp.region_name2 = arcade["city"]
+            resp.name = arcade["name"] if arcade["name"] is not None else ""
+            resp.nickname = arcade["nickname"] if arcade["nickname"] is not None else ""
+            resp.region0 = arcade["region_id"] if arcade["region_id"] is not None else AllnetJapanRegionId.AICHI.value
+            resp.region_name0 = arcade["country"] if arcade["country"] is not None else AllnetCountryCode.JAPAN.value
+            resp.region_name1 = arcade["state"] if arcade["state"] is not None else AllnetJapanRegionId.AICHI.name
+            resp.region_name2 = arcade["city"] if arcade["city"] is not None else ""
             resp.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
         
         int_ver = req.ver.replace(".", "")
@@ -154,6 +160,7 @@ class AllnetServlet:
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
         self.logger.info(msg)
+        self.logger.debug(f"Allnet response: {vars(resp)}")
 
         return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
@@ -191,7 +198,7 @@ class AllnetServlet:
         
         self.logger.debug(f"request {req_dict}")
 
-        rsa = RSA.import_key(open(self.config.billing.sign_key, 'rb').read())
+        rsa = RSA.import_key(open(self.config.billing.signing_key, 'rb').read())
         signer = PKCS1_v1_5.new(rsa)
         digest = SHA.new()
 

@@ -32,16 +32,5 @@ if __name__=='__main__':
 
         else:
             data.migrate_database(args.game, int(args.version), args.action)
-    
-    elif args.action == "migrate":
-        data.logger.info("Migrating from old schema to new schema")
-        data.restore_from_old_schema()
-    
-    elif args.action == "dump":
-        data.logger.info("Dumping old schema to migrate to new schema")
-        data.dump_db()
-    
-    elif args.action == "generate":
-        pass
 
     data.logger.info("Done")

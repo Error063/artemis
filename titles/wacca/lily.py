@@ -17,20 +17,20 @@ class WaccaLily(WaccaS):
 
         self.OPTIONS_DEFAULTS["set_nav_id"] = 210002
         self.allowed_stages = [
-            (2001, 1),
-            (2002, 2),
-            (2003, 3),
-            (2004, 4),
-            (2005, 5),
-            (2006, 6),
-            (2007, 7),
-            (2008, 8),
-            (2009, 9),
-            (2010, 10),
-            (2011, 11),
-            (2012, 12),
-            (2013, 13),
             (2014, 14),
+            (2013, 13),
+            (2012, 12),
+            (2011, 11),
+            (2010, 10),
+            (2009, 9),
+            (2008, 8),
+            (2007, 7),
+            (2006, 6),
+            (2005, 5),
+            (2004, 4),
+            (2003, 3),
+            (2002, 2),
+            (2001, 1),
             (210001, 0),
             (210002, 0),
             (210003, 0),
@@ -42,24 +42,26 @@ class WaccaLily(WaccaS):
 
     def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV2(data)
+        
+        if req.appVersion.country != "JPN" and req.appVersion.country in [region.name for region in WaccaConstants.Region]:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+        else:
+            region_id = self.region_id
 
-        resp = HousingStartResponseV1(
-            1, 
-            [ # Recomended songs
-                1269,1007,1270,1002,1020,1003,1008,1211,1018,1092,1056,32,
-                1260,1230,1258,1251,2212,1264,1125,1037,2001,1272,1126,1119,
-                1104,1070,1047,1044,1027,1004,1001,24,2068,2062,2021,1275,
-                1249,1207,1203,1107,1021,1009,9,4,3,23,22,2014,13,1276,1247,
-                1240,1237,1128,1114,1110,1109,1102,1045,1043,1036,1035,1030,
-                1023,1015
-            ]
-        )
+        resp = HousingStartResponseV1(region_id)
         return resp.make()
+    
+    def handle_user_status_create_request(self, data: Dict)-> Dict:
+        req = UserStatusCreateRequest(data)
+        resp = super().handle_user_status_create_request(data)
+
+        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210002) # Lily, Added Lily
+
+        return resp
 
     def handle_user_status_get_request(self, data: Dict)-> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
-        ver_split = req.appVersion.split(".")
 
         profile = self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
@@ -69,11 +71,9 @@ class WaccaLily(WaccaS):
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
-            profile_ver_split = ver_split            
-            resp.lastGameVersion = req.appVersion
+            resp.lastGameVersion = ShortVersion(str(req.appVersion))
         else:
-            profile_ver_split = profile["last_game_ver"].split(".")
-            resp.lastGameVersion = profile["last_game_ver"]
+            resp.lastGameVersion = ShortVersion(profile["last_game_ver"])
         
         resp.userStatus.userId = profile["id"]
         resp.userStatus.username = profile["username"]
@@ -103,26 +103,11 @@ class WaccaLily(WaccaS):
         if profile["last_login_date"].timestamp() < int((datetime.now().replace(hour=0,minute=0,second=0,microsecond=0) - timedelta(days=1)).timestamp()):
             resp.userStatus.loginConsecutiveDays = 0
 
-        if int(ver_split[0]) > int(profile_ver_split[0]):
+        if req.appVersion > resp.lastGameVersion:
             resp.versionStatus = PlayVersionStatus.VersionUpgrade
-
-        elif int(ver_split[0]) < int(profile_ver_split[0]):
-            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
-        else:
-            if int(ver_split[1]) > int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionUpgrade
-            
-            elif int(ver_split[1]) < int(profile_ver_split[1]):
-                resp.versionStatus = PlayVersionStatus.VersionTooNew
-            
-            else:
-                if int(ver_split[2]) > int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionUpgrade
-                
-                
-                elif int(ver_split[2]) < int(profile_ver_split[2]):
-                    resp.versionStatus = PlayVersionStatus.VersionTooNew
+        elif req.appVersion < resp.lastGameVersion:
+            resp.versionStatus = PlayVersionStatus.VersionTooNew
         
         if profile["vip_expire_time"] is not None:
             resp.userStatus.vipExpireTime = int(profile["vip_expire_time"].timestamp())
@@ -178,8 +163,7 @@ class WaccaLily(WaccaS):
     
     def handle_user_status_getDetail_request(self, data: Dict)-> Dict:
         req = UserStatusGetDetailRequest(data)
-        ver_split = req.appVersion.split(".")
-        if int(ver_split[1]) >= 53:
+        if req.appVersion.minor >= 53:
             resp = UserStatusGetDetailResponseV3()
         else:
             resp = UserStatusGetDetailResponseV2()
@@ -252,7 +236,7 @@ class WaccaLily(WaccaS):
 
             for user_gate in profile_gates:
                 if user_gate["gate_id"] == gate:
-                    if int(ver_split[1]) >= 53:
+                    if req.appVersion.minor >= 53:
                         resp.gateInfo.append(GateDetailV2(user_gate["gate_id"],user_gate["page"],user_gate["progress"],
                         user_gate["loops"],int(user_gate["last_used"].timestamp()),user_gate["mission_flag"]))
                     
@@ -266,7 +250,7 @@ class WaccaLily(WaccaS):
                     break
 
             if not added_gate:
-                if int(ver_split[1]) >= 53:
+                if req.appVersion.minor >= 53:
                     resp.gateInfo.append(GateDetailV2(gate))
                 
                 else:
