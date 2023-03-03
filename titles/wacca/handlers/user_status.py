@@ -275,11 +275,6 @@ class UserStatusUpdateRequestV1(BaseRequest):
             self.itemsRecieved.append(GenericItemRecv(itm[0], itm[1], itm[2]))
 
 class UserStatusUpdateRequestV2(UserStatusUpdateRequestV1):
-    isContinue = False
-    isFirstPlayFree = False
-    itemsUsed = []
-    lastSongInfo: LastSongDetail
-
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.isContinue = bool(data["params"][3])
