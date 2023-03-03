@@ -840,3 +840,11 @@ class GateTutorialFlag:
             self.tutorialId,
             int(self.flagWatched)
         ]
+
+class DateUpdate:
+    def __init__(self, date_id: int = 0, timestamp: int = 0) -> None:
+        self.id = date_id
+        self.timestamp = timestamp
+    
+    def make(self) -> List:
+        return [self.id, self.timestamp]
