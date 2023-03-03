@@ -10,6 +10,7 @@ class OngekiConstants():
     VER_ONGEKI_RED = 4
     VER_ONGEKI_RED_PLUS = 5
     VER_ONGEKI_BRIGHT = 6
+    VER_ONGEKI_BRIGHT_MEMORY = 7
 
     EVT_TYPES: Enum = Enum('EVT_TYPES', [
         'None',
@@ -43,7 +44,7 @@ class OngekiConstants():
         Lunatic = 10
 
     VERSION_NAMES = ("ONGEKI", "ONGEKI+", "ONGEKI Summer", "ONGEKI Summer+", "ONGEKI Red", "ONGEKI Red+", 
-        "ONGEKI Bright")
+        "ONGEKI Bright", "ONGEKI Bright Memory")
 
     @classmethod
     def game_ver_to_string(cls, ver: int):

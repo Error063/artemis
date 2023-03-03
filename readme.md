@@ -16,7 +16,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + All versions
 
 + Ongeki
-    + All versions up to Bright
+    + All versions up to Bright Memory
 
 + Wacca
     + Lily R

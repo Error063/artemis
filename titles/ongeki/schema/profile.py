@@ -78,6 +78,7 @@ profile = Table(
     Column("overDamageBattlePoint", Integer, server_default="0"),
     Column("bestBattlePoint", Integer, server_default="0"),
     Column("lastEmoneyBrand", Integer, server_default="0"),
+    Column("isDialogWatchedSuggestMemory", Boolean),
     UniqueConstraint("user", "version", name="ongeki_profile_profile_uk"),
     mysql_charset='utf8mb4'
 )
