@@ -14,6 +14,7 @@ from time import strptime
 from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
+from core.const import *
 
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):        
@@ -137,15 +138,15 @@ class AllnetServlet:
         
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            resp.country = arcade["country"] if machine["country"] is None else machine["country"]
+            resp.country = arcade["country"] if machine["country"] is None else machine["country"] if machine["country"] is None else AllnetCountryCode.JAPAN.value
             resp.place_id = arcade["id"]
             resp.allnet_id = machine["id"]
-            resp.name = arcade["name"]
-            resp.nickname = arcade["nickname"]
-            resp.region0 = arcade["region_id"]
-            resp.region_name0 = arcade["country"]
-            resp.region_name1 = arcade["state"]
-            resp.region_name2 = arcade["city"]
+            resp.name = arcade["name"] if arcade["name"] is not None else ""
+            resp.nickname = arcade["nickname"] if arcade["nickname"] is not None else ""
+            resp.region0 = arcade["region_id"] if arcade["region_id"] is not None else AllnetJapanRegionId.AICHI.value
+            resp.region_name0 = arcade["country"] if arcade["country"] is not None else AllnetCountryCode.JAPAN.value
+            resp.region_name1 = arcade["state"] if arcade["state"] is not None else AllnetJapanRegionId.AICHI.name
+            resp.region_name2 = arcade["city"] if arcade["city"] is not None else ""
             resp.client_timezone = arcade["timezone"] if arcade["timezone"] is not None else "+0900"
         
         int_ver = req.ver.replace(".", "")
