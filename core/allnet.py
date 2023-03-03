@@ -138,7 +138,7 @@ class AllnetServlet:
         
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
-            resp.country = arcade["country"] if machine["country"] is None else machine["country"] if machine["country"] is None else AllnetCountryCode.JAPAN.value
+            resp.country = arcade["country"] if machine["country"] is None else machine["country"] if machine["country"] is not None else AllnetCountryCode.JAPAN.value
             resp.place_id = arcade["id"]
             resp.allnet_id = machine["id"]
             resp.name = arcade["name"] if arcade["name"] is not None else ""
