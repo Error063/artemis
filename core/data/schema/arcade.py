@@ -50,9 +50,20 @@ arcade_owner = Table(
 class ArcadeData(BaseData):
     def get_machine(self, serial: str = None, id: int = None) -> Optional[Dict]:
         if serial is not None:
-            sql = machine.select(machine.c.serial == serial)
+            serial = serial.replace("-", "")
+            if len(serial) == 11:
+                sql = machine.select(machine.c.serial.like(f"{serial}%"))
+            
+            elif len(serial) == 15:
+                sql = machine.select(machine.c.serial == serial)
+            
+            else:
+                self.logger.error(f"{__name__ }: Malformed serial {serial}")
+                return None
+        
         elif id is not None:
             sql = machine.select(machine.c.id == id)
+        
         else: 
             self.logger.error(f"{__name__ }: Need either serial or ID to look up!")
             return None
