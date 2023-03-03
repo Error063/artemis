@@ -211,7 +211,7 @@ class WaccaProfileData(BaseData):
         )
 
         conflict = sql.on_duplicate_key_update(
-            value = sql.inserted.value
+            value = value
         )
 
         result = self.execute(conflict)

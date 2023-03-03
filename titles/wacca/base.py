@@ -746,7 +746,7 @@ class WaccaBase():
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
 
         for opt in req.optsUpdated:
-            self.data.profile.update_option(user_id, opt.id, opt.val)
+            self.data.profile.update_option(user_id, opt.opt_id, opt.opt_val)
 
         for update in req.datesUpdated:
            pass
