@@ -35,7 +35,7 @@ CREATE TABLE ongeki_static_gachas (
     changeRateCnt1 INT DEFAULT 0,
     changeRateCnt2 INT DEFAULT 0,
     startDate TIMESTAMP DEFAULT '2018-01-01 00:00:00.0',
-    endDate TIMESTAMP DEFAULT '2018-01-01 00:00:00.0',
+    endDate TIMESTAMP DEFAULT '2038-01-01 00:00:00.0',
     noticeStartDate TIMESTAMP DEFAULT '2018-01-01 00:00:00.0',
     noticeEndDate TIMESTAMP DEFAULT '2038-01-01 00:00:00.0',
     convertEndDate TIMESTAMP DEFAULT '2038-01-01 00:00:00.0',
