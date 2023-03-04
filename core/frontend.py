@@ -4,12 +4,27 @@ from twisted.web import resource
 from twisted.web.util import redirectTo
 from twisted.web.http import Request
 from logging.handlers import TimedRotatingFileHandler
+from twisted.web.server import Session
+from zope.interface import Interface, Attribute, implementer
+from twisted.python.components import registerAdapter
 import jinja2
 import bcrypt
 
 from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
+
+class IUserSession(Interface):
+    userId = Attribute("User's ID")
+    current_ip = Attribute("User's current ip address")
+    permissions = Attribute("User's permission level")
+    
+@implementer(IUserSession)
+class UserSession(object):
+    def __init__(self, session):
+        self.userId = 0
+        self.current_ip = "0.0.0.0"
+        self.permissions = 0
 
 class FrontendServlet(resource.Resource):
     def getChild(self, name: bytes, request: Request):
@@ -38,6 +53,7 @@ class FrontendServlet(resource.Resource):
         
         self.logger.setLevel(cfg.frontend.loglevel)
         coloredlogs.install(level=cfg.frontend.loglevel, logger=self.logger, fmt=log_fmt_str)
+        registerAdapter(UserSession, Session, IUserSession)
 
         fe_game = FE_Game(cfg, self.environment)
         games = Utils.get_all_titles()
@@ -59,8 +75,8 @@ class FrontendServlet(resource.Resource):
 
     def render_GET(self, request):
         self.logger.debug(f"{request.getClientIP()} -> {request.uri.decode()}")
-        template = self.environment.get_template("core/frontend/index.jinja")        
-        return template.render(server_name=self.config.server.name, title=self.config.server.name, game_list=self.game_list).encode("utf-16")
+        template = self.environment.get_template("core/frontend/index.jinja")
+        return template.render(server_name=self.config.server.name, title=self.config.server.name, game_list=self.game_list, sesh=vars(IUserSession(request.getSession()))).encode("utf-16")
 
 class FE_Base(resource.Resource):
     """
@@ -80,6 +96,12 @@ class FE_Gate(FE_Base):
     def render_GET(self, request: Request):        
         self.logger.debug(f"{request.getClientIP()} -> {request.uri.decode()}")
         uri: str = request.uri.decode()
+        
+        sesh = request.getSession()
+        usr_sesh = IUserSession(sesh)
+        if usr_sesh.userId > 0:
+            return redirectTo(b"/user", request)
+        
         if uri.startswith("/gate/create"):
             return self.create_user(request)
 
@@ -92,7 +114,7 @@ class FE_Gate(FE_Base):
         else: err = 0
 
         template = self.environment.get_template("core/frontend/gate/gate.jinja")        
-        return template.render(title=f"{self.core_config.server.name} | Login Gate", error=err).encode("utf-16")
+        return template.render(title=f"{self.core_config.server.name} | Login Gate", error=err, sesh=vars(usr_sesh)).encode("utf-16")
     
     def render_POST(self, request: Request):
         uri = request.uri.decode()
@@ -100,7 +122,7 @@ class FE_Gate(FE_Base):
         
         if uri == "/gate/gate.login":            
             access_code: str = request.args[b"access_code"][0].decode()
-            passwd: str = request.args[b"passwd"][0]
+            passwd: bytes = request.args[b"passwd"][0]
             if passwd == b"":
                 passwd = None
 
@@ -109,20 +131,22 @@ class FE_Gate(FE_Base):
                 return redirectTo(b"/gate?e=1", request)
                         
             if passwd is None:
-                sesh = self.data.user.login(uid, ip=ip)
+                sesh = self.data.user.check_password(uid)
 
                 if sesh is not None:
                     return redirectTo(f"/gate/create?ac={access_code}".encode(), request)
                 return redirectTo(b"/gate?e=1", request)
 
-            salt = bcrypt.gensalt()
-            hashed = bcrypt.hashpw(passwd, salt)
-            sesh = self.data.user.login(uid, hashed, ip)
-
-            if sesh is None:
+            if not self.data.user.check_password(uid, passwd):
                 return redirectTo(b"/gate?e=1", request)
-
-            request.addCookie('session', sesh)            
+            
+            self.logger.info(f"Successful login of user {uid} at {ip}")
+            
+            sesh = request.getSession()
+            usr_sesh = IUserSession(sesh)
+            usr_sesh.userId = uid
+            usr_sesh.current_ip = ip
+          
             return redirectTo(b"/user", request)
         
         elif uri == "/gate/gate.create":
@@ -142,10 +166,8 @@ class FE_Gate(FE_Base):
             if result is None:
                 return redirectTo(b"/gate?e=3", request)
             
-            sesh = self.data.user.login(uid, hashed, ip)
-            if sesh is None:
+            if not self.data.user.check_password(uid, passwd.encode()):
                 return redirectTo(b"/gate", request)
-            request.addCookie('session', sesh)
             
             return redirectTo(b"/user", request)
 
@@ -159,14 +181,18 @@ class FE_Gate(FE_Base):
         ac = request.args[b'ac'][0].decode()
         
         template = self.environment.get_template("core/frontend/gate/create.jinja")        
-        return template.render(title=f"{self.core_config.server.name} | Create User", code=ac).encode("utf-16")
+        return template.render(title=f"{self.core_config.server.name} | Create User", code=ac, sesh={"userId": 0}).encode("utf-16")
 
 class FE_User(FE_Base):
     def render_GET(self, request: Request):
         template = self.environment.get_template("core/frontend/user/index.jinja")
-        return template.render().encode("utf-16")
-        if b'session' not in request.cookies:
+
+        sesh: Session = request.getSession()
+        usr_sesh = IUserSession(sesh)
+        if usr_sesh.userId == 0:
             return redirectTo(b"/gate", request)
+        
+        return template.render(title=f"{self.core_config.server.name} | Account", sesh=vars(usr_sesh)).encode("utf-16")
 
 class FE_Game(FE_Base):
     isLeaf = False

@@ -31,7 +31,7 @@ class Data:
         self.arcade = ArcadeData(self.config, self.session)
         self.card = CardData(self.config, self.session)
         self.base = BaseData(self.config, self.session)
-        self.schema_ver_latest = 2
+        self.schema_ver_latest = 4
 
         log_fmt_str = "[%(asctime)s] %(levelname)s | Database | %(message)s"
         log_fmt = logging.Formatter(log_fmt_str)
