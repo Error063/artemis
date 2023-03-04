@@ -85,7 +85,12 @@ class BaseData():
         result = self.execute(sql)
         if result is None:
             return None
-        return result.fetchone()["version"]
+        
+        row = result.fetchone()
+        if row is None:
+            return None
+        
+        return row["version"]
     
     def set_schema_ver(self, ver: int, game: str = "CORE") -> Optional[int]:
         sql = insert(schema_ver).values(game = game, version = ver)
