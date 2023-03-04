@@ -1,13 +1,10 @@
 from enum import Enum
-from typing import Dict, Optional
-from sqlalchemy import Table, Column, and_
+from typing import Optional, List
+from sqlalchemy import Table, Column
 from sqlalchemy.types import Integer, String, TIMESTAMP
-from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.mysql import insert
-from sqlalchemy.sql import func, select, Delete
-from uuid import uuid4
-from datetime import datetime, timedelta
+from sqlalchemy.sql import func, select
 from sqlalchemy.engine import Row
 import bcrypt
 
@@ -34,9 +31,6 @@ class PermissionBits(Enum):
 
 class UserData(BaseData):
     def create_user(self, id: int = None, username: str = None, email: str = None, password: str = None, permission: int = 1) -> Optional[int]:
-        if email is None:
-            permission = 1
-
         if id is None:
             sql = insert(aime_user).values(
                 username=username, 
@@ -83,3 +77,21 @@ class UserData(BaseData):
         # ALTER TABLE isn't in sqlalchemy so we do this the ugly way
         sql = f"ALTER TABLE aime_user AUTO_INCREMENT={ai_value}"
         self.execute(sql)
+    
+    def delete_user(self, user_id: int) -> None:
+        sql = aime_user.delete(aime_user.c.id == user_id)
+
+        result = self.execute(sql)
+        if result is None: 
+            self.logger.error(f"Failed to delete user with id {user_id}")
+
+    def get_unregistered_users(self) -> List[Row]:
+        """
+        Returns a list of users who have not registered with the webui. They may or may not have cards.
+        """
+        sql = select(aime_user).where(aime_user.c.password == None)
+
+        result = self.execute(sql)
+        if result is None: 
+            return None
+        return result.fetchall()

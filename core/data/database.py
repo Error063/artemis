@@ -1,12 +1,12 @@
 import logging, coloredlogs
-from typing import Any, Dict, List
+from typing import Optional
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
 from logging.handlers import TimedRotatingFileHandler
-from datetime import datetime
-import importlib, os, json
-
+import importlib, os
+import secrets, string
+import bcrypt
 from hashlib import sha256
 
 from core.config import CoreConfig
@@ -138,3 +138,61 @@ class Data:
             return None
         
         self.logger.info(f"Successfully migrated {game} to schema version {version}")
+
+    def create_owner(self, email: Optional[str] = None) -> None:
+        pw = ''.join(secrets.choice(string.ascii_letters + string.digits) for i in range(20))
+        hash = bcrypt.hashpw(pw.encode(), bcrypt.gensalt())
+
+        user_id = self.user.create_user(email=email, permission=255, password=hash)
+        if user_id is None:
+            self.logger.error(f"Failed to create owner with email {email}")
+            return
+
+        card_id = self.card.create_card(user_id, "00000000000000000000")
+        if card_id is None:
+            self.logger.error(f"Failed to create card for owner with id {user_id}")
+            return
+
+        self.logger.warn(f"Successfully created owner with email {email}, access code 00000000000000000000, and password {pw} Make sure to change this password and assign a real card ASAP!")
+    
+    def migrate_card(self, old_ac: str, new_ac: str, should_force: bool) -> None:
+        if old_ac == new_ac:
+            self.logger.error("Both access codes are the same!")
+            return
+        
+        new_card = self.card.get_card_by_access_code(new_ac)
+        if new_card is None:
+            self.card.update_access_code(old_ac, new_ac)
+            return
+        
+        if not should_force:
+            self.logger.warn(f"Card already exists for access code {new_ac} (id {new_card['id']}). If you wish to continue, rerun with the '--force' flag."\
+                f" All exiting data on the target card {new_ac} will be perminently erased and replaced with data from card {old_ac}.")
+            return
+        
+        self.logger.info(f"All exiting data on the target card {new_ac} will be perminently erased and replaced with data from card {old_ac}.")
+        self.card.delete_card(new_card["id"])
+        self.card.update_access_code(old_ac, new_ac)
+
+        hanging_user = self.user.get_user(new_card["user"])
+        if hanging_user["password"] is None:
+            self.logger.info(f"Delete hanging user {hanging_user['id']}")
+            self.user.delete_user(hanging_user['id'])
+    
+    def delete_hanging_users(self) -> None:
+        """
+        Finds and deletes users that have not registered for the webui that have no cards assocated with them.
+        """
+        unreg_users = self.user.get_unregistered_users()
+        if unreg_users is None:
+            self.logger.error("Error occoured finding unregistered users")
+        
+        for user in unreg_users:
+            cards = self.card.get_user_cards(user['id'])
+            if cards is None:
+                self.logger.error(f"Error getting cards for user {user['id']}")
+                continue
+
+            if not cards:
+                self.logger.info(f"Delete hanging user {user['id']}")
+                self.user.delete_user(user['id'])

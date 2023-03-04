@@ -3,6 +3,7 @@ from sqlalchemy import Table, Column, UniqueConstraint
 from sqlalchemy.types import Integer, String, Boolean, TIMESTAMP
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.engine import Row
 
 from core.data.schema.base import BaseData, metadata
 
@@ -21,21 +22,44 @@ aime_card = Table(
 )
 
 class CardData(BaseData):
-    def get_user_id_from_card(self, access_code: str) -> Optional[int]:
-        """
-        Given a 20 digit access code as a string, get the user id associated with that card
-        """
+    def get_card_by_access_code(self, access_code: str) -> Optional[Row]:
         sql = aime_card.select(aime_card.c.access_code == access_code)
 
         result = self.execute(sql)
         if result is None: return None 
+        return result.fetchone()
 
-        card = result.fetchone()
+    def get_card_by_id(self, card_id: int) -> Optional[Row]:
+        sql = aime_card.select(aime_card.c.id == card_id)
+
+        result = self.execute(sql)
+        if result is None: return None 
+        return result.fetchone()
+    
+    def update_access_code(self, old_ac: str, new_ac: str) -> None:
+        sql = aime_card.update(aime_card.c.access_code == old_ac).values(access_code = new_ac)
+
+        result = self.execute(sql)
+        if result is None: 
+            self.logger.error(f"Failed to change card access code from {old_ac} to {new_ac}")
+
+    def get_user_id_from_card(self, access_code: str) -> Optional[int]:
+        """
+        Given a 20 digit access code as a string, get the user id associated with that card
+        """
+        card = self.get_card_by_access_code(access_code)
         if card is None: return None
 
         return int(card["user"])
+    
+    def delete_card(self, card_id: int) -> None:
+        sql = aime_card.delete(aime_card.c.id == card_id)
 
-    def get_user_cards(self, aime_id: int) -> Optional[List[Dict]]:
+        result = self.execute(sql)
+        if result is None: 
+            self.logger.error(f"Failed to delete card with id {card_id}")
+
+    def get_user_cards(self, aime_id: int) -> Optional[List[Row]]:
         """
         Returns all cards owned by a user
         """
