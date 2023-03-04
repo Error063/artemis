@@ -28,7 +28,7 @@ if __name__=='__main__':
 
         if args.game is None:
             data.logger.info("No game set, upgrading core schema")
-            data.migrate_database("CORE", int(args.version))
+            data.migrate_database("CORE", int(args.version), args.action)
 
         else:
             data.migrate_database(args.game, int(args.version), args.action)
