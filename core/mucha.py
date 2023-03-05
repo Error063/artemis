@@ -56,11 +56,8 @@ class MuchaServlet:
             return b""
 
         # TODO: Figure out why the S/N is the way it is.
-
-        if self.config.server.is_develop:
-            resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
-        else:
-            resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}")
+        
+        resp = MuchaAuthResponse(f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
@@ -80,10 +77,7 @@ class MuchaServlet:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
             return b""
 
-        if self.config.server.is_develop:
-            resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}:{self.config.mucha.port}")
-        else:
-            resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}")
+        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
