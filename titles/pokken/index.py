@@ -19,7 +19,8 @@ class PokkenServlet(resource.Resource):
         self.core_cfg = core_cfg
         self.config_dir = cfg_dir
         self.game_cfg = PokkenConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/pokken.yaml")))
+        if path.exists(f"{cfg_dir}/pokken.yaml"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/pokken.yaml")))
 
         self.logger = logging.getLogger("pokken")
         if not hasattr(self.logger, "inited"):
