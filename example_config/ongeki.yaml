@@ -24,3 +24,8 @@ gachas:
     - 1104
     - 1111
     - 1135
+    # can be used for Card Maker 1.35 and up, else will be ignored
+    - 1149
+    - 1156
+    - 1163
+    - 1164

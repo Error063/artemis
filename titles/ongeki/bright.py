@@ -22,10 +22,8 @@ class OngekiBright(OngekiBase):
         return ret
 
     def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
-        # first check for a bright memory profile after that check for a
-        # bright profile
-        p = (self.data.profile.get_profile_data(data["userId"], self.version+1)
-             or self.data.profile.get_profile_data(data["userId"], self.version))
+        # check for a bright profile
+        p = self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -50,6 +48,8 @@ class OngekiBright(OngekiBase):
         user_data["accessCode"] = cards[0]["access_code"]
 
         # hardcode Card Maker version for now
+        # Card Maker 1.34.00 = 1.30.01
+        # Card Maker 1.36.00 = 1.35.04
         user_data["compatibleCmVersion"] = "1.30.01"
 
         return {"userId": data["userId"], "userData": user_data}
@@ -195,7 +195,9 @@ class OngekiBright(OngekiBase):
 
             # make sure to only show gachas for the current version
             # so only up to bright, 1140 is the first bright memory gacha
-            if tmp["gachaId"] < 1140:
+            if self.version == OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY:
+                game_gacha_list.append(tmp)
+            elif self.version == OngekiConstants.VER_ONGEKI_BRIGHT and tmp["gachaId"] < 1140:
                 game_gacha_list.append(tmp)
 
         return {
@@ -379,11 +381,11 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version+1)
+            p = self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
                 self.data.profile.put_profile_data(
-                    user_id, self.version+1, upsert["userData"][0])
+                    user_id, self.version, upsert["userData"][0])
             else:
                 # save the bright profile
                 self.data.profile.put_profile_data(
@@ -413,11 +415,11 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version+1)
+            p = self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
                 self.data.profile.put_profile_data(
-                    user_id, self.version+1, upsert["userData"][0])
+                    user_id, self.version, upsert["userData"][0])
             else:
                 # save the bright profile
                 self.data.profile.put_profile_data(
@@ -601,11 +603,11 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version+1)
+            p = self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
                 self.data.profile.put_profile_data(
-                    user_id, self.version+1, upsert["userData"][0])
+                    user_id, self.version, upsert["userData"][0])
             else:
                 # save the bright profile
                 self.data.profile.put_profile_data(

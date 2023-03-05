@@ -192,7 +192,7 @@ class OngekiStaticData(BaseData):
 
     def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
         sql = gachas.select(and_(
-            gachas.c.version == version,
+            gachas.c.version <= version,
             gachas.c.gachaId == gacha_id
         ))
 
