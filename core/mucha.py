@@ -55,7 +55,7 @@ class MuchaServlet:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
             return b""
 
-        # TODO: Figure out why the S/N is the way it is.
+        # TODO: Decrypt S/N
         
         resp = MuchaAuthResponse(f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
 
@@ -77,7 +77,6 @@ class MuchaServlet:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
             return b""
 
-        #resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
         resp = MuchaUpdateResponseStub(req.gameVer)
 
         self.logger.debug(f"Mucha response {vars(resp)}")
@@ -113,12 +112,13 @@ class MuchaServlet:
 
 class MuchaAuthRequest():
     def __init__(self, request: Dict) -> None:
-        self.gameVer = "" if "gameVer" not in request else request["gameVer"]
-        self.sendDate = "" if "sendDate" not in request else datetime.strptime(request["sendDate"], "%Y%m%d")
+        self.gameVer = "" if "gameVer" not in request else request["gameVer"] # gameCd + boardType + countryCd + version
+        self.sendDate = "" if "sendDate" not in request else request["sendDate"] # %Y%m%d
         self.serialNum = "" if "serialNum" not in request else request["serialNum"]
         self.gameCd = "" if "gameCd" not in request else request["gameCd"]
         self.boardType = "" if "boardType" not in request else request["boardType"]
         self.boardId = "" if "boardId" not in request else request["boardId"]
+        self.mac = "" if "mac" not in request else request["mac"]
         self.placeId = "" if "placeId" not in request else request["placeId"]
         self.storeRouterIp = "" if "storeRouterIp" not in request else request["storeRouterIp"]
         self.countryCd = "" if "countryCd" not in request else request["countryCd"]
