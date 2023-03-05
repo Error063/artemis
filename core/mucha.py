@@ -191,6 +191,8 @@ class MuchaUpdateResponse():
         self.COM_SIZE_1 = "0"
         self.COM_TIME_1 = "0"
         self.LAN_INFO_SIZE_1 = "0"
+        self.USER_ID = ""
+        self.PASSWORD = ""
 
 class MuchaUpdateResponseStub():
     def __init__(self, game_ver: str) -> None:
