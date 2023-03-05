@@ -77,7 +77,8 @@ class MuchaServlet:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
             return b""
 
-        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
+        #resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + self.config.mucha.port if self.config.server.is_develop else ''}")
+        resp = MuchaUpdateResponseStub(req.gameVer)
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
@@ -190,3 +191,8 @@ class MuchaUpdateResponse():
         self.COM_SIZE_1 = "0"
         self.COM_TIME_1 = "0"
         self.LAN_INFO_SIZE_1 = "0"
+
+class MuchaUpdateResponseStub():
+    def __init__(self, game_ver: str) -> None:
+        self.RESULTS = "001"
+        self.UPDATE_VER_1 = game_ver
