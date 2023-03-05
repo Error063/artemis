@@ -2,6 +2,7 @@ import yaml
 import argparse
 from core.config import CoreConfig
 from core.data import Data
+from os import path
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description="Database utilities")
@@ -16,7 +17,8 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     cfg = CoreConfig()
-    cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    if path.exists(f"{args.config}/core.yaml"):
+        cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
     data = Data(cfg)
 
     if args.action == "create":

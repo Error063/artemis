@@ -12,6 +12,7 @@ from google.protobuf.message import DecodeError
 from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
 from titles.pokken.base import PokkenBase
+from titles.pokken.const import PokkenConstants
 
 class PokkenServlet(resource.Resource):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -46,7 +47,9 @@ class PokkenServlet(resource.Resource):
     @classmethod
     def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
         game_cfg = PokkenConfig()
-        game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/pokken.yaml")))
+        
+        if path.exists(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}")))
 
         if not game_cfg.server.enable:
             return (False, "", "")

@@ -39,20 +39,21 @@ class TitleServlet():
             if hasattr(mod, "game_codes") and hasattr(mod, "index"):
                 should_call_setup = True
                 
-                for code in mod.game_codes:
-                    if hasattr(mod.index, "get_allnet_info"):
+                if hasattr(mod.index, "get_allnet_info"):                    
+                    for code in mod.game_codes:
                         enabled, _, _ = mod.index.get_allnet_info(code, self.config, self.config_folder)
-                    
-                    else:
-                        enabled = True
 
-                    if enabled:
-                        handler_cls = mod.index(self.config, self.config_folder)
-                        if hasattr(handler_cls, "setup") and should_call_setup:
-                            handler_cls.setup()
-                            should_call_setup = False
+                        if enabled:
+                            handler_cls = mod.index(self.config, self.config_folder)
+                            
+                            if hasattr(handler_cls, "setup") and should_call_setup:
+                                handler_cls.setup()
+                                should_call_setup = False
 
-                        self.title_registry[code] = handler_cls
+                            self.title_registry[code] = handler_cls
+                
+                else:
+                    self.logger.warn(f"Game {folder} has no get_allnet_info")
             
             else:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py")

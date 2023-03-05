@@ -3,7 +3,7 @@ import argparse
 import re
 import os
 import yaml
-import importlib
+from os import path
 import logging, coloredlogs
 
 from logging.handlers import TimedRotatingFileHandler
@@ -79,7 +79,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = CoreConfig()
-    config.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    if path.exists(f"{args.config}/core.yaml"):
+        config.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
     log_fmt_str = "[%(asctime)s] Reader | %(levelname)s | %(message)s"
     log_fmt = logging.Formatter(log_fmt_str)

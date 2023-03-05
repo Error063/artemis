@@ -3,6 +3,8 @@ from enum import Enum
 class OngekiConstants():
     GAME_CODE = "SDDT"
 
+    CONFIG_NAME = "ongeki.yaml"
+
     VER_ONGEKI = 0
     VER_ONGEKI_PLUS = 1
     VER_ONGEKI_SUMMER = 2

@@ -6,6 +6,8 @@ import string
 import logging, coloredlogs
 import zlib
 from logging.handlers import TimedRotatingFileHandler
+from os import path
+from typing import Tuple
 
 from core.config import CoreConfig
 from titles.mai2.config import Mai2Config
@@ -22,7 +24,8 @@ class Mai2Servlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = Mai2Config()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}")))
+        if path.exists(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}")))
 
         self.versions = [
             Mai2Base(core_cfg, self.game_cfg),
@@ -49,6 +52,21 @@ class Mai2Servlet():
         
         self.logger.setLevel(self.game_cfg.server.loglevel)
         coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
+
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = Mai2Config()
+
+        if path.exists(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", f"{core_cfg.title.hostname}:{core_cfg.title.port}/")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", f"{core_cfg.title.hostname}/")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         req_raw = request.content.getvalue()

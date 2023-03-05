@@ -56,49 +56,7 @@ class AllnetServlet:
                         self.uri_registry[code] = (uri, host)
             
             else:
-                for code in mod.game_codes:
-                    if hasattr(mod, "use_default_title") and mod.use_default_title:
-                        if hasattr(mod, "include_protocol") and mod.include_protocol:
-                            if hasattr(mod, "title_secure") and mod.title_secure:
-                                uri = "https://"
-                            
-                            else:
-                                uri = "http://"
-
-                        else:
-                            uri = ""
-                        
-                        if core_cfg.server.is_develop:
-                            uri += f"{core_cfg.title.hostname}:{core_cfg.title.port}"
-                        
-                        else:
-                            uri += f"{core_cfg.title.hostname}"
-                        
-                        uri += f"/{code}/$v"
-
-                        if hasattr(mod, "trailing_slash") and mod.trailing_slash:
-                            uri += "/"
-                    
-                    else:
-                        if hasattr(mod, "uri"):
-                            uri = mod.uri
-                        else:
-                            uri = ""
-
-                    if hasattr(mod, "host"):
-                        host = mod.host
-                    
-                    elif hasattr(mod, "use_default_host") and mod.use_default_host:
-                        if core_cfg.server.is_develop:
-                            host = f"{core_cfg.title.hostname}:{core_cfg.title.port}"
-                        
-                        else:
-                            host = f"{core_cfg.title.hostname}"
-                    
-                    else:
-                        host = ""
-                    
-                    self.uri_registry[code] = (uri, host)
+                self.logger.warn("Game {_} has no get_allnet_info method.")
 
         self.logger.info(f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}")
 

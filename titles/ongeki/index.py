@@ -25,8 +25,8 @@ class OngekiServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = OngekiConfig()
-        if path.exists(f"{cfg_dir}/ongeki.yaml"):
-            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/ongeki.yaml")))
+        if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}")))
 
         self.versions = [
             OngekiBase(core_cfg, self.game_cfg),
@@ -59,7 +59,9 @@ class OngekiServlet():
     @classmethod
     def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
         game_cfg = OngekiConfig()
-        game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/ongeki.yaml")))
+
+        if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}")))
 
         if not game_cfg.server.enable:
             return (False, "", "")

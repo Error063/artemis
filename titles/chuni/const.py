@@ -2,6 +2,8 @@ class ChuniConstants():
     GAME_CODE = "SDBT"
     GAME_CODE_NEW = "SDHD"
 
+    CONFIG_NAME = "chuni.yaml"
+
     VER_CHUNITHM = 0
     VER_CHUNITHM_PLUS = 1
     VER_CHUNITHM_AIR = 2

@@ -90,7 +90,8 @@ if __name__ == "__main__":
         exit(1)
 
     cfg: CoreConfig = CoreConfig()
-    cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    if path.exists(f"{args.config}/core.yaml"):
+        cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
     logger = logging.getLogger("core")
     log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
