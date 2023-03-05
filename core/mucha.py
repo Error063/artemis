@@ -131,7 +131,7 @@ class MuchaAuthRequest():
         self.allToken = "" if "allToken" not in request else request["allToken"]
 
 class MuchaAuthResponse():
-    def __init__(self, mucha_url: str = "localhost") -> None:
+    def __init__(self, mucha_url: str) -> None:
         self.RESULTS = "001"        
         self.AUTH_INTERVAL = "86400"
         self.SERVER_TIME = datetime.strftime(datetime.now(), "%Y%m%d%H%M")
@@ -184,7 +184,7 @@ class MuchaUpdateRequest():
         self.storeRouterIp = "" if "storeRouterIp" not in request else request["storeRouterIp"]
 
 class MuchaUpdateResponse():
-    def __init__(self, game_ver: str = "PKFN0JPN01.01", mucha_url: str = "localhost") -> None:
+    def __init__(self, game_ver: str, mucha_url: str) -> None:
         self.RESULTS = "001"
         self.UPDATE_VER_1 = game_ver
         self.UPDATE_URL_1 = f"https://{mucha_url}/updUrl1/"
