@@ -1,3 +1,4 @@
+from typing import Tuple
 from twisted.web.http import Request
 from twisted.web import resource, server
 from twisted.internet import reactor, endpoints
@@ -40,6 +41,19 @@ class PokkenServlet(resource.Resource):
             self.logger.inited = True
 
         self.base = PokkenBase(core_cfg, self.game_cfg)
+
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = PokkenConfig()
+        game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/pokken.yaml")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/", f"{game_cfg.server.hostname}:{game_cfg.server.port}/")
+        
+        return (True, f"https://{game_cfg.server.hostname}/{game_code}/$v/", f"{game_cfg.server.hostname}/")
     
     def setup(self):
         """

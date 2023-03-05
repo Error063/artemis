@@ -37,16 +37,26 @@ class TitleServlet():
         
         for folder, mod in plugins.items():
             if hasattr(mod, "game_codes") and hasattr(mod, "index"):
-                handler_cls = mod.index(self.config, self.config_folder)
-                if hasattr(handler_cls, "setup"):
-                    handler_cls.setup()
+                should_call_setup = True
                 
                 for code in mod.game_codes:
-                    self.title_registry[code] = handler_cls
+                    if hasattr(mod.index, "get_allnet_info"):
+                        enabled, _, _ = mod.index.get_allnet_info(code, self.config, self.config_folder)
+                    
+                    else:
+                        enabled = True
+
+                    if enabled:
+                        handler_cls = mod.index(self.config, self.config_folder)
+                        if hasattr(handler_cls, "setup") and should_call_setup:
+                            handler_cls.setup()
+                            should_call_setup = False
+
+                        self.title_registry[code] = handler_cls
             
             else:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py")
-        
+
         self.logger.info(f"Serving {len(self.title_registry)} game codes on port {core_cfg.title.port}")
 
     def render_GET(self, request: Request, endpoints: dict) -> bytes:
