@@ -58,6 +58,18 @@ class PokkenServlet(resource.Resource):
             return (True, f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/", f"{game_cfg.server.hostname}:{game_cfg.server.port}/")
         
         return (True, f"https://{game_cfg.server.hostname}/{game_code}/$v/", f"{game_cfg.server.hostname}/")
+
+    @classmethod
+    def get_mucha_info(cls, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = PokkenConfig()
+        
+        if path.exists(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        return (True, "PKFN")
     
     def setup(self):
         """

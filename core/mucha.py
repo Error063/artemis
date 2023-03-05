@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from twisted.web import resource
@@ -7,10 +7,13 @@ from datetime import datetime
 import pytz
 
 from core.config import CoreConfig
+from core.utils import Utils
 
 class MuchaServlet:
-    def __init__(self, cfg: CoreConfig) -> None:        
+    def __init__(self, cfg: CoreConfig, cfg_dir: str) -> None:        
         self.config = cfg
+        self.config_dir = cfg_dir
+        self.mucha_registry: List[str] = []
 
         self.logger = logging.getLogger('mucha')
         log_fmt_str = "[%(asctime)s] Mucha | %(levelname)s | %(message)s"
@@ -28,6 +31,16 @@ class MuchaServlet:
         self.logger.setLevel(logging.INFO)
         coloredlogs.install(level=logging.INFO, logger=self.logger, fmt=log_fmt_str)
 
+        all_titles = Utils.get_all_titles()
+
+        for _, mod in all_titles.items():
+            if hasattr(mod, "index") and hasattr(mod.index, "get_mucha_info"):
+                enabled, game_cd = mod.index.get_mucha_info(self.config, self.config_dir)
+                if enabled:
+                    self.mucha_registry.append(game_cd)
+        
+        self.logger.info(f"Serving {len(self.mucha_registry)} games on port {self.config.mucha.port}")
+
     def handle_boardauth(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         if req_dict is None:
@@ -36,6 +49,13 @@ class MuchaServlet:
 
         req = MuchaAuthRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
+        self.logger.info(f"Boardauth request from {request.getClientAddress().host} for {req.gameVer}")
+
+        if req.gameCd not in self.mucha_registry:
+            self.logger.warn(f"Unknown gameCd {req.gameCd}")
+            return b""
+
+        # TODO: Figure out why the S/N is the way it is.
 
         if self.config.server.is_develop:
             resp = MuchaAuthResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
@@ -54,11 +74,16 @@ class MuchaServlet:
 
         req = MuchaUpdateRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
+        self.logger.info(f"Updatecheck request from {request.getClientAddress().host} for {req.gameVer}")
+
+        if req.gameCd not in self.mucha_registry:
+            self.logger.warn(f"Unknown gameCd {req.gameCd}")
+            return b""
 
         if self.config.server.is_develop:
-            resp = MuchaUpdateResponse(mucha_url=f"{self.config.mucha.hostname}:{self.config.mucha.port}")
+            resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}:{self.config.mucha.port}")
         else:
-            resp = MuchaUpdateResponse(mucha_url=f"{self.config.mucha.hostname}")
+            resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
@@ -94,7 +119,7 @@ class MuchaServlet:
 class MuchaAuthRequest():
     def __init__(self, request: Dict) -> None:
         self.gameVer = "" if "gameVer" not in request else request["gameVer"]
-        self.sendDate = "" if "sendDate" not in request else request["sendDate"]
+        self.sendDate = "" if "sendDate" not in request else datetime.strptime(request["sendDate"], "%Y%m%d")
         self.serialNum = "" if "serialNum" not in request else request["serialNum"]
         self.gameCd = "" if "gameCd" not in request else request["gameCd"]
         self.boardType = "" if "boardType" not in request else request["boardType"]

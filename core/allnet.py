@@ -54,9 +54,6 @@ class AllnetServlet:
                     
                     if enabled:
                         self.uri_registry[code] = (uri, host)
-            
-            else:
-                self.logger.warn("Game {_} has no get_allnet_info method.")
 
         self.logger.info(f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}")
 

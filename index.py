@@ -23,7 +23,7 @@ class HttpDispatcher(resource.Resource):
         
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
-        self.mucha = MuchaServlet(cfg)
+        self.mucha = MuchaServlet(cfg, config_dir)
 
         self.map_post.connect('allnet_ping', '/naomitest.html', controller="allnet", action='handle_naomitest', conditions=dict(method=['GET']))
         self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
