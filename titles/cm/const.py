@@ -1,6 +1,8 @@
 class CardMakerConstants():
     GAME_CODE = "SDED"
 
+    CONFIG_NAME = "cardmaker.yaml"
+
     VER_CARD_MAKER = 0
     VER_CARD_MAKER_136 = 1
 

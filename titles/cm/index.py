@@ -1,4 +1,3 @@
-from twisted.web.http import Request
 import json
 import inflection
 import yaml
@@ -6,6 +5,10 @@ import string
 import logging
 import coloredlogs
 import zlib
+
+from os import path
+from typing import Tuple
+from twisted.web.http import Request
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
@@ -19,7 +22,8 @@ class CardMakerServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = CardMakerConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/cardmaker.yaml")))
+        if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}")))
 
         self.versions = [
             CardMakerBase(core_cfg, self.game_cfg),
@@ -43,6 +47,20 @@ class CardMakerServlet():
         self.logger.setLevel(self.game_cfg.server.loglevel)
         coloredlogs.install(level=self.game_cfg.server.loglevel,
                             logger=self.logger, fmt=log_fmt_str)
+
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = CardMakerConfig()
+        if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", "")
+
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         req_raw = request.content.getvalue()
