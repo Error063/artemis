@@ -2,6 +2,7 @@ from typing import Dict, Optional, List
 from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.schema import ForeignKey
+from sqlalchemy.engine import Row
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
 
@@ -239,6 +240,63 @@ tech_event = Table(
     Column("isRankingRewarded", Boolean),
     Column("isTotalTechNewRecord", Boolean),
     UniqueConstraint("user", "eventId", name="ongeki_user_tech_event_uk"),
+    mysql_charset='utf8mb4'
+)
+
+gacha = Table(
+    "ongeki_user_gacha",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("gachaId", Integer, nullable=False),
+    Column("totalGachaCnt", Integer, server_default="0"),
+    Column("ceilingGachaCnt", Integer, server_default="0"),
+    Column("selectPoint", Integer, server_default="0"),
+    Column("useSelectPoint", Integer, server_default="0"),
+    Column("dailyGachaCnt", Integer, server_default="0"),
+    Column("fiveGachaCnt", Integer, server_default="0"),
+    Column("elevenGachaCnt", Integer, server_default="0"),
+    Column("dailyGachaDate", TIMESTAMP, nullable=False, server_default=func.now()),
+    UniqueConstraint("user", "gachaId", name="ongeki_user_gacha_uk"),
+    mysql_charset='utf8mb4'
+)
+
+gacha_supply = Table(
+    "ongeki_user_gacha_supply",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("cardId", Integer, nullable=False),
+    UniqueConstraint("user", "cardId", name="ongeki_user_gacha_supply_uk"),
+    mysql_charset='utf8mb4'
+)
+
+
+print_detail = Table(
+    "ongeki_user_print_detail",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("cardId", Integer, nullable=False),
+    Column("cardType", Integer, server_default="0"),
+    Column("printDate", TIMESTAMP, nullable=False),
+    Column("serialId", String(20), nullable=False),
+    Column("placeId", Integer, nullable=False),
+    Column("clientId", String(11), nullable=False),
+    Column("printerSerialId", String(20), nullable=False),
+    Column("isHolograph", Boolean, server_default="0"),
+    Column("isAutographed", Boolean, server_default="0"),
+    Column("printOption1", Boolean, server_default="1"),
+    Column("printOption2", Boolean, server_default="1"),
+    Column("printOption3", Boolean, server_default="1"),
+    Column("printOption4", Boolean, server_default="1"),
+    Column("printOption5", Boolean, server_default="1"),
+    Column("printOption6", Boolean, server_default="1"),
+    Column("printOption7", Boolean, server_default="1"),
+    Column("printOption8", Boolean, server_default="1"),
+    Column("printOption9", Boolean, server_default="1"),
+    Column("printOption10", Boolean, server_default="0"),
+    UniqueConstraint("serialId", name="ongeki_user_print_detail_uk"),
     mysql_charset='utf8mb4'
 )
 
@@ -545,7 +603,7 @@ class OngekiItemData(BaseData):
 
         if result is None: return None
         return result.fetchall()
-    
+
     def put_memorychapter(self, aime_id: int, memorychapter_data: Dict) -> Optional[int]:
         memorychapter_data["user"] = aime_id
 
@@ -557,10 +615,73 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_memorychapters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(memorychapter).where(memorychapter.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
+
+    def get_user_gacha(self, aime_id: int, gacha_id: int) -> Optional[Row]:
+        sql = gacha.select(and_(
+            gacha.c.user == aime_id,
+            gacha.c.gachaId == gacha_id
+        ))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
+        sql = gacha.select(gacha.c.user == aime_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_user_gacha_supplies(self, aime_id: int) -> Optional[List[Row]]:
+        sql = gacha_supply.select(gacha_supply.c.user == aime_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def put_user_gacha(self, aime_id: int, gacha_id: int, **data) -> Optional[int]:
+        sql = insert(gacha).values(
+            user=aime_id,
+            gachaId=gacha_id,
+            **data)
+
+        conflict = sql.on_duplicate_key_update(
+            user=aime_id,
+            gachaId=gacha_id,
+            **data)
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
+            return None
+        return result.lastrowid
+
+    def put_user_print_detail(self, aime_id: int, serial_id: str,
+                              user_print_data: Dict) -> Optional[int]:
+        sql = insert(print_detail).values(
+            user=aime_id,
+            serialId=serial_id,
+            **user_print_data)
+
+        conflict = sql.on_duplicate_key_update(
+            user=aime_id,
+            serialId=serial_id,
+            **user_print_data)
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(f"put_user_print_detail: Failed to insert! aime_id: {aime_id}")
+            return None
+        return result.lastrowid

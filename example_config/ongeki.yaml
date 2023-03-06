@@ -1,3 +1,31 @@
 server:
   enable: True
   loglevel: "info"
+
+gachas:
+  enabled_gachas:
+    - 1011
+    - 1012
+    - 1043
+    - 1067
+    - 1068
+    - 1069
+    - 1070
+    - 1071
+    - 1072
+    - 1073
+    - 1074
+    - 1075
+    - 1076
+    - 1077
+    - 1081
+    - 1085
+    - 1089
+    - 1104
+    - 1111
+    - 1135
+    # can be used for Card Maker 1.35 and up, else will be ignored
+    - 1149
+    - 1156
+    - 1163
+    - 1164
