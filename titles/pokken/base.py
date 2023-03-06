@@ -35,19 +35,19 @@ class PokkenBase():
         regist_pcb.server_time = int(datetime.now().timestamp() / 1000)
         biwa_setting = {
             "MatchingServer": {
-                "host": f"https://{self.core_cfg.title.hostname}",
-                "port": 9000,
+                "host": f"https://{self.game_cfg.server.hostname}",
+                "port": self.game_cfg.server.port_matching,
                 "url": "/matching"
             },
             "StunServer": {
-                "addr": self.core_cfg.title.hostname,
-                "port": 3333
+                "addr": self.game_cfg.server.hostname,
+                "port": self.game_cfg.server.port_stun
             },
             "TurnServer": {
-                "addr": self.core_cfg.title.hostname,
-                "port": 4444
+                "addr": self.game_cfg.server.hostname,
+                "port": self.game_cfg.server.port_turn
             },
-            "AdmissionUrl": f"ws://{self.core_cfg.title.hostname}:1111",
+            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}",
             "locationId": 123,
             "logfilename": "JackalMatchingLibrary.log",
             "biwalogfilename": "./biwa.log"

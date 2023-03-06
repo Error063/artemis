@@ -29,6 +29,7 @@ event_log = Table(
     Column("system", String(255), nullable=False),
     Column("type", String(255), nullable=False),
     Column("severity", Integer, nullable=False),
+    Column("message", String(1000), nullable=False),
     Column("details", JSON, nullable=False),
     Column("when_logged", TIMESTAMP, nullable=False, server_default=func.now()),
     mysql_charset='utf8mb4'
@@ -85,7 +86,12 @@ class BaseData():
         result = self.execute(sql)
         if result is None:
             return None
-        return result.fetchone()["version"]
+        
+        row = result.fetchone()
+        if row is None:
+            return None
+        
+        return row["version"]
     
     def set_schema_ver(self, ver: int, game: str = "CORE") -> Optional[int]:
         sql = insert(schema_ver).values(game = game, version = ver)
@@ -97,12 +103,12 @@ class BaseData():
             return None
         return result.lastrowid
 
-    def log_event(self, system: str, type: str, severity: int, details: Dict) -> Optional[int]:
-        sql = event_log.insert().values(system = system, type = type, severity = severity, details = json.dumps(details))
+    def log_event(self, system: str, type: str, severity: int, message: str, details: Dict = {}) -> Optional[int]:
+        sql = event_log.insert().values(system = system, type = type, severity = severity, message = message, details = json.dumps(details))
         result = self.execute(sql)
 
         if result is None:
-            self.logger.error(f"{__name__}: Failed to insert event into event log! system = {system}, type = {type}, severity = {severity}, details = {details}")
+            self.logger.error(f"{__name__}: Failed to insert event into event log! system = {system}, type = {type}, severity = {severity}, message = {message}")
             return None
 
         return result.lastrowid

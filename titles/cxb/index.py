@@ -7,7 +7,8 @@ import re
 import inflection
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from typing import Dict
+from typing import Dict, Tuple
+from os import path
 
 from core.config import CoreConfig
 from titles.cxb.config import CxbConfig
@@ -22,7 +23,8 @@ class CxbServlet(resource.Resource):
         self.cfg_dir = cfg_dir
         self.core_cfg = core_cfg
         self.game_cfg = CxbConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/cxb.yaml")))
+        if path.exists(f"{cfg_dir}/{CxbConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CxbConstants.CONFIG_NAME}")))
 
         self.logger = logging.getLogger("cxb")
         if not hasattr(self.logger, "inited"):
@@ -49,6 +51,20 @@ class CxbServlet(resource.Resource):
             CxbRevSunriseS2(core_cfg, self.game_cfg),
         ]
     
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = CxbConfig()
+        if path.exists(f"{cfg_dir}/{CxbConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CxbConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", "")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
+
     def setup(self):
         if self.game_cfg.server.enable:
             endpoints.serverFromString(reactor, f"tcp:{self.game_cfg.server.port}:interface={self.core_cfg.server.listen_address}")\

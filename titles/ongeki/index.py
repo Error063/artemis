@@ -6,6 +6,8 @@ import string
 import logging, coloredlogs
 import zlib
 from logging.handlers import TimedRotatingFileHandler
+from os import path
+from typing import Tuple
 
 from core.config import CoreConfig
 from titles.ongeki.config import OngekiConfig
@@ -23,7 +25,8 @@ class OngekiServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = OngekiConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/ongeki.yaml")))
+        if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}")))
 
         self.versions = [
             OngekiBase(core_cfg, self.game_cfg),
@@ -52,6 +55,21 @@ class OngekiServlet():
         
         self.logger.setLevel(self.game_cfg.server.loglevel)
         coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
+    
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = OngekiConfig()
+
+        if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", f"{core_cfg.title.hostname}:{core_cfg.title.port}/")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", f"{core_cfg.title.hostname}/")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         req_raw = request.content.getvalue()

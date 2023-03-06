@@ -2,10 +2,23 @@
 {% block content %}
 <h1>Gate</h1>
 {% include "core/frontend/widgets/err_banner.jinja" %}
+<style>
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+</style>
 <form id="login" style="max-width: 240px; min-width: 10%;" action="/gate/gate.login" method="post">
     <div class="form-group row">
         <label for="access_code">Card Access Code</label><br>
-        <input form="login" class="form-control" name="access_code" id="access_code" type="text" placeholder="00000000000000000000" maxlength="20" required>
+        <input form="login" class="form-control" name="access_code" id="access_code" type="number" placeholder="00000000000000000000" maxlength="20" required>
     </div>
     <div class="form-group row">
         <label for="passwd">Password</label><br>
@@ -14,4 +27,6 @@
     <p></p>
     <input id="submit" class="btn btn-primary" style="display: block; margin: 0 auto;" form="login" type="submit" value="Login">
 </form>
+<h6>*To register for the webui, type in the access code of your card, as shown in a game, and leave the password field blank.</h6>
+<h6>*If you have not registered a card with this server, you cannot create a webui account.</h6>
 {% endblock content %}

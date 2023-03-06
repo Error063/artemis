@@ -1,0 +1,1 @@
+ALTER TABLE `event_log` ADD COLUMN `message` VARCHAR(1000) NOT NULL AFTER `severity`;

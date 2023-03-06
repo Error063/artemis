@@ -23,7 +23,7 @@ class HttpDispatcher(resource.Resource):
         
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
-        self.mucha = MuchaServlet(cfg)
+        self.mucha = MuchaServlet(cfg, config_dir)
 
         self.map_post.connect('allnet_ping', '/naomitest.html', controller="allnet", action='handle_naomitest', conditions=dict(method=['GET']))
         self.map_post.connect('allnet_poweron', '/sys/servlet/PowerOn', controller="allnet", action='handle_poweron', conditions=dict(method=['POST']))
@@ -90,7 +90,8 @@ if __name__ == "__main__":
         exit(1)
 
     cfg: CoreConfig = CoreConfig()
-    cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    if path.exists(f"{args.config}/core.yaml"):
+        cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
     logger = logging.getLogger("core")
     log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"

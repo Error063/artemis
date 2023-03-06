@@ -3,10 +3,10 @@ import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 import logging
 import json
-from datetime import datetime
 from hashlib import md5
 from twisted.web.http import Request
-from typing import Dict
+from typing import Dict, Tuple
+from os import path
 
 from core.config import CoreConfig
 from titles.wacca.config import WaccaConfig
@@ -24,7 +24,8 @@ class WaccaServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = WaccaConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/wacca.yaml")))
+        if path.exists(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}")))
 
         self.versions = [
             WaccaBase(core_cfg, self.game_cfg),
@@ -51,6 +52,20 @@ class WaccaServlet():
         self.logger.setLevel(self.game_cfg.server.loglevel)
         coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
     
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = WaccaConfig()
+        if path.exists(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v", "")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v", "")
+
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         def end(resp: Dict) -> bytes:
             hash = md5(json.dumps(resp, ensure_ascii=False).encode()).digest()

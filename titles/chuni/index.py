@@ -8,6 +8,8 @@ import inflection
 import string
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
+from os import path
+from typing import Tuple
 
 from core import CoreConfig
 from titles.chuni.config import ChuniConfig
@@ -30,7 +32,8 @@ class ChuniServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = ChuniConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/chuni.yaml")))
+        if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}")))
 
         self.versions = [
             ChuniBase(core_cfg, self.game_cfg),
@@ -67,6 +70,20 @@ class ChuniServlet():
             self.logger.setLevel(self.game_cfg.server.loglevel)
             coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
             self.logger.inited = True
+
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = ChuniConfig()
+        if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", "")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         req_raw = request.content.getvalue()

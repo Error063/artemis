@@ -6,16 +6,20 @@ import zlib
 import json
 import urllib.parse
 import base64
+from os import path
+from typing import Tuple
 
 from core.config import CoreConfig
 from titles.diva.config import DivaConfig
+from titles.diva.const import DivaConstants
 from titles.diva.base import DivaBase
 
 class DivaServlet():
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = DivaConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/diva.yaml")))
+        if path.exists(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}"):
+            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}")))
 
         self.base = DivaBase(core_cfg, self.game_cfg)
 
@@ -36,6 +40,20 @@ class DivaServlet():
         self.logger.setLevel(self.game_cfg.server.loglevel)
         coloredlogs.install(level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str)
     
+    @classmethod
+    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+        game_cfg = DivaConfig()
+        if path.exists(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}"):
+            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}")))
+
+        if not game_cfg.server.enable:
+            return (False, "", "")
+        
+        if core_cfg.server.is_develop:
+            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", "")
+        
+        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
+
     def render_POST(self, req: Request, version: int, url_path: str) -> bytes:
         req_raw = req.content.getvalue()
         url_header = req.getAllHeaders()
