@@ -60,6 +60,9 @@ class ChuniNew(ChuniBase):
             "isAou": "false",
         }
 
+    def handle_remove_token_api_request(self, data: Dict) -> Dict:
+        return { "returnCode": "1" }
+        
     def handle_delete_token_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
