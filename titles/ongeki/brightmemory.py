@@ -5,11 +5,12 @@ import json
 
 from core.config import CoreConfig
 from titles.ongeki.base import OngekiBase
+from titles.ongeki.bright import OngekiBright
 from titles.ongeki.const import OngekiConstants
 from titles.ongeki.config import OngekiConfig
 
-class OngekiBrightMemory(OngekiBase):
 
+class OngekiBrightMemory(OngekiBright):
     def __init__(self, core_cfg: CoreConfig, game_cfg: OngekiConfig) -> None:
         super().__init__(core_cfg, game_cfg)
         self.version = OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY
@@ -28,7 +29,7 @@ class OngekiBrightMemory(OngekiBase):
 
     def handle_get_user_memory_chapter_api_request(self, data: Dict) -> Dict:
         memories = self.data.item.get_memorychapters(data["userId"])
-        if not memories: 
+        if not memories:
             return {"userId": data["userId"], "length":6, "userMemoryChapterList":[
             {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70001, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
             {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70002, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
@@ -37,17 +38,17 @@ class OngekiBrightMemory(OngekiBase):
             {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70005, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
             {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70099, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0}
         ]}
-        
+
         memory_chp = []
         for chp in memories:
             tmp = chp._asdict()
             tmp.pop("id")
             tmp.pop("user")
             memory_chp.append(tmp)
-        
+
         return {
-            "userId": data["userId"], 
-            "length": len(memory_chp), 
+            "userId": data["userId"],
+            "length": len(memory_chp),
             "userMemoryChapterList": memory_chp
         }
 
@@ -56,3 +57,14 @@ class OngekiBrightMemory(OngekiBase):
             "techScore": 0,
             "cardNum": 0
         }
+
+    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
+        # check for a bright memory profile
+        user_data = super().handle_cm_get_user_data_api_request(data)
+
+        # hardcode Card Maker version for now
+        # Card Maker 1.34.00 = 1.30.01
+        # Card Maker 1.36.00 = 1.35.04
+        user_data["userData"]["compatibleCmVersion"] = "1.35.04"
+
+        return user_data

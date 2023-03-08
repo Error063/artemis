@@ -1,0 +1,1 @@
+ALTER TABLE ongeki_profile_data DROP COLUMN lastEmoneyCredit;

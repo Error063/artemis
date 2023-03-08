@@ -1,0 +1,3 @@
+server:
+  enable: True
+  loglevel: "info"

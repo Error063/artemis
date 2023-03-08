@@ -15,6 +15,10 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + Hatsune Miku Arcade
     + All versions
 
++ Card Maker
+    + 1.34.xx
+    + 1.36.xx
+
 + Ongeki
     + All versions up to Bright Memory
 

@@ -78,7 +78,8 @@ profile = Table(
     Column("overDamageBattlePoint", Integer, server_default="0"),
     Column("bestBattlePoint", Integer, server_default="0"),
     Column("lastEmoneyBrand", Integer, server_default="0"),
-    Column("isDialogWatchedSuggestMemory", Boolean),
+    Column("lastEmoneyCredit", Integer, server_default="0"),
+    Column("isDialogWatchedSuggestMemory", Boolean, server_default="0"),
     UniqueConstraint("user", "version", name="ongeki_profile_profile_uk"),
     mysql_charset='utf8mb4'
 )
@@ -179,7 +180,7 @@ region = Table(
     mysql_charset='utf8mb4'
 )
 
-training_room = Table (
+training_room = Table(
     "ongeki_profile_training_room",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
@@ -192,7 +193,7 @@ training_room = Table (
     mysql_charset='utf8mb4'
 )
 
-kop = Table (
+kop = Table(
     "ongeki_profile_kop",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
@@ -217,6 +218,7 @@ rival = Table(
     UniqueConstraint("user", "rivalUserId", name="ongeki_profile_rival_uk"),
     mysql_charset='utf8mb4'
 )
+
 
 class OngekiProfileData(BaseData):
     def __init__(self, cfg: CoreConfig, conn: Connection) -> None:
@@ -286,14 +288,14 @@ class OngekiProfileData(BaseData):
         result = self.execute(sql)
         if result is None: return None
         return result.fetchall()
-    
+
     def get_kop(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(kop).where(kop.c.user == aime_id)
 
         result = self.execute(sql)
         if result is None: return None
         return result.fetchall()
-    
+
     def get_rivals(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(rival.c.rivalUserId).where(rival.c.user == aime_id)
 

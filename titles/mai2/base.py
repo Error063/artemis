@@ -16,6 +16,9 @@ class Mai2Base():
         self.data = Mai2Data(cfg)
         self.logger = logging.getLogger("mai2")
 
+    def handle_ping_request(self, data: Dict) -> Dict:
+        return {"returnCode": 1}
+
     def handle_get_game_setting_api_request(self, data: Dict):
         reboot_start = date.strftime(datetime.now() + timedelta(hours=3), Mai2Constants.DATE_TIME_FORMAT)
         reboot_end = date.strftime(datetime.now() + timedelta(hours=4), Mai2Constants.DATE_TIME_FORMAT)
@@ -202,9 +205,9 @@ class Mai2Base():
             for fav in upsert["userFavoriteList"]:
                 self.data.item.put_favorite(user_id, fav["kind"], fav["itemIdList"])
 
-        if "isNewFriendSeasonRankingList" in upsert and int(upsert["isNewFriendSeasonRankingList"]) > 0:
-            for fsr in upsert["userFriendSeasonRankingList"]:
-                pass
+        # if "isNewFriendSeasonRankingList" in upsert and int(upsert["isNewFriendSeasonRankingList"]) > 0:
+        #     for fsr in upsert["userFriendSeasonRankingList"]:
+        #        pass
 
     def handle_user_logout_api_request(self, data: Dict) -> Dict:
         pass
