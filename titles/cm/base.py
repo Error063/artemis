@@ -25,7 +25,7 @@ class CardMakerBase():
         if self.core_cfg.server.is_develop:
             uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
         else:
-            f"http://{self.core_cfg.title.hostname}"
+            uri = f"http://{self.core_cfg.title.hostname}"
 
         # CHUNITHM = 0, maimai = 1, ONGEKI = 2
         return {
