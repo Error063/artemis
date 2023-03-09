@@ -346,20 +346,16 @@ class AllnetPowerOnRequest:
     def __init__(self, req: Dict) -> None:
         if req is None:
             raise AllnetRequestException("Request processing failed")
-        self.game_id: str = req["game_id"] if "game_id" in req else ""
-        self.ver: str = req["ver"] if "ver" in req else ""
-        self.serial: str = req["serial"] if "serial" in req else ""
-        self.ip: str = req["ip"] if "ip" in req else ""
-        self.firm_ver: str = req["firm_ver"] if "firm_ver" in req else ""
-        self.boot_ver: str = req["boot_ver"] if "boot_ver" in req else ""
-        self.encode: str = req["encode"] if "encode" in req else ""
-
-        try:
-            self.hops = int(req["hops"]) if "hops" in req else 0
-            self.format_ver = int(req["format_ver"]) if "format_ver" in req else 2
-            self.token = int(req["token"]) if "token" in req else 0
-        except ValueError as e:
-            raise AllnetRequestException(f"Failed to parse int: {e}")
+        self.game_id: str = req.get("game_id", "")
+        self.ver: str = req.get("ver", "")
+        self.serial: str = req.get("serial", "")
+        self.ip: str = req.get("ip", "")
+        self.firm_ver: str = req.get("firm_ver", "")
+        self.boot_ver: str = req.get("boot_ver", "")
+        self.encode: str = req.get("encode", "")
+        self.hops = int(req.get("hops", "0"))
+        self.format_ver = int(req.get("hops", "2"))
+        self.token = int(req.get("hops", "0"))
 
 
 class AllnetPowerOnResponse3:
@@ -413,10 +409,10 @@ class AllnetPowerOnResponse2:
 
 class AllnetDownloadOrderRequest:
     def __init__(self, req: Dict) -> None:
-        self.game_id = req["game_id"] if "game_id" in req else ""
-        self.ver = req["ver"] if "ver" in req else ""
-        self.serial = req["serial"] if "serial" in req else ""
-        self.encode = req["encode"] if "encode" in req else ""
+        self.game_id = req.get("game_id", "")
+        self.ver = req.get("ver", "")
+        self.serial = req.get("serial", "")
+        self.encode = req.get("encode", "")
 
 
 class AllnetDownloadOrderResponse:

@@ -132,24 +132,19 @@ class MuchaServlet:
 
 class MuchaAuthRequest:
     def __init__(self, request: Dict) -> None:
-        self.gameVer = (
-            "" if "gameVer" not in request else request["gameVer"]
-        )  # gameCd + boardType + countryCd + version
-        self.sendDate = (
-            "" if "sendDate" not in request else request["sendDate"]
-        )  # %Y%m%d
-        self.serialNum = "" if "serialNum" not in request else request["serialNum"]
-        self.gameCd = "" if "gameCd" not in request else request["gameCd"]
-        self.boardType = "" if "boardType" not in request else request["boardType"]
-        self.boardId = "" if "boardId" not in request else request["boardId"]
-        self.mac = "" if "mac" not in request else request["mac"]
-        self.placeId = "" if "placeId" not in request else request["placeId"]
-        self.storeRouterIp = (
-            "" if "storeRouterIp" not in request else request["storeRouterIp"]
-        )
-        self.countryCd = "" if "countryCd" not in request else request["countryCd"]
-        self.useToken = "" if "useToken" not in request else request["useToken"]
-        self.allToken = "" if "allToken" not in request else request["allToken"]
+        # gameCd + boardType + countryCd + version
+        self.gameVer = request.get("gameVer", "")
+        self.sendDate = request.get("sendDate", "")  # %Y%m%d
+        self.serialNum = request.get("serialNum", "")
+        self.gameCd = request.get("gameCd", "")
+        self.boardType = request.get("boardType", "")
+        self.boardId = request.get("boardId", "")
+        self.mac = request.get("mac", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")
+        self.countryCd = request.get("countryCd", "")
+        self.useToken = request.get("useToken", "")
+        self.allToken = request.get("allToken", "")
 
 
 class MuchaAuthResponse:
@@ -199,14 +194,12 @@ class MuchaAuthResponse:
 
 class MuchaUpdateRequest:
     def __init__(self, request: Dict) -> None:
-        self.gameVer = "" if "gameVer" not in request else request["gameVer"]
-        self.gameCd = "" if "gameCd" not in request else request["gameCd"]
-        self.serialNum = "" if "serialNum" not in request else request["serialNum"]
-        self.countryCd = "" if "countryCd" not in request else request["countryCd"]
-        self.placeId = "" if "placeId" not in request else request["placeId"]
-        self.storeRouterIp = (
-            "" if "storeRouterIp" not in request else request["storeRouterIp"]
-        )
+        self.gameVer = request.get("gameVer", "")
+        self.gameCd = request.get("gameCd", "")
+        self.serialNum = request.get("serialNum", "")
+        self.countryCd = request.get("countryCd", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")
 
 
 class MuchaUpdateResponse:

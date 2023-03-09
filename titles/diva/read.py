@@ -298,6 +298,6 @@ class DivaReader(BaseReader):
         tree[key] = (
             value
             if len(vector) == 1
-            else self.add_branch(tree[key] if key in tree else {}, vector[1:], value)
+            else self.add_branch(tree.get(key, {}), vector[1:], value)
         )
         return tree
