@@ -26,6 +26,8 @@ class CardMaker136(CardMakerBase):
         ret["gameConnectList"][0]["titleUri"] = f"{uri}/SDHD/205/"
         ret["gameConnectList"][1]["titleUri"] = f"{uri}/SDEZ/125/"
         ret["gameConnectList"][2]["titleUri"] = f"{uri}/SDDT/135/"
+        
+        return ret
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         ret = super().handle_get_game_setting_api_request(data)
