@@ -117,24 +117,24 @@ class WaccaServlet():
         self.logger.info(f"v{req_json['appVersion']} {url_path} request from {request.getClientAddress().host} with chipId {req_json['chipId']}")
         self.logger.debug(req_json)
 
+        if not hasattr(self.versions[internal_ver], func_to_find):
+            self.logger.warn(f"{req_json['appVersion']} has no handler for {func_to_find}")
+            resp = BaseResponse().make()
+            return end(resp)
+
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
-            if handler is not None:
-                resp = handler(req_json)
-            
-            else:
-                self.logger.warn(f"{req_json['appVersion']} has no handler for {func_to_find}")
-                resp = None
-            
-            if resp is None:
-                resp = BaseResponse().make()
+            resp = handler(req_json)
             
             self.logger.debug(f"{req_json['appVersion']} response {resp}")
             return end(resp)
 
         except Exception as e:
             self.logger.error(f"{req_json['appVersion']} Error handling method {url_path} -> {e}")
-            if self.game_cfg.server.loglevel <= logging.DEBUG:
+            if self.core_cfg.server.is_develop:
                 raise
-            resp = BaseResponse().make()
+            
+            resp = BaseResponse()
+            resp.status = 1
+            resp.message = "A server error occoured."
             return end(resp)

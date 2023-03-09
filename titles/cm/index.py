@@ -87,7 +87,7 @@ class CardMakerServlet():
         except zlib.error as e:
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+            return zlib.compress(b'{"stat": "0"}')
 
         req_data = json.loads(unzip)
 
@@ -95,19 +95,18 @@ class CardMakerServlet():
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
 
+        if not hasattr(self.versions[internal_ver], func_to_find):
+            self.logger.warning(f"Unhandled v{version} request {endpoint}")
+            return zlib.compress(b'{"returnCode": 1}')
+
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
             resp = handler(req_data)
 
-        except AttributeError as e:
-            self.logger.warning(
-                f"Unhandled v{version} request {endpoint} - {e}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
-
         except Exception as e:
             self.logger.error(
                 f"Error handling v{version} method {endpoint} - {e}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+            return zlib.compress(b'{"stat": "0"}')
 
         if resp is None:
             resp = {'returnCode': 1}

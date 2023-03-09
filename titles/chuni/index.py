@@ -87,7 +87,7 @@ class ChuniServlet():
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         if url_path.lower() == "/ping":
-            return zlib.compress(json.dumps({'returnCode': 1}, ensure_ascii=False).encode("utf-8"))
+            return zlib.compress(b'{"returnCode": "1"}')
 
         req_raw = request.content.getvalue()
         url_split = url_path.split("/")
@@ -138,13 +138,13 @@ class ChuniServlet():
 
             except:
                 self.logger.error(f"Failed to decrypt v{version} request to {endpoint} -> {req_raw}")
-                return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+                return zlib.compress(b'{"stat": "0"}')
 
             encrtped = True
         
         if not encrtped and self.game_cfg.crypto.encrypted_only:
             self.logger.error(f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+            return zlib.compress(b'{"stat": "0"}')
 
         try:            
             unzip = zlib.decompress(req_raw)
@@ -160,17 +160,19 @@ class ChuniServlet():
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
 
-        try:
-            handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data)
-            
-        except AttributeError as e: 
-            self.logger.warning(f"Unhandled v{version} request {endpoint} - {e}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+        if not hasattr(self.versions[internal_ver], func_to_find):
+            self.logger.warning(f"Unhandled v{version} request {endpoint}")
+            resp = {"returnCode": 1}
+        
+        else:
 
-        except Exception as e:
-            self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-            return zlib.compress("{\"stat\": \"0\"}".encode("utf-8"))
+            try:
+                handler = getattr(self.versions[internal_ver], func_to_find)
+                resp = handler(req_data)
+
+            except Exception as e:
+                self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
+                return zlib.compress(b'{"stat": "0"}')
         
         if resp == None:
             resp = {'returnCode': 1}
