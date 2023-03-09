@@ -22,7 +22,10 @@ class CardMakerBase():
         self.version = CardMakerConstants.VER_CARD_MAKER
 
     def handle_get_game_connect_api_request(self, data: Dict) -> Dict:
-        uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
+        if self.core_cfg.server.is_develop:
+            uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
+        else:
+            f"http://{self.core_cfg.title.hostname}"
 
         # CHUNITHM = 0, maimai = 1, ONGEKI = 2
         return {
