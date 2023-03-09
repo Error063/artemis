@@ -18,23 +18,29 @@ from titles.cm.base import CardMakerBase
 from titles.cm.cm136 import CardMaker136
 
 
-class CardMakerServlet():
+class CardMakerServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = CardMakerConfig()
         if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
-            self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}")))
+            self.game_cfg.update(
+                yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"))
+            )
 
         self.versions = [
             CardMakerBase(core_cfg, self.game_cfg),
-            CardMaker136(core_cfg, self.game_cfg)
+            CardMaker136(core_cfg, self.game_cfg),
         ]
 
         self.logger = logging.getLogger("cardmaker")
         log_fmt_str = "[%(asctime)s] Card Maker | %(levelname)s | %(message)s"
         log_fmt = logging.Formatter(log_fmt_str)
-        fileHandler = TimedRotatingFileHandler("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cardmaker"), encoding='utf8',
-                                               when="d", backupCount=10)
+        fileHandler = TimedRotatingFileHandler(
+            "{0}/{1}.log".format(self.core_cfg.server.log_dir, "cardmaker"),
+            encoding="utf8",
+            when="d",
+            backupCount=10,
+        )
 
         fileHandler.setFormatter(log_fmt)
 
@@ -45,20 +51,29 @@ class CardMakerServlet():
         self.logger.addHandler(consoleHandler)
 
         self.logger.setLevel(self.game_cfg.server.loglevel)
-        coloredlogs.install(level=self.game_cfg.server.loglevel,
-                            logger=self.logger, fmt=log_fmt_str)
+        coloredlogs.install(
+            level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
+        )
 
     @classmethod
-    def get_allnet_info(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str, str]:
+    def get_allnet_info(
+        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
+    ) -> Tuple[bool, str, str]:
         game_cfg = CardMakerConfig()
         if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
-            game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}")))
+            game_cfg.update(
+                yaml.safe_load(open(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"))
+            )
 
         if not game_cfg.server.enable:
             return (False, "", "")
 
         if core_cfg.server.is_develop:
-            return (True, f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/", "")
+            return (
+                True,
+                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
+                "",
+            )
 
         return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
 
@@ -86,7 +101,8 @@ class CardMakerServlet():
 
         except zlib.error as e:
             self.logger.error(
-                f"Failed to decompress v{version} {endpoint} request -> {e}")
+                f"Failed to decompress v{version} {endpoint} request -> {e}"
+            )
             return zlib.compress(b'{"stat": "0"}')
 
         req_data = json.loads(unzip)
@@ -104,12 +120,11 @@ class CardMakerServlet():
             resp = handler(req_data)
 
         except Exception as e:
-            self.logger.error(
-                f"Error handling v{version} method {endpoint} - {e}")
+            self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
             return zlib.compress(b'{"stat": "0"}')
 
         if resp is None:
-            resp = {'returnCode': 1}
+            resp = {"returnCode": 1}
 
         self.logger.info(f"Response {resp}")
 

@@ -10,25 +10,27 @@ module = Table(
     "diva_profile_module",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("module_id", Integer, nullable=False),
     UniqueConstraint("user", "version", "module_id", name="diva_profile_module_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 
 class DivaModuleData(BaseData):
     def put_module(self, aime_id: int, version: int, module_id: int) -> None:
-        sql = insert(module).values(
-            version=version,
-            user=aime_id,
-            module_id=module_id
-        )
+        sql = insert(module).values(version=version, user=aime_id, module_id=module_id)
 
         result = self.execute(sql)
         if result is None:
-            self.logger.error(f"{__name__} Failed to insert diva profile module! aime id: {aime_id} module: {module_id}")
+            self.logger.error(
+                f"{__name__} Failed to insert diva profile module! aime id: {aime_id} module: {module_id}"
+            )
             return None
         return result.lastrowid
 
@@ -36,10 +38,7 @@ class DivaModuleData(BaseData):
         """
         Given a game version and an aime id, return all the modules, not used directly
         """
-        sql = module.select(and_(
-                module.c.version == version,
-                module.c.user == aime_id
-            ))
+        sql = module.select(and_(module.c.version == version, module.c.user == aime_id))
 
         result = self.execute(sql)
         if result is None:

@@ -1,4 +1,4 @@
-class CxbConstants():
+class CxbConstants:
     GAME_CODE = "SDCA"
 
     CONFIG_NAME = "cxb.yaml"
@@ -8,7 +8,12 @@ class CxbConstants():
     VER_CROSSBEATS_REV_SUNRISE_S2 = 2
     VER_CROSSBEATS_REV_SUNRISE_S2_OMNI = 3
 
-    VERSION_NAMES = ("crossbeats REV.", "crossbeats REV. SUNRISE", "crossbeats REV. SUNRISE S2", "crossbeats REV. SUNRISE S2 Omnimix")
+    VERSION_NAMES = (
+        "crossbeats REV.",
+        "crossbeats REV. SUNRISE",
+        "crossbeats REV. SUNRISE S2",
+        "crossbeats REV. SUNRISE S2 Omnimix",
+    )
 
     @classmethod
     def game_ver_to_string(cls, ver: int):

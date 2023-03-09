@@ -12,7 +12,11 @@ best_score = Table(
     "mai2_score_best",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("musicId", Integer),
     Column("level", Integer),
     Column("playCount", Integer),
@@ -22,14 +26,18 @@ best_score = Table(
     Column("deluxscoreMax", Integer),
     Column("scoreRank", Integer),
     UniqueConstraint("user", "musicId", "level", name="mai2_score_best_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
     "mai2_playlog",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("userId", BigInteger),
     Column("orderId", Integer),
     Column("playlogId", BigInteger),
@@ -136,14 +144,18 @@ playlog = Table(
     Column("extNum1", Integer),
     Column("extNum2", Integer),
     Column("trialPlayAchievement", Integer),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 course = Table(
     "mai2_score_course",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("courseId", Integer),
     Column("isLastClear", Boolean),
     Column("totalRestlife", Integer),
@@ -157,8 +169,9 @@ course = Table(
     Column("bestDeluxscore", Integer),
     Column("bestDeluxscoreDate", String(25)),
     UniqueConstraint("user", "courseId", name="mai2_score_best_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
+
 
 class Mai2ScoreData(BaseData):
     def put_best_score(self, user_id: int, score_data: Dict) -> Optional[int]:
@@ -169,33 +182,39 @@ class Mai2ScoreData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"put_best_score:  Failed to insert best score! user_id {user_id}")
+            self.logger.error(
+                f"put_best_score:  Failed to insert best score! user_id {user_id}"
+            )
             return None
         return result.lastrowid
 
     def get_best_scores(self, user_id: int, song_id: int = None) -> Optional[List[Row]]:
         sql = best_score.select(
             and_(
-                    best_score.c.user == user_id,
-                    (best_score.c.song_id == song_id) if song_id is not None else True
-                )
+                best_score.c.user == user_id,
+                (best_score.c.song_id == song_id) if song_id is not None else True,
             )
+        )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
-    def get_best_score(self, user_id: int, song_id: int, chart_id: int) -> Optional[Row]:
+
+    def get_best_score(
+        self, user_id: int, song_id: int, chart_id: int
+    ) -> Optional[Row]:
         sql = best_score.select(
             and_(
-                    best_score.c.user == user_id,
-                    best_score.c.song_id == song_id,
-                    best_score.c.chart_id == chart_id
-                )
+                best_score.c.user == user_id,
+                best_score.c.song_id == song_id,
+                best_score.c.chart_id == chart_id,
             )
+        )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()
 
     def put_playlog(self, user_id: int, playlog_data: Dict) -> Optional[int]:
@@ -209,7 +228,7 @@ class Mai2ScoreData(BaseData):
             self.logger.error(f"put_playlog:  Failed to insert! user_id {user_id}")
             return None
         return result.lastrowid
-    
+
     def put_course(self, user_id: int, course_data: Dict) -> Optional[int]:
         course_data["user"] = user_id
         sql = insert(course).values(**course_data)
@@ -221,10 +240,11 @@ class Mai2ScoreData(BaseData):
             self.logger.error(f"put_course:  Failed to insert! user_id {user_id}")
             return None
         return result.lastrowid
-    
+
     def get_courses(self, user_id: int) -> Optional[List[Row]]:
         sql = course.select(best_score.c.user == user_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()

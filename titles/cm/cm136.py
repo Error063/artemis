@@ -22,7 +22,7 @@ class CardMaker136(CardMakerBase):
             uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
         else:
             uri = f"http://{self.core_cfg.title.hostname}"
-        
+
         ret["gameConnectList"][0]["titleUri"] = f"{uri}/SDHD/205/"
         ret["gameConnectList"][1]["titleUri"] = f"{uri}/SDEZ/125/"
         ret["gameConnectList"][2]["titleUri"] = f"{uri}/SDDT/135/"

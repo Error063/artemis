@@ -1,4 +1,4 @@
-class DivaConstants():
+class DivaConstants:
     GAME_CODE = "SBZV"
 
     CONFIG_NAME = "diva.yaml"

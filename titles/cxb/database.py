@@ -1,7 +1,7 @@
-
 from core.data import Data
 from core.config import CoreConfig
 from titles.cxb.schema import CxbProfileData, CxbScoreData, CxbItemData, CxbStaticData
+
 
 class CxbData(Data):
     def __init__(self, cfg: CoreConfig) -> None:

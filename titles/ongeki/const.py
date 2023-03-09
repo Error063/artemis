@@ -2,7 +2,7 @@ from typing import Final, Dict
 from enum import Enum
 
 
-class OngekiConstants():
+class OngekiConstants:
     GAME_CODE = "SDDT"
 
     CONFIG_NAME = "ongeki.yaml"
@@ -16,28 +16,31 @@ class OngekiConstants():
     VER_ONGEKI_BRIGHT = 6
     VER_ONGEKI_BRIGHT_MEMORY = 7
 
-    EVT_TYPES: Enum = Enum('EVT_TYPES', [
-        'None',
-        'Announcement',
-        'Movie',
-        'AddMyList',
-        'UnlockChapter',
-        'JewelEvent',
-        'RankingEvent',
-        'AcceptRankingEvent',
-        'UnlockMusic',
-        'UnlockCard',
-        'UnlockTrophy',
-        'UnlockNamePlate',
-        'UnlockLimitBreakItem',
-        'MissionEvent',
-        'DailyBonus',
-        'UnlockBossLockEarly',
-        'UnlockPurchaseItem',
-        'TechChallengeEvent',
-        'AcceptTechChallengeEvent',
-        'SilverJewelEvent',
-    ])
+    EVT_TYPES: Enum = Enum(
+        "EVT_TYPES",
+        [
+            "None",
+            "Announcement",
+            "Movie",
+            "AddMyList",
+            "UnlockChapter",
+            "JewelEvent",
+            "RankingEvent",
+            "AcceptRankingEvent",
+            "UnlockMusic",
+            "UnlockCard",
+            "UnlockTrophy",
+            "UnlockNamePlate",
+            "UnlockLimitBreakItem",
+            "MissionEvent",
+            "DailyBonus",
+            "UnlockBossLockEarly",
+            "UnlockPurchaseItem",
+            "TechChallengeEvent",
+            "AcceptTechChallengeEvent",
+            "SilverJewelEvent",
+        ],
+    )
 
     class CM_GACHA_KINDS(Enum):
         Normal = 0
@@ -61,8 +64,16 @@ class OngekiConstants():
         Master = 3
         Lunatic = 10
 
-    VERSION_NAMES = ("ONGEKI", "ONGEKI+", "ONGEKI Summer", "ONGEKI Summer+", "ONGEKI Red", "ONGEKI Red+", 
-        "ONGEKI Bright", "ONGEKI Bright Memory")
+    VERSION_NAMES = (
+        "ONGEKI",
+        "ONGEKI+",
+        "ONGEKI Summer",
+        "ONGEKI Summer+",
+        "ONGEKI Red",
+        "ONGEKI Red+",
+        "ONGEKI Bright",
+        "ONGEKI Bright Memory",
+    )
 
     @classmethod
     def game_ver_to_string(cls, ver: int):

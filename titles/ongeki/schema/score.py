@@ -11,14 +11,18 @@ score_best = Table(
     "ongeki_score_best",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("musicId", Integer, nullable=False),
     Column("level", Integer, nullable=False),
-    Column("playCount", Integer, nullable=False),    
+    Column("playCount", Integer, nullable=False),
     Column("techScoreMax", Integer, nullable=False),
     Column("techScoreRank", Integer, nullable=False),
     Column("battleScoreMax", Integer, nullable=False),
-    Column("battleScoreRank", Integer, nullable=False),    
+    Column("battleScoreRank", Integer, nullable=False),
     Column("maxComboCount", Integer, nullable=False),
     Column("maxOverKill", Float, nullable=False),
     Column("maxTeamOverKill", Float, nullable=False),
@@ -30,14 +34,18 @@ score_best = Table(
     Column("isStoryWatched", Boolean, nullable=False),
     Column("platinumScoreMax", Integer),
     UniqueConstraint("user", "musicId", "level", name="ongeki_best_score_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
     "ongeki_score_playlog",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("sortNumber", Integer),
     Column("placeId", Integer),
     Column("placeName", String(255)),
@@ -99,25 +107,30 @@ playlog = Table(
     Column("battlePoint", Integer),
     Column("platinumScore", Integer),
     Column("platinumScoreMax", Integer),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 tech_count = Table(
     "ongeki_score_tech_count",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("levelId", Integer, nullable=False),
     Column("allBreakCount", Integer),
     Column("allBreakPlusCount", Integer),
     UniqueConstraint("user", "levelId", name="ongeki_tech_count_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
+
 
 class OngekiScoreData(BaseData):
     def get_tech_count(self, aime_id: int) -> Optional[List[Dict]]:
         return []
-    
+
     def put_tech_count(self, aime_id: int, tech_count_data: Dict) -> Optional[int]:
         tech_count_data["user"] = aime_id
 
@@ -129,17 +142,20 @@ class OngekiScoreData(BaseData):
             self.logger.warn(f"put_tech_count: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_best_scores(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(score_best).where(score_best.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
-    def get_best_score(self, aime_id: int, song_id: int, chart_id: int = None) -> Optional[List[Dict]]:
+    def get_best_score(
+        self, aime_id: int, song_id: int, chart_id: int = None
+    ) -> Optional[List[Dict]]:
         return []
-    
+
     def put_best_score(self, aime_id: int, music_detail: Dict) -> Optional[int]:
         music_detail["user"] = aime_id
 

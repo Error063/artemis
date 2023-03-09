@@ -11,8 +11,11 @@ profile = Table(
     "diva_profile",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade",
-           onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("player_name", String(10), nullable=False),
     Column("lv_str", String(24), nullable=False, server_default="Dab on 'em"),
@@ -29,10 +32,8 @@ profile = Table(
     Column("use_pv_skn_eqp", Boolean, nullable=False, server_default="0"),
     Column("use_pv_btn_se_eqp", Boolean, nullable=False, server_default="1"),
     Column("use_pv_sld_se_eqp", Boolean, nullable=False, server_default="0"),
-    Column("use_pv_chn_sld_se_eqp", Boolean,
-           nullable=False, server_default="0"),
-    Column("use_pv_sldr_tch_se_eqp", Boolean,
-           nullable=False, server_default="0"),
+    Column("use_pv_chn_sld_se_eqp", Boolean, nullable=False, server_default="0"),
+    Column("use_pv_sldr_tch_se_eqp", Boolean, nullable=False, server_default="0"),
     Column("nxt_pv_id", Integer, nullable=False, server_default="708"),
     Column("nxt_dffclty", Integer, nullable=False, server_default="2"),
     Column("nxt_edtn", Integer, nullable=False, server_default="0"),
@@ -44,35 +45,39 @@ profile = Table(
     Column("lv_plt_id", Integer, nullable=False, server_default="1"),
     Column("passwd_stat", Integer, nullable=False, server_default="0"),
     Column("passwd", String(12), nullable=False, server_default="**********"),
-    Column("my_qst_id", String(
-        128), server_default="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"),
-    Column("my_qst_sts", String(
-        128), server_default="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"),
+    Column(
+        "my_qst_id",
+        String(128),
+        server_default="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+    ),
+    Column(
+        "my_qst_sts",
+        String(128),
+        server_default="-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+    ),
     UniqueConstraint("user", "version", name="diva_profile_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 
 class DivaProfileData(BaseData):
-    def create_profile(self, version: int, aime_id: int,
-                       player_name: str) -> Optional[int]:
+    def create_profile(
+        self, version: int, aime_id: int, player_name: str
+    ) -> Optional[int]:
         """
         Given a game version, aime id, and player_name, create a profile and return it's ID
         """
         sql = insert(profile).values(
-            version=version,
-            user=aime_id,
-            player_name=player_name
+            version=version, user=aime_id, player_name=player_name
         )
 
-        conflict = sql.on_duplicate_key_update(
-            player_name=sql.inserted.player_name
-        )
+        conflict = sql.on_duplicate_key_update(player_name=sql.inserted.player_name)
 
         result = self.execute(conflict)
         if result is None:
             self.logger.error(
-                f"{__name__} Failed to insert diva profile! aime id: {aime_id} username: {player_name}")
+                f"{__name__} Failed to insert diva profile! aime id: {aime_id} username: {player_name}"
+            )
             return None
         return result.lastrowid
 
@@ -86,17 +91,17 @@ class DivaProfileData(BaseData):
         result = self.execute(sql)
         if result is None:
             self.logger.error(
-                f"update_profile: failed to update profile! profile: {aime_id}")
+                f"update_profile: failed to update profile! profile: {aime_id}"
+            )
         return None
 
     def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and either a profile or aime id, return the profile
         """
-        sql = profile.select(and_(
-            profile.c.version == version,
-            profile.c.user == aime_id
-        ))
+        sql = profile.select(
+            and_(profile.c.version == version, profile.c.user == aime_id)
+        )
 
         result = self.execute(sql)
         if result is None:

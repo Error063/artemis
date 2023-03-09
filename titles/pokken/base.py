@@ -6,12 +6,13 @@ from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
 from titles.pokken.proto import jackal_pb2
 
-class PokkenBase():
+
+class PokkenBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: PokkenConfig) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = game_cfg
         self.version = 0
-    
+
     def handle_noop(self, request: Any) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -25,7 +26,7 @@ class PokkenBase():
         res.type = jackal_pb2.MessageType.PING
 
         return res.SerializeToString()
-    
+
     def handle_register_pcb(self, request: jackal_pb2.RegisterPcbRequestData) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -37,20 +38,20 @@ class PokkenBase():
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
                 "port": self.game_cfg.server.port_matching,
-                "url": "/matching"
+                "url": "/matching",
             },
             "StunServer": {
                 "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_stun
+                "port": self.game_cfg.server.port_stun,
             },
             "TurnServer": {
                 "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_turn
+                "port": self.game_cfg.server.port_turn,
             },
             "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}",
             "locationId": 123,
             "logfilename": "JackalMatchingLibrary.log",
-            "biwalogfilename": "./biwa.log"
+            "biwalogfilename": "./biwa.log",
         }
         regist_pcb.bnp_baseuri = f"{self.core_cfg.title.hostname}/bna"
         regist_pcb.biwa_setting = json.dumps(biwa_setting)
@@ -66,21 +67,27 @@ class PokkenBase():
 
         return res.SerializeToString()
 
-    def handle_save_client_log(self, request: jackal_pb2.SaveClientLogRequestData) -> bytes:
+    def handle_save_client_log(
+        self, request: jackal_pb2.SaveClientLogRequestData
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_CLIENT_LOG
 
         return res.SerializeToString()
 
-    def handle_check_diagnosis(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+    def handle_check_diagnosis(
+        self, request: jackal_pb2.CheckDiagnosisRequestData
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.CHECK_DIAGNOSIS
 
         return res.SerializeToString()
 
-    def handle_load_client_settings(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+    def handle_load_client_settings(
+        self, request: jackal_pb2.CheckDiagnosisRequestData
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_CLIENT_SETTINGS

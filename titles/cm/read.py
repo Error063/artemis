@@ -15,14 +15,21 @@ from titles.ongeki.config import OngekiConfig
 
 
 class CardMakerReader(BaseReader):
-    def __init__(self, config: CoreConfig, version: int, bin_dir: Optional[str],
-                 opt_dir: Optional[str], extra: Optional[str]) -> None:
+    def __init__(
+        self,
+        config: CoreConfig,
+        version: int,
+        bin_dir: Optional[str],
+        opt_dir: Optional[str],
+        extra: Optional[str],
+    ) -> None:
         super().__init__(config, version, bin_dir, opt_dir, extra)
         self.ongeki_data = OngekiData(config)
 
         try:
             self.logger.info(
-                f"Start importer for {CardMakerConstants.game_ver_to_string(version)}")
+                f"Start importer for {CardMakerConstants.game_ver_to_string(version)}"
+            )
         except IndexError:
             self.logger.error(f"Invalid Card Maker version {version}")
             exit(1)
@@ -30,7 +37,7 @@ class CardMakerReader(BaseReader):
     def read(self) -> None:
         static_datas = {
             "static_gachas.csv": "read_ongeki_gacha_csv",
-            "static_gacha_cards.csv": "read_ongeki_gacha_card_csv"
+            "static_gacha_cards.csv": "read_ongeki_gacha_card_csv",
         }
 
         data_dirs = []
@@ -41,7 +48,9 @@ class CardMakerReader(BaseReader):
                     read_csv = getattr(CardMakerReader, func)
                     read_csv(self, f"{self.bin_dir}/MU3/{file}")
                 else:
-                    self.logger.warn(f"Couldn't find {file} file in {self.bin_dir}, skipping")
+                    self.logger.warn(
+                        f"Couldn't find {file} file in {self.bin_dir}, skipping"
+                    )
 
         if self.opt_dir is not None:
             data_dirs += self.get_data_directories(self.opt_dir)
@@ -64,7 +73,7 @@ class CardMakerReader(BaseReader):
                     row["kind"],
                     type=row["type"],
                     isCeiling=True if row["isCeiling"] == "1" else False,
-                    maxSelectPoint=row["maxSelectPoint"]
+                    maxSelectPoint=row["maxSelectPoint"],
                 )
 
                 self.logger.info(f"Added gacha {row['gachaId']}")
@@ -81,7 +90,7 @@ class CardMakerReader(BaseReader):
                     rarity=row["rarity"],
                     weight=row["weight"],
                     isPickup=True if row["isPickup"] == "1" else False,
-                    isSelect=True if row["isSelect"] == "1" else False
+                    isSelect=True if row["isSelect"] == "1" else False,
                 )
 
                 self.logger.info(f"Added card {row['cardId']} to gacha")
@@ -95,7 +104,7 @@ class CardMakerReader(BaseReader):
             "Pickup": "Pickup",
             "RecoverFiveShotFlag": "BonusRestored",
             "Free": "Free",
-            "FreeSR": "Free"
+            "FreeSR": "Free",
         }
 
         for root, dirs, files in os.walk(base_dir):
@@ -104,13 +113,19 @@ class CardMakerReader(BaseReader):
                     with open(f"{root}/{dir}/Gacha.xml", "r", encoding="utf-8") as f:
                         troot = ET.fromstring(f.read())
 
-                        name = troot.find('Name').find('str').text
-                        gacha_id = int(troot.find('Name').find('id').text)
+                        name = troot.find("Name").find("str").text
+                        gacha_id = int(troot.find("Name").find("id").text)
 
                         # skip already existing gachas
-                        if self.ongeki_data.static.get_gacha(
-                            OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY, gacha_id) is not None:
-                            self.logger.info(f"Gacha {gacha_id} already added, skipping")
+                        if (
+                            self.ongeki_data.static.get_gacha(
+                                OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY, gacha_id
+                            )
+                            is not None
+                        ):
+                            self.logger.info(
+                                f"Gacha {gacha_id} already added, skipping"
+                            )
                             continue
 
                         # 1140 is the first bright memory gacha
@@ -120,7 +135,8 @@ class CardMakerReader(BaseReader):
                             version = OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY
 
                         gacha_kind = OngekiConstants.CM_GACHA_KINDS[
-                            type_to_kind[troot.find('Type').text]].value
+                            type_to_kind[troot.find("Type").text]
+                        ].value
 
                         # hardcode which gachas get "Select Gacha" with 33 points
                         is_ceiling, max_select_point = 0, 0
@@ -134,5 +150,6 @@ class CardMakerReader(BaseReader):
                             name,
                             gacha_kind,
                             isCeiling=is_ceiling,
-                            maxSelectPoint=max_select_point)
+                            maxSelectPoint=max_select_point,
+                        )
                         self.logger.info(f"Added gacha {gacha_id}")

@@ -28,7 +28,7 @@ score = Table(
     Column("worst", Integer),
     Column("max_combo", Integer),
     UniqueConstraint("user", "pv_id", "difficulty", "edition", name="diva_score_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
@@ -51,16 +51,29 @@ playlog = Table(
     Column("worst", Integer),
     Column("max_combo", Integer),
     Column("date_scored", TIMESTAMP, server_default=func.now()),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 
 class DivaScoreData(BaseData):
-    def put_best_score(self, user_id: int, game_version: int, song_id: int,
-                       difficulty: int, edition: int, song_score: int,
-                       atn_pnt: int, clr_kind: int, sort_kind: int,
-                       cool: int, fine: int, safe: int, sad: int,
-                       worst: int, max_combo: int) -> Optional[int]:
+    def put_best_score(
+        self,
+        user_id: int,
+        game_version: int,
+        song_id: int,
+        difficulty: int,
+        edition: int,
+        song_score: int,
+        atn_pnt: int,
+        clr_kind: int,
+        sort_kind: int,
+        cool: int,
+        fine: int,
+        safe: int,
+        sad: int,
+        worst: int,
+        max_combo: int,
+    ) -> Optional[int]:
         """
         Update the user's best score for a chart
         """
@@ -98,16 +111,30 @@ class DivaScoreData(BaseData):
         result = self.execute(conflict)
         if result is None:
             self.logger.error(
-                f"{__name__} failed to insert best score! profile: {user_id}, song: {song_id}")
+                f"{__name__} failed to insert best score! profile: {user_id}, song: {song_id}"
+            )
             return None
 
         return result.lastrowid
 
-    def put_playlog(self, user_id: int, game_version: int, song_id: int,
-                    difficulty: int, edition: int, song_score: int,
-                    atn_pnt: int, clr_kind: int, sort_kind: int,
-                    cool: int, fine: int, safe: int, sad: int,
-                    worst: int, max_combo: int) -> Optional[int]:
+    def put_playlog(
+        self,
+        user_id: int,
+        game_version: int,
+        song_id: int,
+        difficulty: int,
+        edition: int,
+        song_score: int,
+        atn_pnt: int,
+        clr_kind: int,
+        sort_kind: int,
+        cool: int,
+        fine: int,
+        safe: int,
+        sad: int,
+        worst: int,
+        max_combo: int,
+    ) -> Optional[int]:
         """
         Add an entry to the user's play log
         """
@@ -126,24 +153,28 @@ class DivaScoreData(BaseData):
             safe=safe,
             sad=sad,
             worst=worst,
-            max_combo=max_combo
+            max_combo=max_combo,
         )
 
         result = self.execute(sql)
         if result is None:
             self.logger.error(
-                f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {difficulty}")
+                f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {difficulty}"
+            )
             return None
 
         return result.lastrowid
 
-    def get_best_user_score(self, user_id: int, pv_id: int, difficulty: int,
-                            edition: int) -> Optional[Dict]:
+    def get_best_user_score(
+        self, user_id: int, pv_id: int, difficulty: int, edition: int
+    ) -> Optional[Dict]:
         sql = score.select(
-            and_(score.c.user == user_id,
-                 score.c.pv_id == pv_id,
-                 score.c.difficulty == difficulty,
-                 score.c.edition == edition)
+            and_(
+                score.c.user == user_id,
+                score.c.pv_id == pv_id,
+                score.c.difficulty == difficulty,
+                score.c.edition == edition,
+            )
         )
 
         result = self.execute(sql)
@@ -151,36 +182,48 @@ class DivaScoreData(BaseData):
             return None
         return result.fetchone()
 
-    def get_top3_scores(self, pv_id: int, difficulty: int,
-                        edition: int) -> Optional[List[Dict]]:
-        sql = score.select(
-            and_(score.c.pv_id == pv_id,
-                 score.c.difficulty == difficulty,
-                 score.c.edition == edition)
-        ).order_by(score.c.score.desc()).limit(3)
+    def get_top3_scores(
+        self, pv_id: int, difficulty: int, edition: int
+    ) -> Optional[List[Dict]]:
+        sql = (
+            score.select(
+                and_(
+                    score.c.pv_id == pv_id,
+                    score.c.difficulty == difficulty,
+                    score.c.edition == edition,
+                )
+            )
+            .order_by(score.c.score.desc())
+            .limit(3)
+        )
 
         result = self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_global_ranking(self, user_id: int, pv_id: int, difficulty: int,
-                           edition: int) -> Optional[List]:
+    def get_global_ranking(
+        self, user_id: int, pv_id: int, difficulty: int, edition: int
+    ) -> Optional[List]:
         # get the subquery max score of a user with pv_id, difficulty and
         # edition
-        sql_sub = select([score.c.score]).filter(
-            score.c.user == user_id,
-            score.c.pv_id == pv_id,
-            score.c.difficulty == difficulty,
-            score.c.edition == edition
-        ).scalar_subquery()
+        sql_sub = (
+            select([score.c.score])
+            .filter(
+                score.c.user == user_id,
+                score.c.pv_id == pv_id,
+                score.c.difficulty == difficulty,
+                score.c.edition == edition,
+            )
+            .scalar_subquery()
+        )
 
         # Perform the main query, also rename the resulting column to ranking
         sql = select(func.count(score.c.id).label("ranking")).filter(
             score.c.score >= sql_sub,
             score.c.pv_id == pv_id,
             score.c.difficulty == difficulty,
-            score.c.edition == edition
+            score.c.edition == edition,
         )
 
         result = self.execute(sql)

@@ -1,4 +1,4 @@
-class CardMakerConstants():
+class CardMakerConstants:
     GAME_CODE = "SDED"
 
     CONFIG_NAME = "cardmaker.yaml"

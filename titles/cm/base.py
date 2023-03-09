@@ -10,12 +10,14 @@ from titles.cm.const import CardMakerConstants
 from titles.cm.config import CardMakerConfig
 
 
-class CardMakerBase():
+class CardMakerBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: CardMakerConfig) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = game_cfg
         self.date_time_format = "%Y-%m-%d %H:%M:%S"
-        self.date_time_format_ext = "%Y-%m-%d %H:%M:%S.%f"  # needs to be lopped off at [:-5]
+        self.date_time_format_ext = (
+            "%Y-%m-%d %H:%M:%S.%f"  # needs to be lopped off at [:-5]
+        )
         self.date_time_format_short = "%Y-%m-%d"
         self.logger = logging.getLogger("cardmaker")
         self.game = CardMakerConstants.GAME_CODE
@@ -31,27 +33,19 @@ class CardMakerBase():
         return {
             "length": 3,
             "gameConnectList": [
-                {
-                    "modelKind": 0,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDHD/200/"
-                },
-                {
-                    "modelKind": 1,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDEZ/120/"
-                },
-                {
-                    "modelKind": 2,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDDT/130/"
-                }
-            ]
+                {"modelKind": 0, "type": 1, "titleUri": f"{uri}/SDHD/200/"},
+                {"modelKind": 1, "type": 1, "titleUri": f"{uri}/SDEZ/120/"},
+                {"modelKind": 2, "type": 1, "titleUri": f"{uri}/SDDT/130/"},
+            ],
         }
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        reboot_start = date.strftime(datetime.now() + timedelta(hours=3), self.date_time_format)
-        reboot_end = date.strftime(datetime.now() + timedelta(hours=4), self.date_time_format)
+        reboot_start = date.strftime(
+            datetime.now() + timedelta(hours=3), self.date_time_format
+        )
+        reboot_end = date.strftime(
+            datetime.now() + timedelta(hours=4), self.date_time_format
+        )
 
         return {
             "gameSetting": {
@@ -67,18 +61,14 @@ class CardMakerBase():
                 "maxCountCard": 100,
                 "watermark": False,
                 "isMaintenance": False,
-                "isBackgroundDistribute": False
+                "isBackgroundDistribute": False,
             },
             "isDumpUpload": False,
-            "isAou": False
+            "isAou": False,
         }
 
     def handle_get_client_bookkeeping_api_request(self, data: Dict) -> Dict:
-        return {
-            "placeId": data["placeId"],
-            "length": 0,
-            "clientBookkeepingList": []
-        }
+        return {"placeId": data["placeId"], "length": 0, "clientBookkeepingList": []}
 
     def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
