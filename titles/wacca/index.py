@@ -94,20 +94,24 @@ class WaccaServlet:
             version_full = Version(req_json["appVersion"])
         except:
             self.logger.error(
-                f"Failed to parse request toi {request.uri} -> {request.content.getvalue()}"
+                f"Failed to parse request to {url_path} -> {request.content.getvalue()}"
             )
             resp = BaseResponse()
             resp.status = 1
             resp.message = "不正なリクエスト エラーです"
             return end(resp.make())
 
-        url_split = url_path.split("/")
-        start_req_idx = url_split.index("api") + 1
+        if "/api/" in url_path:
+            func_to_find = (
+                "handle_" + url_path.partition("api/")[2].replace("/", "_") + "_request"
+            )
 
-        func_to_find = "handle_"
-        for x in range(len(url_split) - start_req_idx):
-            func_to_find += f"{url_split[x + start_req_idx]}_"
-        func_to_find += "request"
+        else:
+            self.logger.error(f"Malformed url {url_path}")
+            resp = BaseResponse()
+            resp.status = 1
+            resp.message = "Bad URL"
+            return end(resp.make())
 
         ver_search = int(version_full)
 
