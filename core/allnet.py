@@ -354,8 +354,8 @@ class AllnetPowerOnRequest:
         self.boot_ver: str = req.get("boot_ver", "")
         self.encode: str = req.get("encode", "")
         self.hops = int(req.get("hops", "0"))
-        self.format_ver = int(req.get("hops", "2"))
-        self.token = int(req.get("hops", "0"))
+        self.format_ver = int(req.get("format_ver", "2"))
+        self.token = int(req.get("token", "0"))
 
 
 class AllnetPowerOnResponse3:
