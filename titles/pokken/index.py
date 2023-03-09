@@ -90,7 +90,7 @@ class PokkenServlet(resource.Resource):
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return (False, "")
 
         return (True, "PKFN")
 
