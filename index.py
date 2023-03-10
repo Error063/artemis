@@ -163,6 +163,9 @@ if __name__ == "__main__":
     if path.exists(f"{args.config}/core.yaml"):
         cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
 
+    if not path.exists(cfg.server.log_dir):
+        mkdir(cfg.server.log_dir)
+
     logger = logging.getLogger("core")
     log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
     log_fmt = logging.Formatter(log_fmt_str)
@@ -181,9 +184,6 @@ if __name__ == "__main__":
     log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
     logger.setLevel(log_lv)
     coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
-
-    if not path.exists(cfg.server.log_dir):
-        mkdir(cfg.server.log_dir)
 
     if not access(cfg.server.log_dir, W_OK):
         logger.error(
