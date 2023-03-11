@@ -65,17 +65,17 @@ class PokkenServlet(resource.Resource):
         if not game_cfg.server.enable:
             return (False, "", "")
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
-                f"{game_cfg.server.hostname}:{game_cfg.server.port}/",
-            )
+        # if core_cfg.server.is_develop:
+        #    return (
+        #        True,
+        #        f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
+        #        f"{game_cfg.server.hostname}:{game_cfg.server.port}/",
+        #    )
 
         return (
             True,
-            f"https://{game_cfg.server.hostname}/{game_code}/$v/",
-            f"{game_cfg.server.hostname}/",
+            f"https://{game_cfg.server.hostname}:443/{game_code}/$v/",
+            f"{game_cfg.server.hostname}/SDAK/$v/",
         )
 
     @classmethod
@@ -92,7 +92,7 @@ class PokkenServlet(resource.Resource):
         if not game_cfg.server.enable:
             return (False, "")
 
-        return (True, "PKFN")
+        return (True, "PKF2")
 
     def setup(self):
         """
@@ -143,7 +143,9 @@ class PokkenServlet(resource.Resource):
             self.logger.warn(f"{e} {content}")
             return b""
 
-        endpoint = jackal_pb2.MessageType(pokken_request.type).name.lower()
+        endpoint = jackal_pb2.MessageType.DESCRIPTOR.values_by_number[
+            pokken_request.type
+        ].name.lower()
 
         self.logger.info(f"{endpoint} request")
 

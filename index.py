@@ -73,7 +73,7 @@ class HttpDispatcher(resource.Resource):
             "mucha_updatacheck",
             "/mucha/updatacheck.do",
             controller="mucha",
-            action="handle_updatacheck",
+            action="handle_updatecheck",
             conditions=dict(method=["POST"]),
         )
 

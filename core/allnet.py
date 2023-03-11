@@ -78,13 +78,7 @@ class AllnetServlet:
             req = AllnetPowerOnRequest(req_dict[0])
             # Validate the request. Currently we only validate the fields we plan on using
 
-            if (
-                not req.game_id
-                or not req.ver
-                or not req.token
-                or not req.serial
-                or not req.ip
-            ):
+            if not req.game_id or not req.ver or not req.serial or not req.ip:
                 raise AllnetRequestException(
                     f"Bad auth request params from {request_ip} - {vars(req)}"
                 )
@@ -94,7 +88,7 @@ class AllnetServlet:
                 self.logger.error(e)
             return b""
 
-        if req.format_ver == 3:
+        if req.format_ver == "3":
             resp = AllnetPowerOnResponse3(req.token)
         else:
             resp = AllnetPowerOnResponse2()
@@ -354,7 +348,7 @@ class AllnetPowerOnRequest:
         self.boot_ver: str = req.get("boot_ver", "")
         self.encode: str = req.get("encode", "")
         self.hops = int(req.get("hops", "0"))
-        self.format_ver = int(req.get("format_ver", "2"))
+        self.format_ver = req.get("format_ver", "2")
         self.token = int(req.get("token", "0"))
 
 
