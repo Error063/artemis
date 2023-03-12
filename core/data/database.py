@@ -71,7 +71,8 @@ class Data:
         games = Utils.get_all_titles()
         for game_dir, game_mod in games.items():
             try:
-                title_db = game_mod.database(self.config)
+                if hasattr(game_mod, "database"):
+                    game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
                 self.base.set_schema_ver(
@@ -109,7 +110,8 @@ class Data:
                         mod = importlib.import_module(f"titles.{dir}")
 
                         try:
-                            title_db = mod.database(self.config)
+                            if hasattr(mod, "database"):
+                                mod.database(self.config)
                             metadata.drop_all(self.__engine.connect())
 
                         except Exception as e:
