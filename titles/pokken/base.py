@@ -26,7 +26,6 @@ class PokkenBase:
         res.result = 1
         res.type = jackal_pb2.MessageType.PING
 
-        self.logger.debug(res)
         return res.SerializeToString()
 
     def handle_register_pcb(self, request: jackal_pb2.Request) -> bytes:
