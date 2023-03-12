@@ -153,4 +153,7 @@ class PokkenServlet(resource.Resource):
         if handler is None:
             self.logger.warn(f"No handler found for message type {endpoint}")
             return self.base.handle_noop(pokken_request)
-        return handler(pokken_request)
+        
+        ret = handler(pokken_request)
+        self.logger.debug(f"Response: {ret}")
+        return ret
