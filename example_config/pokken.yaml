@@ -7,5 +7,3 @@ server:
   port_stun: 9002
   port_turn: 9003
   port_admission: 9004
-  ssl_cert: cert/pokken.crt
-  ssl_key: cert/pokken.key
