@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import json
-from typing import Any
+from typing import Any, Dict
 
 from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
@@ -37,8 +37,8 @@ class PokkenBase:
         biwa_setting = {
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
-                "port": self.game_cfg.server.port_matching,
-                "url": "SDAK/100/matching",
+                "port": self.game_cfg.server.port,
+                "url": "/SDAK/100/matching",
             },
             "StunServer": {
                 "addr": self.game_cfg.server.hostname,
@@ -108,3 +108,36 @@ class PokkenBase:
         res.load_client_settings.CopyFrom(settings)
 
         return res.SerializeToString()
+
+    def handle_load_ranking(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+        res = jackal_pb2.Response()
+        res.result = 1
+        res.type = jackal_pb2.MessageType.LOAD_RANKING
+        ranking = jackal_pb2.LoadRankingResponseData()
+
+        ranking.ranking_id = 1
+        ranking.ranking_start = 0
+        ranking.ranking_end = 1
+        ranking.event_end = True
+        ranking.modify_date = int(datetime.now().timestamp() / 1000)
+        res.load_ranking.CopyFrom(ranking)
+    
+    def handle_matching_noop(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}
+    
+    def handle_matching_start_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}
+
+    def handle_matching_is_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        """
+        "sessionId":"12345678",
+                "A":{
+                    "pcb_id": data["data"]["must"]["pcb_id"],
+                    "gip": client_ip
+                }, 
+                "list":[]
+        """
+        return {}
+    
+    def handle_matching_stop_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}

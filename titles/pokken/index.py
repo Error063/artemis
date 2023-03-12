@@ -1,11 +1,12 @@
 from typing import Tuple
 from twisted.web.http import Request
-from twisted.web import resource, server
-from twisted.internet import reactor, endpoints
+from twisted.web import resource
+import json, ast
+from datetime import datetime
 import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from titles.pokken.proto import jackal_pb2
+import inflection
 from os import path
 from google.protobuf.message import DecodeError
 
@@ -13,6 +14,7 @@ from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
 from titles.pokken.base import PokkenBase
 from titles.pokken.const import PokkenConstants
+from titles.pokken.proto import jackal_pb2
 
 
 class PokkenServlet(resource.Resource):
@@ -88,15 +90,14 @@ class PokkenServlet(resource.Resource):
         return (True, "PKF2")
 
     def setup(self) -> None:
-        # TODO: Setup matching, stun, turn and admission servers
+        # TODO: Setup stun, turn (UDP) and admission (WSS) servers
         pass
 
     def render_POST(
         self, request: Request, version: int = 0, endpoints: str = ""
     ) -> bytes:
-        if endpoints.startswith("/matching"):
-            self.logger.info("Matching request")
-            self.logger.debug(request.content)
+        if endpoints == "matching":
+            return self.handle_matching(request)
 
         content = request.content.getvalue()
         if content == b"":
@@ -122,5 +123,37 @@ class PokkenServlet(resource.Resource):
             return self.base.handle_noop(pokken_request)
         
         ret = handler(pokken_request)
-        self.logger.debug(f"Response: {ret}")
+        #self.logger.debug(f"Response: {ret}")
         return ret
+    
+    def handle_matching(self, request: Request) -> bytes:
+        content = request.content.getvalue()
+        client_ip = request.getClientAddress().host
+
+        if content is None or content == b"":
+            self.logger.info("Empty matching request")
+            return json.dumps(self.base.handle_matching_noop()).encode()
+
+        json_content = ast.literal_eval(content.decode().replace('null', 'None').replace('true', 'True').replace('false', 'False'))
+        self.logger.info(f"Matching {json_content['call']} request")
+        self.logger.debug(json_content)
+
+        handler = getattr(self.base, f"handle_matching_{inflection.underscore(json_content['call'])}", None)
+        if handler is None:
+            self.logger.warn(f"No handler found for message type {json_content['call']}")
+            return json.dumps(self.base.handle_matching_noop()).encode()
+        
+        ret = handler(json_content, client_ip)
+        
+        if ret is None:
+            ret = {}        
+        if "result" not in ret:
+            ret["result"] = "true"
+        if "data" not in ret:
+            ret["data"] = {}
+        if "timestamp" not in ret:
+            ret["timestamp"] = int(datetime.now().timestamp() * 1000)
+        
+        self.logger.debug(f"Response {ret}")
+
+        return json.dumps(ret).encode()
