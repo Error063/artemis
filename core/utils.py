@@ -4,13 +4,14 @@ import logging
 import importlib
 from os import walk
 
+
 class Utils:
     @classmethod
     def get_all_titles(cls) -> Dict[str, ModuleType]:
         ret: Dict[str, Any] = {}
 
         for root, dirs, files in walk("titles"):
-            for dir in dirs: 
+            for dir in dirs:
                 if not dir.startswith("__"):
                     try:
                         mod = importlib.import_module(f"titles.{dir}")

@@ -1,4 +1,3 @@
-
 from typing import Any, Callable
 from functools import wraps
 import hashlib
@@ -6,15 +5,17 @@ import pickle
 import logging
 from core.config import CoreConfig
 
-cfg:CoreConfig = None # type: ignore
+cfg: CoreConfig = None  # type: ignore
 # Make memcache optional
 try:
     import pylibmc  # type: ignore
+
     has_mc = True
 except ModuleNotFoundError:
     has_mc = False
 
-def cached(lifetime: int=10, extra_key: Any=None) -> Callable:
+
+def cached(lifetime: int = 10, extra_key: Any = None) -> Callable:
     def _cached(func: Callable) -> Callable:
         if has_mc:
             hostname = "127.0.0.1"
@@ -22,11 +23,10 @@ def cached(lifetime: int=10, extra_key: Any=None) -> Callable:
                 hostname = cfg.database.memcached_host
             memcache = pylibmc.Client([hostname], binary=True)
             memcache.behaviors = {"tcp_nodelay": True, "ketama": True}
-            
+
             @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 if lifetime is not None:
-
                     # Hash function args
                     items = kwargs.items()
                     hashable_args = (args[1:], sorted(list(items)))
@@ -41,7 +41,7 @@ def cached(lifetime: int=10, extra_key: Any=None) -> Callable:
                     except pylibmc.Error as e:
                         logging.getLogger("database").error(f"Memcache failed: {e}")
                         result = None
-                        
+
                     if result is not None:
                         logging.getLogger("database").debug(f"Cache hit: {result}")
                         return result
@@ -55,7 +55,9 @@ def cached(lifetime: int=10, extra_key: Any=None) -> Callable:
                     memcache.set(cache_key, result, lifetime)
 
                 return result
+
         else:
+
             @wraps(func)
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 return func(*args, **kwargs)

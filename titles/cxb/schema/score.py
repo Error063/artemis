@@ -18,7 +18,7 @@ score = Table(
     Column("song_index", Integer),
     Column("data", JSON),
     UniqueConstraint("user", "song_mcode", "song_index", name="cxb_score_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
@@ -40,7 +40,7 @@ playlog = Table(
     Column("fail", Integer),
     Column("combo", Integer),
     Column("date_scored", TIMESTAMP, server_default=func.now()),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 ranking = Table(
@@ -53,11 +53,19 @@ ranking = Table(
     Column("score", Integer),
     Column("clear", Integer),
     UniqueConstraint("user", "rev_id", name="cxb_ranking_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
+
 class CxbScoreData(BaseData):
-    def put_best_score(self, user_id: int, song_mcode: str, game_version: int, song_index: int, data: JSON) -> Optional[int]:
+    def put_best_score(
+        self,
+        user_id: int,
+        song_mcode: str,
+        game_version: int,
+        song_index: int,
+        data: JSON,
+    ) -> Optional[int]:
         """
         Update the user's best score for a chart
         """
@@ -66,22 +74,37 @@ class CxbScoreData(BaseData):
             song_mcode=song_mcode,
             game_version=game_version,
             song_index=song_index,
-            data=data
+            data=data,
         )
 
-        conflict = sql.on_duplicate_key_update(
-            data = sql.inserted.data
-        )
+        conflict = sql.on_duplicate_key_update(data=sql.inserted.data)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"{__name__} failed to insert best score! profile: {user_id}, song: {song_mcode}, data: {data}")
+            self.logger.error(
+                f"{__name__} failed to insert best score! profile: {user_id}, song: {song_mcode}, data: {data}"
+            )
             return None
-        
+
         return result.lastrowid
-    
-    def put_playlog(self, user_id: int, song_mcode: str, chart_id: int, score: int, clear: int, flawless: int, this_super: int, 
-        cool: int, this_fast: int, this_fast2: int, this_slow: int, this_slow2: int, fail: int, combo: int) -> Optional[int]:
+
+    def put_playlog(
+        self,
+        user_id: int,
+        song_mcode: str,
+        chart_id: int,
+        score: int,
+        clear: int,
+        flawless: int,
+        this_super: int,
+        cool: int,
+        this_fast: int,
+        this_fast2: int,
+        this_slow: int,
+        this_slow2: int,
+        fail: int,
+        combo: int,
+    ) -> Optional[int]:
         """
         Add an entry to the user's play log
         """
@@ -99,45 +122,42 @@ class CxbScoreData(BaseData):
             slow=this_slow,
             slow2=this_slow2,
             fail=fail,
-            combo=combo
+            combo=combo,
         )
 
         result = self.execute(sql)
         if result is None:
-            self.logger.error(f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_mcode}, chart: {chart_id}")
+            self.logger.error(
+                f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_mcode}, chart: {chart_id}"
+            )
             return None
-        
+
         return result.lastrowid
 
-    def put_ranking(self, user_id: int, rev_id: int, song_id: int, score: int, clear: int) -> Optional[int]:
+    def put_ranking(
+        self, user_id: int, rev_id: int, song_id: int, score: int, clear: int
+    ) -> Optional[int]:
         """
         Add an entry to the user's ranking logs
         """
         if song_id == 0:
             sql = insert(ranking).values(
-                user=user_id,
-                rev_id=rev_id,
-                score=score,
-                clear=clear
+                user=user_id, rev_id=rev_id, score=score, clear=clear
             )
         else:
             sql = insert(ranking).values(
-                user=user_id,
-                rev_id=rev_id,
-                song_id=song_id,
-                score=score,
-                clear=clear
+                user=user_id, rev_id=rev_id, song_id=song_id, score=score, clear=clear
             )
-            
-        conflict = sql.on_duplicate_key_update(
-            score = score
-        )
+
+        conflict = sql.on_duplicate_key_update(score=score)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"{__name__} failed to insert ranking log! profile: {user_id}, score: {score}, clear: {clear}")
+            self.logger.error(
+                f"{__name__} failed to insert ranking log! profile: {user_id}, score: {score}, clear: {clear}"
+            )
             return None
-        
+
         return result.lastrowid
 
     def get_best_score(self, user_id: int, song_mcode: int) -> Optional[Dict]:
@@ -146,21 +166,22 @@ class CxbScoreData(BaseData):
         )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()
 
     def get_best_scores(self, user_id: int) -> Optional[Dict]:
         sql = score.select(score.c.user == user_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def get_best_rankings(self, user_id: int) -> Optional[List[Dict]]:
-        sql = ranking.select(
-            ranking.c.user == user_id
-        )
+        sql = ranking.select(ranking.c.user == user_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()

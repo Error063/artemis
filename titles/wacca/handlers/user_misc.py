@@ -5,6 +5,7 @@ from titles.wacca.handlers.helpers import PurchaseType, GenericItemRecv
 from titles.wacca.handlers.helpers import TicketItem, SongRatingUpdate, BingoDetail
 from titles.wacca.handlers.helpers import BingoPageStatus, GateTutorialFlag
 
+
 # ---user/goods/purchase---
 class UserGoodsPurchaseRequest(BaseRequest):
     def __init__(self, data: Dict) -> None:
@@ -14,14 +15,17 @@ class UserGoodsPurchaseRequest(BaseRequest):
         self.purchaseCount = int(self.params[2])
         self.purchaseType = PurchaseType(self.params[3])
         self.cost = int(self.params[4])
-        self.itemObtained: GenericItemRecv = GenericItemRecv(self.params[5][0], self.params[5][1], self.params[5][2])
+        self.itemObtained: GenericItemRecv = GenericItemRecv(
+            self.params[5][0], self.params[5][1], self.params[5][2]
+        )
+
 
 class UserGoodsPurchaseResponse(BaseResponse):
     def __init__(self, wp: int = 0, tickets: List = []) -> None:
         super().__init__()
         self.currentWp = wp
         self.tickets: List[TicketItem] = []
-        
+
         for ticket in tickets:
             self.tickets.append(TicketItem(ticket[0], ticket[1], ticket[2]))
 
@@ -34,6 +38,7 @@ class UserGoodsPurchaseResponse(BaseResponse):
 
         return super().make()
 
+
 # ---user/sugaroku/update---
 class UserSugarokuUpdateRequestV1(BaseRequest):
     def __init__(self, data: Dict) -> None:
@@ -44,16 +49,18 @@ class UserSugarokuUpdateRequestV1(BaseRequest):
         self.progress = int(self.params[3])
         self.loops = int(self.params[4])
         self.boostsUsed = self.params[5]
-        self.totalPts = int(self.params[7])        
+        self.totalPts = int(self.params[7])
         self.itemsObtainted: List[GenericItemRecv] = []
 
         for item in self.params[6]:
             self.itemsObtainted.append(GenericItemRecv(item[0], item[1], item[2]))
 
+
 class UserSugarokuUpdateRequestV2(UserSugarokuUpdateRequestV1):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.mission_flag = int(self.params[8])
+
 
 # ---user/rating/update---
 class UserRatingUpdateRequest(BaseRequest):
@@ -66,8 +73,9 @@ class UserRatingUpdateRequest(BaseRequest):
         for x in self.params[2]:
             self.songs.append(SongRatingUpdate(x[0], x[1], x[2]))
 
+
 # ---user/mission/update---
-class UserMissionUpdateRequest(BaseRequest):    
+class UserMissionUpdateRequest(BaseRequest):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         self.profileId = self.params[0]

@@ -30,14 +30,96 @@ class OngekiBrightMemory(OngekiBright):
     def handle_get_user_memory_chapter_api_request(self, data: Dict) -> Dict:
         memories = self.data.item.get_memorychapters(data["userId"])
         if not memories:
-            return {"userId": data["userId"], "length":6, "userMemoryChapterList":[
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70001, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70002, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70003, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70004, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70005, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0},
-            {"gaugeId":0, "isClear": False, "gaugeNum": 0, "chapterId": 70099, "jewelCount": 0, "isBossWatched": False, "isStoryWatched": False, "isDialogWatched": False, "isEndingWatched": False, "lastPlayMusicId": 0, "lastPlayMusicLevel": 0, "lastPlayMusicCategory": 0}
-        ]}
+            return {
+                "userId": data["userId"],
+                "length": 6,
+                "userMemoryChapterList": [
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70001,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70002,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70003,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70004,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70005,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                    {
+                        "gaugeId": 0,
+                        "isClear": False,
+                        "gaugeNum": 0,
+                        "chapterId": 70099,
+                        "jewelCount": 0,
+                        "isBossWatched": False,
+                        "isStoryWatched": False,
+                        "isDialogWatched": False,
+                        "isEndingWatched": False,
+                        "lastPlayMusicId": 0,
+                        "lastPlayMusicLevel": 0,
+                        "lastPlayMusicCategory": 0,
+                    },
+                ],
+            }
 
         memory_chp = []
         for chp in memories:
@@ -49,14 +131,11 @@ class OngekiBrightMemory(OngekiBright):
         return {
             "userId": data["userId"],
             "length": len(memory_chp),
-            "userMemoryChapterList": memory_chp
+            "userMemoryChapterList": memory_chp,
         }
 
     def handle_get_game_music_release_state_api_request(self, data: Dict) -> Dict:
-        return {
-            "techScore": 0,
-            "cardNum": 0
-        }
+        return {"techScore": 0, "cardNum": 0}
 
     def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         # check for a bright memory profile

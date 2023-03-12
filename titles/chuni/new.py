@@ -9,13 +9,9 @@ from titles.chuni.database import ChuniData
 from titles.chuni.base import ChuniBase
 from titles.chuni.config import ChuniConfig
 
-class ChuniNew(ChuniBase):
 
-    ITEM_TYPE = {
-        "character": 20,
-        "story": 21,
-        "card": 22
-    }
+class ChuniNew(ChuniBase):
+    ITEM_TYPE = {"character": 20, "story": 21, "card": 22}
 
     def __init__(self, core_cfg: CoreConfig, game_cfg: ChuniConfig) -> None:
         self.core_cfg = core_cfg
@@ -25,12 +21,20 @@ class ChuniNew(ChuniBase):
         self.logger = logging.getLogger("chuni")
         self.game = ChuniConstants.GAME_CODE
         self.version = ChuniConstants.VER_CHUNITHM_NEW
-    
+
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        match_start = datetime.strftime(datetime.now() - timedelta(hours=10), self.date_time_format)
-        match_end = datetime.strftime(datetime.now() + timedelta(hours=10), self.date_time_format)
-        reboot_start = datetime.strftime(datetime.now() - timedelta(hours=11), self.date_time_format)
-        reboot_end = datetime.strftime(datetime.now() - timedelta(hours=10), self.date_time_format)
+        match_start = datetime.strftime(
+            datetime.now() - timedelta(hours=10), self.date_time_format
+        )
+        match_end = datetime.strftime(
+            datetime.now() + timedelta(hours=10), self.date_time_format
+        )
+        reboot_start = datetime.strftime(
+            datetime.now() - timedelta(hours=11), self.date_time_format
+        )
+        reboot_end = datetime.strftime(
+            datetime.now() - timedelta(hours=10), self.date_time_format
+        )
         return {
             "gameSetting": {
                 "isMaintenance": "false",
@@ -52,16 +56,19 @@ class ChuniNew(ChuniBase):
                 "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "reflectorUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
             },
-                "isDumpUpload": "false",
-                "isAou": "false",
+            "isDumpUpload": "false",
+            "isAou": "false",
         }
+
+    def handle_remove_token_api_request(self, data: Dict) -> Dict:
+        return { "returnCode": "1" }
         
     def handle_delete_token_api_request(self, data: Dict) -> Dict:
-        return { "returnCode": "1" }
-    
+        return {"returnCode": "1"}
+
     def handle_create_token_api_request(self, data: Dict) -> Dict:
-        return { "returnCode": "1" }
-        
+        return {"returnCode": "1"}
+
     def handle_get_user_map_area_api_request(self, data: Dict) -> Dict:
         user_map_areas = self.data.item.get_map_areas(data["userId"])
 
@@ -72,32 +79,29 @@ class ChuniNew(ChuniBase):
             tmp.pop("user")
             map_areas.append(tmp)
 
-        return {
-            "userId": data["userId"], 
-            "userMapAreaList": map_areas
-        }
-    
+        return {"userId": data["userId"], "userMapAreaList": map_areas}
+
     def handle_get_user_symbol_chat_setting_api_request(self, data: Dict) -> Dict:
-        return {
-            "userId": data["userId"], 
-            "symbolCharInfoList": []
-        }
+        return {"userId": data["userId"], "symbolCharInfoList": []}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_preview(data["userId"], self.version)
-        if profile is None: return None
-        profile_character = self.data.item.get_character(data["userId"], profile["characterId"])
-        
+        if profile is None:
+            return None
+        profile_character = self.data.item.get_character(
+            data["userId"], profile["characterId"]
+        )
+
         if profile_character is None:
             chara = {}
         else:
             chara = profile_character._asdict()
             chara.pop("id")
             chara.pop("user")
-        
+
         data1 = {
-            "userId": data["userId"],    
-            # Current Login State            
+            "userId": data["userId"],
+            # Current Login State
             "isLogin": False,
             "lastLoginDate": profile["lastPlayDate"],
             # User Profile
@@ -109,14 +113,14 @@ class ChuniNew(ChuniBase):
             "lastGameId": profile["lastGameId"],
             "lastRomVersion": profile["lastRomVersion"],
             "lastDataVersion": profile["lastDataVersion"],
-            "lastPlayDate": profile["lastPlayDate"],          
+            "lastPlayDate": profile["lastPlayDate"],
             "emoneyBrandId": 0,
-            "trophyId": profile["trophyId"],            
+            "trophyId": profile["trophyId"],
             # Current Selected Character
             "userCharacter": chara,
             # User Game Options
-            "playerLevel": profile["playerLevel"], 
-            "rating": profile["rating"], 
+            "playerLevel": profile["playerLevel"],
+            "rating": profile["rating"],
             "headphone": profile["headphone"],
             "chargeState": 0,
             "userNameEx": "0",

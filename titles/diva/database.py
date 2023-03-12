@@ -1,6 +1,14 @@
 from core.data import Data
 from core.config import CoreConfig
-from titles.diva.schema import DivaProfileData, DivaScoreData, DivaModuleData, DivaCustomizeItemData, DivaPvCustomizeData, DivaItemData, DivaStaticData
+from titles.diva.schema import (
+    DivaProfileData,
+    DivaScoreData,
+    DivaModuleData,
+    DivaCustomizeItemData,
+    DivaPvCustomizeData,
+    DivaItemData,
+    DivaStaticData,
+)
 
 
 class DivaData(Data):

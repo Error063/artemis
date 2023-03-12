@@ -13,7 +13,11 @@ course = Table(
     "chuni_score_course",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("courseId", Integer),
     Column("classId", Integer),
     Column("playCount", Integer),
@@ -33,14 +37,18 @@ course = Table(
     Column("orderId", Integer),
     Column("playerRating", Integer),
     UniqueConstraint("user", "courseId", name="chuni_score_course_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 best_score = Table(
     "chuni_score_best",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("musicId", Integer),
     Column("level", Integer),
     Column("playCount", Integer),
@@ -60,14 +68,18 @@ best_score = Table(
     Column("ext1", Integer),
     Column("theoryCount", Integer),
     UniqueConstraint("user", "musicId", "level", name="chuni_score_best_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
     "chuni_score_playlog",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("orderId", Integer),
     Column("sortNumber", Integer),
     Column("placeId", Integer),
@@ -122,15 +134,17 @@ playlog = Table(
     Column("charaIllustId", Integer),
     Column("romVersion", String(255)),
     Column("judgeHeaven", Integer),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
+
 
 class ChuniScoreData(BaseData):
     def get_courses(self, aime_id: int) -> Optional[Row]:
         sql = select(course).where(course.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_course(self, aime_id: int, course_data: Dict) -> Optional[int]:
@@ -141,16 +155,18 @@ class ChuniScoreData(BaseData):
         conflict = sql.on_duplicate_key_update(**course_data)
 
         result = self.execute(conflict)
-        if result is None: return None
+        if result is None:
+            return None
         return result.lastrowid
-    
+
     def get_scores(self, aime_id: int) -> Optional[Row]:
         sql = select(best_score).where(best_score.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
+
     def put_score(self, aime_id: int, score_data: Dict) -> Optional[int]:
         score_data["user"] = aime_id
         score_data = self.fix_bools(score_data)
@@ -159,16 +175,18 @@ class ChuniScoreData(BaseData):
         conflict = sql.on_duplicate_key_update(**score_data)
 
         result = self.execute(conflict)
-        if result is None: return None
+        if result is None:
+            return None
         return result.lastrowid
 
     def get_playlogs(self, aime_id: int) -> Optional[Row]:
         sql = select(playlog).where(playlog.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
+
     def put_playlog(self, aime_id: int, playlog_data: Dict) -> Optional[int]:
         playlog_data["user"] = aime_id
         playlog_data = self.fix_bools(playlog_data)
@@ -177,5 +195,6 @@ class ChuniScoreData(BaseData):
         conflict = sql.on_duplicate_key_update(**playlog_data)
 
         result = self.execute(conflict)
-        if result is None: return None
+        if result is None:
+            return None
         return result.lastrowid

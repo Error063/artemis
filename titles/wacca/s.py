@@ -9,6 +9,7 @@ from titles.wacca.const import WaccaConstants
 
 from titles.wacca.handlers import *
 
+
 class WaccaS(WaccaBase):
     allowed_stages = [
         (1513, 13),
@@ -25,11 +26,11 @@ class WaccaS(WaccaBase):
         (1512, 2),
         (1511, 1),
     ]
-    
+
     def __init__(self, cfg: CoreConfig, game_cfg: WaccaConfig) -> None:
         super().__init__(cfg, game_cfg)
         self.version = WaccaConstants.VER_WACCA_S
-    
+
     def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
         resp = GetNewsResponseV2()
         return resp.make()

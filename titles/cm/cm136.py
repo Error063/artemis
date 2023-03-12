@@ -17,29 +17,17 @@ class CardMaker136(CardMakerBase):
         self.version = CardMakerConstants.VER_CARD_MAKER_136
 
     def handle_get_game_connect_api_request(self, data: Dict) -> Dict:
-        uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
+        ret = super().handle_get_game_connect_api_request(data)
+        if self.core_cfg.server.is_develop:
+            uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
+        else:
+            uri = f"http://{self.core_cfg.title.hostname}"
 
-        # CHUNITHM = 0, maimai = 1, ONGEKI = 2
-        return {
-            "length": 3,
-            "gameConnectList": [
-                {
-                    "modelKind": 0,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDHD/205/"
-                },
-                {
-                    "modelKind": 1,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDEZ/125/"
-                },
-                {
-                    "modelKind": 2,
-                    "type": 1,
-                    "titleUri": f"{uri}/SDDT/135/"
-                }
-            ]
-        }
+        ret["gameConnectList"][0]["titleUri"] = f"{uri}/SDHD/205/"
+        ret["gameConnectList"][1]["titleUri"] = f"{uri}/SDEZ/125/"
+        ret["gameConnectList"][2]["titleUri"] = f"{uri}/SDDT/135/"
+        
+        return ret
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         ret = super().handle_get_game_setting_api_request(data)

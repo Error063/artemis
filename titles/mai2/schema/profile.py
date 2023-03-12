@@ -14,7 +14,11 @@ detail = Table(
     "mai2_profile_detail",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("userName", String(25)),
     Column("isNetMember", Integer),
@@ -41,9 +45,9 @@ detail = Table(
     Column("lastRomVersion", String(25)),
     Column("lastDataVersion", String(25)),
     Column("lastLoginDate", String(25)),
-    Column("lastPairLoginDate", String(25)), # new with uni+
+    Column("lastPairLoginDate", String(25)),  # new with uni+
     Column("lastPlayDate", String(25)),
-    Column("lastTrialPlayDate", String(25)), # new with uni+
+    Column("lastTrialPlayDate", String(25)),  # new with uni+
     Column("lastPlayCredit", Integer),
     Column("lastPlayMode", Integer),
     Column("lastPlaceId", Integer),
@@ -90,16 +94,20 @@ detail = Table(
     Column("playerOldRating", BigInteger),
     Column("playerNewRating", BigInteger),
     Column("dateTime", BigInteger),
-    Column("banState", Integer), # new with uni+
+    Column("banState", Integer),  # new with uni+
     UniqueConstraint("user", "version", name="mai2_profile_detail_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 ghost = Table(
     "mai2_profile_ghost",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version_int", Integer, nullable=False),
     Column("name", String(25)),
     Column("iconId", Integer),
@@ -120,15 +128,21 @@ ghost = Table(
     Column("resultBitList", JSON),
     Column("resultNum", Integer),
     Column("achievement", Integer),
-    UniqueConstraint("user", "version", "musicId", "difficulty", name="mai2_profile_ghost_uk"),
-    mysql_charset='utf8mb4'
+    UniqueConstraint(
+        "user", "version", "musicId", "difficulty", name="mai2_profile_ghost_uk"
+    ),
+    mysql_charset="utf8mb4",
 )
 
 extend = Table(
     "mai2_profile_extend",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("selectMusicId", Integer),
     Column("selectDifficultyId", Integer),
@@ -145,14 +159,18 @@ extend = Table(
     Column("selectedCardList", JSON),
     Column("encountMapNpcList", JSON),
     UniqueConstraint("user", "version", name="mai2_profile_extend_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 option = Table(
     "mai2_profile_option",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("selectMusicId", Integer),
     Column("optionKind", Integer),
@@ -200,14 +218,18 @@ option = Table(
     Column("sortTab", Integer),
     Column("sortMusic", Integer),
     UniqueConstraint("user", "version", name="mai2_profile_option_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 rating = Table(
     "mai2_profile_rating",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("rating", Integer),
     Column("ratingList", JSON),
@@ -216,26 +238,34 @@ rating = Table(
     Column("nextNewRatingList", JSON),
     Column("udemae", JSON),
     UniqueConstraint("user", "version", name="mai2_profile_rating_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 region = Table(
     "mai2_profile_region",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("regionId", Integer),
     Column("playCount", Integer, server_default="1"),
     Column("created", String(25)),
     UniqueConstraint("user", "regionId", name="mai2_profile_region_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 activity = Table(
     "mai2_profile_activity",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("kind", Integer, nullable=False),
     Column("activityId", Integer, nullable=False),
     Column("param1", Integer, nullable=False),
@@ -244,11 +274,14 @@ activity = Table(
     Column("param4", Integer, nullable=False),
     Column("sortNumber", Integer, nullable=False),
     UniqueConstraint("user", "kind", "activityId", name="mai2_profile_activity_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
+
 class Mai2ProfileData(BaseData):
-    def put_profile_detail(self, user_id: int, version: int, detail_data: Dict) -> Optional[Row]:
+    def put_profile_detail(
+        self, user_id: int, version: int, detail_data: Dict
+    ) -> Optional[Row]:
         detail_data["user"] = user_id
         detail_data["version"] = version
         sql = insert(detail).values(**detail_data)
@@ -257,18 +290,25 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile: Failed to create profile! user_id {user_id}")
+            self.logger.warn(
+                f"put_profile: Failed to create profile! user_id {user_id}"
+            )
             return None
         return result.lastrowid
 
     def get_profile_detail(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(detail).where(and_(detail.c.user == user_id, detail.c.version == version))
+        sql = select(detail).where(
+            and_(detail.c.user == user_id, detail.c.version == version)
+        )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()
 
-    def put_profile_ghost(self, user_id: int, version: int, ghost_data: Dict) -> Optional[int]:
+    def put_profile_ghost(
+        self, user_id: int, version: int, ghost_data: Dict
+    ) -> Optional[int]:
         ghost_data["user"] = user_id
         ghost_data["version_int"] = version
 
@@ -282,13 +322,18 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_ghost(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(ghost).where(and_(ghost.c.user == user_id, ghost.c.version_int == version))
+        sql = select(ghost).where(
+            and_(ghost.c.user == user_id, ghost.c.version_int == version)
+        )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()
 
-    def put_profile_extend(self, user_id: int, version: int, extend_data: Dict) -> Optional[int]:
+    def put_profile_extend(
+        self, user_id: int, version: int, extend_data: Dict
+    ) -> Optional[int]:
         extend_data["user"] = user_id
         extend_data["version"] = version
 
@@ -302,13 +347,18 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_extend(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(extend).where(and_(extend.c.user == user_id, extend.c.version == version))
+        sql = select(extend).where(
+            and_(extend.c.user == user_id, extend.c.version == version)
+        )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()
 
-    def put_profile_option(self, user_id: int, version: int, option_data: Dict) -> Optional[int]:
+    def put_profile_option(
+        self, user_id: int, version: int, option_data: Dict
+    ) -> Optional[int]:
         option_data["user"] = user_id
         option_data["version"] = version
 
@@ -322,13 +372,18 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_option(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(option).where(and_(option.c.user == user_id, option.c.version == version))
+        sql = select(option).where(
+            and_(option.c.user == user_id, option.c.version == version)
+        )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()
-    
-    def put_profile_rating(self, user_id: int, version: int, rating_data: Dict) -> Optional[int]:
+
+    def put_profile_rating(
+        self, user_id: int, version: int, rating_data: Dict
+    ) -> Optional[int]:
         rating_data["user"] = user_id
         rating_data["version"] = version
 
@@ -342,22 +397,23 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_rating(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(rating).where(and_(rating.c.user == user_id, rating.c.version == version))
+        sql = select(rating).where(
+            and_(rating.c.user == user_id, rating.c.version == version)
+        )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()
 
     def put_profile_region(self, user_id: int, region_id: int) -> Optional[int]:
         sql = insert(region).values(
-            user = user_id,
-            regionId = region_id,
-            created = datetime.strftime(datetime.now(), Mai2Constants.DATE_TIME_FORMAT)
+            user=user_id,
+            regionId=region_id,
+            created=datetime.strftime(datetime.now(), Mai2Constants.DATE_TIME_FORMAT),
         )
-        
-        conflict = sql.on_duplicate_key_update(
-            playCount = region.c.playCount + 1
-        )
+
+        conflict = sql.on_duplicate_key_update(playCount=region.c.playCount + 1)
 
         result = self.execute(conflict)
         if result is None:
@@ -369,34 +425,38 @@ class Mai2ProfileData(BaseData):
         sql = select(region).where(region.c.user == user_id)
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchall()
-    
+
     def put_profile_activity(self, user_id: int, activity_data: Dict) -> Optional[int]:
         if "id" in activity_data:
             activity_data["activityId"] = activity_data["id"]
             activity_data.pop("id")
-        
+
         activity_data["user"] = user_id
-        
+
         sql = insert(activity).values(**activity_data)
 
         conflict = sql.on_duplicate_key_update(**activity_data)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_activity: failed to update! user_id: {user_id}")
+            self.logger.warn(
+                f"put_profile_activity: failed to update! user_id: {user_id}"
+            )
             return None
         return result.lastrowid
 
     def get_profile_activity(self, user_id: int, kind: int = None) -> Optional[Row]:
         sql = activity.select(
             and_(
-                activity.c.user == user_id, 
+                activity.c.user == user_id,
                 (activity.c.kind == kind) if kind is not None else True,
             )
         )
 
         result = self.execute(sql)
-        if result is None:return None
+        if result is None:
+            return None
         return result.fetchone()

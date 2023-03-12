@@ -3,7 +3,8 @@ from typing import Optional
 
 from core.const import AllnetJapanRegionId
 
-class WaccaConstants():
+
+class WaccaConstants:
     CONFIG_NAME = "wacca.yaml"
     GAME_CODE = "SDFE"
 
@@ -51,51 +52,48 @@ class WaccaConstants():
     }
 
     OPTIONS = {
-        "note_speed": 1, # 1.0 - 6.0
-        "field_mask": 2, # 0-4
-        "note_sound": 3, # ID
-        "note_color": 4, # ID
-        "bgm_volume": 5, # 0-100 incremements of 10
-        "bg_video": 7, # ask, on, or off
-
-        "mirror": 101, # none or left+right swap
-        "judge_display_pos": 102, # center, under, over, top or off
-        "judge_detail_display": 103, # on or off
-        "measure_guidelines": 105, # on or off
-        "guideline_mask": 106, # 0 - 5
-        "judge_line_timing_adjust": 108, # -10 - 10
-        "note_design": 110, # 1 - 5
-        "bonus_effect": 114, # on or off
-        "chara_voice": 115, # "usually" or none
-        "score_display_method": 116, # add or subtract
-        "give_up": 117, # off, no touch, can't achieve s, ss, sss, pb
-        "guideline_spacing": 118, # none, or a-g type
-        "center_display": 119, # none, combo, score add, score sub, s ss sss pb boarder
-        "ranking_display": 120, # on or off
-        "stage_up_icon_display": 121, # on or off
-        "rating_display": 122, # on or off
-        "player_level_display": 123, # on or off
-        "touch_effect": 124, # on or off
-        "guide_sound_vol": 125, # 0-100 incremements of 10
-        "touch_note_vol": 126, # 0-100 incremements of 10
-        "hold_note_vol": 127, # 0-100 incremements of 10
-        "slide_note_vol": 128, # 0-100 incremements of 10
-        "snap_note_vol": 129, # 0-100 incremements of 10
-        "chain_note_vol": 130, # 0-100 incremements of 10
-        "bonus_note_vol": 131, # 0-100 incremements of 10
-        "gate_skip": 132, # on or off
-        "key_beam_display": 133, # on or off
-
-        "left_slide_note_color": 201, # red blue green or orange
-        "right_slide_note_color": 202, # red blue green or orange
-        "forward_slide_note_color": 203, # red blue green or orange
-        "back_slide_note_color": 204, # red blue green or orange
-
-        "master_vol": 1001, # 0-100 incremements of 10
-        "set_title_id": 1002, # ID
-        "set_icon_id": 1003, # ID
-        "set_nav_id": 1004, # ID
-        "set_plate_id": 1005, # ID
+        "note_speed": 1,  # 1.0 - 6.0
+        "field_mask": 2,  # 0-4
+        "note_sound": 3,  # ID
+        "note_color": 4,  # ID
+        "bgm_volume": 5,  # 0-100 incremements of 10
+        "bg_video": 7,  # ask, on, or off
+        "mirror": 101,  # none or left+right swap
+        "judge_display_pos": 102,  # center, under, over, top or off
+        "judge_detail_display": 103,  # on or off
+        "measure_guidelines": 105,  # on or off
+        "guideline_mask": 106,  # 0 - 5
+        "judge_line_timing_adjust": 108,  # -10 - 10
+        "note_design": 110,  # 1 - 5
+        "bonus_effect": 114,  # on or off
+        "chara_voice": 115,  # "usually" or none
+        "score_display_method": 116,  # add or subtract
+        "give_up": 117,  # off, no touch, can't achieve s, ss, sss, pb
+        "guideline_spacing": 118,  # none, or a-g type
+        "center_display": 119,  # none, combo, score add, score sub, s ss sss pb boarder
+        "ranking_display": 120,  # on or off
+        "stage_up_icon_display": 121,  # on or off
+        "rating_display": 122,  # on or off
+        "player_level_display": 123,  # on or off
+        "touch_effect": 124,  # on or off
+        "guide_sound_vol": 125,  # 0-100 incremements of 10
+        "touch_note_vol": 126,  # 0-100 incremements of 10
+        "hold_note_vol": 127,  # 0-100 incremements of 10
+        "slide_note_vol": 128,  # 0-100 incremements of 10
+        "snap_note_vol": 129,  # 0-100 incremements of 10
+        "chain_note_vol": 130,  # 0-100 incremements of 10
+        "bonus_note_vol": 131,  # 0-100 incremements of 10
+        "gate_skip": 132,  # on or off
+        "key_beam_display": 133,  # on or off
+        "left_slide_note_color": 201,  # red blue green or orange
+        "right_slide_note_color": 202,  # red blue green or orange
+        "forward_slide_note_color": 203,  # red blue green or orange
+        "back_slide_note_color": 204,  # red blue green or orange
+        "master_vol": 1001,  # 0-100 incremements of 10
+        "set_title_id": 1002,  # ID
+        "set_icon_id": 1003,  # ID
+        "set_nav_id": 1004,  # ID
+        "set_plate_id": 1005,  # ID
     }
 
     class Difficulty(Enum):
@@ -103,7 +101,7 @@ class WaccaConstants():
         HARD = 2
         EXPERT = 3
         INFERNO = 4
-    
+
     class Region(Enum):
         NONE = 0
         HOKKAIDO = 1
@@ -163,7 +161,7 @@ class WaccaConstants():
         SGP = 51
         KOREA = 52
         KOR = 52
-    
+
     VALID_COUNTRIES = set(["JPN", "USA", "KOR", "HKG", "SGP"])
 
     @classmethod
@@ -174,16 +172,54 @@ class WaccaConstants():
     def allnet_region_id_to_wacca_region(cls, region: int) -> Optional[Region]:
         try:
             return [
-                cls.Region.NONE, cls.Region.AICHI, cls.Region.AOMORI, cls.Region.AKITA, cls.Region.ISHIKAWA,
-                cls.Region.IBARAKI, cls.Region.IWATE, cls.Region.EHIME, cls.Region.OITA, cls.Region.OSAKA,
-                cls.Region.OKAYAMA, cls.Region.OKINAWA, cls.Region.KAGAWA, cls.Region.KAGOSHIMA, cls.Region.KANAGAWA,
-                cls.Region.GIFU, cls.Region.KYOTO, cls.Region.KUMAMOTO, cls.Region.GUNMA, cls.Region.KOCHI,
-                cls.Region.SAITAMA, cls.Region.SAGA, cls.Region.SHIGA, cls.Region.SHIZUOKA, cls.Region.SHIMANE,
-                cls.Region.CHIBA, cls.Region.TOKYO, cls.Region.TOKUSHIMA, cls.Region.TOCHIGI, cls.Region.TOTTORI,
-                cls.Region.TOYAMA, cls.Region.NAGASAKI, cls.Region.NAGANO, cls.Region.NARA, cls.Region.NIIGATA,
-                cls.Region.HYOGO, cls.Region.HIROSHIMA, cls.Region.FUKUI, cls.Region.FUKUOKA, cls.Region.FUKUSHIMA,
-                cls.Region.HOKKAIDO, cls.Region.MIE, cls.Region.MIYAGI, cls.Region.MIYAZAKI, cls.Region.YAMAGATA,
-                cls.Region.YAMAGUCHI, cls.Region.YAMANASHI, cls.Region.WAKAYAMA,
+                cls.Region.NONE,
+                cls.Region.AICHI,
+                cls.Region.AOMORI,
+                cls.Region.AKITA,
+                cls.Region.ISHIKAWA,
+                cls.Region.IBARAKI,
+                cls.Region.IWATE,
+                cls.Region.EHIME,
+                cls.Region.OITA,
+                cls.Region.OSAKA,
+                cls.Region.OKAYAMA,
+                cls.Region.OKINAWA,
+                cls.Region.KAGAWA,
+                cls.Region.KAGOSHIMA,
+                cls.Region.KANAGAWA,
+                cls.Region.GIFU,
+                cls.Region.KYOTO,
+                cls.Region.KUMAMOTO,
+                cls.Region.GUNMA,
+                cls.Region.KOCHI,
+                cls.Region.SAITAMA,
+                cls.Region.SAGA,
+                cls.Region.SHIGA,
+                cls.Region.SHIZUOKA,
+                cls.Region.SHIMANE,
+                cls.Region.CHIBA,
+                cls.Region.TOKYO,
+                cls.Region.TOKUSHIMA,
+                cls.Region.TOCHIGI,
+                cls.Region.TOTTORI,
+                cls.Region.TOYAMA,
+                cls.Region.NAGASAKI,
+                cls.Region.NAGANO,
+                cls.Region.NARA,
+                cls.Region.NIIGATA,
+                cls.Region.HYOGO,
+                cls.Region.HIROSHIMA,
+                cls.Region.FUKUI,
+                cls.Region.FUKUOKA,
+                cls.Region.FUKUSHIMA,
+                cls.Region.HOKKAIDO,
+                cls.Region.MIE,
+                cls.Region.MIYAGI,
+                cls.Region.MIYAZAKI,
+                cls.Region.YAMAGATA,
+                cls.Region.YAMAGUCHI,
+                cls.Region.YAMANASHI,
+                cls.Region.WAKAYAMA,
             ][region]
-        except: return None
-
+        except:
+            return None

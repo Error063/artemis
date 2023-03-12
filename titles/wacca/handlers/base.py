@@ -2,7 +2,8 @@ from typing import Dict, List
 from titles.wacca.handlers.helpers import Version
 from datetime import datetime
 
-class BaseRequest():
+
+class BaseRequest:
     def __init__(self, data: Dict) -> None:
         self.requestNo: int = data["requestNo"]
         self.appVersion: Version = Version(data["appVersion"])
@@ -10,7 +11,8 @@ class BaseRequest():
         self.chipId: str = data["chipId"]
         self.params: List = data["params"]
 
-class BaseResponse():
+
+class BaseResponse:
     def __init__(self) -> None:
         self.status: int = 0
         self.message: str = ""
@@ -28,5 +30,5 @@ class BaseResponse():
             "maintNoticeTime": self.maintNoticeTime,
             "maintNotPlayableTime": self.maintNotPlayableTime,
             "maintStartTime": self.maintStartTime,
-            "params": self.params
+            "params": self.params,
         }
