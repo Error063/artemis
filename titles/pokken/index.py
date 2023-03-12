@@ -65,16 +65,9 @@ class PokkenServlet(resource.Resource):
         if not game_cfg.server.enable:
             return (False, "", "")
 
-        # if core_cfg.server.is_develop:
-        #    return (
-        #        True,
-        #        f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
-        #        f"{game_cfg.server.hostname}:{game_cfg.server.port}/",
-        #    )
-
         return (
             True,
-            f"https://{game_cfg.server.hostname}:443/{game_code}/$v/",
+            f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
             f"{game_cfg.server.hostname}/SDAK/$v/",
         )
 
@@ -94,42 +87,16 @@ class PokkenServlet(resource.Resource):
 
         return (True, "PKF2")
 
-    def setup(self):
-        """
-        There's currently no point in having this server on because Twisted
-        won't play ball with both the fact that it's TLSv1.1, and because the
-        types of certs that pokken will accept are too flimsy for Twisted
-        so it will throw a fit. Currently leaving this here in case a bypass
-        is discovered in the future, but it's unlikly. For now, just use NGINX.
-        """
-        if self.game_cfg.server.enable and self.core_cfg.server.is_develop:
-            key_exists = path.exists(self.game_cfg.server.ssl_key)
-            cert_exists = path.exists(self.game_cfg.server.ssl_cert)
-
-            if key_exists and cert_exists:
-                endpoints.serverFromString(
-                    reactor,
-                    f"ssl:{self.game_cfg.server.port}"
-                    f":interface={self.core_cfg.server.listen_address}:privateKey={self.game_cfg.server.ssl_key}:"
-                    f"certKey={self.game_cfg.server.ssl_cert}",
-                ).listen(server.Site(self))
-
-                self.logger.info(
-                    f"Pokken title server ready on port {self.game_cfg.server.port}"
-                )
-
-            else:
-                self.logger.error(
-                    f"Could not find cert at {self.game_cfg.server.ssl_key} or key at {self.game_cfg.server.ssl_cert}, Pokken not running."
-                )
+    def setup(self) -> None:
+        # TODO: Setup matching, stun, turn and admission servers
+        pass
 
     def render_POST(
         self, request: Request, version: int = 0, endpoints: str = ""
     ) -> bytes:
-        if endpoints == "":
-            endpoints = request.uri.decode()
         if endpoints.startswith("/matching"):
             self.logger.info("Matching request")
+            self.logger.debug(request.content)
 
         content = request.content.getvalue()
         if content == b"":

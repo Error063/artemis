@@ -38,7 +38,7 @@ class PokkenBase:
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
                 "port": self.game_cfg.server.port_matching,
-                "url": "/matching",
+                "url": "SDAK/100/matching",
             },
             "StunServer": {
                 "addr": self.game_cfg.server.hostname,

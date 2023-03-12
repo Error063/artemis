@@ -55,19 +55,6 @@ class PokkenServerConfig:
             self.__config, "pokken", "server", "port_admission", default=9004
         )
 
-    @property
-    def ssl_cert(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "ssl_cert", default="cert/pokken.crt"
-        )
-
-    @property
-    def ssl_key(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "ssl_key", default="cert/pokken.key"
-        )
-
-
 class PokkenConfig(dict):
     def __init__(self) -> None:
         self.server = PokkenServerConfig(self)
