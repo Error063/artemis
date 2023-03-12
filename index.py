@@ -96,9 +96,11 @@ class HttpDispatcher(resource.Resource):
 
     def render_GET(self, request: Request) -> bytes:
         test = self.map_get.match(request.uri.decode())
+        client_ip = Utils.get_ip_addr(request)
+
         if test is None:
             self.logger.debug(
-                f"Unknown GET endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}"
+                f"Unknown GET endpoint {request.uri.decode()} from {client_ip} to port {request.getHost().port}"
             )
             request.setResponseCode(404)
             return b"Endpoint not found."
@@ -107,9 +109,11 @@ class HttpDispatcher(resource.Resource):
 
     def render_POST(self, request: Request) -> bytes:
         test = self.map_post.match(request.uri.decode())
+        client_ip = Utils.get_ip_addr(request)
+
         if test is None:
             self.logger.debug(
-                f"Unknown POST endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}"
+                f"Unknown POST endpoint {request.uri.decode()} from {client_ip} to port {request.getHost().port}"
             )
             request.setResponseCode(404)
             return b"Endpoint not found."

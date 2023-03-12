@@ -11,7 +11,7 @@ from Crypto.Util.Padding import pad
 from os import path
 from typing import Tuple
 
-from core import CoreConfig
+from core import CoreConfig, Utils
 from titles.chuni.config import ChuniConfig
 from titles.chuni.const import ChuniConstants
 from titles.chuni.base import ChuniBase
@@ -111,6 +111,7 @@ class ChuniServlet:
         encrtped = False
         internal_ver = 0
         endpoint = url_split[len(url_split) - 1]
+        client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0
             internal_ver = ChuniConstants.VER_CHUNITHM
@@ -179,7 +180,7 @@ class ChuniServlet:
         req_data = json.loads(unzip)
 
         self.logger.info(
-            f"v{version} {endpoint} request from {request.getClientAddress().host}"
+            f"v{version} {endpoint} request from {client_ip}"
         )
         self.logger.debug(req_data)
 

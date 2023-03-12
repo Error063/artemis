@@ -9,8 +9,7 @@ import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from typing import List, Optional
 
-from core import CoreConfig
-from core.utils import Utils
+from core import CoreConfig, Utils
 
 
 class BaseReader:

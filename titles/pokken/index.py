@@ -10,7 +10,7 @@ import inflection
 from os import path
 from google.protobuf.message import DecodeError
 
-from core.config import CoreConfig
+from core import CoreConfig, Utils
 from titles.pokken.config import PokkenConfig
 from titles.pokken.base import PokkenBase
 from titles.pokken.const import PokkenConstants
@@ -128,7 +128,7 @@ class PokkenServlet(resource.Resource):
     
     def handle_matching(self, request: Request) -> bytes:
         content = request.content.getvalue()
-        client_ip = request.getClientAddress().host
+        client_ip = Utils.get_ip_addr(request)
 
         if content is None or content == b"":
             self.logger.info("Empty matching request")

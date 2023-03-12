@@ -10,9 +10,8 @@ from twisted.python.components import registerAdapter
 import jinja2
 import bcrypt
 
-from core.config import CoreConfig
+from core import CoreConfig, Utils
 from core.data import Data
-from core.utils import Utils
 
 
 class IUserSession(Interface):
@@ -143,7 +142,7 @@ class FE_Gate(FE_Base):
 
     def render_POST(self, request: Request):
         uri = request.uri.decode()
-        ip = request.getClientAddress().host
+        ip = Utils.get_ip_addr(request)
 
         if uri == "/gate/gate.login":
             access_code: str = request.args[b"access_code"][0].decode()

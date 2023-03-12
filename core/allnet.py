@@ -12,8 +12,8 @@ from Crypto.Signature import PKCS1_v1_5
 from time import strptime
 
 from core.config import CoreConfig
-from core.data import Data
 from core.utils import Utils
+from core.data import Data
 from core.const import *
 
 
@@ -69,7 +69,7 @@ class AllnetServlet:
         )
 
     def handle_poweron(self, request: Request, _: Dict):
-        request_ip = request.getClientAddress().host
+        request_ip = Utils.get_ip_addr(request)
         try:
             req_dict = self.allnet_req_to_dict(request.content.getvalue())
             if req_dict is None:
@@ -162,7 +162,7 @@ class AllnetServlet:
         return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
     def handle_dlorder(self, request: Request, _: Dict):
-        request_ip = request.getClientAddress().host
+        request_ip = Utils.get_ip_addr(request)
         try:
             req_dict = self.allnet_req_to_dict(request.content.getvalue())
             if req_dict is None:
@@ -255,7 +255,7 @@ class AllnetServlet:
         return resp_str.encode("utf-8")
 
     def handle_naomitest(self, request: Request, _: Dict) -> bytes:
-        self.logger.info(f"Ping from {request.getClientAddress().host}")
+        self.logger.info(f"Ping from {Utils.get_ip_addr(request)}")
         return b"naomi ok"
 
     def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
