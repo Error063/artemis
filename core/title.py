@@ -68,7 +68,7 @@ class TitleServlet:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py")
 
         self.logger.info(
-            f"Serving {len(self.title_registry)} game codes on port {core_cfg.title.port}"
+            f"Serving {len(self.title_registry)} game codes {'on port ' + str(core_cfg.title.port) if core_cfg.title.port > 0 else ''}"
         )
 
     def render_GET(self, request: Request, endpoints: dict) -> bytes:

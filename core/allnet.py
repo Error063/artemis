@@ -65,7 +65,7 @@ class AllnetServlet:
                         self.uri_registry[code] = (uri, host)
 
         self.logger.info(
-            f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}"
+            f"Serving {len(self.uri_registry)} game codes port {core_cfg.allnet.port}"
         )
 
     def handle_poweron(self, request: Request, _: Dict):

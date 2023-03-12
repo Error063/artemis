@@ -98,11 +98,11 @@ class CxbServlet(resource.Resource):
                 ).listen(server.Site(CxbServlet(self.core_cfg, self.cfg_dir)))
 
                 self.logger.info(
-                    f"Crossbeats title server ready on port {self.game_cfg.server.port} & {self.game_cfg.server.port_secure}"
+                    f"Ready on ports {self.game_cfg.server.port} & {self.game_cfg.server.port_secure}"
                 )
             else:
                 self.logger.info(
-                    f"Crossbeats title server ready on port {self.game_cfg.server.port}"
+                    f"Ready on port {self.game_cfg.server.port}"
                 )
 
     def render_POST(self, request: Request):

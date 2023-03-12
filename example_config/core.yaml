@@ -48,6 +48,3 @@ mucha:
   enable: False
   hostname: "localhost"
   loglevel: "info"
-  port: 8444
-  ssl_key: "cert/server.key"
-  ssl_cert: "cert/server.pem"

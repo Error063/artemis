@@ -47,7 +47,7 @@ class MuchaServlet:
                     self.mucha_registry.append(game_cd)
 
         self.logger.info(
-            f"Serving {len(self.mucha_registry)} games on port {self.config.mucha.port}"
+            f"Serving {len(self.mucha_registry)} games"
         )
 
     def handle_boardauth(self, request: Request, _: Dict) -> bytes:
@@ -73,7 +73,7 @@ class MuchaServlet:
         # TODO: Decrypt S/N
 
         resp = MuchaAuthResponse(
-            f"{self.config.mucha.hostname}{':' + str(self.config.mucha.port) if self.config.server.is_develop else ''}"
+            f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}"
         )
 
         self.logger.debug(f"Mucha response {vars(resp)}")
