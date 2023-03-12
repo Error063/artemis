@@ -1,6 +1,7 @@
 import yaml
 import jinja2
 from twisted.web.http import Request
+from os import path
 
 from core.frontend import FE_Base
 from core.config import CoreConfig
@@ -16,7 +17,10 @@ class WaccaFrontend(FE_Base):
         super().__init__(cfg, environment)
         self.data = WaccaData(cfg)
         self.game_cfg = WaccaConfig()
-        self.game_cfg.update(yaml.safe_load(open(f"{cfg_dir}/wacca.yaml")))
+        if path.exists(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"):
+            self.game_cfg.update(
+                yaml.safe_load(open(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"))
+            )
         self.nav_name = "Wacca"
 
     def render_GET(self, request: Request) -> bytes:
