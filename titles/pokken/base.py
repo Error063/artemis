@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-import json
+import json, logging
 from typing import Any, Dict
 
 from core.config import CoreConfig
@@ -12,6 +12,7 @@ class PokkenBase:
         self.core_cfg = core_cfg
         self.game_cfg = game_cfg
         self.version = 0
+        self.logger = logging.getLogger("pokken")
 
     def handle_noop(self, request: Any) -> bytes:
         res = jackal_pb2.Response()
@@ -20,20 +21,22 @@ class PokkenBase:
 
         return res.SerializeToString()
 
-    def handle_ping(self, request: jackal_pb2.PingRequestData) -> bytes:
+    def handle_ping(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.PING
 
+        self.logger.debug(res)
         return res.SerializeToString()
 
-    def handle_register_pcb(self, request: jackal_pb2.RegisterPcbRequestData) -> bytes:
+    def handle_register_pcb(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.REGISTER_PCB
+        self.logger.info(f"Register PCB {request.register_pcb.pcb_id}")
 
         regist_pcb = jackal_pb2.RegisterPcbResponseData()
-        regist_pcb.server_time = int(datetime.now().timestamp() / 1000)
+        regist_pcb.server_time = int(datetime.now().timestamp())
         biwa_setting = {
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
@@ -60,7 +63,7 @@ class PokkenBase:
 
         return res.SerializeToString()
 
-    def handle_save_ads(self, request: jackal_pb2.SaveAdsRequestData) -> bytes:
+    def handle_save_ads(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_ADS
@@ -68,7 +71,7 @@ class PokkenBase:
         return res.SerializeToString()
 
     def handle_save_client_log(
-        self, request: jackal_pb2.SaveClientLogRequestData
+        self, request: jackal_pb2.Request
     ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -77,7 +80,7 @@ class PokkenBase:
         return res.SerializeToString()
 
     def handle_check_diagnosis(
-        self, request: jackal_pb2.CheckDiagnosisRequestData
+        self, request: jackal_pb2.Request
     ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -86,7 +89,7 @@ class PokkenBase:
         return res.SerializeToString()
 
     def handle_load_client_settings(
-        self, request: jackal_pb2.CheckDiagnosisRequestData
+        self, request: jackal_pb2.Request
     ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -109,7 +112,7 @@ class PokkenBase:
 
         return res.SerializeToString()
 
-    def handle_load_ranking(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+    def handle_load_ranking(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_RANKING

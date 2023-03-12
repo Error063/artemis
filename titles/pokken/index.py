@@ -115,15 +115,16 @@ class PokkenServlet(resource.Resource):
             pokken_request.type
         ].name.lower()
 
-        self.logger.info(f"{endpoint} request")
-
         handler = getattr(self.base, f"handle_{endpoint}", None)
         if handler is None:
             self.logger.warn(f"No handler found for message type {endpoint}")
             return self.base.handle_noop(pokken_request)
         
+        self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
+        self.logger.debug(pokken_request)
+        
         ret = handler(pokken_request)
-        #self.logger.debug(f"Response: {ret}")
+        self.logger.debug(f"Response: {ret}")
         return ret
     
     def handle_matching(self, request: Request) -> bytes:
