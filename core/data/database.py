@@ -71,7 +71,7 @@ class Data:
         games = Utils.get_all_titles()
         for game_dir, game_mod in games.items():
             try:
-                if hasattr(game_mod, "database"):
+                if hasattr(game_mod, "database") and hasattr(game_mod, "current_schema_version"):
                     game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
