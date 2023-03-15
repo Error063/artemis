@@ -53,6 +53,22 @@ ticket = Table(
     mysql_charset="utf8mb4",
 )
 
+cards = Table(
+    "mai2_static_cards",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("cardId", Integer, nullable=False),
+    Column("cardName", String(255), nullable=False),
+    Column("startDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
+    Column("endDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    Column("noticeStartDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
+    Column("noticeEndDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    Column("enabled", Boolean, server_default="1"),
+    UniqueConstraint("version", "cardId", "cardName", name="mai2_static_cards_uk"),
+    mysql_charset="utf8mb4",
+)
+
 
 class Mai2StaticData(BaseData):
     def put_game_event(
@@ -166,6 +182,8 @@ class Mai2StaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(price=ticket_price)
 
+        conflict = sql.on_duplicate_key_update(price=ticket_price)
+
         result = self.execute(conflict)
         if result is None:
             self.logger.warn(f"Failed to insert charge {ticket_id} type {ticket_type}")
@@ -208,3 +226,24 @@ class Mai2StaticData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+
+    def put_card(self, version: int, card_id: int, card_name: str, **card_data) -> int:
+        sql = insert(cards).values(
+            version=version, cardId=card_id, cardName=card_name, **card_data
+        )
+
+        conflict = sql.on_duplicate_key_update(**card_data)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(f"Failed to insert card {card_id}")
+            return None
+        return result.lastrowid
+
+    def get_enabled_cards(self, version: int) -> Optional[List[Row]]:
+        sql = cards.select(and_(cards.c.version == version, cards.c.enabled == True))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()

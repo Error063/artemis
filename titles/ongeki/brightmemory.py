@@ -142,8 +142,8 @@ class OngekiBrightMemory(OngekiBright):
         user_data = super().handle_cm_get_user_data_api_request(data)
 
         # hardcode Card Maker version for now
-        # Card Maker 1.34.00 = 1.30.01
-        # Card Maker 1.36.00 = 1.35.04
-        user_data["userData"]["compatibleCmVersion"] = "1.35.04"
+        # Card Maker 1.34 = 1.30.01
+        # Card Maker 1.35 = 1.35.03
+        user_data["userData"]["compatibleCmVersion"] = "1.35.03"
 
         return user_data

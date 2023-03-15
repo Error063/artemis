@@ -89,7 +89,7 @@ class Mai2Servlet:
         )
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "/ping":
+        if url_path.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
 
         req_raw = request.content.getvalue()

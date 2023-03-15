@@ -448,7 +448,9 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_activity(self, user_id: int, kind: int = None) -> Optional[Row]:
+    def get_profile_activity(
+        self, user_id: int, kind: int = None
+    ) -> Optional[List[Row]]:
         sql = activity.select(
             and_(
                 activity.c.user == user_id,
@@ -459,4 +461,4 @@ class Mai2ProfileData(BaseData):
         result = self.execute(sql)
         if result is None:
             return None
-        return result.fetchone()
+        return result.fetchall()

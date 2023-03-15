@@ -588,3 +588,11 @@ class ChuniBase:
 
     def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
+
+    def handle_get_user_net_battle_data_api_request(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "userNetBattleData": {
+                "recentNBSelectMusicList": []
+            }
+        }
