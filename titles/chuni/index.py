@@ -57,21 +57,6 @@ class ChuniServlet:
             ChuniNewPlus,
         ]
 
-        for version, keys in self.game_cfg.crypto.keys.items():
-            if len(keys) < 3:
-                continue
-            
-            self.hash_table[version] = {}
-            
-            method_list = [method for method in dir(self.versions[version]) if not method.startswith('__')]
-            for method in method_list:
-                method_fixed = inflection.camelize(method)
-                hash = PBKDF2(method_fixed, bytes.fromhex(keys[2]), 128, count=44, hmac_hash_module=SHA1)
-                
-                self.hash_table[version][hash.hex()] = method_fixed
-                
-                self.logger.debug(f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}")
-
         self.logger = logging.getLogger("chuni")
 
         if not hasattr(self.logger, "inited"):
@@ -97,6 +82,21 @@ class ChuniServlet:
                 level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
             )
             self.logger.inited = True
+        
+        for version, keys in self.game_cfg.crypto.keys.items():
+            if len(keys) < 3:
+                continue
+            
+            self.hash_table[version] = {}
+            
+            method_list = [method for method in dir(self.versions[version]) if not method.startswith('__')]
+            for method in method_list:
+                method_fixed = inflection.camelize(method)[6:-7]
+                hash = PBKDF2(method_fixed, bytes.fromhex(keys[2]), 128, count=44, hmac_hash_module=SHA1)
+                
+                self.hash_table[version][hash.hex()] = method_fixed
+                
+                self.logger.debug(f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}")
 
     @classmethod
     def get_allnet_info(
