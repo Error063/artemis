@@ -8,13 +8,13 @@ using the megaime database. Clean installations always create the latest databas
 
 # Table of content
 
-- [Supported Games](#Supported-Games)
-    - [Chunithm](#Chunithm)
-    - [crossbeats REV.](#crossbeats-REV)
-    - [maimai DX](#maimai-DX)
-    - [O.N.G.E.K.I.](#ONGEKI)
-    - [Card Maker](#Card-Maker)
-    - [WACCA](#WACCA)
+- [Supported Games](#supported-games)
+    - [Chunithm](#chunithm)
+    - [crossbeats REV.](#crossbeats-rev)
+    - [maimai DX](#maimai-dx)
+    - [O.N.G.E.K.I.](#ongeki)
+    - [Card Maker](#card-maker)
+    - [WACCA](#wacca)
 
 
 # Supported Games
