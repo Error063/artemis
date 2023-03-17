@@ -244,9 +244,9 @@ class ChuniServlet:
         padded = pad(zipped, 16)
 
         crypt = AES.new(
-            bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][0]),
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
             AES.MODE_CBC,
-            bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][1]),
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
         return crypt.encrypt(padded)
