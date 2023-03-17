@@ -371,7 +371,7 @@ class AllnetPowerOnResponse3:
         self.utc_time = datetime.now(tz=pytz.timezone("UTC")).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
-        self.setting = ""
+        self.setting = "1"
         self.res_ver = "3"
         self.token = str(token)
 
