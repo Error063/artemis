@@ -192,7 +192,7 @@ class AllnetServlet:
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
-        request_ip = request.getClientAddress()
+        request_ip = Utils.get_ip_addr(request)
         if req_dict is None:
             self.logger.error(f"Failed to parse request {request.content.getvalue()}")
             return b""
@@ -225,7 +225,7 @@ class AllnetServlet:
             return self.dict_to_http_form_string([vars(resp)])
 
         msg = (
-            f"Billing checkin from {request.getClientIP()}: game {kc_game} keychip {kc_serial} playcount "
+            f"Billing checkin from {request_ip}: game {kc_game} keychip {kc_serial} playcount "
             f"{kc_playcount} billing_type {kc_billigtype} nearfull {kc_nearfull} playlimit {kc_playlimit}"
         )
         self.logger.info(msg)

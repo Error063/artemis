@@ -30,7 +30,7 @@ class UserSession(object):
 
 class FrontendServlet(resource.Resource):
     def getChild(self, name: bytes, request: Request):
-        self.logger.debug(f"{request.getClientIP()} -> {name.decode()}")
+        self.logger.debug(f"{Utils.get_ip_addr(request)} -> {name.decode()}")
         if name == b"":
             return self
         return resource.Resource.getChild(self, name, request)
@@ -84,7 +84,7 @@ class FrontendServlet(resource.Resource):
         )
 
     def render_GET(self, request):
-        self.logger.debug(f"{request.getClientIP()} -> {request.uri.decode()}")
+        self.logger.debug(f"{Utils.get_ip_addr(request)} -> {request.uri.decode()}")
         template = self.environment.get_template("core/frontend/index.jinja")
         return template.render(
             server_name=self.config.server.name,
@@ -113,7 +113,7 @@ class FE_Base(resource.Resource):
 
 class FE_Gate(FE_Base):
     def render_GET(self, request: Request):
-        self.logger.debug(f"{request.getClientIP()} -> {request.uri.decode()}")
+        self.logger.debug(f"{Utils.get_ip_addr(request)} -> {request.uri.decode()}")
         uri: str = request.uri.decode()
 
         sesh = request.getSession()
