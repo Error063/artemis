@@ -181,7 +181,9 @@ class AllnetServlet:
                 self.logger.error(e)
             return b""
 
+        self.logger.info(f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}")
         resp = AllnetDownloadOrderResponse()
+        
         if not self.config.allnet.allow_online_updates:
             return self.dict_to_http_form_string([vars(resp)])
 
