@@ -32,6 +32,9 @@ class ChuniBase:
 
     def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
         game_charge_list = self.data.static.get_enabled_charges(self.version)
+        
+        if game_charge_list is None or len(game_charge_list) == 0:
+            return {"length": 0, "gameChargeList": []}
 
         charges = []
         for x in range(len(game_charge_list)):
@@ -51,6 +54,14 @@ class ChuniBase:
 
     def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         game_events = self.data.static.get_enabled_events(self.version)
+
+        if game_events is None or len(game_events) == 0:
+            self.logger.warn("No enabled events, did you run the reader?")
+            return {
+                "type": data["type"],
+                "length": 0,
+                "gameEventList": [],
+            }
 
         event_list = []
         for evt_row in game_events:
