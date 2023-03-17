@@ -2,7 +2,7 @@ import yaml
 import argparse
 from core.config import CoreConfig
 from core.data import Data
-from os import path
+from os import path, mkdir, access, W_OK
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Database utilities")
@@ -33,7 +33,18 @@ if __name__ == "__main__":
     cfg = CoreConfig()
     if path.exists(f"{args.config}/core.yaml"):
         cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+    
+    if not path.exists(cfg.server.log_dir):
+        mkdir(cfg.server.log_dir)
+    
+    if not access(cfg.server.log_dir, W_OK):
+        print(
+            f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
+        )
+        exit(1)
+
     data = Data(cfg)
+    
 
     if args.action == "create":
         data.create_database()

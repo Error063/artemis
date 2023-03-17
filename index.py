@@ -170,6 +170,12 @@ if __name__ == "__main__":
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
 
+    if not access(cfg.server.log_dir, W_OK):
+        print(
+            f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
+        )
+        exit(1)
+
     logger = logging.getLogger("core")
     log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
     log_fmt = logging.Formatter(log_fmt_str)
@@ -188,12 +194,6 @@ if __name__ == "__main__":
     log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
     logger.setLevel(log_lv)
     coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
-
-    if not access(cfg.server.log_dir, W_OK):
-        logger.error(
-            f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
-        )
-        exit(1)
 
     if not cfg.aimedb.key:
         logger.error("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")
