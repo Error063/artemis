@@ -942,7 +942,7 @@ class MusicUpdateDetailV1:
         self.score = 0
         self.lowestMissCount = 0
         self.maxSkillPts = 0
-        self.locked = 0
+        self.lock_state = 0
 
     def make(self) -> List:
         return [
@@ -954,7 +954,7 @@ class MusicUpdateDetailV1:
             self.score,
             self.lowestMissCount,
             self.maxSkillPts,
-            self.locked,
+            self.lock_state,
         ]
 
 
