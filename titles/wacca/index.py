@@ -102,7 +102,7 @@ class WaccaServlet:
             resp.message = "不正なリクエスト エラーです"
             return end(resp.make())
 
-        if "/api/" in url_path:
+        if "api/" in url_path:
             func_to_find = (
                 "handle_" + url_path.partition("api/")[2].replace("/", "_") + "_request"
             )

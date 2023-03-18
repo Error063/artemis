@@ -577,7 +577,21 @@ class SongDetailGradeCountsV2(SongDetailGradeCountsV1):
             self.ssspCt = counts[12]
 
     def make(self) -> List:
-        return super().make() + [self.spCt, self.sspCt, self.ssspCt]
+        return [
+            self.dCt,
+            self.cCt,
+            self.bCt,
+            self.aCt,
+            self.aaCt,
+            self.aaaCt,
+            self.sCt,
+            self.spCt,
+            self.ssCt,
+            self.sspCt,
+            self.sssCt,
+            self.ssspCt,
+            self.masterCt,
+        ]
 
 
 class BestScoreDetailV1:
