@@ -12,7 +12,7 @@ using the megaime database. Clean installations always create the latest databas
     - [Chunithm](#chunithm)
     - [crossbeats REV.](#crossbeats-rev)
     - [maimai DX](#maimai-dx)
-    - [O.N.G.E.K.I.](#ongeki)
+    - [O.N.G.E.K.I.](#o-n-g-e-k-i)
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
 
