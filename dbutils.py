@@ -64,6 +64,9 @@ if __name__ == "__main__":
         else:
             data.migrate_database(args.game, int(args.version), args.action)
 
+    elif args.action == "autoupgrade":
+        data.autoupgrade()
+
     elif args.action == "create-owner":
         data.create_owner(args.email)
 

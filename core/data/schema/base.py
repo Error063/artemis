@@ -2,6 +2,7 @@ import json
 import logging
 from random import randrange
 from typing import Any, Optional, Dict, List
+from sqlalchemy.engine import Row
 from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.sql import text, func, select
@@ -80,6 +81,14 @@ class BaseData:
         Generate a random 5-7 digit id
         """
         return randrange(10000, 9999999)
+    
+    def get_all_schema_vers(self) -> Optional[List[Row]]:
+        sql = select(schema_ver)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def get_schema_ver(self, game: str) -> Optional[int]:
         sql = select(schema_ver).where(schema_ver.c.game == game)
