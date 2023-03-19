@@ -6,6 +6,12 @@ from titles.diva.schema.pv_customize import DivaPvCustomizeData
 from titles.diva.schema.item import DivaItemData
 from titles.diva.schema.static import DivaStaticData
 
-__all__ = [DivaProfileData, DivaScoreData, DivaModuleData,
-           DivaCustomizeItemData, DivaPvCustomizeData, DivaItemData,
-           DivaStaticData]
+__all__ = [
+    DivaProfileData,
+    DivaScoreData,
+    DivaModuleData,
+    DivaCustomizeItemData,
+    DivaPvCustomizeData,
+    DivaItemData,
+    DivaStaticData,
+]

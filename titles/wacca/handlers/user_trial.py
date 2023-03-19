@@ -2,6 +2,7 @@ from typing import Dict, List
 from titles.wacca.handlers.base import BaseRequest, BaseResponse
 from titles.wacca.handlers.helpers import StageInfo, StageupClearType, GenericItemRecv
 
+
 # --user/trial/get--
 class UserTrialGetRequest(BaseRequest):
     profileId: int = 0
@@ -10,19 +11,21 @@ class UserTrialGetRequest(BaseRequest):
         super().__init__(data)
         self.profileId = self.params[0]
 
+
 class UserTrialGetResponse(BaseResponse):
     def __init__(self) -> None:
         super().__init__()
-        
+
         self.stageList: List[StageInfo] = []
 
     def make(self) -> Dict:
         dans = []
         for x in self.stageList:
             dans.append(x.make())
-        
+
         self.params = [dans]
         return super().make()
+
 
 # --user/trial/update--
 class UserTrialUpdateRequest(BaseRequest):
@@ -43,9 +46,10 @@ class UserTrialUpdateRequest(BaseRequest):
         if len(self.params) == 8:
             self.unk7 = self.params[7]
 
+
 class UserTrialUpdateResponse(BaseResponse):
     def __init__(self) -> None:
         super().__init__()
-    
+
     def make(self) -> Dict:
         return super().make()

@@ -1,6 +1,7 @@
 from enum import Enum
 
-class MainboardPlatformCodes():
+
+class MainboardPlatformCodes:
     RINGEDGE = "AALE"
     RINGWIDE = "AAML"
     NU = "AAVE"
@@ -8,7 +9,8 @@ class MainboardPlatformCodes():
     ALLS_UX = "ACAE"
     ALLS_HX = "ACAX"
 
-class MainboardRevisions():
+
+class MainboardRevisions:
     RINGEDGE = 1
     RINGEDGE2 = 2
 
@@ -26,11 +28,13 @@ class MainboardRevisions():
     ALLS_UX2 = 2
     ALLS_HX2 = 12
 
-class KeychipPlatformsCodes():
+
+class KeychipPlatformsCodes:
     RING = "A72E"
     NU = ("A60E", "A60E", "A60E")
     NUSX = ("A61X", "A69X")
     ALLS = "A63E"
+
 
 class AllnetCountryCode(Enum):
     JAPAN = "JPN"
@@ -40,6 +44,7 @@ class AllnetCountryCode(Enum):
     SOUTH_KOREA = "KOR"
     TAIWAN = "TWN"
     CHINA = "CHN"
+
 
 class AllnetJapanRegionId(Enum):
     NONE = 0

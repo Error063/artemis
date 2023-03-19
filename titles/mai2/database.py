@@ -1,6 +1,12 @@
 from core.data import Data
 from core.config import CoreConfig
-from titles.mai2.schema import Mai2ItemData, Mai2ProfileData, Mai2StaticData, Mai2ScoreData
+from titles.mai2.schema import (
+    Mai2ItemData,
+    Mai2ProfileData,
+    Mai2StaticData,
+    Mai2ScoreData,
+)
+
 
 class Mai2Data(Data):
     def __init__(self, cfg: CoreConfig) -> None:

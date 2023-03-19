@@ -15,6 +15,10 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + Hatsune Miku Arcade
     + All versions
 
++ Card Maker
+    + 1.34.xx
+    + 1.35.xx
+
 + Ongeki
     + All versions up to Bright Memory
 
@@ -31,6 +35,9 @@ Games listed below have been tested and confirmed working. Only game versions ol
 
 ## Setup guides
 Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md) and [ubuntu](docs/INSTALL_UBUNTU.md) to setup and run the server.
+
+## Game specific information
+Read [Games specific info](docs/game_specific_info.md) for all supported games, importer settings, configuration option and database upgrades.
 
 ## Production guide
 See the [production guide](docs/prod.md) for running a production server.

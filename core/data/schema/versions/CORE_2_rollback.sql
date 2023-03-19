@@ -1,0 +1,1 @@
+ALTER TABLE `event_log` DROP COLUMN `message`;

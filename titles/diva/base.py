@@ -1,6 +1,6 @@
 import datetime
 from typing import Any, List, Dict
-import logging 
+import logging
 import json
 import urllib
 
@@ -9,34 +9,35 @@ from titles.diva.config import DivaConfig
 from titles.diva.const import DivaConstants
 from titles.diva.database import DivaData
 
-class DivaBase():
+
+class DivaBase:
     def __init__(self, cfg: CoreConfig, game_cfg: DivaConfig) -> None:
-        self.core_cfg = cfg # Config file
+        self.core_cfg = cfg  # Config file
         self.game_config = game_cfg
-        self.data = DivaData(cfg) # Database
+        self.data = DivaData(cfg)  # Database
         self.date_time_format = "%Y-%m-%d %H:%M:%S"
         self.logger = logging.getLogger("diva")
         self.game = DivaConstants.GAME_CODE
         self.version = DivaConstants.VER_PROJECT_DIVA_ARCADE_FUTURE_TONE
 
         dt = datetime.datetime.now()
-        self.time_lut=urllib.parse.quote(dt.strftime("%Y-%m-%d %H:%M:%S:16.0"))
-    
+        self.time_lut = urllib.parse.quote(dt.strftime("%Y-%m-%d %H:%M:%S:16.0"))
+
     def handle_test_request(self, data: Dict) -> Dict:
         return ""
 
     def handle_game_init_request(self, data: Dict) -> Dict:
-        return ( f'' )
+        return f""
 
     def handle_attend_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
-            'atnd_prm1': '0,1,1,0,0,0,1,0,100,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1', 
-            'atnd_prm2': '30,10,100,4,1,50,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1',
-            'atnd_prm3': '100,0,1,1,1,1,1,1,1,1,2,3,4,1,1,1,3,4,5,1,1,1,4,5,6,1,1,1,5,6,7,4,4,4,9,10,14,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,10,30,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0',
-            'atnd_lut': f'{self.time_lut}',
+            "atnd_prm1": "0,1,1,0,0,0,1,0,100,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+            "atnd_prm2": "30,10,100,4,1,50,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+            "atnd_prm3": "100,0,1,1,1,1,1,1,1,1,2,3,4,1,1,1,3,4,5,1,1,1,4,5,6,1,1,1,5,6,7,4,4,4,9,10,14,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,5,10,10,25,20,50,30,90,10,30,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+            "atnd_lut": f"{self.time_lut}",
         }
-        
+
         encoded += urllib.parse.urlencode(params)
         encoded = encoded.replace("%2C", ",")
 
@@ -45,42 +46,42 @@ class DivaBase():
     def handle_ping_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
-            'ping_b_msg': f'Welcome to {self.core_cfg.server.name} network!', 
-            'ping_m_msg': 'xxx',
-            'atnd_lut': f'{self.time_lut}',
-            'fi_lut': f'{self.time_lut}',
-            'ci_lut': f'{self.time_lut}',
-            'qi_lut': f'{self.time_lut}',
-            'pvl_lut': '2021-05-22 12:08:16.0',
-            'shp_ctlg_lut': '2020-06-10 19:44:16.0',
-            'cstmz_itm_ctlg_lut': '2019-10-08 20:23:12.0',
-            'ngwl_lut': '2019-10-08 20:23:12.0',
-            'rnk_nv_lut': '2020-06-10 19:51:30.0',
-            'rnk_ps_lut': f'{self.time_lut}',
-            'bi_lut': '2020-09-18 10:00:00.0',
-            'cpi_lut': '2020-10-25 09:25:10.0',
-            'bdlol_lut': '2020-09-18 10:00:00.0',
-            'p_std_hc_lut': '2019-08-01 04:00:36.0',
-            'p_std_i_n_lut': '2019-08-01 04:00:36.0',
-            'pdcl_lut': '2019-08-01 04:00:36.0',
-            'pnml_lut': '2019-08-01 04:00:36.0',
-            'cinml_lut': '2019-08-01 04:00:36.0',
-            'rwl_lut': '2019-08-01 04:00:36.0',
-            'req_inv_cmd_num': '-1,-1,-1,-1,-1,-1,-1,-1,-1,-1',
-            'req_inv_cmd_prm1': '-1,-1,-1,-1,-1,-1,-1,-1,-1,-1',
-            'req_inv_cmd_prm2': '-1,-1,-1,-1,-1,-1,-1,-1,-1,-1',
-            'req_inv_cmd_prm3': '-1,-1,-1,-1,-1,-1,-1,-1,-1,-1',
-            'req_inv_cmd_prm4': '-1,-1,-1,-1,-1,-1,-1,-1,-1,-1',
-            'pow_save_flg': 0,
-            'nblss_dnt_p': 100,
-            'nblss_ltt_rl_vp': 1500,
-            'nblss_ex_ltt_flg': 1,
-            'nblss_dnt_st_tm': "2019-07-15 12:00:00.0",
-            'nblss_dnt_ed_tm': "2019-09-17 12:00:00.0",
-            'nblss_ltt_st_tm': "2019-09-18 12:00:00.0",
-            'nblss_ltt_ed_tm': "2019-09-22 12:00:00.0",
+            "ping_b_msg": f"Welcome to {self.core_cfg.server.name} network!",
+            "ping_m_msg": "xxx",
+            "atnd_lut": f"{self.time_lut}",
+            "fi_lut": f"{self.time_lut}",
+            "ci_lut": f"{self.time_lut}",
+            "qi_lut": f"{self.time_lut}",
+            "pvl_lut": "2021-05-22 12:08:16.0",
+            "shp_ctlg_lut": "2020-06-10 19:44:16.0",
+            "cstmz_itm_ctlg_lut": "2019-10-08 20:23:12.0",
+            "ngwl_lut": "2019-10-08 20:23:12.0",
+            "rnk_nv_lut": "2020-06-10 19:51:30.0",
+            "rnk_ps_lut": f"{self.time_lut}",
+            "bi_lut": "2020-09-18 10:00:00.0",
+            "cpi_lut": "2020-10-25 09:25:10.0",
+            "bdlol_lut": "2020-09-18 10:00:00.0",
+            "p_std_hc_lut": "2019-08-01 04:00:36.0",
+            "p_std_i_n_lut": "2019-08-01 04:00:36.0",
+            "pdcl_lut": "2019-08-01 04:00:36.0",
+            "pnml_lut": "2019-08-01 04:00:36.0",
+            "cinml_lut": "2019-08-01 04:00:36.0",
+            "rwl_lut": "2019-08-01 04:00:36.0",
+            "req_inv_cmd_num": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+            "req_inv_cmd_prm1": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+            "req_inv_cmd_prm2": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+            "req_inv_cmd_prm3": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+            "req_inv_cmd_prm4": "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+            "pow_save_flg": 0,
+            "nblss_dnt_p": 100,
+            "nblss_ltt_rl_vp": 1500,
+            "nblss_ex_ltt_flg": 1,
+            "nblss_dnt_st_tm": "2019-07-15 12:00:00.0",
+            "nblss_dnt_ed_tm": "2019-09-17 12:00:00.0",
+            "nblss_ltt_st_tm": "2019-09-18 12:00:00.0",
+            "nblss_ltt_ed_tm": "2019-09-22 12:00:00.0",
         }
-        
+
         encoded += urllib.parse.urlencode(params)
         encoded = encoded.replace("+", "%20")
         encoded = encoded.replace("%2C", ",")
@@ -122,7 +123,7 @@ class DivaBase():
         response += f"&pvl_lut={self.time_lut}"
         response += f"&pv_lst={pvlist}"
 
-        return ( response )
+        return response
 
     def handle_shop_catalog_request(self, data: Dict) -> Dict:
         catalog = ""
@@ -137,7 +138,21 @@ class DivaBase():
 
         else:
             for shop in shopList:
-                line = str(shop["shopId"]) + "," + str(shop['unknown_0']) + "," + shop['name'] + "," + str(shop['points']) + "," + shop['start_date'] + "," + shop['end_date'] + "," + str(shop["type"])
+                line = (
+                    str(shop["shopId"])
+                    + ","
+                    + str(shop["unknown_0"])
+                    + ","
+                    + shop["name"]
+                    + ","
+                    + str(shop["points"])
+                    + ","
+                    + shop["start_date"]
+                    + ","
+                    + shop["end_date"]
+                    + ","
+                    + str(shop["type"])
+                )
                 line = urllib.parse.quote(line) + ","
                 catalog += f"{urllib.parse.quote(line)}"
 
@@ -146,7 +161,7 @@ class DivaBase():
         response = f"&shp_ctlg_lut={self.time_lut}"
         response += f"&shp_ctlg={catalog[:-3]}"
 
-        return ( response )
+        return response
 
     def handle_buy_module_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
@@ -162,10 +177,7 @@ class DivaBase():
 
         new_vcld_pts = profile["vcld_pts"] - int(data["mdl_price"])
 
-        self.data.profile.update_profile(
-            profile["user"],
-            vcld_pts=new_vcld_pts
-        )
+        self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
         self.data.module.put_module(data["pd_id"], self.version, data["mdl_id"])
 
         # generate the mdl_have string
@@ -191,7 +203,21 @@ class DivaBase():
 
         else:
             for item in itemList:
-                line = str(item["itemId"]) + "," + str(item['unknown_0']) + "," + item['name'] + "," + str(item['points']) + "," + item['start_date'] + "," + item['end_date'] + "," + str(item["type"])
+                line = (
+                    str(item["itemId"])
+                    + ","
+                    + str(item["unknown_0"])
+                    + ","
+                    + item["name"]
+                    + ","
+                    + str(item["points"])
+                    + ","
+                    + item["start_date"]
+                    + ","
+                    + item["end_date"]
+                    + ","
+                    + str(item["type"])
+                )
                 line = urllib.parse.quote(line) + ","
                 catalog += f"{urllib.parse.quote(line)}"
 
@@ -200,11 +226,13 @@ class DivaBase():
         response = f"&cstmz_itm_ctlg_lut={self.time_lut}"
         response += f"&cstmz_itm_ctlg={catalog[:-3]}"
 
-        return ( response )
+        return response
 
     def handle_buy_cstmz_itm_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        item = self.data.static.get_enabled_item(self.version, int(data["cstmz_itm_id"]))
+        item = self.data.static.get_enabled_item(
+            self.version, int(data["cstmz_itm_id"])
+        )
 
         # make sure module is available to purchase
         if not item:
@@ -217,15 +245,16 @@ class DivaBase():
         new_vcld_pts = profile["vcld_pts"] - int(data["cstmz_itm_price"])
 
         # save new Vocaloid Points balance
-        self.data.profile.update_profile(
-            profile["user"],
-            vcld_pts=new_vcld_pts
+        self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
+
+        self.data.customize.put_customize_item(
+            data["pd_id"], self.version, data["cstmz_itm_id"]
         )
 
-        self.data.customize.put_customize_item(data["pd_id"], self.version, data["cstmz_itm_id"])
-
         # generate the cstmz_itm_have string
-        cstmz_itm_have = self.data.customize.get_customize_items_have_string(data["pd_id"], self.version)
+        cstmz_itm_have = self.data.customize.get_customize_items_have_string(
+            data["pd_id"], self.version
+        )
 
         response = "&shp_rslt=1"
         response += f"&cstmz_itm_id={data['cstmz_itm_id']}"
@@ -237,33 +266,33 @@ class DivaBase():
     def handle_festa_info_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
-            'fi_id': '1,-1',
-            'fi_name': f'{self.core_cfg.server.name} Opening,xxx',
-            'fi_kind': '0,0',
-            'fi_difficulty': '-1,-1',
-            'fi_pv_id_lst': 'ALL,ALL',
-            'fi_attr': '7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
-            'fi_add_vp': '20,0',
-            'fi_mul_vp': '1,1',
-            'fi_st': '2022-06-17 17:00:00.0,2014-07-08 18:10:11.0',
-            'fi_et': '2029-01-01 10:00:00.0,2014-07-08 18:10:11.0',
-            'fi_lut': '{self.time_lut}',
+            "fi_id": "1,-1",
+            "fi_name": f"{self.core_cfg.server.name} Opening,xxx",
+            "fi_kind": "0,0",
+            "fi_difficulty": "-1,-1",
+            "fi_pv_id_lst": "ALL,ALL",
+            "fi_attr": "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+            "fi_add_vp": "20,0",
+            "fi_mul_vp": "1,1",
+            "fi_st": "2022-06-17 17:00:00.0,2014-07-08 18:10:11.0",
+            "fi_et": "2029-01-01 10:00:00.0,2014-07-08 18:10:11.0",
+            "fi_lut": "{self.time_lut}",
         }
-        
+
         encoded += urllib.parse.urlencode(params)
         encoded = encoded.replace("+", "%20")
         encoded = encoded.replace("%2C", ",")
 
         return encoded
-        
+
     def handle_contest_info_request(self, data: Dict) -> Dict:
         response = ""
 
         response += f"&ci_lut={self.time_lut}"
         response += "&ci_str=%2A%2A%2A,%2A%2A%2A,%2A%2A%2A,%2A%2A%2A,%2A%2A%2A,%2A%2A%2A,%2A%2A%2A,%2A%2A%2A"
-        
-        return ( response )
-        
+
+        return response
+
     def handle_qst_inf_request(self, data: Dict) -> Dict:
         quest = ""
 
@@ -279,11 +308,31 @@ class DivaBase():
             response += f"&qhi_str={quest[:-1]}"
         else:
             for quests in questList:
-                line = str(quests["questId"]) + "," + str(quests['quest_order']) + "," + str(quests['kind']) + "," + str(quests['unknown_0']) + "," + quests['start_datetime'] + "," + quests['end_datetime'] + "," + quests["name"] + "," + str(quests["unknown_1"]) + "," + str(quests["unknown_2"]) + "," + str(quests["quest_enable"])
+                line = (
+                    str(quests["questId"])
+                    + ","
+                    + str(quests["quest_order"])
+                    + ","
+                    + str(quests["kind"])
+                    + ","
+                    + str(quests["unknown_0"])
+                    + ","
+                    + quests["start_datetime"]
+                    + ","
+                    + quests["end_datetime"]
+                    + ","
+                    + quests["name"]
+                    + ","
+                    + str(quests["unknown_1"])
+                    + ","
+                    + str(quests["unknown_2"])
+                    + ","
+                    + str(quests["quest_enable"])
+                )
                 quest += f"{urllib.parse.quote(line)}%0A,"
 
             responseline = f"{quest[:-1]},"
-            for i in range(len(questList),59):
+            for i in range(len(questList), 59):
                 responseline += "%2A%2A%2A%0A,"
 
             response = ""
@@ -292,44 +341,44 @@ class DivaBase():
 
         response += "&qrai_str=%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1,%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1,%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1%2C%2D1"
 
-        return ( response )
-        
+        return response
+
     def handle_nv_ranking_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_ps_ranking_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_ng_word_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_rmt_wp_list_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_pv_def_chr_list_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_pv_ng_mdl_list_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_cstmz_itm_ng_mdl_lst_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_banner_info_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_banner_data_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_cm_ply_info_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_pstd_h_ctrl_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_pstd_item_ng_lst_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_pre_start_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["aime_id"], self.version)
         profile_shop = self.data.item.get_shop(data["aime_id"], self.version)
@@ -372,8 +421,10 @@ class DivaBase():
             return response
 
     def handle_registration_request(self, data: Dict) -> Dict:
-        self.data.profile.create_profile(self.version, data["aime_id"], data["player_name"])
-        return (f"&cd_adm_result=1&pd_id={data['aime_id']}")
+        self.data.profile.create_profile(
+            self.version, data["aime_id"], data["player_name"]
+        )
+        return f"&cd_adm_result=1&pd_id={data['aime_id']}"
 
     def handle_start_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
@@ -384,12 +435,16 @@ class DivaBase():
         mdl_have = "F" * 250
         # generate the mdl_have string if "unlock_all_modules" is disabled
         if not self.game_config.mods.unlock_all_modules:
-            mdl_have = self.data.module.get_modules_have_string(data["pd_id"], self.version)
+            mdl_have = self.data.module.get_modules_have_string(
+                data["pd_id"], self.version
+            )
 
         cstmz_itm_have = "F" * 250
         # generate the cstmz_itm_have string if "unlock_all_items" is disabled
         if not self.game_config.mods.unlock_all_items:
-            cstmz_itm_have = self.data.customize.get_customize_items_have_string(data["pd_id"], self.version)
+            cstmz_itm_have = self.data.customize.get_customize_items_have_string(
+                data["pd_id"], self.version
+            )
 
         response = f"&pd_id={data['pd_id']}"
         response += "&start_result=1"
@@ -452,15 +507,16 @@ class DivaBase():
         response += f"&mdl_eqp_ary={mdl_eqp_ary}"
         response += f"&c_itm_eqp_ary={c_itm_eqp_ary}"
         response += f"&ms_itm_flg_ary={ms_itm_flg_ary}"
-        
-        return ( response )
+
+        return response
 
     def handle_pd_unlock_request(self, data: Dict) -> Dict:
-        return ( f'' )
-        
+        return f""
+
     def handle_spend_credit_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        if profile is None: return
+        if profile is None:
+            return
 
         response = ""
 
@@ -471,10 +527,16 @@ class DivaBase():
         response += f"&lv_efct_id={profile['lv_efct_id']}"
         response += f"&lv_plt_id={profile['lv_plt_id']}"
 
-        return ( response )
+        return response
 
-    def _get_pv_pd_result(self, song: int, pd_db_song: Dict, pd_db_ranking: Dict,
-                          pd_db_customize: Dict, edition: int) -> str:
+    def _get_pv_pd_result(
+        self,
+        song: int,
+        pd_db_song: Dict,
+        pd_db_ranking: Dict,
+        pd_db_customize: Dict,
+        edition: int,
+    ) -> str:
         """
         Helper function to generate the pv_result string for every song, ranking and edition
         """
@@ -483,7 +545,7 @@ class DivaBase():
             # make sure there are enough max scores to calculate a ranking
             if pd_db_ranking["ranking"] != 0:
                 global_ranking = pd_db_ranking["ranking"]
-    
+
         # pv_no
         pv_result = f"{song},"
         # edition
@@ -513,7 +575,7 @@ class DivaBase():
                 f"{pd_db_customize['chsld_se']},"
                 f"{pd_db_customize['sldtch_se']}"
             )
-        
+
         pv_result += f"{module_eqp},"
         pv_result += f"{customize_eqp},"
         pv_result += f"{customize_flag},"
@@ -537,21 +599,35 @@ class DivaBase():
             if int(song) > 0:
                 # the request do not send a edition so just perform a query best score and ranking for each edition.
                 # 0=ORIGINAL, 1=EXTRA
-                pd_db_song_0 = self.data.score.get_best_user_score(data["pd_id"], int(song), data["difficulty"], edition=0)
-                pd_db_song_1 = self.data.score.get_best_user_score(data["pd_id"], int(song), data["difficulty"], edition=1)
-                
+                pd_db_song_0 = self.data.score.get_best_user_score(
+                    data["pd_id"], int(song), data["difficulty"], edition=0
+                )
+                pd_db_song_1 = self.data.score.get_best_user_score(
+                    data["pd_id"], int(song), data["difficulty"], edition=1
+                )
+
                 pd_db_ranking_0, pd_db_ranking_1 = None, None
                 if pd_db_song_0:
-                    pd_db_ranking_0 = self.data.score.get_global_ranking(data["pd_id"], int(song), data["difficulty"], edition=0)
+                    pd_db_ranking_0 = self.data.score.get_global_ranking(
+                        data["pd_id"], int(song), data["difficulty"], edition=0
+                    )
 
                 if pd_db_song_1:
-                    pd_db_ranking_1 = self.data.score.get_global_ranking(data["pd_id"], int(song), data["difficulty"], edition=1)
+                    pd_db_ranking_1 = self.data.score.get_global_ranking(
+                        data["pd_id"], int(song), data["difficulty"], edition=1
+                    )
 
-                pd_db_customize = self.data.pv_customize.get_pv_customize(data["pd_id"], int(song))
-                
+                pd_db_customize = self.data.pv_customize.get_pv_customize(
+                    data["pd_id"], int(song)
+                )
+
                 # generate the pv_result string with the ORIGINAL edition and the EXTRA edition appended
-                pv_result = self._get_pv_pd_result(int(song), pd_db_song_0, pd_db_ranking_0, pd_db_customize, edition=0)
-                pv_result += "," + self._get_pv_pd_result(int(song), pd_db_song_1, pd_db_ranking_1, pd_db_customize, edition=1)
+                pv_result = self._get_pv_pd_result(
+                    int(song), pd_db_song_0, pd_db_ranking_0, pd_db_customize, edition=0
+                )
+                pv_result += "," + self._get_pv_pd_result(
+                    int(song), pd_db_song_1, pd_db_ranking_1, pd_db_customize, edition=1
+                )
 
                 self.logger.debug(f"pv_result = {pv_result}")
 
@@ -565,13 +641,12 @@ class DivaBase():
         response += "&pdddt_flg=0"
         response += f"&pdddt_tm={self.time_lut}"
 
-        return ( response )
+        return response
 
     def handle_stage_start_request(self, data: Dict) -> Dict:
-        return ( f'' )
+        return f""
 
     def handle_stage_result_request(self, data: Dict) -> Dict:
-
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         pd_song_list = data["stg_ply_pv_id"].split(",")
@@ -590,15 +665,100 @@ class DivaBase():
 
         for index, value in enumerate(pd_song_list):
             if "-1" not in pd_song_list[index]:
-                profile_pd_db_song = self.data.score.get_best_user_score(data["pd_id"], pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index])
+                profile_pd_db_song = self.data.score.get_best_user_score(
+                    data["pd_id"],
+                    pd_song_list[index],
+                    pd_song_difficulty[index],
+                    pd_song_edition[index],
+                )
                 if profile_pd_db_song is None:
-                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_best_score(
+                        data["pd_id"],
+                        self.version,
+                        pd_song_list[index],
+                        pd_song_difficulty[index],
+                        pd_song_edition[index],
+                        pd_song_max_score[index],
+                        pd_song_max_atn_pnt[index],
+                        pd_song_ranking[index],
+                        pd_song_sort_kind,
+                        pd_song_cool_cnt[index],
+                        pd_song_fine_cnt[index],
+                        pd_song_safe_cnt[index],
+                        pd_song_sad_cnt[index],
+                        pd_song_worst_cnt[index],
+                        pd_song_max_combo[index],
+                    )
+                    self.data.score.put_playlog(
+                        data["pd_id"],
+                        self.version,
+                        pd_song_list[index],
+                        pd_song_difficulty[index],
+                        pd_song_edition[index],
+                        pd_song_max_score[index],
+                        pd_song_max_atn_pnt[index],
+                        pd_song_ranking[index],
+                        pd_song_sort_kind,
+                        pd_song_cool_cnt[index],
+                        pd_song_fine_cnt[index],
+                        pd_song_safe_cnt[index],
+                        pd_song_sad_cnt[index],
+                        pd_song_worst_cnt[index],
+                        pd_song_max_combo[index],
+                    )
                 elif int(pd_song_max_score[index]) >= int(profile_pd_db_song["score"]):
-                    self.data.score.put_best_score(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_best_score(
+                        data["pd_id"],
+                        self.version,
+                        pd_song_list[index],
+                        pd_song_difficulty[index],
+                        pd_song_edition[index],
+                        pd_song_max_score[index],
+                        pd_song_max_atn_pnt[index],
+                        pd_song_ranking[index],
+                        pd_song_sort_kind,
+                        pd_song_cool_cnt[index],
+                        pd_song_fine_cnt[index],
+                        pd_song_safe_cnt[index],
+                        pd_song_sad_cnt[index],
+                        pd_song_worst_cnt[index],
+                        pd_song_max_combo[index],
+                    )
+                    self.data.score.put_playlog(
+                        data["pd_id"],
+                        self.version,
+                        pd_song_list[index],
+                        pd_song_difficulty[index],
+                        pd_song_edition[index],
+                        pd_song_max_score[index],
+                        pd_song_max_atn_pnt[index],
+                        pd_song_ranking[index],
+                        pd_song_sort_kind,
+                        pd_song_cool_cnt[index],
+                        pd_song_fine_cnt[index],
+                        pd_song_safe_cnt[index],
+                        pd_song_sad_cnt[index],
+                        pd_song_worst_cnt[index],
+                        pd_song_max_combo[index],
+                    )
                 elif int(pd_song_max_score[index]) != int(profile_pd_db_song["score"]):
-                    self.data.score.put_playlog(data["pd_id"], self.version, pd_song_list[index], pd_song_difficulty[index], pd_song_edition[index], pd_song_max_score[index], pd_song_max_atn_pnt[index], pd_song_ranking[index], pd_song_sort_kind, pd_song_cool_cnt[index], pd_song_fine_cnt[index], pd_song_safe_cnt[index], pd_song_sad_cnt[index], pd_song_worst_cnt[index], pd_song_max_combo[index])
+                    self.data.score.put_playlog(
+                        data["pd_id"],
+                        self.version,
+                        pd_song_list[index],
+                        pd_song_difficulty[index],
+                        pd_song_edition[index],
+                        pd_song_max_score[index],
+                        pd_song_max_atn_pnt[index],
+                        pd_song_ranking[index],
+                        pd_song_sort_kind,
+                        pd_song_cool_cnt[index],
+                        pd_song_fine_cnt[index],
+                        pd_song_safe_cnt[index],
+                        pd_song_sad_cnt[index],
+                        pd_song_worst_cnt[index],
+                        pd_song_max_combo[index],
+                    )
 
         # Profile saving based on registration list
 
@@ -608,7 +768,7 @@ class DivaBase():
         total_atn_pnt = 0
         for best_score in best_scores:
             total_atn_pnt += best_score["atn_pnt"]
-        
+
         new_level = (total_atn_pnt // 13979) + 1
         new_level_pnt = round((total_atn_pnt % 13979) / 13979 * 100)
 
@@ -630,7 +790,7 @@ class DivaBase():
             nxt_dffclty=int(data["nxt_dffclty"]),
             nxt_edtn=int(data["nxt_edtn"]),
             my_qst_id=data["my_qst_id"],
-            my_qst_sts=data["my_qst_sts"]
+            my_qst_sts=data["my_qst_sts"],
         )
 
         response += f"&lv_num={new_level}"
@@ -663,35 +823,51 @@ class DivaBase():
         response += "&my_ccd_r_hnd=-1,-1,-1,-1,-1"
         response += "&my_ccd_r_vp=-1,-1,-1,-1,-1"
 
-        return ( response )
+        return response
 
     def handle_end_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         self.data.profile.update_profile(
-            profile["user"],
-            my_qst_id=data["my_qst_id"],
-            my_qst_sts=data["my_qst_sts"]
+            profile["user"], my_qst_id=data["my_qst_id"], my_qst_sts=data["my_qst_sts"]
         )
-        return (f'')
+        return f""
 
     def handle_shop_exit_request(self, data: Dict) -> Dict:
-        self.data.item.put_shop(data["pd_id"], self.version, data["mdl_eqp_cmn_ary"], data["c_itm_eqp_cmn_ary"], data["ms_itm_flg_cmn_ary"])
+        self.data.item.put_shop(
+            data["pd_id"],
+            self.version,
+            data["mdl_eqp_cmn_ary"],
+            data["c_itm_eqp_cmn_ary"],
+            data["ms_itm_flg_cmn_ary"],
+        )
         if int(data["use_pv_mdl_eqp"]) == 1:
-            self.data.pv_customize.put_pv_customize(data["pd_id"], self.version, data["ply_pv_id"],
-                                                    data["mdl_eqp_pv_ary"], data["c_itm_eqp_pv_ary"], data["ms_itm_flg_pv_ary"])
+            self.data.pv_customize.put_pv_customize(
+                data["pd_id"],
+                self.version,
+                data["ply_pv_id"],
+                data["mdl_eqp_pv_ary"],
+                data["c_itm_eqp_pv_ary"],
+                data["ms_itm_flg_pv_ary"],
+            )
         else:
-            self.data.pv_customize.put_pv_customize(data["pd_id"], self.version, data["ply_pv_id"],
-                                                    "-1,-1,-1", "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1", "1,1,1,1,1,1,1,1,1,1,1,1")
+            self.data.pv_customize.put_pv_customize(
+                data["pd_id"],
+                self.version,
+                data["ply_pv_id"],
+                "-1,-1,-1",
+                "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1",
+                "1,1,1,1,1,1,1,1,1,1,1,1",
+            )
 
         response = "&shp_rslt=1"
-        return ( response )
+        return response
 
     def handle_card_procedure_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["aime_id"], self.version)
         if profile is None:
             return "&cd_adm_result=0"
-        
+
         response = "&cd_adm_result=1"
         response += "&chg_name_price=100"
         response += "&accept_idx=100"
@@ -706,20 +882,18 @@ class DivaBase():
         response += f"&passwd_stat={profile['passwd_stat']}"
 
         return response
-    
+
     def handle_change_name_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         # make sure user has enough Vocaloid Points
         if profile["vcld_pts"] < int(data["chg_name_price"]):
             return "&cd_adm_result=0"
-        
+
         # update the vocaloid points and player name
         new_vcld_pts = profile["vcld_pts"] - int(data["chg_name_price"])
         self.data.profile.update_profile(
-            profile["user"],
-            player_name=data["player_name"],
-            vcld_pts=new_vcld_pts
+            profile["user"], player_name=data["player_name"], vcld_pts=new_vcld_pts
         )
 
         response = "&cd_adm_result=1"
@@ -728,19 +902,17 @@ class DivaBase():
         response += f"&player_name={data['player_name']}"
 
         return response
-    
+
     def handle_change_passwd_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         # TODO: return correct error number instead of 0
-        if (data["passwd"] != profile["passwd"]):
+        if data["passwd"] != profile["passwd"]:
             return "&cd_adm_result=0"
 
         # set password to true and update the saved password
         self.data.profile.update_profile(
-            profile["user"],
-            passwd_stat=1,
-            passwd=data["new_passwd"]
+            profile["user"], passwd_stat=1, passwd=data["new_passwd"]
         )
 
         response = "&cd_adm_result=1"

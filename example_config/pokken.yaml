@@ -1,7 +1,8 @@
 server:
+  hostname: "localhost"
   enable: True
   loglevel: "info"
   port: 9000
-  port_matching: 9001
-  ssl_cert: cert/pokken.crt
-  ssl_key: cert/pokken.key
+  port_stun: 9001
+  port_turn: 9002
+  port_admission: 9003

@@ -2,6 +2,7 @@ from core.data import Data
 from core.config import CoreConfig
 from titles.wacca.schema import *
 
+
 class WaccaData(Data):
     def __init__(self, cfg: CoreConfig) -> None:
         super().__init__(cfg)

@@ -13,9 +13,13 @@ best_score = Table(
     "wacca_score_best",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("song_id", Integer),
-    Column("chart_id", Integer),    
+    Column("chart_id", Integer),
     Column("score", Integer),
     Column("play_ct", Integer),
     Column("clear_ct", Integer),
@@ -39,14 +43,18 @@ best_score = Table(
     Column("lowest_miss_ct", Integer),
     Column("rating", Integer),
     UniqueConstraint("user", "song_id", "chart_id", name="wacca_score_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 playlog = Table(
     "wacca_score_playlog",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("song_id", Integer),
     Column("chart_id", Integer),
     Column("score", Integer),
@@ -61,14 +69,18 @@ playlog = Table(
     Column("late_ct", Integer),
     Column("season", Integer),
     Column("date_scored", TIMESTAMP, server_default=func.now()),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 stageup = Table(
     "wacca_score_stageup",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer),
     Column("stage_id", Integer),
     Column("clear_status", Integer),
@@ -77,19 +89,29 @@ stageup = Table(
     Column("song2_score", Integer),
     Column("song3_score", Integer),
     Column("play_ct", Integer, server_default="1"),
-    UniqueConstraint("user", "stage_id",  name="wacca_score_stageup_uk"),
-    mysql_charset='utf8mb4'
+    UniqueConstraint("user", "stage_id", name="wacca_score_stageup_uk"),
+    mysql_charset="utf8mb4",
 )
 
+
 class WaccaScoreData(BaseData):
-    def put_best_score(self, user_id: int, song_id: int, chart_id: int, score: int, clear: List[int], 
-        grade: List[int], best_combo: int, lowest_miss_ct: int) -> Optional[int]:
+    def put_best_score(
+        self,
+        user_id: int,
+        song_id: int,
+        chart_id: int,
+        score: int,
+        clear: List[int],
+        grade: List[int],
+        best_combo: int,
+        lowest_miss_ct: int,
+    ) -> Optional[int]:
         """
         Update the user's best score for a chart
         """
         while len(grade) < 13:
             grade.append(0)
-        
+
         sql = insert(best_score).values(
             user=user_id,
             song_id=song_id,
@@ -115,7 +137,7 @@ class WaccaScoreData(BaseData):
             grade_sssp_ct=grade[12],
             best_combo=best_combo,
             lowest_miss_ct=lowest_miss_ct,
-            rating=0
+            rating=0,
         )
 
         conflict = sql.on_duplicate_key_update(
@@ -144,13 +166,30 @@ class WaccaScoreData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"{__name__}: failed to insert best score! profile: {user_id}, song: {song_id}, chart: {chart_id}")
+            self.logger.error(
+                f"{__name__}: failed to insert best score! profile: {user_id}, song: {song_id}, chart: {chart_id}"
+            )
             return None
-        
+
         return result.lastrowid
-    
-    def put_playlog(self, user_id: int, song_id: int, chart_id: int, this_score: int, clear: int, grade: int, max_combo: int, 
-        marv_ct: int, great_ct: int, good_ct: int, miss_ct: int, fast_ct: int, late_ct: int, season: int) -> Optional[int]:
+
+    def put_playlog(
+        self,
+        user_id: int,
+        song_id: int,
+        chart_id: int,
+        this_score: int,
+        clear: int,
+        grade: int,
+        max_combo: int,
+        marv_ct: int,
+        great_ct: int,
+        good_ct: int,
+        miss_ct: int,
+        fast_ct: int,
+        late_ct: int,
+        season: int,
+    ) -> Optional[int]:
         """
         Add an entry to the user's play log
         """
@@ -168,85 +207,112 @@ class WaccaScoreData(BaseData):
             miss_ct=miss_ct,
             fast_ct=fast_ct,
             late_ct=late_ct,
-            season=season
+            season=season,
         )
 
         result = self.execute(sql)
         if result is None:
-            self.logger.error(f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {chart_id}")
+            self.logger.error(
+                f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {chart_id}"
+            )
             return None
-        
+
         return result.lastrowid
 
-    def get_best_score(self, user_id: int, song_id: int, chart_id: int) -> Optional[Row]:
+    def get_best_score(
+        self, user_id: int, song_id: int, chart_id: int
+    ) -> Optional[Row]:
         sql = best_score.select(
-            and_(best_score.c.user == user_id, best_score.c.song_id == song_id, best_score.c.chart_id == chart_id)
+            and_(
+                best_score.c.user == user_id,
+                best_score.c.song_id == song_id,
+                best_score.c.chart_id == chart_id,
+            )
         )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()
 
     def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
-        sql = best_score.select(
-            best_score.c.user == user_id
-        )
+        sql = best_score.select(best_score.c.user == user_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
-    def update_song_rating(self, user_id: int, song_id: int, chart_id: int, new_rating: int) -> None:
+    def update_song_rating(
+        self, user_id: int, song_id: int, chart_id: int, new_rating: int
+    ) -> None:
         sql = best_score.update(
             and_(
-                best_score.c.user == user_id, 
-                best_score.c.song_id == song_id, 
-                best_score.c.chart_id == chart_id
-                )).values(
-                rating = new_rating
+                best_score.c.user == user_id,
+                best_score.c.song_id == song_id,
+                best_score.c.chart_id == chart_id,
             )
+        ).values(rating=new_rating)
 
         result = self.execute(sql)
-        if result is None: 
-            self.logger.error(f"update_song_rating: failed to update rating! user_id: {user_id} song_id: {song_id} chart_id {chart_id} new_rating {new_rating}")
+        if result is None:
+            self.logger.error(
+                f"update_song_rating: failed to update rating! user_id: {user_id} song_id: {song_id} chart_id {chart_id} new_rating {new_rating}"
+            )
         return None
 
-    def put_stageup(self, user_id: int, version: int, stage_id: int, clear_status: int, clear_song_ct: int, score1: int, 
-        score2: int, score3: int) -> Optional[int]:
+    def put_stageup(
+        self,
+        user_id: int,
+        version: int,
+        stage_id: int,
+        clear_status: int,
+        clear_song_ct: int,
+        score1: int,
+        score2: int,
+        score3: int,
+    ) -> Optional[int]:
         sql = insert(stageup).values(
-            user = user_id,
-            version = version,
-            stage_id = stage_id,
-            clear_status = clear_status,
-            clear_song_ct = clear_song_ct,
-            song1_score = score1,
-            song2_score = score2,
-            song3_score = score3,
+            user=user_id,
+            version=version,
+            stage_id=stage_id,
+            clear_status=clear_status,
+            clear_song_ct=clear_song_ct,
+            song1_score=score1,
+            song2_score=score2,
+            song3_score=score3,
         )
 
         conflict = sql.on_duplicate_key_update(
-            clear_status = clear_status,
-            clear_song_ct = clear_song_ct,
-            song1_score = score1,
-            song2_score = score2,
-            song3_score = score3,
-            play_ct = stageup.c.play_ct + 1
+            clear_status=clear_status,
+            clear_song_ct=clear_song_ct,
+            song1_score=score1,
+            song2_score=score2,
+            song3_score=score3,
+            play_ct=stageup.c.play_ct + 1,
         )
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_stageup: failed to update! user_id: {user_id} version: {version} stage_id: {stage_id}")
+            self.logger.warn(
+                f"put_stageup: failed to update! user_id: {user_id} version: {version} stage_id: {stage_id}"
+            )
             return None
         return result.lastrowid
 
     def get_stageup(self, user_id: int, version: int) -> Optional[List[Row]]:
-        sql = select(stageup).where(and_(stageup.c.user==user_id, stageup.c.version==version))
+        sql = select(stageup).where(
+            and_(stageup.c.user == user_id, stageup.c.version == version)
+        )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
-    def get_stageup_stage(self, user_id: int, version: int, stage_id: int) -> Optional[Row]:
+
+    def get_stageup_stage(
+        self, user_id: int, version: int, stage_id: int
+    ) -> Optional[Row]:
         sql = select(stageup).where(
             and_(
                 stageup.c.user == user_id,
@@ -256,5 +322,6 @@ class WaccaScoreData(BaseData):
         )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()

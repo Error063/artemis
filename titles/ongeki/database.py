@@ -3,6 +3,7 @@ from core.config import CoreConfig
 from titles.ongeki.schema import OngekiItemData, OngekiProfileData, OngekiScoreData
 from titles.ongeki.schema import OngekiStaticData, OngekiLogData
 
+
 class OngekiData(Data):
     def __init__(self, cfg: CoreConfig) -> None:
         super().__init__(cfg)

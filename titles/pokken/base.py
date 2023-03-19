@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
-import json
-from typing import Any
+import json, logging
+from typing import Any, Dict
 
 from core.config import CoreConfig
 from titles.pokken.config import PokkenConfig
 from titles.pokken.proto import jackal_pb2
 
-class PokkenBase():
+
+class PokkenBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: PokkenConfig) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = game_cfg
         self.version = 0
-    
+        self.logger = logging.getLogger("pokken")
+
     def handle_noop(self, request: Any) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
@@ -19,38 +21,39 @@ class PokkenBase():
 
         return res.SerializeToString()
 
-    def handle_ping(self, request: jackal_pb2.PingRequestData) -> bytes:
+    def handle_ping(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.PING
 
         return res.SerializeToString()
-    
-    def handle_register_pcb(self, request: jackal_pb2.RegisterPcbRequestData) -> bytes:
+
+    def handle_register_pcb(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.REGISTER_PCB
+        self.logger.info(f"Register PCB {request.register_pcb.pcb_id}")
 
         regist_pcb = jackal_pb2.RegisterPcbResponseData()
-        regist_pcb.server_time = int(datetime.now().timestamp() / 1000)
+        regist_pcb.server_time = int(datetime.now().timestamp())
         biwa_setting = {
             "MatchingServer": {
-                "host": f"https://{self.core_cfg.title.hostname}",
-                "port": 9000,
-                "url": "/matching"
+                "host": f"https://{self.game_cfg.server.hostname}",
+                "port": self.game_cfg.server.port,
+                "url": "/SDAK/100/matching",
             },
             "StunServer": {
-                "addr": self.core_cfg.title.hostname,
-                "port": 3333
+                "addr": self.game_cfg.server.hostname,
+                "port": self.game_cfg.server.port_stun,
             },
             "TurnServer": {
-                "addr": self.core_cfg.title.hostname,
-                "port": 4444
+                "addr": self.game_cfg.server.hostname,
+                "port": self.game_cfg.server.port_turn,
             },
-            "AdmissionUrl": f"ws://{self.core_cfg.title.hostname}:1111",
+            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}",
             "locationId": 123,
             "logfilename": "JackalMatchingLibrary.log",
-            "biwalogfilename": "./biwa.log"
+            "biwalogfilename": "./biwa.log",
         }
         regist_pcb.bnp_baseuri = f"{self.core_cfg.title.hostname}/bna"
         regist_pcb.biwa_setting = json.dumps(biwa_setting)
@@ -59,28 +62,34 @@ class PokkenBase():
 
         return res.SerializeToString()
 
-    def handle_save_ads(self, request: jackal_pb2.SaveAdsRequestData) -> bytes:
+    def handle_save_ads(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_ADS
 
         return res.SerializeToString()
 
-    def handle_save_client_log(self, request: jackal_pb2.SaveClientLogRequestData) -> bytes:
+    def handle_save_client_log(
+        self, request: jackal_pb2.Request
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_CLIENT_LOG
 
         return res.SerializeToString()
 
-    def handle_check_diagnosis(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+    def handle_check_diagnosis(
+        self, request: jackal_pb2.Request
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.CHECK_DIAGNOSIS
 
         return res.SerializeToString()
 
-    def handle_load_client_settings(self, request: jackal_pb2.CheckDiagnosisRequestData) -> bytes:
+    def handle_load_client_settings(
+        self, request: jackal_pb2.Request
+    ) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_CLIENT_SETTINGS
@@ -101,3 +110,36 @@ class PokkenBase():
         res.load_client_settings.CopyFrom(settings)
 
         return res.SerializeToString()
+
+    def handle_load_ranking(self, request: jackal_pb2.Request) -> bytes:
+        res = jackal_pb2.Response()
+        res.result = 1
+        res.type = jackal_pb2.MessageType.LOAD_RANKING
+        ranking = jackal_pb2.LoadRankingResponseData()
+
+        ranking.ranking_id = 1
+        ranking.ranking_start = 0
+        ranking.ranking_end = 1
+        ranking.event_end = True
+        ranking.modify_date = int(datetime.now().timestamp() / 1000)
+        res.load_ranking.CopyFrom(ranking)
+    
+    def handle_matching_noop(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}
+    
+    def handle_matching_start_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}
+
+    def handle_matching_is_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        """
+        "sessionId":"12345678",
+                "A":{
+                    "pcb_id": data["data"]["must"]["pcb_id"],
+                    "gip": client_ip
+                }, 
+                "list":[]
+        """
+        return {}
+    
+    def handle_matching_stop_matching(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:
+        return {}

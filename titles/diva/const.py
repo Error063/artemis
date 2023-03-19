@@ -1,5 +1,7 @@
-class DivaConstants():
+class DivaConstants:
     GAME_CODE = "SBZV"
+
+    CONFIG_NAME = "diva.yaml"
 
     VER_PROJECT_DIVA_ARCADE = 0
     VER_PROJECT_DIVA_ARCADE_FUTURE_TONE = 1

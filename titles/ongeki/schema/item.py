@@ -2,6 +2,7 @@ from typing import Dict, Optional, List
 from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.schema import ForeignKey
+from sqlalchemy.engine import Row
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
 
@@ -27,7 +28,7 @@ card = Table(
     Column("isAcquired", Boolean),
     Column("created", String(25)),
     UniqueConstraint("user", "cardId", name="ongeki_user_card_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 deck = Table(
@@ -40,7 +41,7 @@ deck = Table(
     Column("cardId2", Integer),
     Column("cardId3", Integer),
     UniqueConstraint("user", "deckId", name="ongeki_user_deck_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 character = Table(
@@ -58,10 +59,10 @@ character = Table(
     Column("intimateCountDate", String(25)),
     Column("isNew", Boolean),
     UniqueConstraint("user", "characterId", name="ongeki_user_character_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
-boss = Table (
+boss = Table(
     "ongeki_user_boss",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
@@ -71,10 +72,10 @@ boss = Table (
     Column("isClear", Boolean),
     Column("eventId", Integer),
     UniqueConstraint("user", "musicId", "eventId", name="ongeki_user_boss_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
-story = Table (
+story = Table(
     "ongeki_user_story",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
@@ -86,7 +87,7 @@ story = Table (
     Column("lastPlayMusicCategory", Integer),
     Column("lastPlayMusicLevel", Integer),
     UniqueConstraint("user", "storyId", name="ongeki_user_story_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 chapter = Table(
@@ -104,7 +105,7 @@ chapter = Table(
     Column("skipTiming1", Integer),
     Column("skipTiming2", Integer),
     UniqueConstraint("user", "chapterId", name="ongeki_user_chapter_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 memorychapter = Table(
@@ -125,7 +126,7 @@ memorychapter = Table(
     Column("lastPlayMusicLevel", Integer),
     Column("lastPlayMusicCategory", Integer),
     UniqueConstraint("user", "chapterId", name="ongeki_user_memorychapter_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 item = Table(
@@ -138,7 +139,7 @@ item = Table(
     Column("stock", Integer),
     Column("isValid", Boolean),
     UniqueConstraint("user", "itemKind", "itemId", name="ongeki_user_item_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 music_item = Table(
@@ -149,7 +150,7 @@ music_item = Table(
     Column("musicId", Integer),
     Column("status", Integer),
     UniqueConstraint("user", "musicId", name="ongeki_user_music_item_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 login_bonus = Table(
@@ -161,7 +162,7 @@ login_bonus = Table(
     Column("bonusCount", Integer),
     Column("lastUpdateDate", String(25)),
     UniqueConstraint("user", "bonusId", name="ongeki_user_login_bonus_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 event_point = Table(
@@ -173,7 +174,7 @@ event_point = Table(
     Column("point", Integer),
     Column("isRankingRewarded", Boolean),
     UniqueConstraint("user", "eventId", name="ongeki_user_event_point_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 mission_point = Table(
@@ -184,7 +185,7 @@ mission_point = Table(
     Column("eventId", Integer),
     Column("point", Integer),
     UniqueConstraint("user", "eventId", name="ongeki_user_mission_point_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 scenerio = Table(
@@ -195,7 +196,7 @@ scenerio = Table(
     Column("scenarioId", Integer),
     Column("playCount", Integer),
     UniqueConstraint("user", "scenarioId", name="ongeki_user_scenerio_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
 )
 
 trade_item = Table(
@@ -206,8 +207,10 @@ trade_item = Table(
     Column("chapterId", Integer),
     Column("tradeItemId", Integer),
     Column("tradeCount", Integer),
-    UniqueConstraint("user", "chapterId", "tradeItemId", name="ongeki_user_trade_item_uk"),
-    mysql_charset='utf8mb4'
+    UniqueConstraint(
+        "user", "chapterId", "tradeItemId", name="ongeki_user_trade_item_uk"
+    ),
+    mysql_charset="utf8mb4",
 )
 
 event_music = Table(
@@ -223,8 +226,10 @@ event_music = Table(
     Column("platinumScoreMax", Integer),
     Column("techRecordDate", String(25)),
     Column("isTechNewRecord", Boolean),
-    UniqueConstraint("user", "eventId", "type", "musicId", "level", name="ongeki_user_event_music"),
-    mysql_charset='utf8mb4'
+    UniqueConstraint(
+        "user", "eventId", "type", "musicId", "level", name="ongeki_user_event_music"
+    ),
+    mysql_charset="utf8mb4",
 )
 
 tech_event = Table(
@@ -239,11 +244,80 @@ tech_event = Table(
     Column("isRankingRewarded", Boolean),
     Column("isTotalTechNewRecord", Boolean),
     UniqueConstraint("user", "eventId", name="ongeki_user_tech_event_uk"),
-    mysql_charset='utf8mb4'
+    mysql_charset="utf8mb4",
+)
+
+gacha = Table(
+    "ongeki_user_gacha",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("gachaId", Integer, nullable=False),
+    Column("totalGachaCnt", Integer, server_default="0"),
+    Column("ceilingGachaCnt", Integer, server_default="0"),
+    Column("selectPoint", Integer, server_default="0"),
+    Column("useSelectPoint", Integer, server_default="0"),
+    Column("dailyGachaCnt", Integer, server_default="0"),
+    Column("fiveGachaCnt", Integer, server_default="0"),
+    Column("elevenGachaCnt", Integer, server_default="0"),
+    Column("dailyGachaDate", TIMESTAMP, nullable=False, server_default=func.now()),
+    UniqueConstraint("user", "gachaId", name="ongeki_user_gacha_uk"),
+    mysql_charset="utf8mb4",
+)
+
+gacha_supply = Table(
+    "ongeki_user_gacha_supply",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("cardId", Integer, nullable=False),
+    UniqueConstraint("user", "cardId", name="ongeki_user_gacha_supply_uk"),
+    mysql_charset="utf8mb4",
 )
 
 
-class OngekiItemData(BaseData):    
+print_detail = Table(
+    "ongeki_user_print_detail",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("cardId", Integer, nullable=False),
+    Column("cardType", Integer, server_default="0"),
+    Column("printDate", TIMESTAMP, nullable=False),
+    Column("serialId", String(20), nullable=False),
+    Column("placeId", Integer, nullable=False),
+    Column("clientId", String(11), nullable=False),
+    Column("printerSerialId", String(20), nullable=False),
+    Column("isHolograph", Boolean, server_default="0"),
+    Column("isAutographed", Boolean, server_default="0"),
+    Column("printOption1", Boolean, server_default="1"),
+    Column("printOption2", Boolean, server_default="1"),
+    Column("printOption3", Boolean, server_default="1"),
+    Column("printOption4", Boolean, server_default="1"),
+    Column("printOption5", Boolean, server_default="1"),
+    Column("printOption6", Boolean, server_default="1"),
+    Column("printOption7", Boolean, server_default="1"),
+    Column("printOption8", Boolean, server_default="1"),
+    Column("printOption9", Boolean, server_default="1"),
+    Column("printOption10", Boolean, server_default="0"),
+    UniqueConstraint("serialId", name="ongeki_user_print_detail_uk"),
+    mysql_charset="utf8mb4",
+)
+
+
+class OngekiItemData(BaseData):
     def put_card(self, aime_id: int, card_data: Dict) -> Optional[int]:
         card_data["user"] = aime_id
 
@@ -260,7 +334,8 @@ class OngekiItemData(BaseData):
         sql = select(card).where(card.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_character(self, aime_id: int, character_data: Dict) -> Optional[int]:
@@ -274,12 +349,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_character: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_characters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(character).where(character.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_deck(self, aime_id: int, deck_data: Dict) -> Optional[int]:
@@ -293,19 +369,21 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_deck: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_deck(self, aime_id: int, deck_id: int) -> Optional[Dict]:
         sql = select(deck).where(and_(deck.c.user == aime_id, deck.c.deckId == deck_id))
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()
-    
+
     def get_decks(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(deck).where(deck.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_boss(self, aime_id: int, boss_data: Dict) -> Optional[int]:
@@ -319,7 +397,7 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_boss: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def put_story(self, aime_id: int, story_data: Dict) -> Optional[int]:
         story_data["user"] = aime_id
 
@@ -331,12 +409,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_story: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_stories(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(story).where(story.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_chapter(self, aime_id: int, chapter_data: Dict) -> Optional[int]:
@@ -350,12 +429,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_chapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_chapters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(chapter).where(chapter.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_item(self, aime_id: int, item_data: Dict) -> Optional[int]:
@@ -369,22 +449,26 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_item(self, aime_id: int, item_id: int, item_kind: int) -> Optional[Dict]:
         sql = select(item).where(and_(item.c.user == aime_id, item.c.itemId == item_id))
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchone()
 
     def get_items(self, aime_id: int, item_kind: int = None) -> Optional[List[Dict]]:
         if item_kind is None:
             sql = select(item).where(item.c.user == aime_id)
         else:
-            sql = select(item).where(and_(item.c.user == aime_id, item.c.itemKind == item_kind))
+            sql = select(item).where(
+                and_(item.c.user == aime_id, item.c.itemKind == item_kind)
+            )
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_music_item(self, aime_id: int, music_item_data: Dict) -> Optional[int]:
@@ -398,12 +482,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_music_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_music_items(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(music_item).where(music_item.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_login_bonus(self, aime_id: int, login_bonus_data: Dict) -> Optional[int]:
@@ -417,15 +502,18 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_login_bonus: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_login_bonuses(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(login_bonus).where(login_bonus.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
-    def put_mission_point(self, aime_id: int, mission_point_data: Dict) -> Optional[int]:
+    def put_mission_point(
+        self, aime_id: int, mission_point_data: Dict
+    ) -> Optional[int]:
         mission_point_data["user"] = aime_id
 
         sql = insert(mission_point).values(**mission_point_data)
@@ -436,14 +524,15 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_mission_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_mission_points(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(mission_point).where(mission_point.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
+
     def put_event_point(self, aime_id: int, event_point_data: Dict) -> Optional[int]:
         event_point_data["user"] = aime_id
 
@@ -455,12 +544,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_event_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_event_points(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(event_point).where(event_point.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_scenerio(self, aime_id: int, scenerio_data: Dict) -> Optional[int]:
@@ -474,12 +564,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_scenerio: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_scenerios(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(scenerio).where(scenerio.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_trade_item(self, aime_id: int, trade_item_data: Dict) -> Optional[int]:
@@ -493,14 +584,15 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_trade_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_trade_items(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(trade_item).where(trade_item.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
+
     def put_event_music(self, aime_id: int, event_music_data: Dict) -> Optional[int]:
         event_music_data["user"] = aime_id
 
@@ -512,12 +604,13 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_event_music: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_event_music(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(event_music).where(event_music.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def put_tech_event(self, aime_id: int, tech_event_data: Dict) -> Optional[int]:
@@ -531,22 +624,26 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_tech_event: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_tech_event(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(tech_event).where(tech_event.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
 
     def get_bosses(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(boss).where(boss.c.user == aime_id)
         result = self.execute(sql)
 
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
-    
-    def put_memorychapter(self, aime_id: int, memorychapter_data: Dict) -> Optional[int]:
+
+    def put_memorychapter(
+        self, aime_id: int, memorychapter_data: Dict
+    ) -> Optional[int]:
         memorychapter_data["user"] = aime_id
 
         sql = insert(memorychapter).values(**memorychapter_data)
@@ -557,10 +654,65 @@ class OngekiItemData(BaseData):
             self.logger.warn(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
-    
+
     def get_memorychapters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(memorychapter).where(memorychapter.c.user == aime_id)
 
         result = self.execute(sql)
-        if result is None: return None
+        if result is None:
+            return None
         return result.fetchall()
+
+    def get_user_gacha(self, aime_id: int, gacha_id: int) -> Optional[Row]:
+        sql = gacha.select(and_(gacha.c.user == aime_id, gacha.c.gachaId == gacha_id))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
+        sql = gacha.select(gacha.c.user == aime_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_user_gacha_supplies(self, aime_id: int) -> Optional[List[Row]]:
+        sql = gacha_supply.select(gacha_supply.c.user == aime_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def put_user_gacha(self, aime_id: int, gacha_id: int, **data) -> Optional[int]:
+        sql = insert(gacha).values(user=aime_id, gachaId=gacha_id, **data)
+
+        conflict = sql.on_duplicate_key_update(user=aime_id, gachaId=gacha_id, **data)
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
+            return None
+        return result.lastrowid
+
+    def put_user_print_detail(
+        self, aime_id: int, serial_id: str, user_print_data: Dict
+    ) -> Optional[int]:
+        sql = insert(print_detail).values(
+            user=aime_id, serialId=serial_id, **user_print_data
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            user=aime_id, **user_print_data
+        )
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(
+                f"put_user_print_detail: Failed to insert! aime_id: {aime_id}"
+            )
+            return None
+        return result.lastrowid
