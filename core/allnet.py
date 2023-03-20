@@ -95,14 +95,21 @@ class AllnetServlet:
 
         self.logger.debug(f"Allnet request: {vars(req)}")
         if req.game_id not in self.uri_registry:
-            msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
-            self.data.base.log_event(
-                "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
-            )
-            self.logger.warn(msg)
+            if not self.config.server.is_develop:
+                msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
+                self.data.base.log_event(
+                    "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
+                )
+                self.logger.warn(msg)
 
-            resp.stat = 0
-            return self.dict_to_http_form_string([vars(resp)])
+                resp.stat = 0
+                return self.dict_to_http_form_string([vars(resp)])
+            
+            else:
+                self.logger.info(f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}")
+                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
+                resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
+                return self.dict_to_http_form_string([vars(resp)])
 
         resp.uri, resp.host = self.uri_registry[req.game_id]
 
