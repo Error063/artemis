@@ -836,7 +836,7 @@ class WaccaBase:
             resp.songDetail.grades = SongDetailGradeCountsV2(counts=grades)
         else:
             resp.songDetail.grades = SongDetailGradeCountsV1(counts=grades)
-
+        resp.songDetail.lock_state = 1
         return resp.make()
 
     # TODO: Coop and vs data
