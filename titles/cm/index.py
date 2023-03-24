@@ -15,7 +15,7 @@ from core.config import CoreConfig
 from titles.cm.config import CardMakerConfig
 from titles.cm.const import CardMakerConstants
 from titles.cm.base import CardMakerBase
-from titles.cm.cm136 import CardMaker136
+from titles.cm.cm135 import CardMaker135
 
 
 class CardMakerServlet:
@@ -29,7 +29,7 @@ class CardMakerServlet:
 
         self.versions = [
             CardMakerBase(core_cfg, self.game_cfg),
-            CardMaker136(core_cfg, self.game_cfg),
+            CardMaker135(core_cfg, self.game_cfg),
         ]
 
         self.logger = logging.getLogger("cardmaker")
@@ -87,8 +87,8 @@ class CardMakerServlet:
 
         if version >= 130 and version < 135:  # Card Maker
             internal_ver = CardMakerConstants.VER_CARD_MAKER
-        elif version >= 135 and version < 140:  # Card Maker
-            internal_ver = CardMakerConstants.VER_CARD_MAKER_136
+        elif version >= 135 and version < 136:  # Card Maker 1.35
+            internal_ver = CardMakerConstants.VER_CARD_MAKER_135
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're

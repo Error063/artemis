@@ -452,7 +452,8 @@ class OngekiBase:
             tmp.pop("id")
             items.append(tmp)
 
-        xout = kind * 10000000000 + (data["nextIndex"] % 10000000000) + len(items)
+        xout = kind * 10000000000 + \
+            (data["nextIndex"] % 10000000000) + len(items)
 
         if len(items) < data["maxCount"] or data["maxCount"] == 0:
             nextIndex = 0
@@ -851,7 +852,8 @@ class OngekiBase:
             )
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
-            self.data.profile.put_profile_options(user_id, upsert["userOption"][0])
+            self.data.profile.put_profile_options(
+                user_id, upsert["userOption"][0])
 
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:

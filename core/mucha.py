@@ -6,7 +6,7 @@ from twisted.web.http import Request
 from datetime import datetime
 import pytz
 
-from core.config import CoreConfig
+from core import CoreConfig
 from core.utils import Utils
 
 
@@ -47,11 +47,13 @@ class MuchaServlet:
                     self.mucha_registry.append(game_cd)
 
         self.logger.info(
-            f"Serving {len(self.mucha_registry)} games on port {self.config.mucha.port}"
+            f"Serving {len(self.mucha_registry)} games"
         )
 
     def handle_boardauth(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
+        client_ip = Utils.get_ip_addr(request)
+
         if req_dict is None:
             self.logger.error(
                 f"Error processing mucha request {request.content.getvalue()}"
@@ -61,7 +63,7 @@ class MuchaServlet:
         req = MuchaAuthRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
         self.logger.info(
-            f"Boardauth request from {request.getClientAddress().host} for {req.gameVer}"
+            f"Boardauth request from {client_ip} for {req.gameVer}"
         )
 
         if req.gameCd not in self.mucha_registry:
@@ -71,7 +73,7 @@ class MuchaServlet:
         # TODO: Decrypt S/N
 
         resp = MuchaAuthResponse(
-            f"{self.config.mucha.hostname}{':' + str(self.config.mucha.port) if self.config.server.is_develop else ''}"
+            f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}"
         )
 
         self.logger.debug(f"Mucha response {vars(resp)}")
@@ -80,6 +82,8 @@ class MuchaServlet:
 
     def handle_updatecheck(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
+        client_ip = Utils.get_ip_addr(request)
+
         if req_dict is None:
             self.logger.error(
                 f"Error processing mucha request {request.content.getvalue()}"
@@ -89,7 +93,7 @@ class MuchaServlet:
         req = MuchaUpdateRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
         self.logger.info(
-            f"Updatecheck request from {request.getClientAddress().host} for {req.gameVer}"
+            f"Updatecheck request from {client_ip} for {req.gameVer}"
         )
 
         if req.gameCd not in self.mucha_registry:

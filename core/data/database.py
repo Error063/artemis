@@ -71,7 +71,8 @@ class Data:
         games = Utils.get_all_titles()
         for game_dir, game_mod in games.items():
             try:
-                title_db = game_mod.database(self.config)
+                if hasattr(game_mod, "database") and hasattr(game_mod, "current_schema_version"):
+                    game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
                 self.base.set_schema_ver(
@@ -109,7 +110,8 @@ class Data:
                         mod = importlib.import_module(f"titles.{dir}")
 
                         try:
-                            title_db = mod.database(self.config)
+                            if hasattr(mod, "database"):
+                                mod.database(self.config)
                             metadata.drop_all(self.__engine.connect())
 
                         except Exception as e:
@@ -143,25 +145,49 @@ class Data:
             )
             return
 
-        if not os.path.exists(
-            f"core/data/schema/versions/{game.upper()}_{version}_{action}.sql"
-        ):
-            self.logger.error(
-                f"Could not find {action} script {game.upper()}_{version}_{action}.sql in core/data/schema/versions folder"
-            )
-            return
+        if action == "upgrade":
+            for x in range(old_ver, version):
+                if not os.path.exists(
+                    f"core/data/schema/versions/{game.upper()}_{x + 1}_{action}.sql"
+                ):
+                    self.logger.error(
+                        f"Could not find {action} script {game.upper()}_{x + 1}_{action}.sql in core/data/schema/versions folder"
+                    )
+                    return
 
-        with open(
-            f"core/data/schema/versions/{game.upper()}_{version}_{action}.sql",
-            "r",
-            encoding="utf-8",
-        ) as f:
-            sql = f.read()
+                with open(
+                    f"core/data/schema/versions/{game.upper()}_{x + 1}_{action}.sql",
+                    "r",
+                    encoding="utf-8",
+                ) as f:
+                    sql = f.read()
 
-        result = self.base.execute(sql)
-        if result is None:
-            self.logger.error("Error execuing sql script!")
-            return None
+                result = self.base.execute(sql)
+                if result is None:
+                    self.logger.error("Error execuing sql script!")
+                    return None
+        
+        else:
+            for x in range(old_ver, version, -1):
+                if not os.path.exists(
+                    f"core/data/schema/versions/{game.upper()}_{x - 1}_{action}.sql"
+                ):
+                    self.logger.error(
+                        f"Could not find {action} script {game.upper()}_{x - 1}_{action}.sql in core/data/schema/versions folder"
+                    )
+                    return
+
+                with open(
+                    f"core/data/schema/versions/{game.upper()}_{x - 1}_{action}.sql",
+                    "r",
+                    encoding="utf-8",
+                ) as f:
+                    sql = f.read()
+
+                result = self.base.execute(sql)
+                if result is None:
+                    self.logger.error("Error execuing sql script!")
+                    return None
 
         result = self.base.set_schema_ver(version, game)
         if result is None:
@@ -235,3 +261,19 @@ class Data:
             if not cards:
                 self.logger.info(f"Delete hanging user {user['id']}")
                 self.user.delete_user(user["id"])
+
+    def autoupgrade(self) -> None:
+        all_games = self.base.get_all_schema_vers()
+        if all_games is None:
+            self.logger.warn("Failed to get schema versions")
+        
+        for x in all_games:
+            game = x["game"].upper()
+            update_ver = 1
+            for y in range(2, 100):
+                if os.path.exists(f"core/data/schema/versions/{game}_{y}_upgrade.sql"):
+                    update_ver = y
+                else:
+                    break
+        
+            self.migrate_database(game, update_ver, "upgrade")

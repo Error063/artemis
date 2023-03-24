@@ -68,6 +68,60 @@ avatar = Table(
     mysql_charset="utf8mb4",
 )
 
+gachas = Table(
+    "chuni_static_gachas",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("gachaId", Integer, nullable=False),
+    Column("gachaName", String(255), nullable=False),
+    Column("type", Integer, nullable=False, server_default="0"),
+    Column("kind", Integer, nullable=False, server_default="0"),
+    Column("isCeiling", Boolean, server_default="0"),
+    Column("ceilingCnt", Integer, server_default="10"),
+    Column("changeRateCnt1", Integer, server_default="0"),
+    Column("changeRateCnt2", Integer, server_default="0"),
+    Column("startDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
+    Column("endDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    Column("noticeStartDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
+    Column("noticeEndDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    UniqueConstraint("version", "gachaId", "gachaName", name="chuni_static_gachas_uk"),
+    mysql_charset="utf8mb4",
+)
+
+cards = Table(
+    "chuni_static_cards",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("cardId", Integer, nullable=False),
+    Column("charaName", String(255), nullable=False),
+    Column("charaId", Integer, nullable=False),
+    Column("presentName", String(255), nullable=False),
+    Column("rarity", Integer, server_default="2"),
+    Column("labelType", Integer, nullable=False),
+    Column("difType", Integer, nullable=False),
+    Column("miss", Integer, nullable=False),
+    Column("combo", Integer, nullable=False),
+    Column("chain", Integer, nullable=False),
+    Column("skillName", String(255), nullable=False),
+    UniqueConstraint("version", "cardId", name="chuni_static_cards_uk"),
+    mysql_charset="utf8mb4",
+)
+
+gacha_cards = Table(
+    "chuni_static_gacha_cards",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("gachaId", Integer, nullable=False),
+    Column("cardId", Integer, nullable=False),
+    Column("rarity", Integer, nullable=False),
+    Column("weight", Integer, server_default="1"),
+    Column("isPickup", Boolean, server_default="0"),
+    UniqueConstraint("gachaId", "cardId", name="chuni_static_gacha_cards_uk"),
+    mysql_charset="utf8mb4",
+)
+
 
 class ChuniStaticData(BaseData):
     def put_event(
@@ -265,3 +319,112 @@ class ChuniStaticData(BaseData):
         if result is None:
             return None
         return result.lastrowid
+
+    def put_gacha(
+        self,
+        version: int,
+        gacha_id: int,
+        gacha_name: int,
+        **gacha_data,
+    ) -> Optional[int]:
+        sql = insert(gachas).values(
+            version=version,
+            gachaId=gacha_id,
+            gachaName=gacha_name,
+            **gacha_data,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            version=version,
+            gachaId=gacha_id,
+            gachaName=gacha_name,
+            **gacha_data,
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(f"Failed to insert gacha! gacha_id {gacha_id}")
+            return None
+        return result.lastrowid
+
+    def get_gachas(self, version: int) -> Optional[List[Dict]]:
+        sql = gachas.select(gachas.c.version <= version).order_by(
+            gachas.c.gachaId.asc()
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
+        sql = gachas.select(
+            and_(gachas.c.version <= version, gachas.c.gachaId == gacha_id)
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_gacha_card(
+        self, gacha_id: int, card_id: int, **gacha_card
+    ) -> Optional[int]:
+        sql = insert(gacha_cards).values(gachaId=gacha_id, cardId=card_id, **gacha_card)
+
+        conflict = sql.on_duplicate_key_update(
+            gachaId=gacha_id, cardId=card_id, **gacha_card
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(f"Failed to insert gacha card! gacha_id {gacha_id}")
+            return None
+        return result.lastrowid
+
+    def get_gacha_cards(self, gacha_id: int) -> Optional[List[Dict]]:
+        sql = gacha_cards.select(gacha_cards.c.gachaId == gacha_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_gacha_card_by_character(self, gacha_id: int, chara_id: int) -> Optional[Dict]:
+        sql_sub = (
+            select(cards.c.cardId)
+            .filter(
+                cards.c.charaId == chara_id
+            )
+            .scalar_subquery()
+        )
+
+        # Perform the main query, also rename the resulting column to ranking
+        sql = gacha_cards.select(and_(
+            gacha_cards.c.gachaId == gacha_id,
+            gacha_cards.c.cardId == sql_sub
+        ))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
+        sql = insert(cards).values(version=version, cardId=card_id, **card_data)
+
+        conflict = sql.on_duplicate_key_update(**card_data)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(f"Failed to insert card! card_id {card_id}")
+            return None
+        return result.lastrowid
+
+    def get_card(self, version: int, card_id: int) -> Optional[Dict]:
+        sql = cards.select(and_(cards.c.version <= version, cards.c.cardId == card_id))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()

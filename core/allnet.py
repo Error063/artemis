@@ -12,8 +12,8 @@ from Crypto.Signature import PKCS1_v1_5
 from time import strptime
 
 from core.config import CoreConfig
-from core.data import Data
 from core.utils import Utils
+from core.data import Data
 from core.const import *
 
 
@@ -65,11 +65,11 @@ class AllnetServlet:
                         self.uri_registry[code] = (uri, host)
 
         self.logger.info(
-            f"Allnet serving {len(self.uri_registry)} games on port {core_cfg.allnet.port}"
+            f"Serving {len(self.uri_registry)} game codes port {core_cfg.allnet.port}"
         )
 
     def handle_poweron(self, request: Request, _: Dict):
-        request_ip = request.getClientAddress().host
+        request_ip = Utils.get_ip_addr(request)
         try:
             req_dict = self.allnet_req_to_dict(request.content.getvalue())
             if req_dict is None:
@@ -95,14 +95,21 @@ class AllnetServlet:
 
         self.logger.debug(f"Allnet request: {vars(req)}")
         if req.game_id not in self.uri_registry:
-            msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
-            self.data.base.log_event(
-                "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
-            )
-            self.logger.warn(msg)
+            if not self.config.server.is_develop:
+                msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
+                self.data.base.log_event(
+                    "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
+                )
+                self.logger.warn(msg)
 
-            resp.stat = 0
-            return self.dict_to_http_form_string([vars(resp)])
+                resp.stat = 0
+                return self.dict_to_http_form_string([vars(resp)])
+            
+            else:
+                self.logger.info(f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}")
+                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
+                resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
+                return self.dict_to_http_form_string([vars(resp)])
 
         resp.uri, resp.host = self.uri_registry[req.game_id]
 
@@ -162,7 +169,7 @@ class AllnetServlet:
         return self.dict_to_http_form_string([vars(resp)]).encode("utf-8")
 
     def handle_dlorder(self, request: Request, _: Dict):
-        request_ip = request.getClientAddress().host
+        request_ip = Utils.get_ip_addr(request)
         try:
             req_dict = self.allnet_req_to_dict(request.content.getvalue())
             if req_dict is None:
@@ -181,7 +188,9 @@ class AllnetServlet:
                 self.logger.error(e)
             return b""
 
+        self.logger.info(f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}")
         resp = AllnetDownloadOrderResponse()
+        
         if not self.config.allnet.allow_online_updates:
             return self.dict_to_http_form_string([vars(resp)])
 
@@ -190,7 +199,7 @@ class AllnetServlet:
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
-        request_ip = request.getClientAddress()
+        request_ip = Utils.get_ip_addr(request)
         if req_dict is None:
             self.logger.error(f"Failed to parse request {request.content.getvalue()}")
             return b""
@@ -223,7 +232,7 @@ class AllnetServlet:
             return self.dict_to_http_form_string([vars(resp)])
 
         msg = (
-            f"Billing checkin from {request.getClientIP()}: game {kc_game} keychip {kc_serial} playcount "
+            f"Billing checkin from {request_ip}: game {kc_game} keychip {kc_serial} playcount "
             f"{kc_playcount} billing_type {kc_billigtype} nearfull {kc_nearfull} playlimit {kc_playlimit}"
         )
         self.logger.info(msg)
@@ -255,7 +264,7 @@ class AllnetServlet:
         return resp_str.encode("utf-8")
 
     def handle_naomitest(self, request: Request, _: Dict) -> bytes:
-        self.logger.info(f"Ping from {request.getClientAddress().host}")
+        self.logger.info(f"Ping from {Utils.get_ip_addr(request)}")
         return b"naomi ok"
 
     def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
@@ -371,7 +380,7 @@ class AllnetPowerOnResponse3:
         self.utc_time = datetime.now(tz=pytz.timezone("UTC")).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
-        self.setting = ""
+        self.setting = "1"
         self.res_ver = "3"
         self.token = str(token)
 

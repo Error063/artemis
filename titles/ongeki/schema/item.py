@@ -706,7 +706,7 @@ class OngekiItemData(BaseData):
         )
 
         conflict = sql.on_duplicate_key_update(
-            user=aime_id, serialId=serial_id, **user_print_data
+            user=aime_id, **user_print_data
         )
         result = self.execute(conflict)
 

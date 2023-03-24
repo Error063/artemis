@@ -202,6 +202,16 @@ class Mai2Base:
                 for act in v:
                     self.data.profile.put_profile_activity(user_id, act)
 
+        if "userChargeList" in upsert and len(upsert["userChargeList"]) > 0:
+            for charge in upsert["userChargeList"]:
+                self.data.item.put_charge(
+                    user_id,
+                    charge["chargeId"],
+                    charge["stock"],
+                    datetime.strptime(charge["purchaseDate"], "%Y-%m-%d %H:%M:%S"),
+                    datetime.strptime(charge["validDate"], "%Y-%m-%d %H:%M:%S")
+                )
+
         if upsert["isNewCharacterList"] and int(upsert["isNewCharacterList"]) > 0:
             for char in upsert["userCharacterList"]:
                 self.data.item.put_character(
@@ -299,10 +309,67 @@ class Mai2Base:
         return {"userId": data["userId"], "userOption": options_dict}
 
     def handle_get_user_card_api_request(self, data: Dict) -> Dict:
-        return {"userId": data["userId"], "nextIndex": 0, "userCardList": []}
+        user_cards = self.data.item.get_cards(data["userId"])
+        if user_cards is None:
+            return {
+                "userId": data["userId"],
+                "nextIndex": 0,
+                "userCardList": []
+            }
+
+        max_ct = data["maxCount"]
+        next_idx = data["nextIndex"]
+        start_idx = next_idx
+        end_idx = max_ct + start_idx
+
+        if len(user_cards[start_idx:]) > max_ct:
+            next_idx += max_ct
+        else:
+            next_idx = 0
+
+        card_list = []
+        for card in user_cards:
+            tmp = card._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            tmp["startDate"] = datetime.strftime(
+                tmp["startDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["endDate"] = datetime.strftime(
+                tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            card_list.append(tmp)
+
+        return {
+            "userId": data["userId"],
+            "nextIndex": next_idx,
+            "userCardList": card_list[start_idx:end_idx]
+        }
 
     def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
-        return {"userId": data["userId"], "length": 0, "userChargeList": []}
+        user_charges = self.data.item.get_charges(data["userId"])
+        if user_charges is None:
+            return {
+                "userId": data["userId"],
+                "length": 0,
+                "userChargeList": []
+            }
+
+        user_charge_list = []
+        for charge in user_charges:
+            tmp = charge._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            tmp["purchaseDate"] = datetime.strftime(
+                tmp["purchaseDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["validDate"] = datetime.strftime(
+                tmp["validDate"], "%Y-%m-%d %H:%M:%S")
+
+            user_charge_list.append(tmp)
+
+        return {
+            "userId": data["userId"],
+            "length": len(user_charge_list),
+            "userChargeList": user_charge_list
+        }
 
     def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
@@ -313,15 +380,13 @@ class Mai2Base:
 
         for x in range(next_idx, data["maxCount"]):
             try:
-                user_item_list.append(
-                    {
-                        "item_kind": user_items[x]["item_kind"],
-                        "item_id": user_items[x]["item_id"],
-                        "stock": user_items[x]["stock"],
-                        "isValid": user_items[x]["is_valid"],
-                    }
-                )
-            except:
+                user_item_list.append({
+                    "itemKind": user_items[x]["itemKind"],
+                    "itemId": user_items[x]["itemId"],
+                    "stock": user_items[x]["stock"],
+                    "isValid": user_items[x]["isValid"]
+                })
+            except IndexError:
                 break
 
             if len(user_item_list) == data["maxCount"]:
@@ -332,21 +397,18 @@ class Mai2Base:
             "userId": data["userId"],
             "nextIndex": next_idx,
             "itemKind": kind,
-            "userItemList": user_item_list,
+            "userItemList": user_item_list
         }
 
     def handle_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = self.data.item.get_characters(data["userId"])
+
         chara_list = []
         for chara in characters:
-            chara_list.append(
-                {
-                    "characterId": chara["character_id"],
-                    "level": chara["level"],
-                    "awakening": chara["awakening"],
-                    "useCount": chara["use_count"],
-                }
-            )
+            tmp = chara._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            chara_list.append(tmp)
 
         return {"userId": data["userId"], "userCharacterList": chara_list}
 
@@ -417,10 +479,21 @@ class Mai2Base:
             tmp.pop("user")
             mlst.append(tmp)
 
-        return {"userActivity": {"playList": plst, "musicList": mlst}}
+        return {
+            "userActivity": {
+                "playList": plst,
+                "musicList": mlst
+            }
+        }
 
     def handle_get_user_course_api_request(self, data: Dict) -> Dict:
         user_courses = self.data.score.get_courses(data["userId"])
+        if user_courses is None:
+            return {
+                "userId": data["userId"],
+                "nextIndex": 0,
+                "userCourseList": []
+            }
 
         course_list = []
         for course in user_courses:
@@ -429,7 +502,11 @@ class Mai2Base:
             tmp.pop("id")
             course_list.append(tmp)
 
-        return {"userId": data["userId"], "nextIndex": 0, "userCourseList": course_list}
+        return {
+            "userId": data["userId"],
+            "nextIndex": 0,
+            "userCourseList": course_list
+        }
 
     def handle_get_user_portrait_api_request(self, data: Dict) -> Dict:
         # No support for custom pfps
@@ -540,18 +617,11 @@ class Mai2Base:
 
         if songs is not None:
             for song in songs:
-                music_detail_list.append(
-                    {
-                        "musicId": song["song_id"],
-                        "level": song["chart_id"],
-                        "playCount": song["play_count"],
-                        "achievement": song["achievement"],
-                        "comboStatus": song["combo_status"],
-                        "syncStatus": song["sync_status"],
-                        "deluxscoreMax": song["dx_score"],
-                        "scoreRank": song["score_rank"],
-                    }
-                )
+                tmp = song._asdict()
+                tmp.pop("id")
+                tmp.pop("user")
+                music_detail_list.append(tmp)
+
                 if len(music_detail_list) == data["maxCount"]:
                     next_index = data["maxCount"] + data["nextIndex"]
                     break
@@ -559,5 +629,5 @@ class Mai2Base:
         return {
             "userId": data["userId"],
             "nextIndex": next_index,
-            "userMusicList": [{"userMusicDetailList": music_detail_list}],
+            "userMusicList": [{"userMusicDetailList": music_detail_list}]
         }

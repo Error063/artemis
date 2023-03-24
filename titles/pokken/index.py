@@ -1,18 +1,20 @@
 from typing import Tuple
 from twisted.web.http import Request
-from twisted.web import resource, server
-from twisted.internet import reactor, endpoints
+from twisted.web import resource
+import json, ast
+from datetime import datetime
 import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from titles.pokken.proto import jackal_pb2
+import inflection
 from os import path
 from google.protobuf.message import DecodeError
 
-from core.config import CoreConfig
+from core import CoreConfig, Utils
 from titles.pokken.config import PokkenConfig
 from titles.pokken.base import PokkenBase
 from titles.pokken.const import PokkenConstants
+from titles.pokken.proto import jackal_pb2
 
 
 class PokkenServlet(resource.Resource):
@@ -65,16 +67,9 @@ class PokkenServlet(resource.Resource):
         if not game_cfg.server.enable:
             return (False, "", "")
 
-        # if core_cfg.server.is_develop:
-        #    return (
-        #        True,
-        #        f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
-        #        f"{game_cfg.server.hostname}:{game_cfg.server.port}/",
-        #    )
-
         return (
             True,
-            f"https://{game_cfg.server.hostname}:443/{game_code}/$v/",
+            f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
             f"{game_cfg.server.hostname}/SDAK/$v/",
         )
 
@@ -94,42 +89,15 @@ class PokkenServlet(resource.Resource):
 
         return (True, "PKF2")
 
-    def setup(self):
-        """
-        There's currently no point in having this server on because Twisted
-        won't play ball with both the fact that it's TLSv1.1, and because the
-        types of certs that pokken will accept are too flimsy for Twisted
-        so it will throw a fit. Currently leaving this here in case a bypass
-        is discovered in the future, but it's unlikly. For now, just use NGINX.
-        """
-        if self.game_cfg.server.enable and self.core_cfg.server.is_develop:
-            key_exists = path.exists(self.game_cfg.server.ssl_key)
-            cert_exists = path.exists(self.game_cfg.server.ssl_cert)
-
-            if key_exists and cert_exists:
-                endpoints.serverFromString(
-                    reactor,
-                    f"ssl:{self.game_cfg.server.port}"
-                    f":interface={self.core_cfg.server.listen_address}:privateKey={self.game_cfg.server.ssl_key}:"
-                    f"certKey={self.game_cfg.server.ssl_cert}",
-                ).listen(server.Site(self))
-
-                self.logger.info(
-                    f"Pokken title server ready on port {self.game_cfg.server.port}"
-                )
-
-            else:
-                self.logger.error(
-                    f"Could not find cert at {self.game_cfg.server.ssl_key} or key at {self.game_cfg.server.ssl_cert}, Pokken not running."
-                )
+    def setup(self) -> None:
+        # TODO: Setup stun, turn (UDP) and admission (WSS) servers
+        pass
 
     def render_POST(
         self, request: Request, version: int = 0, endpoints: str = ""
     ) -> bytes:
-        if endpoints == "":
-            endpoints = request.uri.decode()
-        if endpoints.startswith("/matching"):
-            self.logger.info("Matching request")
+        if endpoints == "matching":
+            return self.handle_matching(request)
 
         content = request.content.getvalue()
         if content == b"":
@@ -147,10 +115,46 @@ class PokkenServlet(resource.Resource):
             pokken_request.type
         ].name.lower()
 
-        self.logger.info(f"{endpoint} request")
-
         handler = getattr(self.base, f"handle_{endpoint}", None)
         if handler is None:
             self.logger.warn(f"No handler found for message type {endpoint}")
             return self.base.handle_noop(pokken_request)
-        return handler(pokken_request)
+        
+        self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
+        self.logger.debug(pokken_request)
+        
+        ret = handler(pokken_request)
+        self.logger.debug(f"Response: {ret}")
+        return ret
+    
+    def handle_matching(self, request: Request) -> bytes:
+        content = request.content.getvalue()
+        client_ip = Utils.get_ip_addr(request)
+
+        if content is None or content == b"":
+            self.logger.info("Empty matching request")
+            return json.dumps(self.base.handle_matching_noop()).encode()
+
+        json_content = ast.literal_eval(content.decode().replace('null', 'None').replace('true', 'True').replace('false', 'False'))
+        self.logger.info(f"Matching {json_content['call']} request")
+        self.logger.debug(json_content)
+
+        handler = getattr(self.base, f"handle_matching_{inflection.underscore(json_content['call'])}", None)
+        if handler is None:
+            self.logger.warn(f"No handler found for message type {json_content['call']}")
+            return json.dumps(self.base.handle_matching_noop()).encode()
+        
+        ret = handler(json_content, client_ip)
+        
+        if ret is None:
+            ret = {}        
+        if "result" not in ret:
+            ret["result"] = "true"
+        if "data" not in ret:
+            ret["data"] = {}
+        if "timestamp" not in ret:
+            ret["timestamp"] = int(datetime.now().timestamp() * 1000)
+        
+        self.logger.debug(f"Response {ret}")
+
+        return json.dumps(ret).encode()

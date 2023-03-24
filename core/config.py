@@ -267,24 +267,6 @@ class MuchaConfig:
             self.__config, "core", "mucha", "hostname", default="localhost"
         )
 
-    @property
-    def port(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "core", "mucha", "port", default=8444
-        )
-
-    @property
-    def ssl_cert(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "core", "mucha", "ssl_cert", default="cert/server.pem"
-        )
-
-    @property
-    def signing_key(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "core", "mucha", "signing_key", default="cert/billing.key"
-        )
-
 
 class CoreConfig(dict):
     def __init__(self) -> None:

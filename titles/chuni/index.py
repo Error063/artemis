@@ -8,10 +8,12 @@ import inflection
 import string
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA1
 from os import path
-from typing import Tuple
+from typing import Tuple, Dict
 
-from core import CoreConfig
+from core import CoreConfig, Utils
 from titles.chuni.config import ChuniConfig
 from titles.chuni.const import ChuniConstants
 from titles.chuni.base import ChuniBase
@@ -33,25 +35,26 @@ class ChuniServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = ChuniConfig()
+        self.hash_table: Dict[Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
             self.game_cfg.update(
                 yaml.safe_load(open(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"))
             )
 
         self.versions = [
-            ChuniBase(core_cfg, self.game_cfg),
-            ChuniPlus(core_cfg, self.game_cfg),
-            ChuniAir(core_cfg, self.game_cfg),
-            ChuniAirPlus(core_cfg, self.game_cfg),
-            ChuniStar(core_cfg, self.game_cfg),
-            ChuniStarPlus(core_cfg, self.game_cfg),
-            ChuniAmazon(core_cfg, self.game_cfg),
-            ChuniAmazonPlus(core_cfg, self.game_cfg),
-            ChuniCrystal(core_cfg, self.game_cfg),
-            ChuniCrystalPlus(core_cfg, self.game_cfg),
-            ChuniParadise(core_cfg, self.game_cfg),
-            ChuniNew(core_cfg, self.game_cfg),
-            ChuniNewPlus(core_cfg, self.game_cfg),
+            ChuniBase,
+            ChuniPlus,
+            ChuniAir,
+            ChuniAirPlus,
+            ChuniStar,
+            ChuniStarPlus,
+            ChuniAmazon,
+            ChuniAmazonPlus,
+            ChuniCrystal,
+            ChuniCrystalPlus,
+            ChuniParadise,
+            ChuniNew,
+            ChuniNewPlus,
         ]
 
         self.logger = logging.getLogger("chuni")
@@ -79,6 +82,21 @@ class ChuniServlet:
                 level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
             )
             self.logger.inited = True
+        
+        for version, keys in self.game_cfg.crypto.keys.items():
+            if len(keys) < 3:
+                continue
+            
+            self.hash_table[version] = {}
+            
+            method_list = [method for method in dir(self.versions[version]) if not method.startswith('__')]
+            for method in method_list:
+                method_fixed = inflection.camelize(method)[6:-7]
+                hash = PBKDF2(method_fixed, bytes.fromhex(keys[2]), 128, count=44, hmac_hash_module=SHA1)
+                
+                self.hash_table[version][hash.hex()] = method_fixed
+                
+                self.logger.debug(f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}")
 
     @classmethod
     def get_allnet_info(
@@ -103,7 +121,7 @@ class ChuniServlet:
         return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "/ping":
+        if url_path.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
 
         req_raw = request.content.getvalue()
@@ -111,6 +129,7 @@ class ChuniServlet:
         encrtped = False
         internal_ver = 0
         endpoint = url_split[len(url_split) - 1]
+        client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0
             internal_ver = ChuniConstants.VER_CHUNITHM
@@ -143,25 +162,38 @@ class ChuniServlet:
             # If we get a 32 character long hex string, it's a hash and we're
             # doing encrypted. The likelyhood of false positives is low but
             # technically not 0
-            endpoint = request.getHeader("User-Agent").split("#")[0]
+            if internal_ver < ChuniConstants.VER_CHUNITHM_NEW:
+                endpoint = request.getHeader("User-Agent").split("#")[0]
+            
+            else:
+                if internal_ver not in self.hash_table:
+                    self.logger.error(f"v{version} does not support encryption or no keys entered")
+                    return zlib.compress(b'{"stat": "0"}')
+                
+                elif endpoint.lower() not in self.hash_table[internal_ver]:
+                    self.logger.error(f"No hash found for v{version} endpoint {endpoint}")
+                    return zlib.compress(b'{"stat": "0"}')
+
+                endpoint = self.hash_table[internal_ver][endpoint.lower()]
+            
             try:
                 crypt = AES.new(
-                    bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][0]),
+                    bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
                     AES.MODE_CBC,
-                    bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][1]),
+                    bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
                 )
 
                 req_raw = crypt.decrypt(req_raw)
 
-            except:
+            except Exception as e:
                 self.logger.error(
-                    f"Failed to decrypt v{version} request to {endpoint} -> {req_raw}"
+                    f"Failed to decrypt v{version} request to {endpoint} -> {e}"
                 )
                 return zlib.compress(b'{"stat": "0"}')
 
             encrtped = True
 
-        if not encrtped and self.game_cfg.crypto.encrypted_only:
+        if not encrtped and self.game_cfg.crypto.encrypted_only and internal_ver >= ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS:
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
             )
@@ -179,19 +211,20 @@ class ChuniServlet:
         req_data = json.loads(unzip)
 
         self.logger.info(
-            f"v{version} {endpoint} request from {request.getClientAddress().host}"
+            f"v{version} {endpoint} request from {client_ip}"
         )
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
+        handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
-        if not hasattr(self.versions[internal_ver], func_to_find):
+        if not hasattr(handler_cls, func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
             resp = {"returnCode": 1}
 
         else:
             try:
-                handler = getattr(self.versions[internal_ver], func_to_find)
+                handler = getattr(handler_cls, func_to_find)
                 resp = handler(req_data)
 
             except Exception as e:
@@ -211,9 +244,9 @@ class ChuniServlet:
         padded = pad(zipped, 16)
 
         crypt = AES.new(
-            bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][0]),
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
             AES.MODE_CBC,
-            bytes.fromhex(self.game_cfg.crypto.keys[str(internal_ver)][1]),
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
         return crypt.encrypt(padded)

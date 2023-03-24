@@ -11,9 +11,9 @@ class UserInfoUpdateRequest(BaseRequest):
         self.profileId = int(self.params[0])
         self.optsUpdated: List[UserOption] = []
         self.unknown2: List = self.params[2]
-        self.datesUpdated: List[DateUpdate] = []
-        self.favoritesAdded: List[int] = self.params[4]
-        self.favoritesRemoved: List[int] = self.params[5]
+        self.datesUpdated: List[DateUpdate] = []        
+        self.favoritesRemoved: List[int] = self.params[4]
+        self.favoritesAdded: List[int] = self.params[5]
 
         for x in self.params[1]:
             self.optsUpdated.append(UserOption(x[0], x[1]))

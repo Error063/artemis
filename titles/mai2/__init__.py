@@ -7,4 +7,4 @@ index = Mai2Servlet
 database = Mai2Data
 reader = Mai2Reader
 game_codes = [Mai2Constants.GAME_CODE]
-current_schema_version = 2
+current_schema_version = 3

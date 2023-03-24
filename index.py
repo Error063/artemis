@@ -96,9 +96,11 @@ class HttpDispatcher(resource.Resource):
 
     def render_GET(self, request: Request) -> bytes:
         test = self.map_get.match(request.uri.decode())
+        client_ip = Utils.get_ip_addr(request)
+
         if test is None:
             self.logger.debug(
-                f"Unknown GET endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}"
+                f"Unknown GET endpoint {request.uri.decode()} from {client_ip} to port {request.getHost().port}"
             )
             request.setResponseCode(404)
             return b"Endpoint not found."
@@ -107,9 +109,11 @@ class HttpDispatcher(resource.Resource):
 
     def render_POST(self, request: Request) -> bytes:
         test = self.map_post.match(request.uri.decode())
+        client_ip = Utils.get_ip_addr(request)
+
         if test is None:
             self.logger.debug(
-                f"Unknown POST endpoint {request.uri.decode()} from {request.getClientAddress().host} to port {request.getHost().port}"
+                f"Unknown POST endpoint {request.uri.decode()} from {client_ip} to port {request.getHost().port}"
             )
             request.setResponseCode(404)
             return b"Endpoint not found."
@@ -166,6 +170,12 @@ if __name__ == "__main__":
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
 
+    if not access(cfg.server.log_dir, W_OK):
+        print(
+            f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
+        )
+        exit(1)
+
     logger = logging.getLogger("core")
     log_fmt_str = "[%(asctime)s] Core | %(levelname)s | %(message)s"
     log_fmt = logging.Formatter(log_fmt_str)
@@ -184,12 +194,6 @@ if __name__ == "__main__":
     log_lv = logging.DEBUG if cfg.server.is_develop else logging.INFO
     logger.setLevel(log_lv)
     coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
-
-    if not access(cfg.server.log_dir, W_OK):
-        logger.error(
-            f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
-        )
-        exit(1)
 
     if not cfg.aimedb.key:
         logger.error("!!AIMEDB KEY BLANK, SET KEY IN CORE.YAML!!")

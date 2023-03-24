@@ -8,7 +8,7 @@ from twisted.web.http import Request
 from typing import Dict, Tuple
 from os import path
 
-from core.config import CoreConfig
+from core import CoreConfig, Utils
 from titles.wacca.config import WaccaConfig
 from titles.wacca.config import WaccaConfig
 from titles.wacca.const import WaccaConstants
@@ -89,6 +89,7 @@ class WaccaServlet:
             request.responseHeaders.addRawHeader(b"X-Wacca-Hash", hash.hex().encode())
             return json.dumps(resp).encode()
 
+        client_ip = Utils.get_ip_addr(request)
         try:
             req_json = json.loads(request.content.getvalue())
             version_full = Version(req_json["appVersion"])
@@ -101,7 +102,7 @@ class WaccaServlet:
             resp.message = "不正なリクエスト エラーです"
             return end(resp.make())
 
-        if "/api/" in url_path:
+        if "api/" in url_path:
             func_to_find = (
                 "handle_" + url_path.partition("api/")[2].replace("/", "_") + "_request"
             )
@@ -140,7 +141,7 @@ class WaccaServlet:
             return end(resp.make())
 
         self.logger.info(
-            f"v{req_json['appVersion']} {url_path} request from {request.getClientAddress().host} with chipId {req_json['chipId']}"
+            f"v{req_json['appVersion']} {url_path} request from {client_ip} with chipId {req_json['chipId']}"
         )
         self.logger.debug(req_json)
 

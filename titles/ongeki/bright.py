@@ -93,7 +93,12 @@ class OngekiBright(OngekiBase):
     def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
         user_characters = self.data.item.get_characters(data["userId"])
         if user_characters is None:
-            return {}
+            return {
+                "userId": data["userId"],
+                "length": 0,
+                "nextIndex": 0,
+                "userCharacterList": []
+            }
 
         max_ct = data["maxCount"]
         next_idx = data["nextIndex"]
@@ -543,7 +548,7 @@ class OngekiBright(OngekiBase):
             "returnCode": 1,
             "orderId": 0,
             "serialId": "11111111111111111111",
-            "apiName": "CMUpsertUserPrintPlaylogApi",
+            "apiName": "CMUpsertUserPrintPlaylogApi"
         }
 
     def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
@@ -551,7 +556,7 @@ class OngekiBright(OngekiBase):
             "returnCode": 1,
             "orderId": 0,
             "serialId": "11111111111111111111",
-            "apiName": "CMUpsertUserPrintlogApi",
+            "apiName": "CMUpsertUserPrintlogApi"
         }
 
     def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:

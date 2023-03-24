@@ -242,7 +242,7 @@ class Mai2ScoreData(BaseData):
         return result.lastrowid
 
     def get_courses(self, user_id: int) -> Optional[List[Row]]:
-        sql = course.select(best_score.c.user == user_id)
+        sql = course.select(course.c.user == user_id)
 
         result = self.execute(sql)
         if result is None:
