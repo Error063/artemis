@@ -2,5 +2,16 @@ server:
   enable: True
   loglevel: "info"
 
+team:
+  name: ARTEMiS
+
+version:
+  "11":
+    rom: 2.00.00
+    data: 2.00.00
+  "12":
+    rom: 2.05.00
+    data: 2.05.00
+
 crypto:
   encrypted_only: False

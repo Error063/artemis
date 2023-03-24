@@ -49,8 +49,8 @@ class ChuniNew(ChuniBase):
                 "matchEndTime": match_end,
                 "matchTimeLimit": 99,
                 "matchErrorLimit": 9999,
-                "romVersion": "2.00.00",
-                "dataVersion": "2.00.00",
+                "romVersion": self.game_cfg.version.version_rom(self.version),
+                "dataVersion": self.game_cfg.version.version_data(self.version),
                 "matchingUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "matchingUriX": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
@@ -454,9 +454,7 @@ class ChuniNew(ChuniBase):
 
         # set the card print state to success and use the orderId as the key
         self.data.item.put_user_print_state(
-            user_id,
-            id=upsert["orderId"],
-            hasCompleted=True
+            user_id, id=upsert["orderId"], hasCompleted=True
         )
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintSubtractApi"}
@@ -467,10 +465,6 @@ class ChuniNew(ChuniBase):
 
         # set the card print state to success and use the orderId as the key
         for order_id in order_ids:
-            self.data.item.put_user_print_state(
-                user_id,
-                id=order_id,
-                hasCompleted=True
-            )
+            self.data.item.put_user_print_state(user_id, id=order_id, hasCompleted=True)
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintCancelApi"}

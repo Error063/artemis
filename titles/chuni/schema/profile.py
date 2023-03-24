@@ -558,8 +558,10 @@ class ChuniProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_activity(self, aime_id: int, kind: int) -> Optional[List[Row]]:
-        sql = select(activity).where(
-            and_(activity.c.user == aime_id, activity.c.kind == kind)
+        sql = (
+            select(activity)
+            .where(and_(activity.c.user == aime_id, activity.c.kind == kind))
+            .order_by(activity.c.sortNumber.desc())  # to get the last played track
         )
 
         result = self.execute(sql)

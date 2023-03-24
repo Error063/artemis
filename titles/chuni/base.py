@@ -32,7 +32,7 @@ class ChuniBase:
 
     def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
         game_charge_list = self.data.static.get_enabled_charges(self.version)
-        
+
         if game_charge_list is None or len(game_charge_list) == 0:
             return {"length": 0, "gameChargeList": []}
 
@@ -130,7 +130,7 @@ class ChuniBase:
         return {
             "userId": data["userId"],
             "length": len(activity_list),
-            "kind": data["kind"],
+            "kind": int(data["kind"]),
             "userActivityList": activity_list,
         }
 
@@ -451,13 +451,13 @@ class ChuniBase:
             "playerLevel": profile["playerLevel"],
             "rating": profile["rating"],
             "headphone": profile["headphone"],
-            "chargeState": "1",
+            "chargeState": 1,
             "userNameEx": profile["userName"],
         }
 
     def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
-        recet_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
-        if recet_rating_list is None:
+        recent_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
+        if recent_rating_list is None:
             return {
                 "userId": data["userId"],
                 "length": 0,
@@ -466,8 +466,8 @@ class ChuniBase:
 
         return {
             "userId": data["userId"],
-            "length": len(recet_rating_list["recentRating"]),
-            "userRecentRatingList": recet_rating_list["recentRating"],
+            "length": len(recent_rating_list["recentRating"]),
+            "userRecentRatingList": recent_rating_list["recentRating"],
         }
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
@@ -479,8 +479,24 @@ class ChuniBase:
         }
 
     def handle_get_user_team_api_request(self, data: Dict) -> Dict:
-        # TODO: Team
-        return {"userId": data["userId"], "teamId": 0}
+        # TODO: use the database "chuni_profile_team" with a GUI
+        team_name = self.game_cfg.team.team_name
+        if team_name == "":
+            return {"userId": data["userId"], "teamId": 0}
+
+        return {
+            "userId": data["userId"],
+            "teamId": 1,
+            "teamRank": 1,
+            "teamName": team_name,
+            "userTeamPoint": {
+                "userId": data["userId"],
+                "teamId": 1,
+                "orderId": 1,
+                "teamPoint": 1,
+                "aggrDate": data["playDate"],
+            },
+        }
 
     def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
@@ -583,6 +599,9 @@ class ChuniBase:
         return {"returnCode": "1"}
 
     def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
+        # add tickets after they got bought, this makes sure the tickets are
+        # still valid after an unsuccessful logout
+        self.data.profile.put_profile_charge(data["userId"], data["userCharge"])
         return {"returnCode": "1"}
 
     def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
@@ -603,7 +622,5 @@ class ChuniBase:
     def handle_get_user_net_battle_data_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
-            "userNetBattleData": {
-                "recentNBSelectMusicList": []
-            }
+            "userNetBattleData": {"recentNBSelectMusicList": []},
         }

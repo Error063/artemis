@@ -390,20 +390,17 @@ class ChuniStaticData(BaseData):
             return None
         return result.fetchall()
 
-    def get_gacha_card_by_character(self, gacha_id: int, chara_id: int) -> Optional[Dict]:
+    def get_gacha_card_by_character(
+        self, gacha_id: int, chara_id: int
+    ) -> Optional[Dict]:
         sql_sub = (
-            select(cards.c.cardId)
-            .filter(
-                cards.c.charaId == chara_id
-            )
-            .scalar_subquery()
+            select(cards.c.cardId).filter(cards.c.charaId == chara_id).scalar_subquery()
         )
 
         # Perform the main query, also rename the resulting column to ranking
-        sql = gacha_cards.select(and_(
-            gacha_cards.c.gachaId == gacha_id,
-            gacha_cards.c.cardId == sql_sub
-        ))
+        sql = gacha_cards.select(
+            and_(gacha_cards.c.gachaId == gacha_id, gacha_cards.c.cardId == sql_sub)
+        )
 
         result = self.execute(sql)
         if result is None:
