@@ -269,10 +269,10 @@ class ChuniNew(ChuniBase):
             tmp = user_print_list[x]._asdict()
             print_list.append(tmp["cardId"])
 
-            if len(user_print_list) >= max_ct:
+            if len(print_list) >= max_ct:
                 break
 
-        if len(user_print_list) >= max_ct:
+        if len(print_list) >= max_ct:
             next_idx = next_idx + max_ct
         else:
             next_idx = -1
