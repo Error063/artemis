@@ -396,7 +396,8 @@ class ChuniBase:
     def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         user_login_bonus = self.data.item.get_all_login_bonus(user_id, self.version)
-        if user_login_bonus is None:
+        # ignore the loginBonus request if its disabled in config
+        if user_login_bonus is None or not self.game_cfg.mods.use_login_bonus:
             return {"userId": user_id, "length": 0, "userLoginBonusList": []}
 
         user_login_list = []
