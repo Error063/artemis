@@ -13,12 +13,8 @@ class ChuniNewPlus(ChuniNew):
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         ret = super().handle_get_game_setting_api_request(data)
-        ret["gameSetting"]["romVersion"] = self.game_cfg.version.version_rom(
-            self.version
-        )
-        ret["gameSetting"]["dataVersion"] = self.game_cfg.version.version_data(
-            self.version
-        )
+        ret["gameSetting"]["romVersion"] = self.game_cfg.version.version(self.version)["rom"]
+        ret["gameSetting"]["dataVersion"] = self.game_cfg.version.version(self.version)["data"]
         ret["gameSetting"][
             "matchingUri"
         ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"

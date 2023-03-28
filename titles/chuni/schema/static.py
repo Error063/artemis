@@ -122,8 +122,148 @@ gacha_cards = Table(
     mysql_charset="utf8mb4",
 )
 
+login_bonus_preset = Table(
+    "chuni_static_login_bonus_preset",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("presetName", String(255), nullable=False),
+    Column("isEnabled", Boolean, server_default="1"),
+    UniqueConstraint("version", "id", name="chuni_static_login_bonus_preset_uk"),
+    mysql_charset="utf8mb4",
+)
+
+login_bonus = Table(
+    "chuni_static_login_bonus",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column(
+        "presetId",
+        ForeignKey(
+            "chuni_static_login_bonus_preset.id",
+            ondelete="cascade",
+            onupdate="cascade",
+        ),
+        nullable=False,
+    ),
+    Column("loginBonusId", Integer, nullable=False),
+    Column("loginBonusName", String(255), nullable=False),
+    Column("presentId", Integer, nullable=False),
+    Column("presentName", String(255), nullable=False),
+    Column("itemNum", Integer, nullable=False),
+    Column("needLoginDayCount", Integer, nullable=False),
+    Column("loginBonusCategoryType", Integer, nullable=False),
+    UniqueConstraint(
+        "version", "presetId", "loginBonusId", name="chuni_static_login_bonus_uk"
+    ),
+    mysql_charset="utf8mb4",
+)
+
 
 class ChuniStaticData(BaseData):
+    def put_login_bonus(
+        self,
+        version: int,
+        preset_id: int,
+        login_bonus_id: int,
+        login_bonus_name: str,
+        present_id: int,
+        present_ame: str,
+        item_num: int,
+        need_login_day_count: int,
+        login_bonus_category_type: int,
+    ) -> Optional[int]:
+        sql = insert(login_bonus).values(
+            version=version,
+            presetId=preset_id,
+            loginBonusId=login_bonus_id,
+            loginBonusName=login_bonus_name,
+            presentId=present_id,
+            presentName=present_ame,
+            itemNum=item_num,
+            needLoginDayCount=need_login_day_count,
+            loginBonusCategoryType=login_bonus_category_type,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            loginBonusName=login_bonus_name,
+            presentName=present_ame,
+            itemNum=item_num,
+            needLoginDayCount=need_login_day_count,
+            loginBonusCategoryType=login_bonus_category_type,
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            return None
+        return result.lastrowid
+
+    def get_login_bonus(
+        self, version: int, preset_id: int,
+    ) -> Optional[List[Row]]:
+        sql = login_bonus.select(
+            and_(
+                login_bonus.c.version == version,
+                login_bonus.c.presetId == preset_id,
+            )
+        ).order_by(login_bonus.c.needLoginDayCount.desc())
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_login_bonus_by_required_days(
+        self, version: int, preset_id: int, need_login_day_count: int
+    ) -> Optional[Row]:
+        sql = login_bonus.select(
+            and_(
+                login_bonus.c.version == version,
+                login_bonus.c.presetId == preset_id,
+                login_bonus.c.needLoginDayCount == need_login_day_count,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_login_bonus_preset(
+        self, version: int, preset_id: int, preset_name: str, is_enabled: bool
+    ) -> Optional[int]:
+        sql = insert(login_bonus_preset).values(
+            id=preset_id,
+            version=version,
+            presetName=preset_name,
+            isEnabled=is_enabled,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            presetName=preset_name, isEnabled=is_enabled
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            return None
+        return result.lastrowid
+
+    def get_login_bonus_presets(
+        self, version: int, is_enabled: bool = True
+    ) -> Optional[List[Row]]:
+        sql = login_bonus_preset.select(
+            and_(
+                login_bonus_preset.c.version == version,
+                login_bonus_preset.c.isEnabled == is_enabled,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
     def put_event(
         self, version: int, event_id: int, type: int, name: str
     ) -> Optional[int]:

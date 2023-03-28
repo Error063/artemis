@@ -184,8 +184,73 @@ print_detail = Table(
     mysql_charset="utf8mb4",
 )
 
+login_bonus = Table(
+    "chuni_item_login_bonus",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("presetId", Integer, nullable=False),
+    Column("bonusCount", Integer, nullable=False, server_default="0"),
+    Column("lastUpdateDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
+    Column("isWatched", Boolean, server_default="0"),
+    Column("isFinished", Boolean, server_default="0"),
+    UniqueConstraint("version", "user", "presetId", name="chuni_item_login_bonus_uk"),
+    mysql_charset="utf8mb4",
+)
+
 
 class ChuniItemData(BaseData):
+    def put_login_bonus(
+        self, user_id: int, version: int, preset_id: int, **login_bonus_data
+    ) -> Optional[int]:
+        sql = insert(login_bonus).values(
+            version=version, user=user_id, presetId=preset_id, **login_bonus_data
+        )
+
+        conflict = sql.on_duplicate_key_update(presetId=preset_id, **login_bonus_data)
+
+        result = self.execute(conflict)
+        if result is None:
+            return None
+        return result.lastrowid
+
+    def get_all_login_bonus(
+        self, user_id: int, version: int, is_finished: bool = False
+    ) -> Optional[List[Row]]:
+        sql = login_bonus.select(
+            and_(
+                login_bonus.c.version == version,
+                login_bonus.c.user == user_id,
+                login_bonus.c.isFinished == is_finished,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_login_bonus(
+        self, user_id: int, version: int, preset_id: int
+    ) -> Optional[Row]:
+        sql = login_bonus.select(
+            and_(
+                login_bonus.c.version == version,
+                login_bonus.c.user == user_id,
+                login_bonus.c.presetId == preset_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
     def put_character(self, user_id: int, character_data: Dict) -> Optional[int]:
         character_data["user"] = user_id
 
@@ -335,7 +400,7 @@ class ChuniItemData(BaseData):
         sql = print_state.select(
             and_(
                 print_state.c.user == aime_id,
-                print_state.c.hasCompleted == has_completed
+                print_state.c.hasCompleted == has_completed,
             )
         )
 
@@ -351,7 +416,7 @@ class ChuniItemData(BaseData):
             and_(
                 print_state.c.user == aime_id,
                 print_state.c.gachaId == gacha_id,
-                print_state.c.hasCompleted == has_completed
+                print_state.c.hasCompleted == has_completed,
             )
         )
 
@@ -380,9 +445,7 @@ class ChuniItemData(BaseData):
             user=aime_id, serialId=serial_id, **user_print_data
         )
 
-        conflict = sql.on_duplicate_key_update(
-            user=aime_id, **user_print_data
-        )
+        conflict = sql.on_duplicate_key_update(user=aime_id, **user_print_data)
         result = self.execute(conflict)
 
         if result is None:
