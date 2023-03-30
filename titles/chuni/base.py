@@ -23,7 +23,98 @@ class ChuniBase:
         self.version = ChuniConstants.VER_CHUNITHM
 
     def handle_game_login_api_request(self, data: Dict) -> Dict:
-        # self.data.base.log_event("chuni", "login", logging.INFO, {"version": self.version, "user": data["userId"]})
+        """
+        Handles the login bonus logic, required for the game because
+        getUserLoginBonus gets called after getUserItem and therefore the
+        items needs to be inserted in the database before they get requested.
+
+        Adds a bonusCount after a user logged in after 24 hours, makes sure
+        loginBonus 30 gets looped, only show the login banner every 24 hours,
+        adds the bonus to items (itemKind 6)
+        """
+
+        # ignore the login bonus if disabled in config
+        if not self.game_cfg.mods.use_login_bonus:
+            return {"returnCode": 1}
+
+        user_id = data["userId"]
+        login_bonus_presets = self.data.static.get_login_bonus_presets(self.version)
+
+        for preset in login_bonus_presets:
+            # check if a user already has some pogress and if not add the
+            # login bonus entry
+            user_login_bonus = self.data.item.get_login_bonus(
+                user_id, self.version, preset["id"]
+            )
+            if user_login_bonus is None:
+                self.data.item.put_login_bonus(user_id, self.version, preset["id"])
+                # yeah i'm lazy
+                user_login_bonus = self.data.item.get_login_bonus(
+                    user_id, self.version, preset["id"]
+                )
+
+            # skip the login bonus entirely if its already finished
+            if user_login_bonus["isFinished"]:
+                continue
+
+            # make sure the last login is more than 24 hours ago
+            if user_login_bonus["lastUpdateDate"] < datetime.now() - timedelta(
+                hours=24
+            ):
+                # increase the login day counter and update the last login date
+                bonus_count = user_login_bonus["bonusCount"] + 1
+                last_update_date = datetime.now()
+
+                all_login_boni = self.data.static.get_login_bonus(
+                    self.version, preset["id"]
+                )
+
+                # skip the current bonus preset if no boni were found
+                if all_login_boni is None or len(all_login_boni) < 1:
+                    self.logger.warn(
+                        f"No bonus entries found for bonus preset {preset['id']}"
+                    )
+                    continue
+
+                max_needed_days = all_login_boni[0]["needLoginDayCount"]
+
+                # make sure to not show login boni after all days got redeemed
+                is_finished = False
+                if bonus_count > max_needed_days:
+                    # assume that all login preset ids under 3000 needs to be
+                    # looped, like 30 and 40 are looped, 40 does not work?
+                    if preset["id"] < 3000:
+                        bonus_count = 1
+                    else:
+                        is_finished = True
+
+                # grab the item for the corresponding day
+                login_item = self.data.static.get_login_bonus_by_required_days(
+                    self.version, preset["id"], bonus_count
+                )
+                if login_item is not None:
+                    # now add the present to the database so the
+                    # handle_get_user_item_api_request can grab them
+                    self.data.item.put_item(
+                        user_id,
+                        {
+                            "itemId": login_item["presentId"],
+                            "itemKind": 6,
+                            "stock": login_item["itemNum"],
+                            "isValid": True,
+                        },
+                    )
+
+                self.data.item.put_login_bonus(
+                    user_id,
+                    self.version,
+                    preset["id"],
+                    bonusCount=bonus_count,
+                    lastUpdateDate=last_update_date,
+                    isWatched=False,
+                    isFinished=is_finished,
+                )
+
         return {"returnCode": 1}
 
     def handle_game_logout_api_request(self, data: Dict) -> Dict:
@@ -32,7 +123,7 @@ class ChuniBase:
 
     def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
         game_charge_list = self.data.static.get_enabled_charges(self.version)
-        
+
         if game_charge_list is None or len(game_charge_list) == 0:
             return {"length": 0, "gameChargeList": []}
 
@@ -130,7 +221,7 @@ class ChuniBase:
         return {
             "userId": data["userId"],
             "length": len(activity_list),
-            "kind": data["kind"],
+            "kind": int(data["kind"]),
             "userActivityList": activity_list,
         }
 
@@ -309,26 +400,29 @@ class ChuniBase:
         }
 
     def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
-        """
-        Unsure how to get this to trigger...
-        """
+        user_id = data["userId"]
+        user_login_bonus = self.data.item.get_all_login_bonus(user_id, self.version)
+        # ignore the loginBonus request if its disabled in config
+        if user_login_bonus is None or not self.game_cfg.mods.use_login_bonus:
+            return {"userId": user_id, "length": 0, "userLoginBonusList": []}
+
+        user_login_list = []
+        for bonus in user_login_bonus:
+            user_login_list.append(
+                {
+                    "presetId": bonus["presetId"],
+                    "bonusCount": bonus["bonusCount"],
+                    "lastUpdateDate": datetime.strftime(
+                        bonus["lastUpdateDate"], "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "isWatched": bonus["isWatched"],
+                }
+            )
+
         return {
-            "userId": data["userId"],
-            "length": 2,
-            "userLoginBonusList": [
-                {
-                    "presetId": "10",
-                    "bonusCount": "0",
-                    "lastUpdateDate": "1970-01-01 09:00:00",
-                    "isWatched": "true",
-                },
-                {
-                    "presetId": "20",
-                    "bonusCount": "0",
-                    "lastUpdateDate": "1970-01-01 09:00:00",
-                    "isWatched": "true",
-                },
-            ],
+            "userId": user_id,
+            "length": len(user_login_list),
+            "userLoginBonusList": user_login_list,
         }
 
     def handle_get_user_map_api_request(self, data: Dict) -> Dict:
@@ -451,13 +545,13 @@ class ChuniBase:
             "playerLevel": profile["playerLevel"],
             "rating": profile["rating"],
             "headphone": profile["headphone"],
-            "chargeState": "1",
+            "chargeState": 1,
             "userNameEx": profile["userName"],
         }
 
     def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
-        recet_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
-        if recet_rating_list is None:
+        recent_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
+        if recent_rating_list is None:
             return {
                 "userId": data["userId"],
                 "length": 0,
@@ -466,8 +560,8 @@ class ChuniBase:
 
         return {
             "userId": data["userId"],
-            "length": len(recet_rating_list["recentRating"]),
-            "userRecentRatingList": recet_rating_list["recentRating"],
+            "length": len(recent_rating_list["recentRating"]),
+            "userRecentRatingList": recent_rating_list["recentRating"],
         }
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
@@ -479,8 +573,24 @@ class ChuniBase:
         }
 
     def handle_get_user_team_api_request(self, data: Dict) -> Dict:
-        # TODO: Team
-        return {"userId": data["userId"], "teamId": 0}
+        # TODO: use the database "chuni_profile_team" with a GUI
+        team_name = self.game_cfg.team.team_name
+        if team_name == "":
+            return {"userId": data["userId"], "teamId": 0}
+
+        return {
+            "userId": data["userId"],
+            "teamId": 1,
+            "teamRank": 1,
+            "teamName": team_name,
+            "userTeamPoint": {
+                "userId": data["userId"],
+                "teamId": 1,
+                "orderId": 1,
+                "teamPoint": 1,
+                "aggrDate": data["playDate"],
+            },
+        }
 
     def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
@@ -580,9 +690,18 @@ class ChuniBase:
             for emoney in upsert["userEmoneyList"]:
                 self.data.profile.put_profile_emoney(user_id, emoney)
 
+        if "userLoginBonusList" in upsert:
+            for login in upsert["userLoginBonusList"]:
+                self.data.item.put_login_bonus(
+                    user_id, self.version, login["presetId"], isWatched=True
+                )
+
         return {"returnCode": "1"}
 
     def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
+        # add tickets after they got bought, this makes sure the tickets are
+        # still valid after an unsuccessful logout
+        self.data.profile.put_profile_charge(data["userId"], data["userCharge"])
         return {"returnCode": "1"}
 
     def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
@@ -603,7 +722,5 @@ class ChuniBase:
     def handle_get_user_net_battle_data_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
-            "userNetBattleData": {
-                "recentNBSelectMusicList": []
-            }
+            "userNetBattleData": {"recentNBSelectMusicList": []},
         }
