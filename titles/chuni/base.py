@@ -69,7 +69,13 @@ class ChuniBase:
                     self.version, preset["id"]
                 )
 
-                # assume its not None
+                # skip the current bonus preset if no boni were found
+                if all_login_boni is None or len(all_login_boni) < 1:
+                    self.logger.warn(
+                        f"No bonus entries found for bonus preset {preset['id']}"
+                    )
+                    continue
+
                 max_needed_days = all_login_boni[0]["needLoginDayCount"]
 
                 # make sure to not show login boni after all days got redeemed
