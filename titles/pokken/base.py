@@ -182,7 +182,8 @@ class PokkenBase:
             load_usr.new_card_flag = True
         
         else:
-            profile_dict = profile._asdict()
+            profile_dict = { k: v for k, v in profile._asdict().items() if v is not None }            
+            self.logger.info(f"Card-in user {user_id} (Trainer name {profile_dict.get('trainer_name', '')})")
             pokemon_data = self.data.profile.get_all_pokemon_data(user_id)
             tutorial_progress = []
             rankmatch_progress = []
