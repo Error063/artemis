@@ -49,6 +49,16 @@ class PokkenServerConfig:
             self.__config, "pokken", "server", "port_admission", default=9003
         )
 
+    @property
+    def auto_register(self) -> bool:
+        """
+        Automatically register users in `aime_user` on first carding in with pokken
+        if they don't exist already. Set to false to display an error instead.
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "server", "auto_register", default=True
+        )
+
 class PokkenConfig(dict):
     def __init__(self) -> None:
         self.server = PokkenServerConfig(self)

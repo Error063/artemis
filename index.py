@@ -95,6 +95,7 @@ class HttpDispatcher(resource.Resource):
         )
 
     def render_GET(self, request: Request) -> bytes:
+        self.logger.debug(request.uri)
         test = self.map_get.match(request.uri.decode())
         client_ip = Utils.get_ip_addr(request)
 

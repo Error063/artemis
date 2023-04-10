@@ -42,6 +42,80 @@ class ChuniReader(BaseReader):
             self.read_music(f"{dir}/music")
             self.read_charges(f"{dir}/chargeItem")
             self.read_avatar(f"{dir}/avatarAccessory")
+            self.read_login_bonus(f"{dir}/")
+
+    def read_login_bonus(self, root_dir: str) -> None:
+        for root, dirs, files in walk(f"{root_dir}loginBonusPreset"):
+            for dir in dirs:
+                if path.exists(f"{root}/{dir}/LoginBonusPreset.xml"):
+                    with open(f"{root}/{dir}/LoginBonusPreset.xml", "rb") as fp:
+                        bytedata = fp.read()
+                        strdata = bytedata.decode("UTF-8")
+
+                    xml_root = ET.fromstring(strdata)
+                    for name in xml_root.findall("name"):
+                        id = name.find("id").text
+                        name = name.find("str").text
+                    is_enabled = (
+                        True if xml_root.find("disableFlag").text == "false" else False
+                    )
+
+                    result = self.data.static.put_login_bonus_preset(
+                        self.version, id, name, is_enabled
+                    )
+
+                    if result is not None:
+                        self.logger.info(f"Inserted login bonus preset {id}")
+                    else:
+                        self.logger.warn(f"Failed to insert login bonus preset {id}")
+
+                    for bonus in xml_root.find("infos").findall("LoginBonusDataInfo"):
+                        for name in bonus.findall("loginBonusName"):
+                            bonus_id = name.find("id").text
+                            bonus_name = name.find("str").text
+
+                        if path.exists(
+                            f"{root_dir}/loginBonus/loginBonus{bonus_id}/LoginBonus.xml"
+                        ):
+                            with open(
+                                f"{root_dir}/loginBonus/loginBonus{bonus_id}/LoginBonus.xml",
+                                "rb",
+                            ) as fp:
+                                bytedata = fp.read()
+                                strdata = bytedata.decode("UTF-8")
+
+                                bonus_root = ET.fromstring(strdata)
+
+                                for present in bonus_root.findall("present"):
+                                    present_id = present.find("id").text
+                                    present_name = present.find("str").text
+
+                                item_num = int(bonus_root.find("itemNum").text)
+                                need_login_day_count = int(
+                                    bonus_root.find("needLoginDayCount").text
+                                )
+                                login_bonus_category_type = int(
+                                    bonus_root.find("loginBonusCategoryType").text
+                                )
+
+                                result = self.data.static.put_login_bonus(
+                                    self.version,
+                                    id,
+                                    bonus_id,
+                                    bonus_name,
+                                    present_id,
+                                    present_name,
+                                    item_num,
+                                    need_login_day_count,
+                                    login_bonus_category_type,
+                                )
+
+                                if result is not None:
+                                    self.logger.info(f"Inserted login bonus {bonus_id}")
+                                else:
+                                    self.logger.warn(
+                                        f"Failed to insert login bonus {bonus_id}"
+                                    )
 
     def read_events(self, evt_dir: str) -> None:
         for root, dirs, files in walk(evt_dir):

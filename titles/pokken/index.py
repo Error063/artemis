@@ -124,7 +124,6 @@ class PokkenServlet(resource.Resource):
         self.logger.debug(pokken_request)
         
         ret = handler(pokken_request)
-        self.logger.debug(f"Response: {ret}")
         return ret
     
     def handle_matching(self, request: Request) -> bytes:
