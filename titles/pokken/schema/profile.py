@@ -182,6 +182,12 @@ class PokkenProfileData(BaseData):
         """
         pass
 
+    def get_profile(self, user_id: int) -> Optional[Row]:
+        sql = profile.select(profile.c.user == user_id)
+        result = self.execute(sql)
+        if result is None: return None
+        return result.fetchone()
+
     def put_pokemon_data(self, user_id: int, pokemon_data: Dict) -> Optional[int]:
         pass
 
