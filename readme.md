@@ -9,8 +9,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + Crossbeats Rev
     + All versions + omnimix
 
-+ Maimai
-    + All versions up to Universe Plus
++ maimai DX
+    + All versions up to Festival
 
 + Hatsune Miku Arcade
     + All versions

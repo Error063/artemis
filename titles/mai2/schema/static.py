@@ -16,6 +16,7 @@ event = Table(
     Column("eventId", Integer),
     Column("type", Integer),
     Column("name", String(255)),
+    Column("startDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", "type", name="mai2_static_event_uk"),
     mysql_charset="utf8mb4",
@@ -108,7 +109,7 @@ class Mai2StaticData(BaseData):
             return None
         return result.fetchall()
 
-    def toggle_game_events(
+    def toggle_game_event(
         self, version: int, event_id: int, toggle: bool
     ) -> Optional[List]:
         sql = event.update(
@@ -118,7 +119,7 @@ class Mai2StaticData(BaseData):
         result = self.execute(sql)
         if result is None:
             self.logger.warning(
-                f"toggle_game_events: Failed to update event! event_id {event_id} toggle {toggle}"
+                f"toggle_game_event: Failed to update event! event_id {event_id} toggle {toggle}"
             )
         return result.last_updated_params()
 

@@ -10,6 +10,7 @@ from os import path
 from typing import Tuple
 
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.mai2.config import Mai2Config
 from titles.mai2.const import Mai2Constants
 from titles.mai2.base import Mai2Base
@@ -18,6 +19,7 @@ from titles.mai2.splash import Mai2Splash
 from titles.mai2.splashplus import Mai2SplashPlus
 from titles.mai2.universe import Mai2Universe
 from titles.mai2.universeplus import Mai2UniversePlus
+from titles.mai2.festival import Mai2Festival
 
 
 class Mai2Servlet:
@@ -30,12 +32,13 @@ class Mai2Servlet:
             )
 
         self.versions = [
-            Mai2Base(core_cfg, self.game_cfg),
-            Mai2Plus(core_cfg, self.game_cfg),
-            Mai2Splash(core_cfg, self.game_cfg),
-            Mai2SplashPlus(core_cfg, self.game_cfg),
-            Mai2Universe(core_cfg, self.game_cfg),
-            Mai2UniversePlus(core_cfg, self.game_cfg),
+            Mai2Base,
+            Mai2Plus,
+            Mai2Splash,
+            Mai2SplashPlus,
+            Mai2Universe,
+            Mai2UniversePlus,
+            Mai2Festival
         ]
 
         self.logger = logging.getLogger("mai2")
@@ -97,6 +100,7 @@ class Mai2Servlet:
         url_split = url_path.split("/")
         internal_ver = 0
         endpoint = url_split[len(url_split) - 1]
+        client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0
             internal_ver = Mai2Constants.VER_MAIMAI_DX
@@ -108,8 +112,10 @@ class Mai2Servlet:
             internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
         elif version >= 120 and version < 125:  # Universe
             internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
-        elif version >= 125:  # Universe Plus
+        elif version >= 125 and version < 130:  # Universe Plus
             internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
+        elif version >= 130:  # Festival
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
@@ -128,25 +134,30 @@ class Mai2Servlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(f"v{version} {endpoint} request - {req_data}")
+        self.logger.info(
+            f"v{version} {endpoint} request from {client_ip}"
+        )
+        self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
+        handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
-        if not hasattr(self.versions[internal_ver], func_to_find):
+        if not hasattr(handler_cls, func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
-            return zlib.compress(b'{"returnCode": 1}')
+            resp = {"returnCode": 1}
 
-        try:
-            handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data)
+        else:
+            try:
+                handler = getattr(handler_cls, func_to_find)
+                resp = handler(req_data)
 
-        except Exception as e:
-            self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-            return zlib.compress(b'{"stat": "0"}')
+            except Exception as e:
+                self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
+                return zlib.compress(b'{"stat": "0"}')
 
         if resp == None:
             resp = {"returnCode": 1}
 
-        self.logger.info(f"Response {resp}")
+        self.logger.debug(f"Response {resp}")
 
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
