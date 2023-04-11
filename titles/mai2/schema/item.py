@@ -246,16 +246,16 @@ class Mai2ItemData(BaseData):
     ) -> None:
         sql = insert(login_bonus).values(
             user=user_id,
-            bonus_id=bonus_id,
+            bonusId=bonus_id,
             point=point,
-            is_current=is_current,
-            is_complete=is_complete,
+            isCurrent=is_current,
+            isComplete=is_complete,
         )
 
         conflict = sql.on_duplicate_key_update(
             point=point,
-            is_current=is_current,
-            is_complete=is_complete,
+            isCurrent=is_current,
+            isComplete=is_complete,
         )
 
         result = self.execute(conflict)

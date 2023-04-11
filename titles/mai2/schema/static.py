@@ -113,7 +113,7 @@ class Mai2StaticData(BaseData):
         self, version: int, event_id: int, toggle: bool
     ) -> Optional[List]:
         sql = event.update(
-            and_(event.c.version == version, event.c.event_id == event_id)
+            and_(event.c.version == version, event.c.eventId == event_id)
         ).values(enabled=int(toggle))
 
         result = self.execute(sql)

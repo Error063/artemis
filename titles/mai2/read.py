@@ -29,7 +29,7 @@ class Mai2Reader(BaseReader):
                 f"Start importer for {Mai2Constants.game_ver_to_string(version)}"
             )
         except IndexError:
-            self.logger.error(f"Invalid maidx version {version}")
+            self.logger.error(f"Invalid maimai DX version {version}")
             exit(1)
 
     def read(self) -> None:
@@ -43,6 +43,7 @@ class Mai2Reader(BaseReader):
         for dir in data_dirs:
             self.logger.info(f"Read from {dir}")
             self.get_events(f"{dir}/event")
+            self.disable_events(f"{dir}/information", f"{dir}/scoreRanking")
             self.read_music(f"{dir}/music")
             self.read_tickets(f"{dir}/ticket")
 
@@ -63,6 +64,64 @@ class Mai2Reader(BaseReader):
                             self.version, event_type, id, name
                         )
                         self.logger.info(f"Added event {id}...")
+
+    def disable_events(
+        self, base_information_dir: str, base_score_ranking_dir: str
+    ) -> None:
+        self.logger.info(f"Reading disabled events from {base_information_dir}...")
+
+        for root, dirs, files in os.walk(base_information_dir):
+            for dir in dirs:
+                if os.path.exists(f"{root}/{dir}/Information.xml"):
+                    with open(f"{root}/{dir}/Information.xml", encoding="utf-8") as f:
+                        troot = ET.fromstring(f.read())
+
+                        event_id = int(troot.find("name").find("id").text)
+
+                        self.data.static.toggle_game_event(
+                            self.version, event_id, toggle=False
+                        )
+                        self.logger.info(f"Disabled event {event_id}...")
+
+        for root, dirs, files in os.walk(base_score_ranking_dir):
+            for dir in dirs:
+                if os.path.exists(f"{root}/{dir}/ScoreRanking.xml"):
+                    with open(f"{root}/{dir}/ScoreRanking.xml", encoding="utf-8") as f:
+                        troot = ET.fromstring(f.read())
+
+                        event_id = int(troot.find("eventName").find("id").text)
+
+                        self.data.static.toggle_game_event(
+                            self.version, event_id, toggle=False
+                        )
+                        self.logger.info(f"Disabled event {event_id}...")
+
+        # manually disable events wich are known to be problematic
+        for event_id in [
+            1,
+            10,
+            220311,
+            220312,
+            220313,
+            220314,
+            220315,
+            220316,
+            220317,
+            220318,
+            20121821,
+            21121651,
+            22091511,
+            22091512,
+            22091513,
+            22091514,
+            22091515,
+            22091516,
+            22091517,
+            22091518,
+            22091519,
+        ]:
+            self.data.static.toggle_game_event(self.version, event_id, toggle=False)
+            self.logger.info(f"Disabled event {event_id}...")
 
     def read_music(self, base_dir: str) -> None:
         self.logger.info(f"Reading music from {base_dir}...")

@@ -98,16 +98,16 @@ class Mai2Base:
         return {"length": len(charge_list), "gameChargeList": charge_list}
 
     def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
-        pass
+        return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
     def handle_upsert_client_upload_api_request(self, data: Dict) -> Dict:
-        pass
+        return {"returnCode": 1, "apiName": "UpsertClientUploadApi"}
 
     def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
-        pass
+        return {"returnCode": 1, "apiName": "UpsertClientBookkeepingApi"}
 
     def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
-        pass
+        return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version)
@@ -172,6 +172,8 @@ class Mai2Base:
 
         self.data.score.put_playlog(user_id, playlog)
 
+        return {"returnCode": 1, "apiName": "UploadUserPlaylogApi"}
+
     def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         charge = data["userCharge"]
@@ -185,6 +187,8 @@ class Mai2Base:
             datetime.strptime(charge["purchaseDate"], Mai2Constants.DATE_TIME_FORMAT),
             datetime.strptime(charge["validDate"], Mai2Constants.DATE_TIME_FORMAT),
         )
+
+        return {"returnCode": 1, "apiName": "UpsertUserChargelogApi"}
 
     def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
@@ -300,8 +304,10 @@ class Mai2Base:
                 )
                 self.data.item.put_friend_season_ranking(user_id, fsr)
 
+        return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
+
     def handle_user_logout_api_request(self, data: Dict) -> Dict:
-        pass
+        return {"returnCode": 1}
 
     def handle_get_user_data_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_detail(data["userId"], self.version)
