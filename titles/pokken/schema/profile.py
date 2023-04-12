@@ -137,6 +137,9 @@ class PokkenProfileData(BaseData):
     def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: Dict) -> None:
         pass
 
+    def add_profile_points(self, user_id: int, rank_pts: int, money: int, score_pts: int) -> None:
+        pass
+
     def get_profile(self, user_id: int) -> Optional[Row]:
         sql = profile.select(profile.c.user == user_id)
         result = self.execute(sql)
