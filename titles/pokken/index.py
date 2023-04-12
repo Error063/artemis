@@ -87,7 +87,7 @@ class PokkenServlet(resource.Resource):
         if not game_cfg.server.enable:
             return (False, "")
 
-        return (True, "PKF2")
+        return (True, "PKF1")
 
     def setup(self) -> None:
         # TODO: Setup stun, turn (UDP) and admission (WSS) servers
@@ -114,6 +114,8 @@ class PokkenServlet(resource.Resource):
         endpoint = jackal_pb2.MessageType.DESCRIPTOR.values_by_number[
             pokken_request.type
         ].name.lower()
+        
+        self.logger.debug(pokken_request)
 
         handler = getattr(self.base, f"handle_{endpoint}", None)
         if handler is None:
@@ -121,7 +123,6 @@ class PokkenServlet(resource.Resource):
             return self.base.handle_noop(pokken_request)
         
         self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
-        self.logger.debug(pokken_request)
         
         ret = handler(pokken_request)
         return ret

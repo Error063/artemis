@@ -28,8 +28,10 @@ profile = Table(
     Column('score_point', Integer),
     Column('grade_max_num', Integer),
     Column('extra_counter', Integer), # Optional
+    Column('tutorial_progress_flag', JSON), # Repeated, Integer
     Column('total_play_days', Integer),
     Column('play_date_time', Integer),
+    Column('achievement_flag', JSON), # Repeated, Integer
     Column('lucky_box_fail_num', Integer),
     Column('event_reward_get_flag', Integer),
     Column('rank_pvp_all', Integer),
@@ -41,15 +43,19 @@ profile = Table(
     Column('use_support_num', Integer),
     Column('rankmatch_flag', Integer),
     Column('rankmatch_max', Integer), # Optional
+    Column('rankmatch_progress', JSON), # Repeated, Integer
     Column('rankmatch_success', Integer), # Optional
     Column('beat_num', Integer), # Optional
     Column('title_text_id', Integer),
     Column('title_plate_id', Integer),
     Column('title_decoration_id', Integer),
     Column('support_pokemon_list', JSON), # Repeated, Integer
-    Column('support_set_1', JSON), # Repeated, Integer
-    Column('support_set_2', JSON), # Repeated, Integer
-    Column('support_set_3', JSON), # Repeated, Integer
+    Column('support_set_1_1', Integer), # Repeated, Integer
+    Column('support_set_1_2', Integer),
+    Column('support_set_2_1', Integer), # Repeated, Integer
+    Column('support_set_2_2', Integer),
+    Column('support_set_3_1', Integer), # Repeated, Integer
+    Column('support_set_3_2', Integer),
     Column('navi_trainer', Integer),
     Column('navi_version_id', Integer),
     Column('aid_skill_list', JSON), # Repeated, Integer
@@ -84,56 +90,8 @@ profile = Table(
     Column('sp_bonus_category_id_2', Integer),
     Column('sp_bonus_key_value_2', Integer),
     Column('last_play_event_id', Integer), # Optional
-    mysql_charset="utf8mb4",
-)
-
-tutorial_progress = Table(
-    'pokken_tutorial_progress',
-    metadata,
-    Column('id', Integer, primary_key=True, nullable=False),
-    Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column('flag', Integer),
-    UniqueConstraint('user', 'flag', name='pokken_tutorial_progress_uk'),
-    mysql_charset="utf8mb4",
-)
-
-rankmatch_progress = Table(
-    'pokken_rankmatch_progress',
-    metadata,
-    Column('id', Integer, primary_key=True, nullable=False),
-    Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column('progress', Integer),
-    UniqueConstraint('user', 'progress', name='pokken_rankmatch_progress_uk'),
-    mysql_charset="utf8mb4",
-)
-
-achievement_flag = Table(
-    'pokken_achievement_flag',
-    metadata,
-    Column('id', Integer, primary_key=True, nullable=False),
-    Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column('flag', Integer),
-    UniqueConstraint('user', 'flag', name='pokken_achievement_flag_uk'),
-    mysql_charset="utf8mb4",
-)
-
-event_achievement_flag = Table(
-    'pokken_event_achievement_flag',
-    metadata,
-    Column('id', Integer, primary_key=True, nullable=False),
-    Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column('flag', Integer),
-    UniqueConstraint('user', 'flag', name='pokken_event_achievement_flag_uk'),
-    mysql_charset="utf8mb4",
-)
-
-event_achievement_param = Table(
-    'pokken_event_achievement_param',
-    metadata,
-    Column('id', Integer, primary_key=True, nullable=False),
-    Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column('param', Integer),
-    UniqueConstraint('user', 'param', name='pokken_event_achievement_param_uk'),
+    Column('event_achievement_flag', JSON), # Repeated, Integer
+    Column('event_achievement_param', JSON), # Repeated, Integer
     mysql_charset="utf8mb4",
 )
 
@@ -176,10 +134,7 @@ class PokkenProfileData(BaseData):
         if result is None:
             self.logger.error(f"Failed to update pokken profile name for user {user_id}!")
     
-    def update_profile(self, user_id: int, profile_data: Dict) -> None:
-        """
-        TODO: Find out what comes in on the SaveUserRequestData protobuf and save it!
-        """
+    def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: Dict) -> None:
         pass
 
     def get_profile(self, user_id: int) -> Optional[Row]:

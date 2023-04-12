@@ -17,6 +17,7 @@ class PokkenBase:
         self.version = 0
         self.logger = logging.getLogger("pokken")
         self.data = PokkenData(core_cfg)
+        self.SUPPORT_SET_NONE = 4294967295
 
     def handle_noop(self, request: Any) -> bytes:
         res = jackal_pb2.Response()
@@ -279,6 +280,12 @@ class PokkenBase:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_INGAME_LOG
+        return res.SerializeToString()
+
+    def handle_save_charge(self, data: jackal_pb2.Request) -> bytes:
+        res = jackal_pb2.Response()
+        res.result = 1
+        res.type = jackal_pb2.MessageType.SAVE_CHARGE
         return res.SerializeToString()
 
     def handle_matching_noop(self, data: Dict = {}, client_ip: str = "127.0.0.1") -> Dict:

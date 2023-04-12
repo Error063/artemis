@@ -158,5 +158,6 @@ cert/*
 !cert/server.pem
 config/*
 deliver/*
+*.gz
 
 dbdump-*.json

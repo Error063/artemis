@@ -55,7 +55,7 @@ class AllnetServlet:
             self.logger.error("No games detected!")
 
         for _, mod in plugins.items():
-            if hasattr(mod.index, "get_allnet_info"):
+            if hasattr(mod, "index") and hasattr(mod.index, "get_allnet_info"):
                 for code in mod.game_codes:
                     enabled, uri, host = mod.index.get_allnet_info(
                         code, self.config, self.config_folder
