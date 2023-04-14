@@ -7,6 +7,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
+from ..const import PokkenConstants
 
 # Some more of the repeated fields could probably be their own tables, for now I just did the ones that made sense to me
 # Having the profile table be this massive kinda blows for updates but w/e, **kwargs to the rescue
@@ -67,7 +68,6 @@ profile = Table(
     Column('wko_num', Integer),
     Column('timeup_win_num', Integer),
     Column('cool_ko_num', Integer),
-    Column('cool_ko_num', Integer),
     Column('perfect_ko_num', Integer),
     Column('record_flag', Integer),
     Column('continue_num', Integer),
@@ -92,7 +92,14 @@ profile = Table(
     Column('last_play_event_id', Integer), # Optional
     Column('event_achievement_flag', JSON), # Repeated, Integer
     Column('event_achievement_param', JSON), # Repeated, Integer
-    mysql_charset="utf8mb4",
+    Column('battle_num_vs_wan', Integer), # 4?
+    Column('win_vs_wan', Integer),
+    Column('battle_num_vs_lan', Integer), # 3?
+    Column('win_vs_lan', Integer),
+    Column('battle_num_vs_cpu', Integer), # 2
+    Column('win_cpu', Integer),
+    Column('battle_num_tutorial', Integer), # 1?
+    mysql_charset="utf8mb4"
 )
 
 pokemon_data = Table(
@@ -101,20 +108,22 @@ pokemon_data = Table(
     Column('id', Integer, primary_key=True, nullable=False),
     Column('user', ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
     Column('char_id', Integer, nullable=False),
-    Column('illustration_book_no', Integer, nullable=False),
-    Column('pokemon_exp', Integer, nullable=False),
-    Column('battle_num_vs_wan', Integer, nullable=False),
-    Column('win_vs_wan', Integer, nullable=False),
-    Column('battle_num_vs_lan', Integer, nullable=False),
-    Column('win_vs_lan', Integer, nullable=False),
-    Column('battle_num_vs_cpu', Integer, nullable=False),
-    Column('win_cpu', Integer, nullable=False),
-    Column('battle_all_num_tutorial', Integer, nullable=False),
-    Column('battle_num_tutorial', Integer, nullable=False),
-    Column('bp_point_atk', Integer, nullable=False),
-    Column('bp_point_res', Integer, nullable=False),
-    Column('bp_point_def', Integer, nullable=False),
-    Column('bp_point_sp', Integer, nullable=False),
+    Column('illustration_book_no', Integer),
+    Column('pokemon_exp', Integer),
+    Column('battle_num_vs_wan', Integer), # 4?
+    Column('win_vs_wan', Integer),
+    Column('battle_num_vs_lan', Integer), # 3?
+    Column('win_vs_lan', Integer),
+    Column('battle_num_vs_cpu', Integer), # 2
+    Column('win_cpu', Integer),
+    Column('battle_all_num_tutorial', Integer),
+    Column('battle_num_tutorial', Integer), # 1?
+    Column('bp_point_atk', Integer),
+    Column('bp_point_res', Integer),
+    Column('bp_point_def', Integer),
+    Column('bp_point_sp', Integer),
+    UniqueConstraint('user', 'char_id', name="pokken_pokemon_data_uk"),
+    mysql_charset="utf8mb4"
 )
 
 class PokkenProfileData(BaseData):
@@ -146,11 +155,23 @@ class PokkenProfileData(BaseData):
         if result is None: return None
         return result.fetchone()
 
-    def put_pokemon_data(self, user_id: int, pokemon_data: Dict) -> Optional[int]:
+    def put_pokemon_data(self, user_id: int, pokemon_id: int, illust_no: int, get_exp: int, atk: int, res: int, defe: int, sp: int) -> Optional[int]:
         pass
 
     def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
         pass
 
     def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
+        pass
+
+    def put_results(self, user_id: int, pokemon_id: int, match_type: int, match_result: int) -> None:
+        """
+        Records the match stats (type and win/loss) for the pokemon and profile
+        """
+        pass
+
+    def put_stats(self, user_id: int, exkos: int, wkos: int, timeout_wins: int, cool_kos: int, perfects: int, continues: int) -> None:
+        """
+        Records profile stats
+        """
         pass
