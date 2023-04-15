@@ -33,7 +33,9 @@ if __name__ == "__main__":
 
     cfg = CoreConfig()
     if path.exists(f"{args.config}/core.yaml"):
-        cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
+        cfg_dict = yaml.safe_load(open(f"{args.config}/core.yaml"))
+        cfg_dict.get('database', {})['loglevel'] = 'info'
+        cfg.update(cfg_dict)
     
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
@@ -44,7 +46,6 @@ if __name__ == "__main__":
         )
         exit(1)
 
-    cfg.update({"database": {"loglevel": "info"}}) # Force it to be info if we're doing db work
     data = Data(cfg)
     
 
