@@ -16,7 +16,8 @@ class Utils:
                 if not dir.startswith("__"):
                     try:
                         mod = importlib.import_module(f"titles.{dir}")
-                        ret[dir] = mod
+                        if hasattr(mod, "game_codes") and hasattr(mod, "index"): # Minimum required to function
+                            ret[dir] = mod
 
                     except ImportError as e:
                         logging.getLogger("core").error(f"get_all_titles: {dir} - {e}")
