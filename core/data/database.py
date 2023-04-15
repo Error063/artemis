@@ -286,8 +286,6 @@ class Data:
             self.logger.warn("Failed to get schema versions")
             return
         
-        print(all_game_versions)
-        
         all_games = Utils.get_all_titles()
         all_games_list: Dict[str, int] = {}
         for _, mod in all_games.items():
