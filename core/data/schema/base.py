@@ -47,7 +47,7 @@ class BaseData:
         res = None
 
         try:
-            self.logger.info(f"SQL Execute: {''.join(str(sql).splitlines())} || {opts}")
+            self.logger.info(f"SQL Execute: {''.join(str(sql).splitlines())}")
             res = self.conn.execute(text(sql), opts)
 
         except SQLAlchemyError as e:
