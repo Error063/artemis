@@ -293,7 +293,7 @@ class Data:
                 all_games_list[mod.game_codes[0]] = mod.current_schema_version
         
         for x in all_game_versions:
-
+            failed = False
             game = x["game"].upper()
             update_ver = int(x["version"])
             latest_ver = all_games_list.get(game, 1)
@@ -316,8 +316,10 @@ class Data:
                     result = self.base.execute(sql)
                     if result is None:
                         self.logger.error(f"Error execuing sql script for game {game} v{y}!")
-                        continue
+                        failed = True
+                        break
                 else:
                     self.logger.warning(f"Could not find script {game}_{y}_upgrade.sql")
+                    failed = True
             
-            self.base.set_schema_ver(latest_ver, game)
+            if not failed: self.base.set_schema_ver(latest_ver, game)
