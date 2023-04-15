@@ -32,7 +32,7 @@ class Data:
         self.arcade = ArcadeData(self.config, self.session)
         self.card = CardData(self.config, self.session)
         self.base = BaseData(self.config, self.session)
-        self.schema_ver_latest = 4
+        self.current_schema_version = 4
 
         log_fmt_str = "[%(asctime)s] %(levelname)s | Database | %(message)s"
         log_fmt = logging.Formatter(log_fmt_str)
@@ -84,8 +84,8 @@ class Data:
                     f"Could not load database schema from {game_dir} - {e}"
                 )
 
-        self.logger.info(f"Setting base_schema_ver to {self.schema_ver_latest}")
-        self.base.set_schema_ver(self.schema_ver_latest)
+        self.logger.info(f"Setting base_schema_ver to {self.current_schema_version}")
+        self.base.set_schema_ver(self.current_schema_version)
 
         self.logger.info(
             f"Setting user auto_incrememnt to {self.config.database.user_table_autoincrement_start}"
@@ -129,9 +129,28 @@ class Data:
 
         self.create_database()
 
-    def migrate_database(self, game: str, version: int, action: str) -> None:
+    def migrate_database(self, game: str, version: Optional[int], action: str) -> None:
         old_ver = self.base.get_schema_ver(game)
         sql = ""
+        if version is None:
+            if not game == "CORE":
+                titles = Utils.get_all_titles()
+                
+                for folder, mod in titles.items():
+                    for game_ in mod.game_codes:
+                        if not game_ == game: continue
+                        
+                        if hasattr(mod, "current_schema_version"):
+                            version = mod.current_schema_version
+                        
+                        else:
+                            self.logger.warn(f"current_schema_version not found for {folder}")
+        
+            else:
+                version = self.current_schema_version
+        
+        if version is None:
+            self.logger.warn(f"Could not determine latest version for {game}, please specify --version")
 
         if old_ver is None:
             self.logger.error(
