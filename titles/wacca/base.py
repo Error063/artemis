@@ -275,9 +275,6 @@ class WaccaBase:
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312001
         )  # Added reverse
-        self.data.item.put_item(
-            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312002
-        )  # Added reverse
 
         return UserStatusCreateResponseV2(profileId, req.username).make()
 
