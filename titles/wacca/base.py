@@ -183,8 +183,6 @@ class WaccaBase:
     def handle_user_status_login_request(self, data: Dict) -> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV1()
-        is_new_day = False
-        is_consec_day = False
         is_consec_day = True
 
         if req.userId == 0:
@@ -202,29 +200,23 @@ class WaccaBase:
             self.logger.info(f"User {req.userId} login on {req.chipId}")
             last_login_time = int(profile["last_login_date"].timestamp())
             resp.lastLoginDate = last_login_time
+            midnight_today_ts = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
 
             # If somebodies login timestamp < midnight of current day, then they are logging in for the first time today
-            if last_login_time < int(
-                datetime.now()
-                .replace(hour=0, minute=0, second=0, microsecond=0)
-                .timestamp()
-            ):
-                is_new_day = True
-                is_consec_day = True
-
-                # If somebodies login timestamp > midnight of current day + 1 day, then they broke their daily login streak
-            elif last_login_time > int(
-                (
-                    datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-                    + timedelta(days=1)
-                ).timestamp()
-            ):
+            if last_login_time < midnight_today_ts:
+                resp.firstLoginDaily = True
+            
+            # If the difference between midnight today and their last login is greater then 1 day (86400 seconds) they've broken their streak 
+            if midnight_today_ts - last_login_time > 86400:
                 is_consec_day = False
-                # else, they are simply logging in again on the same day, and we don't need to do anything for that
 
-            self.data.profile.session_login(req.userId, is_new_day, is_consec_day)
+            self.data.profile.session_login(req.userId, resp.firstLoginDaily, is_consec_day)
+            
+            if resp.firstLoginDaily:
+                # TODO: Daily bonus
+                pass
 
-            resp.firstLoginDaily = int(is_new_day)
+            # TODO: VIP dialy/monthly rewards
 
         return resp.make()
 
