@@ -27,5 +27,5 @@ CHANGE COLUMN record_date recordDate TIMESTAMP NOT NULL;
 
 ALTER TABLE mai2_item_login_bonus
 CHANGE COLUMN bonus_id bonusId INT NOT NULL,
-CHANGE COLUMN is_current isCurrent Boolean NOT NULL DEFAULT 0,
-CHANGE COLUMN is_complete isComplete Boolean NOT NULL DEFAULT 0;
+CHANGE COLUMN is_current isCurrent BOOLEAN NOT NULL DEFAULT 0,
+CHANGE COLUMN is_complete isComplete BOOLEAN NOT NULL DEFAULT 0;
