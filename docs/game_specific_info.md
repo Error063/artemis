@@ -64,8 +64,7 @@ which version is the latest, f.e. `SDBT_3_upgrade.sql`. In order to upgrade to v
 perform all previous updates as well:
 
 ```shell
-python dbutils.py --game SDBT --version 2 upgrade
-python dbutils.py --game SDBT --version 3 upgrade
+python dbutils.py --game SDBT upgrade
 ```
 
 ## crossbeats REV.
@@ -133,7 +132,7 @@ crash without it!**
 Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEZ_2_upgrade.sql`. In order to upgrade to version 2 in this case you need to perform all previous updates as well:
 
 ```shell
-python dbutils.py --game SDEZ --version 2 upgrade
+python dbutils.py --game SDEZ upgrade
 ```
 
 ## Hatsune Miku Project Diva
@@ -174,9 +173,7 @@ which version is the latest, f.e. `SBZV_4_upgrade.sql`. In order to upgrade to v
 perform all previous updates as well:
 
 ```shell
-python dbutils.py --game SBZV --version 2 upgrade
-python dbutils.py --game SBZV --version 3 upgrade
-python dbutils.py --game SBZV --version 4 upgrade
+python dbutils.py --game SBZV upgrade
 ```
 
 ## O.N.G.E.K.I.
@@ -224,9 +221,7 @@ which version is the latest, f.e. `SDDT_4_upgrade.sql`. In order to upgrade to v
 perform all previous updates as well:
 
 ```shell
-python dbutils.py --game SDDT --version 2 upgrade
-python dbutils.py --game SDDT --version 3 upgrade
-python dbutils.py --game SDDT --version 4 upgrade
+python dbutils.py --game SDDT upgrade
 ```
 
 ## Card Maker
@@ -346,6 +341,5 @@ Config file is located in `config/wacca.yaml`.
 Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDFE_3_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
 
 ```shell
-python dbutils.py --game SDFE --version 2 upgrade
-python dbutils.py --game SDFE --version 3 upgrade
+python dbutils.py --game SDFE upgrade
 ```
