@@ -71,12 +71,12 @@ map = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("map_id", Integer, nullable=False),
+    Column("mapId", Integer, nullable=False),
     Column("distance", Integer, nullable=False),
-    Column("is_lock", Boolean, nullable=False, server_default="0"),
-    Column("is_clear", Boolean, nullable=False, server_default="0"),
-    Column("is_complete", Boolean, nullable=False, server_default="0"),
-    UniqueConstraint("user", "map_id", name="mai2_item_map_uk"),
+    Column("isLock", Boolean, nullable=False, server_default="0"),
+    Column("isClear", Boolean, nullable=False, server_default="0"),
+    Column("isComplete", Boolean, nullable=False, server_default="0"),
+    UniqueConstraint("user", "mapId", name="mai2_item_map_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -89,11 +89,11 @@ login_bonus = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("bonus_id", Integer, nullable=False),
+    Column("bonusId", Integer, nullable=False),
     Column("point", Integer, nullable=False),
-    Column("is_current", Boolean, nullable=False, server_default="0"),
-    Column("is_complete", Boolean, nullable=False, server_default="0"),
-    UniqueConstraint("user", "bonus_id", name="mai2_item_login_bonus_uk"),
+    Column("isCurrent", Boolean, nullable=False, server_default="0"),
+    Column("isComplete", Boolean, nullable=False, server_default="0"),
+    UniqueConstraint("user", "bonusId", name="mai2_item_login_bonus_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -106,13 +106,15 @@ friend_season_ranking = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("season_id", Integer, nullable=False),
+    Column("seasonId", Integer, nullable=False),
     Column("point", Integer, nullable=False),
     Column("rank", Integer, nullable=False),
-    Column("reward_get", Boolean, nullable=False),
-    Column("user_name", String(8), nullable=False),
-    Column("record_date", String(255), nullable=False),
-    UniqueConstraint("user", "season_id", "user_name", name="mai2_item_login_bonus_uk"),
+    Column("rewardGet", Boolean, nullable=False),
+    Column("userName", String(8), nullable=False),
+    Column("recordDate", TIMESTAMP, nullable=False),
+    UniqueConstraint(
+        "user", "seasonId", "userName", name="mai2_item_friend_season_ranking_uk"
+    ),
     mysql_charset="utf8mb4",
 )
 
@@ -244,16 +246,16 @@ class Mai2ItemData(BaseData):
     ) -> None:
         sql = insert(login_bonus).values(
             user=user_id,
-            bonus_id=bonus_id,
+            bonusId=bonus_id,
             point=point,
-            is_current=is_current,
-            is_complete=is_complete,
+            isCurrent=is_current,
+            isComplete=is_complete,
         )
 
         conflict = sql.on_duplicate_key_update(
             point=point,
-            is_current=is_current,
-            is_complete=is_complete,
+            isCurrent=is_current,
+            isComplete=is_complete,
         )
 
         result = self.execute(conflict)
@@ -293,18 +295,18 @@ class Mai2ItemData(BaseData):
     ) -> None:
         sql = insert(map).values(
             user=user_id,
-            map_id=map_id,
+            mapId=map_id,
             distance=distance,
-            is_lock=is_lock,
-            is_clear=is_clear,
-            is_complete=is_complete,
+            isLock=is_lock,
+            isClear=is_clear,
+            isComplete=is_complete,
         )
 
         conflict = sql.on_duplicate_key_update(
             distance=distance,
-            is_lock=is_lock,
-            is_clear=is_clear,
-            is_complete=is_complete,
+            isLock=is_lock,
+            isClear=is_clear,
+            isComplete=is_complete,
         )
 
         result = self.execute(conflict)
@@ -324,7 +326,7 @@ class Mai2ItemData(BaseData):
         return result.fetchall()
 
     def get_map(self, user_id: int, map_id: int) -> Optional[Row]:
-        sql = map.select(and_(map.c.user == user_id, map.c.map_id == map_id))
+        sql = map.select(and_(map.c.user == user_id, map.c.mapId == map_id))
 
         result = self.execute(sql)
         if result is None:
@@ -341,16 +343,16 @@ class Mai2ItemData(BaseData):
     ) -> None:
         sql = insert(character).values(
             user=user_id,
-            character_id=character_id,
+            characterId=character_id,
             level=level,
             awakening=awakening,
-            use_count=use_count,
+            useCount=use_count,
         )
 
         conflict = sql.on_duplicate_key_update(
             level=level,
             awakening=awakening,
-            use_count=use_count,
+            useCount=use_count,
         )
 
         result = self.execute(conflict)
@@ -385,7 +387,25 @@ class Mai2ItemData(BaseData):
         result = self.execute(sql)
         if result is None:
             return None
-        return result.fetchone()
+        return result.fetchall()
+
+    def put_friend_season_ranking(
+        self, aime_id: int, friend_season_ranking_data: Dict
+    ) -> Optional[int]:
+        sql = insert(friend_season_ranking).values(
+            user=aime_id, **friend_season_ranking_data
+        )
+
+        conflict = sql.on_duplicate_key_update(**friend_season_ranking_data)
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(
+                f"put_friend_season_ranking: failed to insert",
+                f"friend_season_ranking! aime_id: {aime_id}"
+            )
+            return None
+        return result.lastrowid
 
     def put_favorite(
         self, user_id: int, kind: int, item_id_list: List[int]

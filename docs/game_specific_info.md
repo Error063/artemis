@@ -113,6 +113,7 @@ Config file is located in `config/cxb.yaml`.
 | 3          | maimai DX Splash PLUS   |
 | 4          | maimai DX Universe      |
 | 5          | maimai DX Universe PLUS |
+| 6          | maimai DX Festival      |
 
 ### Importer
 
@@ -125,7 +126,7 @@ python read.py --series SDEZ --version <version ID> --binfolder /path/to/game/fo
 The importer for maimai DX will import Events, Music and Tickets.
 
 **NOTE: It is required to use the importer because the game will
-crash without it!**
+crash without Events!**
 
 ### Database upgrade
 
