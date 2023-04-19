@@ -438,7 +438,7 @@ class Mai2ItemData(BaseData):
         result = self.execute(conflict)
         if result is None:
             self.logger.warn(
-                f"put_card: failed to insert card! user_id: {user_id}, kind: {kind}"
+                f"put_card: failed to insert card! user_id: {user_id}, kind: {card_kind}"
             )
             return None
         return result.lastrowid
