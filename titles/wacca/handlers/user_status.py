@@ -267,7 +267,7 @@ class UserStatusLoginResponseV3(UserStatusLoginResponseV2):
         self, is_first_login_daily: bool = False, last_login_date: int = 0
     ) -> None:
         super().__init__(is_first_login_daily, last_login_date)
-        self.unk: List = []
+        self.unk: List = [] # Ticket info, item info, message, title, voice name (not sure how they fit...)
 
     def make(self) -> Dict:
         super().make()
