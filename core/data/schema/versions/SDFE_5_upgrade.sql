@@ -1,0 +1,1 @@
+ALTER TABLE wacca_profile ADD playcount_time_free int(11) DEFAULT 0 NULL AFTER playcount_stageup;

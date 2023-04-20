@@ -941,6 +941,7 @@ class PlayType(Enum):
     PlayTypeVs = 2
     PlayTypeCoop = 3
     PlayTypeStageup = 4
+    PlayTypeTimeFree = 5
 
 
 class StageInfo:
