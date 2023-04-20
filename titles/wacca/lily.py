@@ -73,6 +73,8 @@ class WaccaLily(WaccaS):
             self.logger.info(f"No user exists for aime id {req.aimeId}")
             resp.profileStatus = ProfileStatus.ProfileRegister
             return resp.make()
+        
+        opts = self.data.profile.get_options(req.aimeId)
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
@@ -137,6 +139,9 @@ class WaccaLily(WaccaS):
 
         if self.game_config.mods.infinite_wp:
             resp.userStatus.wp = 999999
+        
+        for opt in opts:
+            resp.options.append(UserOption(opt["opt_id"], opt["value"]))
 
         return resp.make()
 

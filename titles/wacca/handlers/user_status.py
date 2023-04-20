@@ -39,12 +39,16 @@ class UserStatusGetV2Response(UserStatusGetV1Response):
     def __init__(self) -> None:
         super().__init__()
         self.userStatus: UserStatusV2 = UserStatusV2()
-        self.unknownArr: List = []
+        self.options: List[UserOption] = []
 
     def make(self) -> Dict:
         super().make()
+        opts = []
 
-        self.params.append(self.unknownArr)
+        for x in self.options:
+            opts.append(x.make())
+
+        self.params.append(opts)
 
         return super(UserStatusGetV1Response, self).make()
 
@@ -137,7 +141,7 @@ class UserStatusGetDetailResponseV2(UserStatusGetDetailResponseV1):
         self.userItems: UserItemInfoV2 = UserItemInfoV2()
         self.favorites: List[int] = []
         self.stoppedSongIds: List[int] = []
-        self.eventInfo: List[int] = []
+        self.eventInfo: List[UserEventInfo] = []
         self.gateInfo: List[GateDetailV1] = []
         self.lastSongInfo: LastSongDetail = LastSongDetail()
         self.gateTutorialFlags: List[GateTutorialFlag] = []
@@ -149,6 +153,8 @@ class UserStatusGetDetailResponseV2(UserStatusGetDetailResponseV1):
         gates = []
         friends = []
         tut_flg = []
+        evts = []
+        gacha = []
 
         for x in self.gateInfo:
             gates.append(x.make())
@@ -162,14 +168,20 @@ class UserStatusGetDetailResponseV2(UserStatusGetDetailResponseV1):
         while len(tut_flg) < 5:
             flag_id = len(tut_flg) + 1
             tut_flg.append([flag_id, 0])
+        
+        for x in self.eventInfo:
+            evts.append(x.make())
+
+        for x in self.gatchaInfo:
+            gacha.append(x.make())
 
         self.params.append(self.favorites)
         self.params.append(self.stoppedSongIds)
-        self.params.append(self.eventInfo)
+        self.params.append(evts)
         self.params.append(gates)
         self.params.append(self.lastSongInfo.make())
         self.params.append(tut_flg)
-        self.params.append(self.gatchaInfo)
+        self.params.append(gacha)
         self.params.append(friends)
 
         return super(UserStatusGetDetailResponseV1, self).make()

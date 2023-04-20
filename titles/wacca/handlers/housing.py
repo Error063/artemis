@@ -10,10 +10,10 @@ class HousingGetResponse(BaseResponse):
     def __init__(self, housingId: int) -> None:
         super().__init__()
         self.housingId: int = housingId
-        self.regionId: int = 0
+        self.isNewCab: bool = False
 
     def make(self) -> Dict:
-        self.params = [self.housingId, self.regionId]
+        self.params = [self.housingId, int(self.isNewCab)]
         return super().make()
 
 
@@ -32,8 +32,6 @@ class HousingStartRequestV1(BaseRequest):
 class HousingStartRequestV2(HousingStartRequestV1):
     def __init__(self, data: Dict) -> None:
         super(HousingStartRequestV1, self).__init__(data)
-        self.unknown0: str = self.params[0]
-        self.errorLog: str = self.params[1]
         self.creditLog: str = self.params[2]
         self.info: List[HousingInfo] = []
 

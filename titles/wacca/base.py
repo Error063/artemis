@@ -825,7 +825,7 @@ class WaccaBase:
             resp.songDetail.grades = SongDetailGradeCountsV2(counts=grades)
         else:
             resp.songDetail.grades = SongDetailGradeCountsV1(counts=grades)
-        resp.songDetail.lock_state = 1
+        resp.songDetail.lockState = 1
         return resp.make()
 
     # TODO: Coop and vs data
@@ -971,7 +971,7 @@ class WaccaBase:
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
 
         for opt in req.optsUpdated:
-            self.data.profile.update_option(user_id, opt.opt_id, opt.opt_val)
+            self.data.profile.update_option(user_id, opt.optId, opt.optVal)
 
         for update in req.datesUpdated:
             pass
