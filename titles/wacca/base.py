@@ -634,6 +634,7 @@ class WaccaBase:
             elif item.itemType == WaccaConstants.ITEM_TYPES["ticket"] and not self.game_config.mods.infinite_tickets:
                 for x in range(len(new_tickets)):
                     if new_tickets[x][1] == item.itemId:
+                        self.logger.debug(f"Remove ticket ID {new_tickets[x][0]} type {new_tickets[x][1]} from {user_id}")
                         self.data.item.spend_ticket(new_tickets[x][0])
                         new_tickets.pop(x)
                         break
@@ -657,13 +658,8 @@ class WaccaBase:
         )
 
         if self.game_config.mods.infinite_tickets:
-            new_tickets = [
-                [0, 106002, 0],
-                [1, 106002, 0],
-                [2, 106002, 0],
-                [3, 106002, 0],
-                [4, 106002, 0],
-            ]
+            for x in range(5):
+                new_tickets.append(TicketItem(x, 106002, 0))
 
         if self.game_config.mods.infinite_wp:
             current_wp = 999999
