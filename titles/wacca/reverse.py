@@ -136,6 +136,9 @@ class WaccaReverse(WaccaLilyR):
         resp.seasonalPlayModeCounts.append(
             PlayModeCounts(self.season, 4, profile["playcount_stageup"])
         )
+        resp.seasonalPlayModeCounts.append(
+            PlayModeCounts(self.season, 5, profile["playcount_time_free"])
+        )
 
         # For some fucking reason if this isn't here time play is disabled
         resp.seasonalPlayModeCounts.append(PlayModeCounts(0, 1, 1)) 
