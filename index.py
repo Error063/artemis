@@ -25,6 +25,22 @@ class HttpDispatcher(resource.Resource):
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
         self.mucha = MuchaServlet(cfg, config_dir)
+        
+        self.map_get.connect(
+            "allnet_downloadorder_ini",
+            "/dl/ini/{file}",
+            controller="allnet",
+            action="handle_dlorder_ini",
+            conditions=dict(method=["GET"]),
+        )
+
+        self.map_post.connect(
+            "allnet_downloadorder_report",
+            "/dl/report",
+            controller="allnet",
+            action="handle_dlorder_report",
+            conditions=dict(method=["POST"]),
+        )
 
         self.map_post.connect(
             "allnet_ping",
@@ -93,6 +109,7 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
             requirements=dict(game=R"S..."),
         )
+        
 
     def render_GET(self, request: Request) -> bytes:
         self.logger.debug(request.uri)

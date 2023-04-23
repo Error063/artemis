@@ -188,6 +188,11 @@ class AllnetConfig:
             self.__config, "core", "allnet", "allow_online_updates", default=False
         )
 
+    @property
+    def update_cfg_folder(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "update_cfg_folder", default=""
+        )
 
 class BillingConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:

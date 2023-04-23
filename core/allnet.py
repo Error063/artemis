@@ -10,6 +10,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA
 from Crypto.Signature import PKCS1_v1_5
 from time import strptime
+from os import path
 
 from core.config import CoreConfig
 from core.utils import Utils
@@ -191,11 +192,33 @@ class AllnetServlet:
         self.logger.info(f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}")
         resp = AllnetDownloadOrderResponse()
         
-        if not self.config.allnet.allow_online_updates:
+        if not self.config.allnet.allow_online_updates or not self.config.allnet.update_cfg_folder:
             return self.dict_to_http_form_string([vars(resp)])
 
-        else:  # TODO: Actual dlorder response
+        else:  # TODO: Keychip check
+            if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-app.ini"):
+                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver}-app.ini"
+            
+            if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-opt.ini"):
+                resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver}-opt.ini"
+            
+            self.logger.debug(f"Sending download uri {resp.uri}")
             return self.dict_to_http_form_string([vars(resp)])
+
+    def handle_dlorder_ini(self, request:Request, match: Dict) -> bytes:
+        if "file" not in match: return b""
+
+        req_file = match['file'].replace('%0A', '')
+        
+        if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
+            return open(f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb").read()
+        
+        self.logger.info(f"DL INI File {req_file} not found")
+        return b""
+
+    def handle_dlorder_report(self, request:Request, match: Dict) -> bytes:
+        self.logger.info(f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}")
+        return b""
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
@@ -419,7 +442,7 @@ class AllnetDownloadOrderRequest:
 
 
 class AllnetDownloadOrderResponse:
-    def __init__(self, stat: int = 1, serial: str = "", uri: str = "null") -> None:
+    def __init__(self, stat: int = 1, serial: str = "", uri: str = "") -> None:
         self.stat = stat
         self.serial = serial
         self.uri = uri
