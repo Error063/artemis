@@ -24,7 +24,7 @@ class IDZHandlerLoadConfigA(IDZHandlerBase):
         return ret
 
 class IDZHandlerLoadConfigB(IDZHandlerBase):
-    cmd_codes = [0x00a0] * IDZConstants.NUM_VERS
+    cmd_codes = [0x00ab, 0x00ab, 0x00a0, 0x00a0]
     rsp_codes = [0x00ac, 0x00ac, 0x00a1, 0x00a1]
     name = "load_config_b"
 

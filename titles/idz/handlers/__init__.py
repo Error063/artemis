@@ -37,3 +37,11 @@ from .update_provisional_store_rank import IDZHandlerUpdateProvisionalStoreRank
 from .load_reward_table import IDZHandlerLoadRewardTable
 
 from .save_topic import IDZHandlerSaveTopic
+
+from .save_time_attack import IDZHandlerSaveTimeAttack
+
+from .unlock_profile import IDZHandlerUnlockProfile
+
+from .update_team_points import IDZHandleUpdateTeamPoints
+
+from .update_ui_report import IDZHandleUpdateUIReport
