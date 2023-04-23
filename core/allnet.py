@@ -197,10 +197,10 @@ class AllnetServlet:
 
         else:  # TODO: Keychip check
             if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-app.ini"):
-                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver}-app.ini"
+                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-app.ini"
             
             if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-opt.ini"):
-                resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver}-opt.ini"
+                resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
             
             self.logger.debug(f"Sending download uri {resp.uri}")
             return self.dict_to_http_form_string([vars(resp)])
