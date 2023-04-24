@@ -26,6 +26,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + Lily R
     + Reverse
 
++ Pokken
+    + Final Online
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)
