@@ -71,8 +71,11 @@ class FrontendServlet(resource.Resource):
                     game_fe = game_mod.frontend(cfg, self.environment, config_dir)
                     self.game_list.append({"url": game_dir, "name": game_fe.nav_name})
                     fe_game.putChild(game_dir.encode(), game_fe)
-                except:
-                    raise
+
+                except Exception as e:
+                    self.logger.error(
+                        f"Failed to import frontend from {game_dir} because {e}"
+                    )
 
         self.environment.globals["game_list"] = self.game_list
         self.putChild(b"gate", FE_Gate(cfg, self.environment))

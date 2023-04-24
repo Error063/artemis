@@ -158,11 +158,11 @@ class Notice:
 
 class UserOption:
     def __init__(self, opt_id: int = 0, opt_val: Any = 0) -> None:
-        self.opt_id = opt_id
-        self.opt_val = opt_val
+        self.optId = opt_id
+        self.optVal = opt_val
 
     def make(self) -> List:
-        return [self.opt_id, self.opt_val]
+        return [self.optId, self.optVal]
 
 
 class UserStatusV1:
@@ -348,13 +348,35 @@ class NavigatorItem(IconItem):
 
 
 class SkillItem:
-    skill_type: int
+    skillType: int
     level: int
     flag: int
     badge: int
 
     def make(self) -> List:
-        return [self.skill_type, self.level, self.flag, self.badge]
+        return [self.skillType, self.level, self.flag, self.badge]
+
+
+class UserEventInfo:
+    def __init__(self) -> None:
+        self.eventId = 0
+        self.conditionInfo: List[UserEventConditionInfo] = []
+
+    def make(self) -> List:
+        conditions = []
+        for x in self.conditionInfo:
+            conditions.append(x.make())
+
+        return [self.eventId, conditions]
+
+
+class UserEventConditionInfo:
+    def __init__(self) -> None:
+        self.achievementCondition = 0
+        self.progress = 0
+
+    def make(self) -> List:
+        return [self.achievementCondition, self.progress]
 
 
 class UserItemInfoV1:
@@ -447,19 +469,19 @@ class UserItemInfoV3(UserItemInfoV2):
 class SongDetailClearCounts:
     def __init__(
         self,
-        play_ct: int = 0,
-        clear_ct: int = 0,
-        ml_ct: int = 0,
-        fc_ct: int = 0,
-        am_ct: int = 0,
+        playCt: int = 0,
+        clearCt: int = 0,
+        mlCt: int = 0,
+        fcCt: int = 0,
+        amCt: int = 0,
         counts: Optional[List[int]] = None,
     ) -> None:
         if counts is None:
-            self.playCt = play_ct
-            self.clearCt = clear_ct
-            self.misslessCt = ml_ct
-            self.fullComboCt = fc_ct
-            self.allMarvelousCt = am_ct
+            self.playCt = playCt
+            self.clearCt = clearCt
+            self.misslessCt = mlCt
+            self.fullComboCt = fcCt
+            self.allMarvelousCt = amCt
 
         else:
             self.playCt = counts[0]
@@ -773,8 +795,12 @@ class GateDetailV2(GateDetailV1):
 
 
 class GachaInfo:
+    def __init__(self, gacha_id: int = 0, gacha_roll_ct: int = 0) -> None:
+        self.gachaId = gacha_id
+        self.rollCt = gacha_roll_ct
+
     def make(self) -> List:
-        return []
+        return [self.gachaId, self.rollCt]
 
 
 class LastSongDetail:
@@ -808,9 +834,32 @@ class LastSongDetail:
         ]
 
 
-class FriendDetail:
+class FriendScoreDetail:
+    def __init__(
+        self, song_id: int = 0, difficulty: int = 1, best_score: int = 0
+    ) -> None:
+        self.songId = song_id
+        self.difficulty = difficulty
+        self.bestScore = best_score
+
     def make(self) -> List:
-        return []
+        return [self.songId, self.difficulty, self.bestScore]
+
+
+class FriendDetail:
+    def __init__(self, user_id: int = 0, username: str = "") -> None:
+        self.friendId = user_id
+        self.friendUsername = username
+        self.friendUserType = 1
+        self.friendScoreDetail: List[FriendScoreDetail] = []
+
+    def make(self) -> List:
+        scores = []
+
+        for x in self.friendScoreDetail:
+            scores.append(x.make())
+
+        return [self.friendId, self.friendUsername, self.friendUserType, scores]
 
 
 class LoginBonusInfo:
@@ -894,6 +943,7 @@ class PlayType(Enum):
     PlayTypeVs = 2
     PlayTypeCoop = 3
     PlayTypeStageup = 4
+    PlayTypeTimeFree = 5
 
 
 class StageInfo:
@@ -942,7 +992,7 @@ class MusicUpdateDetailV1:
         self.score = 0
         self.lowestMissCount = 0
         self.maxSkillPts = 0
-        self.lock_state = 0
+        self.lockState = 0
 
     def make(self) -> List:
         return [
@@ -954,7 +1004,7 @@ class MusicUpdateDetailV1:
             self.score,
             self.lowestMissCount,
             self.maxSkillPts,
-            self.lock_state,
+            self.lockState,
         ]
 
 

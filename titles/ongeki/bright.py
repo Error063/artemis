@@ -97,7 +97,7 @@ class OngekiBright(OngekiBase):
                 "userId": data["userId"],
                 "length": 0,
                 "nextIndex": 0,
-                "userCharacterList": []
+                "userCharacterList": [],
             }
 
         max_ct = data["maxCount"]
@@ -548,7 +548,7 @@ class OngekiBright(OngekiBase):
             "returnCode": 1,
             "orderId": 0,
             "serialId": "11111111111111111111",
-            "apiName": "CMUpsertUserPrintPlaylogApi"
+            "apiName": "CMUpsertUserPrintPlaylogApi",
         }
 
     def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
@@ -556,7 +556,7 @@ class OngekiBright(OngekiBase):
             "returnCode": 1,
             "orderId": 0,
             "serialId": "11111111111111111111",
-            "apiName": "CMUpsertUserPrintlogApi"
+            "apiName": "CMUpsertUserPrintlogApi",
         }
 
     def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:

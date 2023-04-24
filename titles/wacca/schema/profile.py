@@ -7,6 +7,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
+from ..handlers.helpers import PlayType
 
 profile = Table(
     "wacca_profile",
@@ -40,6 +41,7 @@ profile = Table(
     Column("playcount_multi_vs", Integer, server_default="0"),
     Column("playcount_multi_coop", Integer, server_default="0"),
     Column("playcount_stageup", Integer, server_default="0"),
+    Column("playcount_time_free", Integer, server_default="0"),
     Column("friend_view_1", Integer),
     Column("friend_view_2", Integer),
     Column("friend_view_3", Integer),
@@ -160,17 +162,20 @@ class WaccaProfileData(BaseData):
     ) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             playcount_single=profile.c.playcount_single + 1
-            if play_type == 1
+            if play_type == PlayType.PlayTypeSingle.value
             else profile.c.playcount_single,
             playcount_multi_vs=profile.c.playcount_multi_vs + 1
-            if play_type == 2
+            if play_type == PlayType.PlayTypeVs.value
             else profile.c.playcount_multi_vs,
             playcount_multi_coop=profile.c.playcount_multi_coop + 1
-            if play_type == 3
+            if play_type == PlayType.PlayTypeCoop.value
             else profile.c.playcount_multi_coop,
             playcount_stageup=profile.c.playcount_stageup + 1
-            if play_type == 4
+            if play_type == PlayType.PlayTypeStageup.value
             else profile.c.playcount_stageup,
+            playcount_time_free=profile.c.playcount_time_free + 1
+            if play_type == PlayType.PlayTypeTimeFree.value
+            else profile.c.playcount_time_free,
             last_game_ver=game_version,
         )
 

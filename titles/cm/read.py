@@ -80,7 +80,7 @@ class CardMakerReader(BaseReader):
             for dir in data_dirs:
                 self.read_chuni_card(f"{dir}/CHU/card")
                 self.read_chuni_gacha(f"{dir}/CHU/gacha")
-
+                self.read_mai2_card(f"{dir}/MAI/card")
                 self.read_ongeki_gacha(f"{dir}/MU3/gacha")
 
     def read_chuni_card(self, base_dir: str) -> None:
@@ -90,7 +90,7 @@ class CardMakerReader(BaseReader):
             "v2_00": ChuniConstants.VER_CHUNITHM_NEW,
             "v2_05": ChuniConstants.VER_CHUNITHM_NEW_PLUS,
             # Chunithm SUN, ignore for now
-            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1
+            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1,
         }
 
         for root, dirs, files in os.walk(base_dir):
@@ -206,6 +206,7 @@ class CardMakerReader(BaseReader):
             "1.15": Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS,
             "1.20": Mai2Constants.VER_MAIMAI_DX_UNIVERSE,
             "1.25": Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS,
+            "1.30": Mai2Constants.VER_MAIMAI_DX_FESTIVAL,
         }
 
         for root, dirs, files in os.walk(base_dir):

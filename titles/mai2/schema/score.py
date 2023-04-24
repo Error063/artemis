@@ -25,6 +25,7 @@ best_score = Table(
     Column("syncStatus", Integer),
     Column("deluxscoreMax", Integer),
     Column("scoreRank", Integer),
+    Column("extNum1", Integer, server_default="0"),
     UniqueConstraint("user", "musicId", "level", name="mai2_score_best_uk"),
     mysql_charset="utf8mb4",
 )
@@ -143,6 +144,7 @@ playlog = Table(
     Column("isNewFree", Boolean),
     Column("extNum1", Integer),
     Column("extNum2", Integer),
+    Column("extNum4", Integer, server_default="0"),
     Column("trialPlayAchievement", Integer),
     mysql_charset="utf8mb4",
 )

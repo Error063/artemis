@@ -49,8 +49,8 @@ class ChuniNew(ChuniBase):
                 "matchEndTime": match_end,
                 "matchTimeLimit": 99,
                 "matchErrorLimit": 9999,
-                "romVersion": "2.00.00",
-                "dataVersion": "2.00.00",
+                "romVersion": self.game_cfg.version.version(self.version)["rom"],
+                "dataVersion": self.game_cfg.version.version(self.version)["data"],
                 "matchingUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "matchingUriX": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
@@ -269,10 +269,10 @@ class ChuniNew(ChuniBase):
             tmp = user_print_list[x]._asdict()
             print_list.append(tmp["cardId"])
 
-            if len(user_print_list) >= max_ct:
+            if len(print_list) >= max_ct:
                 break
 
-        if len(user_print_list) >= max_ct:
+        if len(print_list) >= max_ct:
             next_idx = next_idx + max_ct
         else:
             next_idx = -1
@@ -454,9 +454,7 @@ class ChuniNew(ChuniBase):
 
         # set the card print state to success and use the orderId as the key
         self.data.item.put_user_print_state(
-            user_id,
-            id=upsert["orderId"],
-            hasCompleted=True
+            user_id, id=upsert["orderId"], hasCompleted=True
         )
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintSubtractApi"}
@@ -467,10 +465,6 @@ class ChuniNew(ChuniBase):
 
         # set the card print state to success and use the orderId as the key
         for order_id in order_ids:
-            self.data.item.put_user_print_state(
-                user_id,
-                id=order_id,
-                hasCompleted=True
-            )
+            self.data.item.put_user_print_state(user_id, id=order_id, hasCompleted=True)
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintCancelApi"}

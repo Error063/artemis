@@ -32,6 +32,7 @@ allnet:
   loglevel: "info"
   port: 80
   allow_online_updates: False
+  update_cfg_folder: ""
 
 billing:
   port: 8443

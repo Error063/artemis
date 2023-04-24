@@ -1,0 +1,11 @@
+server:
+  enable: True
+  loglevel: "info"
+  hostname: ""
+  news: ""
+  aes_key: ""
+
+ports:
+  userdb: 10000
+  match: 10010
+  echo: 10020

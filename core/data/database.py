@@ -1,5 +1,5 @@
 import logging, coloredlogs
-from typing import Optional
+from typing import Optional, Dict, List
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import create_engine
@@ -32,7 +32,7 @@ class Data:
         self.arcade = ArcadeData(self.config, self.session)
         self.card = CardData(self.config, self.session)
         self.base = BaseData(self.config, self.session)
-        self.schema_ver_latest = 4
+        self.current_schema_version = 4
 
         log_fmt_str = "[%(asctime)s] %(levelname)s | Database | %(message)s"
         log_fmt = logging.Formatter(log_fmt_str)
@@ -71,7 +71,9 @@ class Data:
         games = Utils.get_all_titles()
         for game_dir, game_mod in games.items():
             try:
-                if hasattr(game_mod, "database") and hasattr(game_mod, "current_schema_version"):
+                if hasattr(game_mod, "database") and hasattr(
+                    game_mod, "current_schema_version"
+                ):
                     game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
@@ -84,8 +86,8 @@ class Data:
                     f"Could not load database schema from {game_dir} - {e}"
                 )
 
-        self.logger.info(f"Setting base_schema_ver to {self.schema_ver_latest}")
-        self.base.set_schema_ver(self.schema_ver_latest)
+        self.logger.info(f"Setting base_schema_ver to {self.current_schema_version}")
+        self.base.set_schema_ver(self.current_schema_version)
 
         self.logger.info(
             f"Setting user auto_incrememnt to {self.config.database.user_table_autoincrement_start}"
@@ -129,9 +131,32 @@ class Data:
 
         self.create_database()
 
-    def migrate_database(self, game: str, version: int, action: str) -> None:
+    def migrate_database(self, game: str, version: Optional[int], action: str) -> None:
         old_ver = self.base.get_schema_ver(game)
         sql = ""
+        if version is None:
+            if not game == "CORE":
+                titles = Utils.get_all_titles()
+
+                for folder, mod in titles.items():
+                    if not mod.game_codes[0] == game:
+                        continue
+
+                    if hasattr(mod, "current_schema_version"):
+                        version = mod.current_schema_version
+
+                    else:
+                        self.logger.warn(
+                            f"current_schema_version not found for {folder}"
+                        )
+
+            else:
+                version = self.current_schema_version
+
+        if version is None:
+            self.logger.warn(
+                f"Could not determine latest version for {game}, please specify --version"
+            )
 
         if old_ver is None:
             self.logger.error(
@@ -166,7 +191,7 @@ class Data:
                 if result is None:
                     self.logger.error("Error execuing sql script!")
                     return None
-        
+
         else:
             for x in range(old_ver, version, -1):
                 if not os.path.exists(
@@ -263,17 +288,48 @@ class Data:
                 self.user.delete_user(user["id"])
 
     def autoupgrade(self) -> None:
-        all_games = self.base.get_all_schema_vers()
-        if all_games is None:
+        all_game_versions = self.base.get_all_schema_vers()
+        if all_game_versions is None:
             self.logger.warn("Failed to get schema versions")
-        
-        for x in all_games:
+            return
+
+        all_games = Utils.get_all_titles()
+        all_games_list: Dict[str, int] = {}
+        for _, mod in all_games.items():
+            if hasattr(mod, "current_schema_version"):
+                all_games_list[mod.game_codes[0]] = mod.current_schema_version
+
+        for x in all_game_versions:
+            failed = False
             game = x["game"].upper()
-            update_ver = 1
-            for y in range(2, 100):
+            update_ver = int(x["version"])
+            latest_ver = all_games_list.get(game, 1)
+            if game == "CORE":
+                latest_ver = self.current_schema_version
+
+            if update_ver == latest_ver:
+                self.logger.info(f"{game} is already latest version")
+                continue
+
+            for y in range(update_ver + 1, latest_ver + 1):
                 if os.path.exists(f"core/data/schema/versions/{game}_{y}_upgrade.sql"):
-                    update_ver = y
+                    with open(
+                        f"core/data/schema/versions/{game}_{y}_upgrade.sql",
+                        "r",
+                        encoding="utf-8",
+                    ) as f:
+                        sql = f.read()
+
+                    result = self.base.execute(sql)
+                    if result is None:
+                        self.logger.error(
+                            f"Error execuing sql script for game {game} v{y}!"
+                        )
+                        failed = True
+                        break
                 else:
-                    break
-        
-            self.migrate_database(game, update_ver, "upgrade")
+                    self.logger.warning(f"Could not find script {game}_{y}_upgrade.sql")
+                    failed = True
+
+            if not failed:
+                self.base.set_schema_ver(latest_ver, game)

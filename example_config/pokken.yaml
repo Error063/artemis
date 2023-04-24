@@ -6,3 +6,4 @@ server:
   port_stun: 9001
   port_turn: 9002
   port_admission: 9003
+  auto_register: True

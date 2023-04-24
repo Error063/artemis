@@ -9,8 +9,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + Crossbeats Rev
     + All versions + omnimix
 
-+ Maimai
-    + All versions up to Universe Plus
++ maimai DX
+    + All versions up to Festival
 
 + Hatsune Miku Arcade
     + All versions
@@ -26,6 +26,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + Lily R
     + Reverse
 
++ Pokken
+    + Final Online
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)

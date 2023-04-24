@@ -135,8 +135,7 @@ if __name__ == "__main__":
 
     for dir, mod in titles.items():
         if args.series in mod.game_codes:
-            handler = mod.reader(config, args.version,
-                                 bin_arg, opt_arg, args.extra)
+            handler = mod.reader(config, args.version, bin_arg, opt_arg, args.extra)
             handler.read()
 
     logger.info("Done")

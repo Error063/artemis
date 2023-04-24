@@ -47,7 +47,7 @@ class BaseData:
         res = None
 
         try:
-            self.logger.info(f"SQL Execute: {''.join(str(sql).splitlines())} || {opts}")
+            self.logger.info(f"SQL Execute: {''.join(str(sql).splitlines())}")
             res = self.conn.execute(text(sql), opts)
 
         except SQLAlchemyError as e:
@@ -81,7 +81,7 @@ class BaseData:
         Generate a random 5-7 digit id
         """
         return randrange(10000, 9999999)
-    
+
     def get_all_schema_vers(self) -> Optional[List[Row]]:
         sql = select(schema_ver)
 
