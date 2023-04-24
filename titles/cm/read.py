@@ -90,7 +90,7 @@ class CardMakerReader(BaseReader):
             "v2_00": ChuniConstants.VER_CHUNITHM_NEW,
             "v2_05": ChuniConstants.VER_CHUNITHM_NEW_PLUS,
             # Chunithm SUN, ignore for now
-            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1
+            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1,
         }
 
         for root, dirs, files in os.walk(base_dir):

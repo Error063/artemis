@@ -5,7 +5,8 @@ from core.config import CoreConfig
 from ..config import IDZConfig
 from ..const import IDZConstants
 
-class IDZHandlerBase():
+
+class IDZHandlerBase:
     name = "generic"
     cmd_codes = [0x0000] * IDZConstants.NUM_VERS
     rsp_codes = [0x0001] * IDZConstants.NUM_VERS
@@ -18,7 +19,7 @@ class IDZHandlerBase():
         self.game = IDZConstants.GAME_CODE
         self.version = version
         self.size = 0x30
-    
+
     def handle(self, data: bytes) -> bytearray:
         ret = bytearray([0] * self.size)
         struct.pack_into("<H", ret, 0x0, self.rsp_codes[self.version])

@@ -81,7 +81,7 @@ class BaseData:
         Generate a random 5-7 digit id
         """
         return randrange(10000, 9999999)
-    
+
     def get_all_schema_vers(self) -> Optional[List[Row]]:
         sql = select(schema_ver)
 

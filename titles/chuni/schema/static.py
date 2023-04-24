@@ -200,7 +200,9 @@ class ChuniStaticData(BaseData):
         return result.lastrowid
 
     def get_login_bonus(
-        self, version: int, preset_id: int,
+        self,
+        version: int,
+        preset_id: int,
     ) -> Optional[List[Row]]:
         sql = login_bonus.select(
             and_(

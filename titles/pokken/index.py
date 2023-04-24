@@ -114,19 +114,19 @@ class PokkenServlet(resource.Resource):
         endpoint = jackal_pb2.MessageType.DESCRIPTOR.values_by_number[
             pokken_request.type
         ].name.lower()
-        
+
         self.logger.debug(pokken_request)
 
         handler = getattr(self.base, f"handle_{endpoint}", None)
         if handler is None:
             self.logger.warn(f"No handler found for message type {endpoint}")
             return self.base.handle_noop(pokken_request)
-        
+
         self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
-        
+
         ret = handler(pokken_request)
         return ret
-    
+
     def handle_matching(self, request: Request) -> bytes:
         content = request.content.getvalue()
         client_ip = Utils.get_ip_addr(request)
@@ -135,26 +135,37 @@ class PokkenServlet(resource.Resource):
             self.logger.info("Empty matching request")
             return json.dumps(self.base.handle_matching_noop()).encode()
 
-        json_content = ast.literal_eval(content.decode().replace('null', 'None').replace('true', 'True').replace('false', 'False'))
+        json_content = ast.literal_eval(
+            content.decode()
+            .replace("null", "None")
+            .replace("true", "True")
+            .replace("false", "False")
+        )
         self.logger.info(f"Matching {json_content['call']} request")
         self.logger.debug(json_content)
 
-        handler = getattr(self.base, f"handle_matching_{inflection.underscore(json_content['call'])}", None)
+        handler = getattr(
+            self.base,
+            f"handle_matching_{inflection.underscore(json_content['call'])}",
+            None,
+        )
         if handler is None:
-            self.logger.warn(f"No handler found for message type {json_content['call']}")
+            self.logger.warn(
+                f"No handler found for message type {json_content['call']}"
+            )
             return json.dumps(self.base.handle_matching_noop()).encode()
-        
+
         ret = handler(json_content, client_ip)
-        
+
         if ret is None:
-            ret = {}        
+            ret = {}
         if "result" not in ret:
             ret["result"] = "true"
         if "data" not in ret:
             ret["data"] = {}
         if "timestamp" not in ret:
             ret["timestamp"] = int(datetime.now().timestamp() * 1000)
-        
+
         self.logger.debug(f"Response {ret}")
 
         return json.dumps(ret).encode()

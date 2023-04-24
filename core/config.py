@@ -194,6 +194,7 @@ class AllnetConfig:
             self.__config, "core", "allnet", "update_cfg_folder", default=""
         )
 
+
 class BillingConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
         self.__config = parent_config

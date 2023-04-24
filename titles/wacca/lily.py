@@ -73,7 +73,7 @@ class WaccaLily(WaccaS):
             self.logger.info(f"No user exists for aime id {req.aimeId}")
             resp.profileStatus = ProfileStatus.ProfileRegister
             return resp.make()
-        
+
         opts = self.data.profile.get_options(req.aimeId)
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
@@ -139,7 +139,7 @@ class WaccaLily(WaccaS):
 
         if self.game_config.mods.infinite_wp:
             resp.userStatus.wp = 999999
-        
+
         for opt in opts:
             resp.options.append(UserOption(opt["opt_id"], opt["value"]))
 
@@ -165,17 +165,23 @@ class WaccaLily(WaccaS):
             self.logger.info(f"User {req.userId} login on {req.chipId}")
             last_login_time = int(profile["last_login_date"].timestamp())
             resp.lastLoginDate = last_login_time
-            midnight_today_ts = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+            midnight_today_ts = int(
+                datetime.now()
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .timestamp()
+            )
 
             # If somebodies login timestamp < midnight of current day, then they are logging in for the first time today
             if last_login_time < midnight_today_ts:
                 resp.firstLoginDaily = True
-            
-            # If the difference between midnight today and their last login is greater then 1 day (86400 seconds) they've broken their streak 
+
+            # If the difference between midnight today and their last login is greater then 1 day (86400 seconds) they've broken their streak
             if midnight_today_ts - last_login_time > 86400:
                 is_consec_day = False
 
-            self.data.profile.session_login(req.userId, resp.firstLoginDaily, is_consec_day)
+            self.data.profile.session_login(
+                req.userId, resp.firstLoginDaily, is_consec_day
+            )
             resp.vipInfo.pageYear = datetime.now().year
             resp.vipInfo.pageMonth = datetime.now().month
             resp.vipInfo.pageDay = datetime.now().day

@@ -38,7 +38,7 @@ class Mai2Servlet:
             Mai2SplashPlus,
             Mai2Universe,
             Mai2UniversePlus,
-            Mai2Festival
+            Mai2Festival,
         ]
 
         self.logger = logging.getLogger("mai2")
@@ -134,9 +134,7 @@ class Mai2Servlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(
-            f"v{version} {endpoint} request from {client_ip}"
-        )
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"

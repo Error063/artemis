@@ -200,18 +200,24 @@ class WaccaBase:
             self.logger.info(f"User {req.userId} login on {req.chipId}")
             last_login_time = int(profile["last_login_date"].timestamp())
             resp.lastLoginDate = last_login_time
-            midnight_today_ts = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+            midnight_today_ts = int(
+                datetime.now()
+                .replace(hour=0, minute=0, second=0, microsecond=0)
+                .timestamp()
+            )
 
             # If somebodies login timestamp < midnight of current day, then they are logging in for the first time today
             if last_login_time < midnight_today_ts:
                 resp.firstLoginDaily = True
-            
-            # If the difference between midnight today and their last login is greater then 1 day (86400 seconds) they've broken their streak 
+
+            # If the difference between midnight today and their last login is greater then 1 day (86400 seconds) they've broken their streak
             if midnight_today_ts - last_login_time > 86400:
                 is_consec_day = False
 
-            self.data.profile.session_login(req.userId, resp.firstLoginDaily, is_consec_day)
-            
+            self.data.profile.session_login(
+                req.userId, resp.firstLoginDaily, is_consec_day
+            )
+
             if resp.firstLoginDaily:
                 # TODO: Daily bonus
                 pass
@@ -624,17 +630,25 @@ class WaccaBase:
             new_tickets.append([ticket["id"], ticket["ticket_id"], 9999999999])
 
         for item in req.itemsUsed:
-            if item.itemType == WaccaConstants.ITEM_TYPES["wp"] and not self.game_config.mods.infinite_wp:
+            if (
+                item.itemType == WaccaConstants.ITEM_TYPES["wp"]
+                and not self.game_config.mods.infinite_wp
+            ):
                 if current_wp >= item.quantity:
                     current_wp -= item.quantity
                     self.data.profile.spend_wp(req.profileId, item.quantity)
                 else:
                     return BaseResponse().make()
 
-            elif item.itemType == WaccaConstants.ITEM_TYPES["ticket"] and not self.game_config.mods.infinite_tickets:
+            elif (
+                item.itemType == WaccaConstants.ITEM_TYPES["ticket"]
+                and not self.game_config.mods.infinite_tickets
+            ):
                 for x in range(len(new_tickets)):
                     if new_tickets[x][1] == item.itemId:
-                        self.logger.debug(f"Remove ticket ID {new_tickets[x][0]} type {new_tickets[x][1]} from {user_id}")
+                        self.logger.debug(
+                            f"Remove ticket ID {new_tickets[x][0]} type {new_tickets[x][1]} from {user_id}"
+                        )
                         self.data.item.spend_ticket(new_tickets[x][0])
                         new_tickets.pop(x)
                         break
@@ -865,7 +879,10 @@ class WaccaBase:
         user_id = profile["user"]
         resp.currentWp = profile["wp"]
 
-        if req.purchaseType == PurchaseType.PurchaseTypeWP and not self.game_config.mods.infinite_wp:
+        if (
+            req.purchaseType == PurchaseType.PurchaseTypeWP
+            and not self.game_config.mods.infinite_wp
+        ):
             resp.currentWp -= req.cost
             self.data.profile.spend_wp(req.profileId, req.cost)
 
@@ -1055,11 +1072,18 @@ class WaccaBase:
                 ):
                     if item.quantity > WaccaConstants.Difficulty.HARD.value:
                         old_score = self.data.score.get_best_score(
-                        user_id, item.itemId, item.quantity
-                    )
+                            user_id, item.itemId, item.quantity
+                        )
                     if not old_score:
                         self.data.score.put_best_score(
-                            user_id, item.itemId, item.quantity, 0, [0] * 5, [0] * 13, 0, 0
+                            user_id,
+                            item.itemId,
+                            item.quantity,
+                            0,
+                            [0] * 5,
+                            [0] * 13,
+                            0,
+                            0,
                         )
 
                     if item.quantity == 0:

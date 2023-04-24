@@ -168,7 +168,7 @@ class UserStatusGetDetailResponseV2(UserStatusGetDetailResponseV1):
         while len(tut_flg) < 5:
             flag_id = len(tut_flg) + 1
             tut_flg.append([flag_id, 0])
-        
+
         for x in self.eventInfo:
             evts.append(x.make())
 
@@ -267,7 +267,9 @@ class UserStatusLoginResponseV3(UserStatusLoginResponseV2):
         self, is_first_login_daily: bool = False, last_login_date: int = 0
     ) -> None:
         super().__init__(is_first_login_daily, last_login_date)
-        self.unk: List = [] # Ticket info, item info, message, title, voice name (not sure how they fit...)
+        self.unk: List = (
+            []
+        )  # Ticket info, item info, message, title, voice name (not sure how they fit...)
 
     def make(self) -> Dict:
         super().make()

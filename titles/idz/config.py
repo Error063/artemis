@@ -46,15 +46,21 @@ class IDZPortsConfig:
 
     @property
     def userdb(self) -> int:
-        return CoreConfig.get_config_field(self.__config, "idz", "ports", "userdb", default=10000)
+        return CoreConfig.get_config_field(
+            self.__config, "idz", "ports", "userdb", default=10000
+        )
 
     @property
     def match(self) -> int:
-        return CoreConfig.get_config_field(self.__config, "idz", "ports", "match", default=10010)
+        return CoreConfig.get_config_field(
+            self.__config, "idz", "ports", "match", default=10010
+        )
 
     @property
     def echo(self) -> int:
-        return CoreConfig.get_config_field(self.__config, "idz", "ports", "echo", default=10020)
+        return CoreConfig.get_config_field(
+            self.__config, "idz", "ports", "echo", default=10020
+        )
 
 
 class IDZConfig(dict):

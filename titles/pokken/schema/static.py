@@ -8,5 +8,6 @@ from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
 
+
 class PokkenStaticData(BaseData):
     pass

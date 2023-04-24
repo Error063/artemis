@@ -101,9 +101,7 @@ class CxbServlet(resource.Resource):
                     f"Ready on ports {self.game_cfg.server.port} & {self.game_cfg.server.port_secure}"
                 )
             else:
-                self.logger.info(
-                    f"Ready on port {self.game_cfg.server.port}"
-                )
+                self.logger.info(f"Ready on port {self.game_cfg.server.port}")
 
     def render_POST(self, request: Request):
         version = 0

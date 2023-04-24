@@ -366,7 +366,7 @@ class UserEventInfo:
         conditions = []
         for x in self.conditionInfo:
             conditions.append(x.make())
-        
+
         return [self.eventId, conditions]
 
 
@@ -374,7 +374,7 @@ class UserEventConditionInfo:
     def __init__(self) -> None:
         self.achievementCondition = 0
         self.progress = 0
-    
+
     def make(self) -> List:
         return [self.achievementCondition, self.progress]
 
@@ -835,11 +835,13 @@ class LastSongDetail:
 
 
 class FriendScoreDetail:
-    def __init__(self, song_id: int = 0, difficulty: int = 1, best_score: int = 0) -> None:
+    def __init__(
+        self, song_id: int = 0, difficulty: int = 1, best_score: int = 0
+    ) -> None:
         self.songId = song_id
         self.difficulty = difficulty
         self.bestScore = best_score
-    
+
     def make(self) -> List:
         return [self.songId, self.difficulty, self.bestScore]
 

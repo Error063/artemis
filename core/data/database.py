@@ -71,7 +71,9 @@ class Data:
         games = Utils.get_all_titles()
         for game_dir, game_mod in games.items():
             try:
-                if hasattr(game_mod, "database") and hasattr(game_mod, "current_schema_version"):
+                if hasattr(game_mod, "database") and hasattr(
+                    game_mod, "current_schema_version"
+                ):
                     game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
@@ -135,21 +137,26 @@ class Data:
         if version is None:
             if not game == "CORE":
                 titles = Utils.get_all_titles()
-                
+
                 for folder, mod in titles.items():
-                    if not mod.game_codes[0] == game: continue
-                    
+                    if not mod.game_codes[0] == game:
+                        continue
+
                     if hasattr(mod, "current_schema_version"):
                         version = mod.current_schema_version
-                    
+
                     else:
-                        self.logger.warn(f"current_schema_version not found for {folder}")
-        
+                        self.logger.warn(
+                            f"current_schema_version not found for {folder}"
+                        )
+
             else:
                 version = self.current_schema_version
-        
+
         if version is None:
-            self.logger.warn(f"Could not determine latest version for {game}, please specify --version")
+            self.logger.warn(
+                f"Could not determine latest version for {game}, please specify --version"
+            )
 
         if old_ver is None:
             self.logger.error(
@@ -184,7 +191,7 @@ class Data:
                 if result is None:
                     self.logger.error("Error execuing sql script!")
                     return None
-        
+
         else:
             for x in range(old_ver, version, -1):
                 if not os.path.exists(
@@ -285,13 +292,13 @@ class Data:
         if all_game_versions is None:
             self.logger.warn("Failed to get schema versions")
             return
-        
+
         all_games = Utils.get_all_titles()
         all_games_list: Dict[str, int] = {}
         for _, mod in all_games.items():
             if hasattr(mod, "current_schema_version"):
                 all_games_list[mod.game_codes[0]] = mod.current_schema_version
-        
+
         for x in all_game_versions:
             failed = False
             game = x["game"].upper()
@@ -299,27 +306,30 @@ class Data:
             latest_ver = all_games_list.get(game, 1)
             if game == "CORE":
                 latest_ver = self.current_schema_version
-            
-            if update_ver == latest_ver: 
+
+            if update_ver == latest_ver:
                 self.logger.info(f"{game} is already latest version")
                 continue
-            
+
             for y in range(update_ver + 1, latest_ver + 1):
                 if os.path.exists(f"core/data/schema/versions/{game}_{y}_upgrade.sql"):
                     with open(
-                    f"core/data/schema/versions/{game}_{y}_upgrade.sql",
-                    "r",
-                    encoding="utf-8",
+                        f"core/data/schema/versions/{game}_{y}_upgrade.sql",
+                        "r",
+                        encoding="utf-8",
                     ) as f:
                         sql = f.read()
 
                     result = self.base.execute(sql)
                     if result is None:
-                        self.logger.error(f"Error execuing sql script for game {game} v{y}!")
+                        self.logger.error(
+                            f"Error execuing sql script for game {game} v{y}!"
+                        )
                         failed = True
                         break
                 else:
                     self.logger.warning(f"Could not find script {game}_{y}_upgrade.sql")
                     failed = True
-            
-            if not failed: self.base.set_schema_ver(latest_ver, game)
+
+            if not failed:
+                self.base.set_schema_ver(latest_ver, game)

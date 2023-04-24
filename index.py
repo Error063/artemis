@@ -25,7 +25,7 @@ class HttpDispatcher(resource.Resource):
         self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
         self.mucha = MuchaServlet(cfg, config_dir)
-        
+
         self.map_get.connect(
             "allnet_downloadorder_ini",
             "/dl/ini/{file}",
@@ -109,7 +109,6 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
             requirements=dict(game=R"S..."),
         )
-        
 
     def render_GET(self, request: Request) -> bytes:
         self.logger.debug(request.uri)

@@ -299,9 +299,11 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_detail(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(detail).where(
-            and_(detail.c.user == user_id, detail.c.version <= version)
-        ).order_by(detail.c.version.desc())
+        sql = (
+            select(detail)
+            .where(and_(detail.c.user == user_id, detail.c.version <= version))
+            .order_by(detail.c.version.desc())
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -324,9 +326,11 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_ghost(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(ghost).where(
-            and_(ghost.c.user == user_id, ghost.c.version_int <= version)
-        ).order_by(ghost.c.version.desc())
+        sql = (
+            select(ghost)
+            .where(and_(ghost.c.user == user_id, ghost.c.version_int <= version))
+            .order_by(ghost.c.version.desc())
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -349,9 +353,11 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_extend(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(extend).where(
-            and_(extend.c.user == user_id, extend.c.version <= version)
-        ).order_by(extend.c.version.desc())
+        sql = (
+            select(extend)
+            .where(and_(extend.c.user == user_id, extend.c.version <= version))
+            .order_by(extend.c.version.desc())
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -374,9 +380,11 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_option(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(option).where(
-            and_(option.c.user == user_id, option.c.version <= version)
-        ).order_by(option.c.version.desc())
+        sql = (
+            select(option)
+            .where(and_(option.c.user == user_id, option.c.version <= version))
+            .order_by(option.c.version.desc())
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -399,9 +407,11 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
 
     def get_profile_rating(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(rating).where(
-            and_(rating.c.user == user_id, rating.c.version <= version)
-        ).order_by(rating.c.version.desc())
+        sql = (
+            select(rating)
+            .where(and_(rating.c.user == user_id, rating.c.version <= version))
+            .order_by(rating.c.version.desc())
+        )
 
         result = self.execute(sql)
         if result is None:

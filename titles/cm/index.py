@@ -109,9 +109,7 @@ class CardMakerServlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(
-            f"v{version} {endpoint} request from {client_ip}"
-        )
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"

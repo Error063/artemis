@@ -141,7 +141,7 @@ class WaccaReverse(WaccaLilyR):
         )
 
         # For some fucking reason if this isn't here time play is disabled
-        resp.seasonalPlayModeCounts.append(PlayModeCounts(0, 1, 1)) 
+        resp.seasonalPlayModeCounts.append(PlayModeCounts(0, 1, 1))
 
         for opt in profile_options:
             resp.options.append(UserOption(opt["opt_id"], opt["value"]))

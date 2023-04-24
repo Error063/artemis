@@ -4,15 +4,16 @@ from .base import IDZHandlerBase
 from core.config import CoreConfig
 from ..config import IDZConfig
 
+
 class IDZHandlerLoadGhost(IDZHandlerBase):
-    cmd_codes = [0x00a0, 0x00a0, 0x0095, 0x0095]
-    rsp_codes = [0x00a1, 0x00a1, 0x0096, 0x0096]
+    cmd_codes = [0x00A0, 0x00A0, 0x0095, 0x0095]
+    rsp_codes = [0x00A1, 0x00A1, 0x0096, 0x0096]
     name = "load_ghost"
 
     def __init__(self, core_cfg: CoreConfig, game_cfg: IDZConfig, version: int) -> None:
         super().__init__(core_cfg, game_cfg, version)
         self.size = 0x0070
-    
+
     def handle(self, data: bytes) -> bytearray:
         ret = super().handle(data)
         struct.pack_into("<I", ret, 0x02, 0x5)

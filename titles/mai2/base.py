@@ -300,7 +300,9 @@ class Mai2Base:
         ):
             for fsr in upsert["userFriendSeasonRankingList"]:
                 fsr["recordDate"] = (
-                    datetime.strptime(fsr["recordDate"], f"{Mai2Constants.DATE_TIME_FORMAT}.0"),
+                    datetime.strptime(
+                        fsr["recordDate"], f"{Mai2Constants.DATE_TIME_FORMAT}.0"
+                    ),
                 )
                 self.data.item.put_friend_season_ranking(user_id, fsr)
 

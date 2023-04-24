@@ -402,7 +402,7 @@ class Mai2ItemData(BaseData):
         if result is None:
             self.logger.warn(
                 f"put_friend_season_ranking: failed to insert",
-                f"friend_season_ranking! aime_id: {aime_id}"
+                f"friend_season_ranking! aime_id: {aime_id}",
             )
             return None
         return result.lastrowid

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class PokkenConstants:
     GAME_CODE = "SDAK"
 

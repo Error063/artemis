@@ -59,6 +59,7 @@ class PokkenServerConfig:
             self.__config, "pokken", "server", "auto_register", default=True
         )
 
+
 class PokkenConfig(dict):
     def __init__(self) -> None:
         self.server = PokkenServerConfig(self)

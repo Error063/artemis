@@ -5,9 +5,10 @@ from .base import IDZHandlerBase
 from core.config import CoreConfig
 from ..config import IDZConfig
 
+
 class IDZHandlerLoadTopTen(IDZHandlerBase):
-    cmd_codes = [0x012c] * 4
-    rsp_codes = [0x00ce] * 4
+    cmd_codes = [0x012C] * 4
+    rsp_codes = [0x00CE] * 4
     name = "load_top_ten"
 
     def __init__(self, core_cfg: CoreConfig, game_cfg: IDZConfig, version: int) -> None:
@@ -19,12 +20,16 @@ class IDZHandlerLoadTopTen(IDZHandlerBase):
         tracks_dates: List[Tuple[int, int]] = []
         for i in range(32):
             tracks_dates.append(
-                (struct.unpack_from("<H", data, 0x04 + (2 * i))[0], "little", 
-                struct.unpack_from("<I", data, 0x44 + (4 * i))[0], "little")
+                (
+                    struct.unpack_from("<H", data, 0x04 + (2 * i))[0],
+                    "little",
+                    struct.unpack_from("<I", data, 0x44 + (4 * i))[0],
+                    "little",
+                )
             )
         # TODO: Best scores
-        for i in range (3):
-            offset = 0x16c0 + 0x1c * i
-            struct.pack_into("<B", ret, offset + 0x02, 0xff)
+        for i in range(3):
+            offset = 0x16C0 + 0x1C * i
+            struct.pack_into("<B", ret, offset + 0x02, 0xFF)
 
         return ret

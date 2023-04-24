@@ -105,9 +105,11 @@ class AllnetServlet:
 
                 resp.stat = 0
                 return self.dict_to_http_form_string([vars(resp)])
-            
+
             else:
-                self.logger.info(f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}")
+                self.logger.info(
+                    f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}"
+                )
                 resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
                 resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
                 return self.dict_to_http_form_string([vars(resp)])
@@ -189,35 +191,49 @@ class AllnetServlet:
                 self.logger.error(e)
             return b""
 
-        self.logger.info(f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}")
+        self.logger.info(
+            f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}"
+        )
         resp = AllnetDownloadOrderResponse()
-        
-        if not self.config.allnet.allow_online_updates or not self.config.allnet.update_cfg_folder:
+
+        if (
+            not self.config.allnet.allow_online_updates
+            or not self.config.allnet.update_cfg_folder
+        ):
             return self.dict_to_http_form_string([vars(resp)])
 
         else:  # TODO: Keychip check
-            if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-app.ini"):
+            if path.exists(
+                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-app.ini"
+            ):
                 resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-app.ini"
-            
-            if path.exists(f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-opt.ini"):
+
+            if path.exists(
+                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-opt.ini"
+            ):
                 resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
-            
+
             self.logger.debug(f"Sending download uri {resp.uri}")
             return self.dict_to_http_form_string([vars(resp)])
 
-    def handle_dlorder_ini(self, request:Request, match: Dict) -> bytes:
-        if "file" not in match: return b""
+    def handle_dlorder_ini(self, request: Request, match: Dict) -> bytes:
+        if "file" not in match:
+            return b""
 
-        req_file = match['file'].replace('%0A', '')
-        
+        req_file = match["file"].replace("%0A", "")
+
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
-            return open(f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb").read()
-        
+            return open(
+                f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
+            ).read()
+
         self.logger.info(f"DL INI File {req_file} not found")
         return b""
 
-    def handle_dlorder_report(self, request:Request, match: Dict) -> bytes:
-        self.logger.info(f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}")
+    def handle_dlorder_report(self, request: Request, match: Dict) -> bytes:
+        self.logger.info(
+            f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}"
+        )
         return b""
 
     def handle_billing_request(self, request: Request, _: Dict):
