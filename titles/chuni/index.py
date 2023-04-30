@@ -82,21 +82,33 @@ class ChuniServlet:
                 level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
             )
             self.logger.inited = True
-        
+
         for version, keys in self.game_cfg.crypto.keys.items():
             if len(keys) < 3:
                 continue
-            
+
             self.hash_table[version] = {}
-            
-            method_list = [method for method in dir(self.versions[version]) if not method.startswith('__')]
+
+            method_list = [
+                method
+                for method in dir(self.versions[version])
+                if not method.startswith("__")
+            ]
             for method in method_list:
                 method_fixed = inflection.camelize(method)[6:-7]
-                hash = PBKDF2(method_fixed, bytes.fromhex(keys[2]), 128, count=44, hmac_hash_module=SHA1)
-                
+                hash = PBKDF2(
+                    method_fixed,
+                    bytes.fromhex(keys[2]),
+                    128,
+                    count=44,
+                    hmac_hash_module=SHA1,
+                )
+
                 self.hash_table[version][hash.hex()] = method_fixed
-                
-                self.logger.debug(f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}")
+
+                self.logger.debug(
+                    f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}"
+                )
 
     @classmethod
     def get_allnet_info(
@@ -164,18 +176,22 @@ class ChuniServlet:
             # technically not 0
             if internal_ver < ChuniConstants.VER_CHUNITHM_NEW:
                 endpoint = request.getHeader("User-Agent").split("#")[0]
-            
+
             else:
                 if internal_ver not in self.hash_table:
-                    self.logger.error(f"v{version} does not support encryption or no keys entered")
+                    self.logger.error(
+                        f"v{version} does not support encryption or no keys entered"
+                    )
                     return zlib.compress(b'{"stat": "0"}')
-                
+
                 elif endpoint.lower() not in self.hash_table[internal_ver]:
-                    self.logger.error(f"No hash found for v{version} endpoint {endpoint}")
+                    self.logger.error(
+                        f"No hash found for v{version} endpoint {endpoint}"
+                    )
                     return zlib.compress(b'{"stat": "0"}')
 
                 endpoint = self.hash_table[internal_ver][endpoint.lower()]
-            
+
             try:
                 crypt = AES.new(
                     bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
@@ -193,7 +209,11 @@ class ChuniServlet:
 
             encrtped = True
 
-        if not encrtped and self.game_cfg.crypto.encrypted_only and internal_ver >= ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS:
+        if (
+            not encrtped
+            and self.game_cfg.crypto.encrypted_only
+            and internal_ver >= ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
+        ):
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
             )
@@ -210,9 +230,7 @@ class ChuniServlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(
-            f"v{version} {endpoint} request from {client_ip}"
-        )
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"

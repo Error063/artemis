@@ -1,5 +1,6 @@
 import yaml
 import argparse
+import logging
 from core.config import CoreConfig
 from core.data import Data
 from os import path, mkdir, access, W_OK
@@ -32,11 +33,13 @@ if __name__ == "__main__":
 
     cfg = CoreConfig()
     if path.exists(f"{args.config}/core.yaml"):
-        cfg.update(yaml.safe_load(open(f"{args.config}/core.yaml")))
-    
+        cfg_dict = yaml.safe_load(open(f"{args.config}/core.yaml"))
+        cfg_dict.get("database", {})["loglevel"] = "info"
+        cfg.update(cfg_dict)
+
     if not path.exists(cfg.server.log_dir):
         mkdir(cfg.server.log_dir)
-    
+
     if not access(cfg.server.log_dir, W_OK):
         print(
             f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
@@ -44,7 +47,6 @@ if __name__ == "__main__":
         exit(1)
 
     data = Data(cfg)
-    
 
     if args.action == "create":
         data.create_database()
@@ -54,15 +56,22 @@ if __name__ == "__main__":
 
     elif args.action == "upgrade" or args.action == "rollback":
         if args.version is None:
-            data.logger.error("Must set game and version to migrate to")
-            exit(0)
+            data.logger.warn("No version set, upgrading to latest")
 
         if args.game is None:
-            data.logger.info("No game set, upgrading core schema")
-            data.migrate_database("CORE", int(args.version), args.action)
+            data.logger.warn("No game set, upgrading core schema")
+            data.migrate_database(
+                "CORE",
+                int(args.version) if args.version is not None else None,
+                args.action,
+            )
 
         else:
-            data.migrate_database(args.game, int(args.version), args.action)
+            data.migrate_database(
+                args.game,
+                int(args.version) if args.version is not None else None,
+                args.action,
+            )
 
     elif args.action == "autoupgrade":
         data.autoupgrade()

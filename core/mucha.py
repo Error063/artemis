@@ -46,9 +46,7 @@ class MuchaServlet:
                 if enabled:
                     self.mucha_registry.append(game_cd)
 
-        self.logger.info(
-            f"Serving {len(self.mucha_registry)} games"
-        )
+        self.logger.info(f"Serving {len(self.mucha_registry)} games")
 
     def handle_boardauth(self, request: Request, _: Dict) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
@@ -62,9 +60,7 @@ class MuchaServlet:
 
         req = MuchaAuthRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
-        self.logger.info(
-            f"Boardauth request from {client_ip} for {req.gameVer}"
-        )
+        self.logger.info(f"Boardauth request from {client_ip} for {req.gameVer}")
 
         if req.gameCd not in self.mucha_registry:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
@@ -92,9 +88,7 @@ class MuchaServlet:
 
         req = MuchaUpdateRequest(req_dict)
         self.logger.debug(f"Mucha request {vars(req)}")
-        self.logger.info(
-            f"Updatecheck request from {client_ip} for {req.gameVer}"
-        )
+        self.logger.info(f"Updatecheck request from {client_ip} for {req.gameVer}")
 
         if req.gameCd not in self.mucha_registry:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")

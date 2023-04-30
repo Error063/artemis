@@ -12,6 +12,7 @@ from twisted.web.http import Request
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.cm.config import CardMakerConfig
 from titles.cm.const import CardMakerConstants
 from titles.cm.base import CardMakerBase
@@ -82,6 +83,7 @@ class CardMakerServlet:
         url_split = url_path.split("/")
         internal_ver = 0
         endpoint = url_split[len(url_split) - 1]
+        client_ip = Utils.get_ip_addr(request)
 
         print(f"version: {version}")
 
@@ -107,7 +109,8 @@ class CardMakerServlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(f"v{version} {endpoint} request - {req_data}")
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
+        self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
 

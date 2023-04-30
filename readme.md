@@ -2,15 +2,15 @@
 A network service emulator for games running SEGA'S ALL.NET service, and similar.
 
 # Supported games
-Games listed below have been tested and confirmed working. Only game versions older then the current one in active use in arcades (n-0) or current game versions older then a year (y-1) are supported.
+Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
 + Chunithm
     + All versions up to New!! Plus
 
 + Crossbeats Rev
     + All versions + omnimix
 
-+ Maimai
-    + All versions up to Universe Plus
++ maimai DX
+    + All versions up to Festival
 
 + Hatsune Miku Arcade
     + All versions
@@ -26,6 +26,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + Lily R
     + Reverse
 
++ Pokken
+    + Final Online
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)

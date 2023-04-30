@@ -1,0 +1,1 @@
+DELETE FROM wacca_item WHERE type=17 AND item_id=312002;

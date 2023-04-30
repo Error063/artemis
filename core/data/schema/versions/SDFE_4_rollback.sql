@@ -1,0 +1,1 @@
+ALTER TABLE wacca_profile DROP COLUMN playcount_time_free;

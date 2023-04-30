@@ -30,14 +30,16 @@ class Mai2Constants:
     VER_MAIMAI_DX_SPLASH_PLUS = 3
     VER_MAIMAI_DX_UNIVERSE = 4
     VER_MAIMAI_DX_UNIVERSE_PLUS = 5
+    VER_MAIMAI_DX_FESTIVAL = 6
 
     VERSION_STRING = (
-        "maimai Delux",
-        "maimai Delux PLUS",
-        "maimai Delux Splash",
-        "maimai Delux Splash PLUS",
-        "maimai Delux Universe",
-        "maimai Delux Universe PLUS",
+        "maimai DX",
+        "maimai DX PLUS",
+        "maimai DX Splash",
+        "maimai DX Splash PLUS",
+        "maimai DX Universe",
+        "maimai DX Universe PLUS",
+        "maimai DX Festival",
     )
 
     @classmethod
