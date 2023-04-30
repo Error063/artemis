@@ -3,6 +3,7 @@ from sqlalchemy.types import Integer, String, TIMESTAMP, JSON, Boolean
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.engine import Row
 from typing import Optional, List, Dict, Any
 
 from core.data.schema import BaseData, metadata
@@ -167,7 +168,7 @@ class DivaScoreData(BaseData):
 
     def get_best_user_score(
         self, user_id: int, pv_id: int, difficulty: int, edition: int
-    ) -> Optional[Dict]:
+    ) -> Optional[Row]:
         sql = score.select(
             and_(
                 score.c.user == user_id,
@@ -184,7 +185,7 @@ class DivaScoreData(BaseData):
 
     def get_top3_scores(
         self, pv_id: int, difficulty: int, edition: int
-    ) -> Optional[List[Dict]]:
+    ) -> Optional[List[Row]]:
         sql = (
             score.select(
                 and_(
@@ -204,7 +205,7 @@ class DivaScoreData(BaseData):
 
     def get_global_ranking(
         self, user_id: int, pv_id: int, difficulty: int, edition: int
-    ) -> Optional[List]:
+    ) -> Optional[List[Row]]:
         # get the subquery max score of a user with pv_id, difficulty and
         # edition
         sql_sub = (
@@ -231,7 +232,7 @@ class DivaScoreData(BaseData):
             return None
         return result.fetchone()
 
-    def get_best_scores(self, user_id: int) -> Optional[List]:
+    def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
         sql = score.select(score.c.user == user_id)
 
         result = self.execute(sql)
