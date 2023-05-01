@@ -9,7 +9,7 @@ from titles.mai2.config import Mai2Config
 from titles.mai2.const import Mai2Constants
 
 
-class Mai2Plus(Mai2Base):
+class Mai2DXPlus(Mai2Base):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_PLUS

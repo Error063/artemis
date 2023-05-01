@@ -14,7 +14,9 @@ from core.utils import Utils
 from titles.mai2.config import Mai2Config
 from titles.mai2.const import Mai2Constants
 from titles.mai2.base import Mai2Base
-from titles.mai2.plus import Mai2Plus
+from titles.mai2.finale import Mai2Finale
+from titles.mai2.dx import Mai2DX
+from titles.mai2.dxplus import Mai2DXPlus
 from titles.mai2.splash import Mai2Splash
 from titles.mai2.splashplus import Mai2SplashPlus
 from titles.mai2.universe import Mai2Universe
@@ -32,13 +34,29 @@ class Mai2Servlet:
             )
 
         self.versions = [
-            Mai2Base,
-            Mai2Plus,
+            Mai2DX,
+            Mai2DXPlus,
             Mai2Splash,
             Mai2SplashPlus,
             Mai2Universe,
             Mai2UniversePlus,
             Mai2Festival,
+        ]
+
+        self.versions_old = [
+            Mai2Base,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Mai2Finale,
         ]
 
         self.logger = logging.getLogger("mai2")

@@ -12,8 +12,7 @@ class Mai2Base:
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         self.core_config = cfg
         self.game_config = game_cfg
-        self.game = Mai2Constants.GAME_CODE
-        self.version = Mai2Constants.VER_MAIMAI_DX
+        self.version = Mai2Constants.VER_MAIMAI
         self.data = Mai2Data(cfg)
         self.logger = logging.getLogger("mai2")
 
