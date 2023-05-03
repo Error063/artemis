@@ -60,27 +60,29 @@ class Mai2Servlet:
         ]
 
         self.logger = logging.getLogger("mai2")
-        log_fmt_str = "[%(asctime)s] Mai2 | %(levelname)s | %(message)s"
-        log_fmt = logging.Formatter(log_fmt_str)
-        fileHandler = TimedRotatingFileHandler(
-            "{0}/{1}.log".format(self.core_cfg.server.log_dir, "mai2"),
-            encoding="utf8",
-            when="d",
-            backupCount=10,
-        )
+        if not hasattr(self.logger, "initted"):
+            log_fmt_str = "[%(asctime)s] Mai2 | %(levelname)s | %(message)s"
+            log_fmt = logging.Formatter(log_fmt_str)
+            fileHandler = TimedRotatingFileHandler(
+                "{0}/{1}.log".format(self.core_cfg.server.log_dir, "mai2"),
+                encoding="utf8",
+                when="d",
+                backupCount=10,
+            )
 
-        fileHandler.setFormatter(log_fmt)
+            fileHandler.setFormatter(log_fmt)
 
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(log_fmt)
+            consoleHandler = logging.StreamHandler()
+            consoleHandler.setFormatter(log_fmt)
 
-        self.logger.addHandler(fileHandler)
-        self.logger.addHandler(consoleHandler)
+            self.logger.addHandler(fileHandler)
+            self.logger.addHandler(consoleHandler)
 
-        self.logger.setLevel(self.game_cfg.server.loglevel)
-        coloredlogs.install(
-            level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
-        )
+            self.logger.setLevel(self.game_cfg.server.loglevel)
+            coloredlogs.install(
+                level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
+            )
+            self.logger.initted = True
 
     @classmethod
     def get_allnet_info(
@@ -100,13 +102,13 @@ class Mai2Servlet:
             return (
                 True,
                 f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                f"{core_cfg.title.hostname}:{core_cfg.title.port}/",
+                f"{core_cfg.title.hostname}",
             )
 
         return (
             True,
             f"http://{core_cfg.title.hostname}/{game_code}/$v/",
-            f"{core_cfg.title.hostname}/",
+            f"{core_cfg.title.hostname}",
         )
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
@@ -120,21 +122,50 @@ class Mai2Servlet:
         endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
-        if version < 105:  # 1.0
-            internal_ver = Mai2Constants.VER_MAIMAI_DX
-        elif version >= 105 and version < 110:  # Plus
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
-        elif version >= 110 and version < 115:  # Splash
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
-        elif version >= 115 and version < 120:  # Splash Plus
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
-        elif version >= 120 and version < 125:  # Universe
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
-        elif version >= 125 and version < 130:  # Universe Plus
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
-        elif version >= 130:  # Festival
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+        if request.uri.startswith(b"/SDEY"):
+            if version < 105:  # 1.0
+                internal_ver = Mai2Constants.VER_MAIMAI_DX
+            elif version >= 105 and version < 110:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
+            elif version >= 110 and version < 115:  # Splash
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
+            elif version >= 115 and version < 120:  # Splash Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
+            elif version >= 120 and version < 125:  # Universe
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
+            elif version >= 125 and version < 130:  # Universe Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
+            elif version >= 130:  # Festival
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
 
+        else:
+            if version < 110:  # 1.0
+                internal_ver = Mai2Constants.VER_MAIMAI
+            elif version >= 110 and version < 120:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_PLUS
+            elif version >= 120 and version < 130:  # Green
+                internal_ver = Mai2Constants.VER_MAIMAI_GREEN
+            elif version >= 130 and version < 140:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_GREEN_PLUS
+            elif version >= 140 and version < 150:  # Orange
+                internal_ver = Mai2Constants.VER_MAIMAI_ORANGE
+            elif version >= 150 and version < 160:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_ORANGE_PLUS
+            elif version >= 160 and version < 170:  # Pink
+                internal_ver = Mai2Constants.VER_MAIMAI_PINK
+            elif version >= 170 and version < 180:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_PINK_PLUS
+            elif version >= 180 and version < 185:  # Murasaki
+                internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI
+            elif version >= 185 and version < 190:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI_PLUS
+            elif version >= 190 and version < 195:  # Milk
+                internal_ver = Mai2Constants.VER_MAIMAI_MILK
+            elif version >= 195 and version < 197:  # Plus
+                internal_ver = Mai2Constants.VER_MAIMAI_MILK_PLUS
+            elif version >= 197:  # Finale
+                internal_ver = Mai2Constants.VER_MAIMAI_FINALE
+        
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
             # doing encrypted. The likelyhood of false positives is low but
@@ -156,7 +187,12 @@ class Mai2Servlet:
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
-        handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
+
+        if internal_ver >= Mai2Constants.VER_MAIMAI:
+            handler_cls = self.versions_old[internal_ver](self.core_cfg, self.game_cfg)
+        
+        else:
+            handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
         if not hasattr(handler_cls, func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
