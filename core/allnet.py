@@ -249,14 +249,18 @@ class AllnetServlet:
         signer = PKCS1_v1_5.new(rsa)
         digest = SHA.new()
 
-        kc_playlimit = int(req_dict[0]["playlimit"])
-        kc_nearfull = int(req_dict[0]["nearfull"])
-        kc_billigtype = int(req_dict[0]["billingtype"])
-        kc_playcount = int(req_dict[0]["playcnt"])
-        kc_serial: str = req_dict[0]["keychipid"]
-        kc_game: str = req_dict[0]["gameid"]
-        kc_date = strptime(req_dict[0]["date"], "%Y%m%d%H%M%S")
-        kc_serial_bytes = kc_serial.encode()
+        try:
+            kc_playlimit = int(req_dict[0]["playlimit"])
+            kc_nearfull = int(req_dict[0]["nearfull"])
+            kc_billigtype = int(req_dict[0]["billingtype"])
+            kc_playcount = int(req_dict[0]["playcnt"])
+            kc_serial: str = req_dict[0]["keychipid"]
+            kc_game: str = req_dict[0]["gameid"]
+            kc_date = strptime(req_dict[0]["date"], "%Y%m%d%H%M%S")
+            kc_serial_bytes = kc_serial.encode()
+        
+        except KeyError as e:
+            return f"result=5&linelimit=&message={e} field is missing".encode()
 
         machine = self.data.arcade.get_machine(kc_serial)
         if machine is None and not self.config.server.allow_unregistered_serials:
