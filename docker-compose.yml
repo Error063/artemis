@@ -1,0 +1,57 @@
+version: "3.9"
+services:
+  app:
+    hostname: ma.app
+    build: .
+    volumes:
+      - ./aime:/app/aime
+
+    environment:
+      CFG_DEV: 1
+      CFG_CORE_SERVER_HOSTNAME: 0.0.0.0
+      CFG_CORE_DATABASE_HOST: ma.db
+      CFG_CORE_MEMCACHED_HOSTNAME: ma.memcached
+      CFG_CORE_AIMEDB_KEY: keyhere
+      CFG_CHUNI_SERVER_LOGLEVEL: debug
+
+    ports:
+    - "80:80"
+    - "8443:8443"
+    - "22345:22345"
+
+    - "8080:8080"
+    - "8090:8090"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    hostname: ma.db
+    image: mysql:8.0.31-debian
+    environment:
+      MYSQL_DATABASE: aime
+      MYSQL_USER: aime
+      MYSQL_PASSWORD: aime
+      MYSQL_ROOT_PASSWORD: AimeRootPassword
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 5
+
+
+  memcached:
+    hostname: ma.memcached
+    image: memcached:1.6.17-bullseye
+
+  phpmyadmin:
+    hostname: ma.phpmyadmin
+    image: phpmyadmin:latest
+    environment:
+      PMA_HOSTS: ma.db
+      PMA_USER: root
+      PMA_PASSWORD: AimeRootPassword
+      APACHE_PORT: 8080
+    ports:
+    - "8080:8080"
+
