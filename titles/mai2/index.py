@@ -82,13 +82,13 @@ class Mai2Servlet:
             return (
                 True,
                 f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                f"{core_cfg.title.hostname}:{core_cfg.title.port}/",
+                f"{core_cfg.title.hostname}:{core_cfg.title.port}",
             )
 
         return (
             True,
             f"http://{core_cfg.title.hostname}/{game_code}/$v/",
-            f"{core_cfg.title.hostname}/",
+            f"{core_cfg.title.hostname}",
         )
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
