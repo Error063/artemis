@@ -15,8 +15,15 @@ class Mai2Base:
         self.version = Mai2Constants.VER_MAIMAI
         self.data = Mai2Data(cfg)
         self.logger = logging.getLogger("mai2")
+        
+        if self.core_config.server.is_develop and self.core_config.title.port > 0:
+            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/100/"
+        
+        else:
+            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/100/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
+        # TODO: See if making this epoch 0 breaks things
         reboot_start = date.strftime(
             datetime.now() + timedelta(hours=3), Mai2Constants.DATE_TIME_FORMAT
         )
@@ -33,7 +40,7 @@ class Mai2Base:
                 "movieStatus": 0,
                 "movieServerUri": "",
                 "deliverServerUri": "",
-                "oldServerUri": "",
+                "oldServerUri": self.old_server,
                 "usbDlServerUri": "",
                 "rebootInterval": 0,
             },
