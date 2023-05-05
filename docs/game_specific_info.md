@@ -144,9 +144,10 @@ Pre-DX:
 python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
 ```
 The importer for maimai DX will import Events, Music and Tickets.
-The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data.
 
-**NOTE: It is required to use the importer because some games will not function properly or even crash without Events!**
+The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers.
+
+**Important: It is required to use the importer because some games may not function properly or even crash without Events!**
 
 ### Database upgrade
 
