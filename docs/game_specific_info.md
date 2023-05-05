@@ -145,7 +145,7 @@ python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/
 ```
 The importer for maimai DX will import Events, Music and Tickets.
 
-The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers.
+The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers. For games that do use encryption, provide the key, as a hex string, with the `--extra` flag. Ex `--extra 00112233445566778899AABBCCDDEEFF`
 
 **Important: It is required to use the importer because some games may not function properly or even crash without Events!**
 

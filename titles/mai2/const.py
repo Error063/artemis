@@ -82,5 +82,5 @@ class Mai2Constants:
     @classmethod
     def game_ver_to_string(cls, ver: int):
         if ver >= 1000:
-            return cls.VERSION_STRING_OLD[ver / 1000]
+            return cls.VERSION_STRING_OLD[ver - 1000]
         return cls.VERSION_STRING[ver]
