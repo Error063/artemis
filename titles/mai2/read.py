@@ -72,6 +72,7 @@ class Mai2Reader(BaseReader):
             score_table = self.load_table_raw(f"{self.bin_dir}/tables", "mmScore.bin", key)
             
             self.read_old_events(evt_table)
+            self.read_old_music(score_table, txt_table)
             
             if self.opt_dir is not None:
                 evt_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmEvent.bin", key)
@@ -79,6 +80,7 @@ class Mai2Reader(BaseReader):
                 score_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmScore.bin", key)
 
                 self.read_old_events(evt_table)
+                self.read_old_music(score_table, txt_table)
 
             return
     
