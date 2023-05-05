@@ -72,6 +72,13 @@ class Mai2Reader(BaseReader):
             score_table = self.load_table_raw(f"{self.bin_dir}/tables", "mmScore.bin", key)
             
             self.read_old_events(evt_table)
+            
+            if self.opt_dir is not None:
+                evt_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmEvent.bin", key)
+                txt_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmtextout_jp.bin", key)
+                score_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmScore.bin", key)
+
+                self.read_old_events(evt_table)
 
             return
     
@@ -95,7 +102,7 @@ class Mai2Reader(BaseReader):
             self.logger.warn(f"file {dir} could not be read, skipping")
             return
         
-        f_data_deflate = zlib.decompress(f_data, wbits = zlib.MAX_WBITS | 16)
+        f_data_deflate = zlib.decompress(f_data, wbits = zlib.MAX_WBITS | 16)[0x12:] # lop off the junk at the beginning
         f_decoded = codecs.utf_16_le_decode(f_data_deflate)[0]
         f_split = f_decoded.splitlines()
 
@@ -313,7 +320,10 @@ class Mai2Reader(BaseReader):
                         )
                         self.logger.info(f"Added ticket {id}...")
 
-    def read_old_events(self, events: List[Dict[str, str]]) -> None:
+    def read_old_events(self, events: Optional[List[Dict[str, str]]]) -> None:
+        if events is None:
+            return
+        
         for event in events:
             evt_id = int(event.get('イベントID', '0'))
             evt_expire_time = float(event.get('オフ時強制時期', '0.0'))
@@ -325,3 +335,8 @@ class Mai2Reader(BaseReader):
             
             if not (is_exp or is_aou):
                 self.data.static.toggle_game_event(self.version, evt_id, False)
+    
+    def read_old_music(self, scores: Optional[List[Dict[str, str]]], text: Optional[List[Dict[str, str]]]) -> None:
+        if scores is None or text is None:
+            return
+        # TODO
