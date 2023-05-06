@@ -17,18 +17,18 @@ class Mai2Base:
         self.logger = logging.getLogger("mai2")
         
         if self.core_config.server.is_develop and self.core_config.title.port > 0:
-            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/100/"
+            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/197/"
         
         else:
-            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/100/"
+            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
         # TODO: See if making this epoch 0 breaks things
         reboot_start = date.strftime(
-            datetime.now() + timedelta(hours=3), Mai2Constants.DATE_TIME_FORMAT
+            datetime.fromtimestamp(0.0), Mai2Constants.DATE_TIME_FORMAT
         )
         reboot_end = date.strftime(
-            datetime.now() + timedelta(hours=4), Mai2Constants.DATE_TIME_FORMAT
+            datetime.fromtimestamp(0.0) + timedelta(hours=1), Mai2Constants.DATE_TIME_FORMAT
         )
         return {
             "gameSetting": {
@@ -39,9 +39,9 @@ class Mai2Base:
                 "movieUploadLimit": 10000,
                 "movieStatus": 0,
                 "movieServerUri": "",
-                "deliverServerUri": "",
-                "oldServerUri": self.old_server,
-                "usbDlServerUri": "",
+                "deliverServerUri": self.old_server + "deliver",
+                "oldServerUri": self.old_server + "old",
+                "usbDlServerUri": self.old_server + "usbdl",
                 "rebootInterval": 0,
             },
             "isAouAccession": "true",
@@ -56,8 +56,9 @@ class Mai2Base:
 
     def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         events = self.data.static.get_enabled_events(self.version)
+        print(self.version)
         events_lst = []
-        if events is None:
+        if events is None or not events:
             self.logger.warn("No enabled events, did you run the reader?")
             return {"type": data["type"], "length": 0, "gameEventList": []}
 
@@ -127,28 +128,20 @@ class Mai2Base:
             "userId": data["userId"],
             "userName": profile["userName"],
             "isLogin": False,
-            "lastGameId": profile["lastGameId"],
             "lastDataVersion": profile["lastDataVersion"],
-            "lastRomVersion": profile["lastRomVersion"],
             "lastLoginDate": profile["lastLoginDate"],
             "lastPlayDate": profile["lastPlayDate"],
             "playerRating": profile["playerRating"],
-            "nameplateId": 0,  # Unused
+            "nameplateId": 0,  # Unused            
+            "frameId": profile["frameId"],
             "iconId": profile["iconId"],
             "trophyId": 0,  # Unused
             "partnerId": profile["partnerId"],
-            "frameId": profile["frameId"],
-            "dispRate": option[
-                "dispRate"
-            ],  # 0: all/begin, 1: disprate, 2: dispDan, 3: hide, 4: end
-            "totalAwake": profile["totalAwake"],
-            "isNetMember": profile["isNetMember"],
-            "dailyBonusDate": profile["dailyBonusDate"],
-            "headPhoneVolume": option["headPhoneVolume"],
-            "isInherit": False,  # Not sure what this is or does??
-            "banState": profile["banState"]
-            if profile["banState"] is not None
-            else 0,  # New with uni+
+            "dispRate": option["dispRate"],  # 0: all, 1: dispRate, 2: dispDan, 3: hide
+            "dispRank": 0,  # TODO
+            "dispHomeRanker": 0,  # TODO
+            "dispTotalLv": 0,  # TODO
+            "totalLv": 0,  # TODO
         }
 
     def handle_user_login_api_request(self, data: Dict) -> Dict:
@@ -169,7 +162,6 @@ class Mai2Base:
             "lastLoginDate": lastLoginDate,
             "loginCount": loginCt,
             "consecutiveLoginCount": 0,  # We don't really have a way to track this...
-            "loginId": loginCt,  # Used with the playlog!
         }
 
     def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:

@@ -34,16 +34,6 @@ class Mai2Servlet:
             )
 
         self.versions = [
-            Mai2DX,
-            Mai2DXPlus,
-            Mai2Splash,
-            Mai2SplashPlus,
-            Mai2Universe,
-            Mai2UniversePlus,
-            Mai2Festival,
-        ]
-
-        self.versions_old = [
             Mai2Base,
             None,
             None,
@@ -56,7 +46,14 @@ class Mai2Servlet:
             None,
             None,
             None,
-            Mai2Finale,
+            Mai2Finale,            
+            Mai2DX,
+            Mai2DXPlus,
+            Mai2Splash,
+            Mai2SplashPlus,
+            Mai2Universe,
+            Mai2UniversePlus,
+            Mai2Festival,
         ]
 
         self.logger = logging.getLogger("mai2")
@@ -122,7 +119,7 @@ class Mai2Servlet:
         endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
-        if request.uri.startswith(b"/SDEY"):
+        if request.uri.startswith(b"/SDEZ"):
             if version < 105:  # 1.0
                 internal_ver = Mai2Constants.VER_MAIMAI_DX
             elif version >= 105 and version < 110:  # Plus
@@ -187,12 +184,7 @@ class Mai2Servlet:
         self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
-
-        if internal_ver >= Mai2Constants.VER_MAIMAI:
-            handler_cls = self.versions_old[internal_ver](self.core_cfg, self.game_cfg)
-        
-        else:
-            handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
+        handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
         if not hasattr(handler_cls, func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
@@ -213,3 +205,9 @@ class Mai2Servlet:
         self.logger.debug(f"Response {resp}")
 
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+
+    def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
+        if url_path.endswith("ping"):
+            return zlib.compress(b"ok")
+        else:
+            return zlib.compress(b"{}")

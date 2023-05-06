@@ -31,39 +31,29 @@ class Mai2Constants:
 
     CONFIG_NAME = "mai2.yaml"
 
-    VER_MAIMAI = 1000
-    VER_MAIMAI_PLUS = 1001
-    VER_MAIMAI_GREEN = 1002
-    VER_MAIMAI_GREEN_PLUS = 1003
-    VER_MAIMAI_ORANGE = 1004
-    VER_MAIMAI_ORANGE_PLUS = 1005
-    VER_MAIMAI_PINK = 1006
-    VER_MAIMAI_PINK_PLUS = 1007
-    VER_MAIMAI_MURASAKI = 1008
-    VER_MAIMAI_MURASAKI_PLUS = 1009
-    VER_MAIMAI_MILK = 1010
-    VER_MAIMAI_MILK_PLUS = 1011
-    VER_MAIMAI_FINALE = 1012
+    VER_MAIMAI = 0
+    VER_MAIMAI_PLUS = 1
+    VER_MAIMAI_GREEN = 2
+    VER_MAIMAI_GREEN_PLUS = 3
+    VER_MAIMAI_ORANGE = 4
+    VER_MAIMAI_ORANGE_PLUS = 5
+    VER_MAIMAI_PINK = 6
+    VER_MAIMAI_PINK_PLUS = 7
+    VER_MAIMAI_MURASAKI = 8
+    VER_MAIMAI_MURASAKI_PLUS = 9
+    VER_MAIMAI_MILK = 10
+    VER_MAIMAI_MILK_PLUS = 11
+    VER_MAIMAI_FINALE = 12
 
-    VER_MAIMAI_DX = 0
-    VER_MAIMAI_DX_PLUS = 1
-    VER_MAIMAI_DX_SPLASH = 2
-    VER_MAIMAI_DX_SPLASH_PLUS = 3
-    VER_MAIMAI_DX_UNIVERSE = 4
-    VER_MAIMAI_DX_UNIVERSE_PLUS = 5
-    VER_MAIMAI_DX_FESTIVAL = 6
+    VER_MAIMAI_DX = 13
+    VER_MAIMAI_DX_PLUS = 14
+    VER_MAIMAI_DX_SPLASH = 15
+    VER_MAIMAI_DX_SPLASH_PLUS = 16
+    VER_MAIMAI_DX_UNIVERSE = 17
+    VER_MAIMAI_DX_UNIVERSE_PLUS = 18
+    VER_MAIMAI_DX_FESTIVAL = 19
 
     VERSION_STRING = (
-        "maimai DX",
-        "maimai DX PLUS",
-        "maimai DX Splash",
-        "maimai DX Splash PLUS",
-        "maimai DX Universe",
-        "maimai DX Universe PLUS",
-        "maimai DX Festival",
-    )
-
-    VERSION_STRING_OLD = (
         "maimai",
         "maimai PLUS",
         "maimai GreeN",
@@ -76,11 +66,16 @@ class Mai2Constants:
         "maimai MURASAKi PLUS",
         "maimai MiLK",
         "maimai MiLK PLUS",
-        "maimai FiNALE",
+        "maimai FiNALE",        
+        "maimai DX",
+        "maimai DX PLUS",
+        "maimai DX Splash",
+        "maimai DX Splash PLUS",
+        "maimai DX Universe",
+        "maimai DX Universe PLUS",
+        "maimai DX Festival",
     )
 
     @classmethod
     def game_ver_to_string(cls, ver: int):
-        if ver >= 1000:
-            return cls.VERSION_STRING_OLD[ver - 1000]
         return cls.VERSION_STRING[ver]
