@@ -23,19 +23,12 @@ class Mai2Base:
             self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
-        # TODO: See if making this epoch 0 breaks things
-        reboot_start = date.strftime(
-            datetime.fromtimestamp(0.0), Mai2Constants.DATE_TIME_FORMAT
-        )
-        reboot_end = date.strftime(
-            datetime.fromtimestamp(0.0) + timedelta(hours=1), Mai2Constants.DATE_TIME_FORMAT
-        )
         return {
             "gameSetting": {
                 "isMaintenance": "false",
                 "requestInterval": 10,
-                "rebootStartTime": reboot_start,
-                "rebootEndTime": reboot_end,
+                "rebootStartTime": "2020-01-01 07:00:00.0",
+                "rebootEndTime": "2020-01-01 07:59:59.0",
                 "movieUploadLimit": 10000,
                 "movieStatus": 0,
                 "movieServerUri": "",
