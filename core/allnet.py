@@ -194,7 +194,7 @@ class AllnetServlet:
         self.logger.info(
             f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}"
         )
-        resp = AllnetDownloadOrderResponse()
+        resp = AllnetDownloadOrderResponse(serial=req.serial)
 
         if (
             not self.config.allnet.allow_online_updates
@@ -430,6 +430,7 @@ class AllnetPowerOnResponse3:
 
 class AllnetPowerOnResponse2:
     def __init__(self) -> None:
+        time = datetime.now(tz=pytz.timezone("Asia/Tokyo"))
         self.stat = 1
         self.uri = ""
         self.host = ""
@@ -442,14 +443,14 @@ class AllnetPowerOnResponse2:
         self.region_name2 = "Y"
         self.region_name3 = "Z"
         self.country = "JPN"
-        self.year = datetime.now().year
-        self.month = datetime.now().month
-        self.day = datetime.now().day
-        self.hour = datetime.now().hour
-        self.minute = datetime.now().minute
-        self.second = datetime.now().second
+        self.year = time.year
+        self.month = time.month
+        self.day = time.day
+        self.hour = time.hour
+        self.minute = time.minute
+        self.second = time.second
         self.setting = "1"
-        self.timezone = "+0900"
+        self.timezone = "+09:00"
         self.res_class = "PowerOnResponseV2"
 
 
