@@ -42,7 +42,7 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
 
-        self.map_post.connect(
+        self.map_get.connect(
             "allnet_ping",
             "/naomitest.html",
             controller="allnet",
