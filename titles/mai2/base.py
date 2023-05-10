@@ -15,6 +15,9 @@ class Mai2Base:
         self.version = Mai2Constants.VER_MAIMAI
         self.data = Mai2Data(cfg)
         self.logger = logging.getLogger("mai2")
+        self.can_deliver = False
+        self.can_usbdl = False
+        self.old_server = ""
         
         if self.core_config.server.is_develop and self.core_config.title.port > 0:
             self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/197/"
@@ -32,9 +35,9 @@ class Mai2Base:
                 "movieUploadLimit": 10000,
                 "movieStatus": 0,
                 "movieServerUri": "",
-                "deliverServerUri": self.old_server + "deliver",
+                "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
                 "oldServerUri": self.old_server + "old",
-                "usbDlServerUri": self.old_server + "usbdl",
+                "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
                 "rebootInterval": 0,
             },
             "isAouAccession": "true",
@@ -49,7 +52,6 @@ class Mai2Base:
 
     def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         events = self.data.static.get_enabled_events(self.version)
-        print(self.version)
         events_lst = []
         if events is None or not events:
             self.logger.warn("No enabled events, did you run the reader?")

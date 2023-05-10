@@ -207,7 +207,31 @@ class Mai2Servlet:
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
     def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.endswith("ping"):
-            return zlib.compress(b"ok")
+        self.logger.info(f"v{version} GET {url_path}")
+        url_split = url_path.split("/")
+
+        if url_split[0] == "old":
+            if url_split[1] == "ping":
+                self.logger.info(f"v{version} old server ping")
+                return zlib.compress(b"ok")
+
+            elif url_split[1].startswith("userdata"):
+                self.logger.info(f"v{version} old server userdata inquire")
+                return zlib.compress(b"{}")
+
+            elif url_split[1].startswith("friend"):
+                self.logger.info(f"v{version} old server friend inquire")
+                return zlib.compress(b"{}")
+        
+        elif url_split[0] == "usbdl":
+            if url_split[1] == "CONNECTIONTEST":
+                self.logger.info(f"v{version} usbdl server test")
+                return zlib.compress(b"ok")
+
+        elif url_split[0] == "deliver":
+            if url_split[len(url_split) - 1] == "maimai_deliver.list":
+                self.logger.info(f"v{version} maimai_deliver.list inquire")
+                return zlib.compress(b"")
+        
         else:
             return zlib.compress(b"{}")
