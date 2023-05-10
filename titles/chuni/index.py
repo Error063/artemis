@@ -98,15 +98,18 @@ class ChuniServlet:
             ]
             for method in method_list:
                 method_fixed = inflection.camelize(method)[6:-7]
+                # number of iterations was changed to 70 in SUN
+                iter_count = 70 if version >= ChuniConstants.VER_CHUNITHM_SUN else 44
                 hash = PBKDF2(
                     method_fixed,
                     bytes.fromhex(keys[2]),
                     128,
-                    count=44,
+                    count=iter_count,
                     hmac_hash_module=SHA1,
                 )
 
-                self.hash_table[version][hash.hex()] = method_fixed
+                hashed_name = hash.hex()[:32] # truncate unused bytes like the game does
+                self.hash_table[version][hashed_name] = method_fixed
 
                 self.logger.debug(
                     f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}"
