@@ -23,41 +23,44 @@ class ChuniNew(ChuniBase):
         self.version = ChuniConstants.VER_CHUNITHM_NEW
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+        # use UTC time and convert it to JST time by adding +9
+        # matching therefore starts one hour before and lasts for 8 hours
         match_start = datetime.strftime(
-            datetime.now() - timedelta(hours=10), self.date_time_format
+            datetime.utcnow() + timedelta(hours=8), self.date_time_format
         )
         match_end = datetime.strftime(
-            datetime.now() + timedelta(hours=10), self.date_time_format
+            datetime.utcnow() + timedelta(hours=16), self.date_time_format
         )
         reboot_start = datetime.strftime(
-            datetime.now() - timedelta(hours=11), self.date_time_format
+            datetime.utcnow() + timedelta(hours=6), self.date_time_format
         )
         reboot_end = datetime.strftime(
-            datetime.now() - timedelta(hours=10), self.date_time_format
+            datetime.utcnow() + timedelta(hours=7), self.date_time_format
         )
         return {
             "gameSetting": {
-                "isMaintenance": "false",
+                "isMaintenance": False,
                 "requestInterval": 10,
                 "rebootStartTime": reboot_start,
                 "rebootEndTime": reboot_end,
-                "isBackgroundDistribute": "false",
+                "isBackgroundDistribute": False,
                 "maxCountCharacter": 300,
                 "maxCountItem": 300,
                 "maxCountMusic": 300,
                 "matchStartTime": match_start,
                 "matchEndTime": match_end,
-                "matchTimeLimit": 99,
+                "matchTimeLimit": 60,
                 "matchErrorLimit": 9999,
                 "romVersion": self.game_cfg.version.version(self.version)["rom"],
                 "dataVersion": self.game_cfg.version.version(self.version)["data"],
                 "matchingUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "matchingUriX": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
+                # might be really important for online battle to connect the cabs via UDP port 50201
                 "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
                 "reflectorUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
             },
-            "isDumpUpload": "false",
-            "isAou": "false",
+            "isDumpUpload": False,
+            "isAou": False,
         }
 
     def handle_remove_token_api_request(self, data: Dict) -> Dict:
@@ -468,3 +471,162 @@ class ChuniNew(ChuniBase):
             self.data.item.put_user_print_state(user_id, id=order_id, hasCompleted=True)
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintCancelApi"}
+
+    def handle_ping_request(self, data: Dict) -> Dict:
+        # matchmaking ping request
+        return {"returnCode": "1"}
+
+    def handle_begin_matching_api_request(self, data: Dict) -> Dict:
+        room_id = 1
+        # check if there is a free matching room
+        matching_room = self.data.item.get_oldest_free_matching(self.version)
+
+        if matching_room is None:
+            # grab the latest roomId and add 1 for the new room
+            newest_matching = self.data.item.get_newest_matching(self.version)
+            if newest_matching is not None:
+                room_id = newest_matching["roomId"] + 1
+
+            # fix userName WTF8
+            new_member = data["matchingMemberInfo"]
+            new_member["userName"] = self.read_wtf8(new_member["userName"])
+
+            # create the new room with room_id and the current user id (host)
+            # user id is required for the countdown later on
+            self.data.item.put_matching(
+                self.version, room_id, [new_member], user_id=new_member["userId"]
+            )
+
+            # get the newly created matching room
+            matching_room = self.data.item.get_matching(self.version, room_id)
+        else:
+            # a room already exists, so just add the new member to it
+            matching_member_list = matching_room["matchingMemberInfoList"]
+            # fix userName WTF8
+            new_member = data["matchingMemberInfo"]
+            new_member["userName"] = self.read_wtf8(new_member["userName"])
+            matching_member_list.append(new_member)
+
+            # add the updated room to the database, make sure to set isFull correctly!
+            self.data.item.put_matching(
+                self.version,
+                matching_room["roomId"],
+                matching_member_list,
+                user_id=matching_room["user"],
+                is_full=True if len(matching_member_list) >= 4 else False,
+            )
+
+        matching_wait = {
+            "isFinish": False,
+            "restMSec": matching_room["restMSec"],  # in sec
+            "pollingInterval": 1,  # in sec
+            "matchingMemberInfoList": matching_room["matchingMemberInfoList"],
+        }
+
+        return {"roomId": 1, "matchingWaitState": matching_wait}
+
+    def handle_end_matching_api_request(self, data: Dict) -> Dict:
+        matching_room = self.data.item.get_matching(self.version, data["roomId"])
+        members = matching_room["matchingMemberInfoList"]
+
+        # only set the host user to role 1 every other to 0?
+        role_list = [
+            {"role": 1} if m["userId"] == matching_room["user"] else {"role": 0}
+            for m in members
+        ]
+
+        self.data.item.put_matching(
+            self.version,
+            matching_room["roomId"],
+            members,
+            user_id=matching_room["user"],
+            rest_sec=0,  # make sure to always set 0
+            is_full=True,  # and full, so no one can join
+        )
+
+        return {
+            "matchingResult": 1,  # needs to be 1 for successful matching
+            "matchingMemberInfoList": members,
+            # no idea, maybe to differentiate between CPUs and real players?
+            "matchingMemberRoleList": role_list,
+            # TCP/UDP connection?
+            "reflectorUri": f"{self.core_cfg.title.hostname}",
+        }
+
+    def handle_remove_matching_member_api_request(self, data: Dict) -> Dict:
+        # get all matching rooms, because Chuni only returns the userId
+        # not the actual roomId
+        matching_rooms = self.data.item.get_all_matchings(self.version)
+        if matching_rooms is None:
+            return {"returnCode": "1"}
+
+        for room in matching_rooms:
+            old_members = room["matchingMemberInfoList"]
+            new_members = [m for m in old_members if m["userId"] != data["userId"]]
+
+            # if nothing changed go to the next room
+            if len(old_members) == len(new_members):
+                continue
+
+            # if the last user got removed, delete the matching room
+            if len(new_members) <= 0:
+                self.data.item.delete_matching(self.version, room["roomId"])
+            else:
+                # remove the user from the room
+                self.data.item.put_matching(
+                    self.version,
+                    room["roomId"],
+                    new_members,
+                    user_id=room["user"],
+                    rest_sec=room["restMSec"],
+                )
+
+        return {"returnCode": "1"}
+
+    def handle_get_matching_state_api_request(self, data: Dict) -> Dict:
+        polling_interval = 1
+        # get the current active room
+        matching_room = self.data.item.get_matching(self.version, data["roomId"])
+        members = matching_room["matchingMemberInfoList"]
+        rest_sec = matching_room["restMSec"]
+
+        # grab the current member
+        current_member = data["matchingMemberInfo"]
+
+        # only the host user can decrease the countdown
+        if matching_room["user"] == int(current_member["userId"]):
+            # cap the restMSec to 0
+            if rest_sec > 0:
+                rest_sec -= polling_interval
+            else:
+                rest_sec = 0
+
+        # update the members in order to recieve messages
+        for i, member in enumerate(members):
+            if member["userId"] == current_member["userId"]:
+                # replace the old user data with the current user data,
+                # also parse WTF-8 everytime
+                current_member["userName"] = self.read_wtf8(current_member["userName"])
+                members[i] = current_member
+
+        self.data.item.put_matching(
+            self.version,
+            data["roomId"],
+            members,
+            rest_sec=rest_sec,
+            user_id=matching_room["user"],
+        )
+
+        # only add the other members to the list
+        diff_members = [m for m in members if m["userId"] != current_member["userId"]]
+
+        matching_wait = {
+            # makes no difference? Always use False?
+            "isFinish": True if rest_sec == 0 else False,
+            "restMSec": rest_sec,
+            "pollingInterval": polling_interval,
+            # the current user needs to be the first one?
+            "matchingMemberInfoList": [current_member] + diff_members,
+        }
+
+        return {"matchingWaitState": matching_wait}

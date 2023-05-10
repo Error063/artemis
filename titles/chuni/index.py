@@ -29,6 +29,7 @@ from titles.chuni.crystalplus import ChuniCrystalPlus
 from titles.chuni.paradise import ChuniParadise
 from titles.chuni.new import ChuniNew
 from titles.chuni.newplus import ChuniNewPlus
+from titles.chuni.sun import ChuniSun
 
 
 class ChuniServlet:
@@ -55,6 +56,7 @@ class ChuniServlet:
             ChuniParadise,
             ChuniNew,
             ChuniNewPlus,
+            ChuniSun,
         ]
 
         self.logger = logging.getLogger("chuni")
@@ -145,30 +147,32 @@ class ChuniServlet:
 
         if version < 105:  # 1.0
             internal_ver = ChuniConstants.VER_CHUNITHM
-        elif version >= 105 and version < 110:  # Plus
+        elif version >= 105 and version < 110:  # PLUS
             internal_ver = ChuniConstants.VER_CHUNITHM_PLUS
-        elif version >= 110 and version < 115:  # Air
+        elif version >= 110 and version < 115:  # AIR
             internal_ver = ChuniConstants.VER_CHUNITHM_AIR
-        elif version >= 115 and version < 120:  # Air Plus
+        elif version >= 115 and version < 120:  # AIR PLUS
             internal_ver = ChuniConstants.VER_CHUNITHM_AIR_PLUS
-        elif version >= 120 and version < 125:  # Star
+        elif version >= 120 and version < 125:  # STAR
             internal_ver = ChuniConstants.VER_CHUNITHM_STAR
-        elif version >= 125 and version < 130:  # Star Plus
+        elif version >= 125 and version < 130:  # STAR PLUS
             internal_ver = ChuniConstants.VER_CHUNITHM_STAR_PLUS
-        elif version >= 130 and version < 135:  # Amazon
+        elif version >= 130 and version < 135:  # AMAZON
             internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON
-        elif version >= 135 and version < 140:  # Amazon Plus
+        elif version >= 135 and version < 140:  # AMAZON PLUS
             internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON_PLUS
-        elif version >= 140 and version < 145:  # Crystal
+        elif version >= 140 and version < 145:  # CRYSTAL
             internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL
-        elif version >= 145 and version < 150:  # Crystal Plus
+        elif version >= 145 and version < 150:  # CRYSTAL PLUS
             internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
-        elif version >= 150 and version < 200:  # Paradise
+        elif version >= 150 and version < 200:  # PARADISE
             internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE
-        elif version >= 200 and version < 205:  # New
+        elif version >= 200 and version < 205:  # NEW!!
             internal_ver = ChuniConstants.VER_CHUNITHM_NEW
-        elif version >= 205 and version < 210:  # New Plus
+        elif version >= 205 and version < 210:  # NEW PLUS!!
             internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+        elif version >= 210:  # SUN
+            internal_ver = ChuniConstants.VER_CHUNITHM_SUN
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
