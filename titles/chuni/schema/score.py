@@ -134,7 +134,9 @@ playlog = Table(
     Column("charaIllustId", Integer),
     Column("romVersion", String(255)),
     Column("judgeHeaven", Integer),
-    mysql_charset="utf8mb4",
+    Column("regionId", Integer),
+    Column("machineType", Integer),
+    mysql_charset="utf8mb4"
 )
 
 

@@ -44,13 +44,15 @@ class ChuniBase:
             # check if a user already has some pogress and if not add the
             # login bonus entry
             user_login_bonus = self.data.item.get_login_bonus(
-                user_id, self.version, preset["id"]
+                user_id, self.version, preset["presetId"]
             )
             if user_login_bonus is None:
-                self.data.item.put_login_bonus(user_id, self.version, preset["id"])
+                self.data.item.put_login_bonus(
+                    user_id, self.version, preset["presetId"]
+                )
                 # yeah i'm lazy
                 user_login_bonus = self.data.item.get_login_bonus(
-                    user_id, self.version, preset["id"]
+                    user_id, self.version, preset["presetId"]
                 )
 
             # skip the login bonus entirely if its already finished
@@ -66,13 +68,13 @@ class ChuniBase:
                 last_update_date = datetime.now()
 
                 all_login_boni = self.data.static.get_login_bonus(
-                    self.version, preset["id"]
+                    self.version, preset["presetId"]
                 )
 
                 # skip the current bonus preset if no boni were found
                 if all_login_boni is None or len(all_login_boni) < 1:
                     self.logger.warn(
-                        f"No bonus entries found for bonus preset {preset['id']}"
+                        f"No bonus entries found for bonus preset {preset['presetId']}"
                     )
                     continue
 
@@ -83,14 +85,14 @@ class ChuniBase:
                 if bonus_count > max_needed_days:
                     # assume that all login preset ids under 3000 needs to be
                     # looped, like 30 and 40 are looped, 40 does not work?
-                    if preset["id"] < 3000:
+                    if preset["presetId"] < 3000:
                         bonus_count = 1
                     else:
                         is_finished = True
 
                 # grab the item for the corresponding day
                 login_item = self.data.static.get_login_bonus_by_required_days(
-                    self.version, preset["id"], bonus_count
+                    self.version, preset["presetId"], bonus_count
                 )
                 if login_item is not None:
                     # now add the present to the database so the
@@ -108,7 +110,7 @@ class ChuniBase:
                 self.data.item.put_login_bonus(
                     user_id,
                     self.version,
-                    preset["id"],
+                    preset["presetId"],
                     bonusCount=bonus_count,
                     lastUpdateDate=last_update_date,
                     isWatched=False,
@@ -156,12 +158,18 @@ class ChuniBase:
 
         event_list = []
         for evt_row in game_events:
-            tmp = {}
-            tmp["id"] = evt_row["eventId"]
-            tmp["type"] = evt_row["type"]
-            tmp["startDate"] = "2017-12-05 07:00:00.0"
-            tmp["endDate"] = "2099-12-31 00:00:00.0"
-            event_list.append(tmp)
+            event_list.append(
+                {
+                    "id": evt_row["eventId"],
+                    "type": evt_row["type"],
+                    # actually use the startDate from the import so it
+                    # properly shows all the events when new ones are imported
+                    "startDate": datetime.strftime(
+                        evt_row["startDate"], "%Y-%m-%d %H:%M:%S"
+                    ),
+                    "endDate": "2099-12-31 00:00:00",
+                }
+            )
 
         return {
             "type": data["type"],
@@ -228,29 +236,36 @@ class ChuniBase:
     def handle_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = self.data.item.get_characters(data["userId"])
         if characters is None:
-            return {}
-        next_idx = -1
+            return {
+                "userId": data["userId"],
+                "length": 0,
+                "nextIndex": -1,
+                "userCharacterList": [],
+            }
 
-        characterList = []
-        for x in range(int(data["nextIndex"]), len(characters)):
+        character_list = []
+        next_idx = int(data["nextIndex"])
+        max_ct = int(data["maxCount"])
+
+        for x in range(next_idx, len(characters)):
             tmp = characters[x]._asdict()
             tmp.pop("user")
             tmp.pop("id")
-            characterList.append(tmp)
+            character_list.append(tmp)
 
-            if len(characterList) >= int(data["maxCount"]):
+            if len(character_list) >= max_ct:
                 break
 
-        if len(characterList) >= int(data["maxCount"]) and len(characters) > int(
-            data["maxCount"]
-        ) + int(data["nextIndex"]):
-            next_idx = int(data["maxCount"]) + int(data["nextIndex"]) + 1
+        if len(characters) >= next_idx + max_ct:
+            next_idx += max_ct
+        else:
+            next_idx = -1
 
         return {
             "userId": data["userId"],
-            "length": len(characterList),
+            "length": len(character_list),
             "nextIndex": next_idx,
-            "userCharacterList": characterList,
+            "userCharacterList": character_list,
         }
 
     def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
@@ -292,8 +307,8 @@ class ChuniBase:
             if len(user_course_list) >= max_ct:
                 break
 
-        if len(user_course_list) >= max_ct:
-            next_idx = next_idx + max_ct
+        if len(user_course_list) >= next_idx + max_ct:
+            next_idx += max_ct
         else:
             next_idx = -1
 
@@ -347,12 +362,23 @@ class ChuniBase:
         }
 
     def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
+        user_fav_item_list = []
+
+        # still needs to be implemented on WebUI
+        # 1: Music, 3: Character
+        fav_list = self.data.item.get_all_favorites(
+            data["userId"], self.version, fav_kind=int(data["kind"])
+        )
+        if fav_list is not None:
+            for fav in fav_list:
+                user_fav_item_list.append({"id": fav["favId"]})
+
         return {
             "userId": data["userId"],
-            "length": 0,
+            "length": len(user_fav_item_list),
             "kind": data["kind"],
             "nextIndex": -1,
-            "userFavoriteItemList": [],
+            "userFavoriteItemList": user_fav_item_list,
         }
 
     def handle_get_user_favorite_music_api_request(self, data: Dict) -> Dict:
@@ -387,13 +413,13 @@ class ChuniBase:
         xout = kind * 10000000000 + next_idx + len(items)
 
         if len(items) < int(data["maxCount"]):
-            nextIndex = 0
+            next_idx = 0
         else:
-            nextIndex = xout
+            next_idx = xout
 
         return {
             "userId": data["userId"],
-            "nextIndex": nextIndex,
+            "nextIndex": next_idx,
             "itemKind": kind,
             "length": len(items),
             "userItemList": items,
@@ -452,6 +478,7 @@ class ChuniBase:
                 "nextIndex": -1,
                 "userMusicList": [],  # 240
             }
+
         song_list = []
         next_idx = int(data["nextIndex"])
         max_ct = int(data["maxCount"])
@@ -474,10 +501,10 @@ class ChuniBase:
             if len(song_list) >= max_ct:
                 break
 
-        if len(song_list) >= max_ct:
+        if len(song_list) >= next_idx + max_ct:
             next_idx += max_ct
         else:
-            next_idx = 0
+            next_idx = -1
 
         return {
             "userId": data["userId"],
@@ -623,12 +650,15 @@ class ChuniBase:
             self.data.profile.put_profile_data(
                 user_id, self.version, upsert["userData"][0]
             )
+
         if "userDataEx" in upsert:
             self.data.profile.put_profile_data_ex(
                 user_id, self.version, upsert["userDataEx"][0]
             )
+
         if "userGameOption" in upsert:
             self.data.profile.put_profile_option(user_id, upsert["userGameOption"][0])
+
         if "userGameOptionEx" in upsert:
             self.data.profile.put_profile_option_ex(
                 user_id, upsert["userGameOptionEx"][0]
@@ -672,6 +702,10 @@ class ChuniBase:
 
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:
+                # convert the player names to utf-8
+                playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
+                playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
+                playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
                 self.data.score.put_playlog(user_id, playlog)
 
         if "userTeamPoint" in upsert:

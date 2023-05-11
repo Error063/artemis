@@ -3,30 +3,31 @@ A network service emulator for games running SEGA'S ALL.NET service, and similar
 
 # Supported games
 Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
-+ Chunithm
-    + All versions up to New!! Plus
 
-+ Crossbeats Rev
++ CHUNITHM
+    + All versions up to SUN
+
++ crossbeats REV.
     + All versions + omnimix
 
 + maimai DX
-    + All versions up to Festival
+    + All versions up to FESTiVAL
 
-+ Hatsune Miku Arcade
++ Hatsune Miku: Project DIVA Arcade
     + All versions
 
 + Card Maker
-    + 1.34.xx
-    + 1.35.xx
+    + 1.34
+    + 1.35
 
-+ Ongeki
++ O.N.G.E.K.I.
     + All versions up to Bright Memory
 
-+ Wacca
++ WACCA
     + Lily R
     + Reverse
 
-+ Pokken
++ POKKÉN TOURNAMENT
     + Final Online
 
 ## Requirements
