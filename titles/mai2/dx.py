@@ -20,6 +20,24 @@ class Mai2DX(Mai2Base):
         
         else:
             self.old_server = f"http://{self.core_config.title.hostname}/SDEZ/100/"
+    
+    def handle_get_game_setting_api_request(self, data: Dict):
+        return {
+            "gameSetting": {
+                "isMaintenance": False,
+                "requestInterval": 1800,
+                "rebootStartTime": "2020-01-01 07:00:00.0",
+                "rebootEndTime": "2020-01-01 07:59:59.0",
+                "movieUploadLimit": 100,
+                "movieStatus": 1,
+                "movieServerUri": self.old_server + "movie/",
+                "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
+                "oldServerUri": self.old_server + "old",
+                "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
+                "rebootInterval": 0,
+            },
+            "isAouAccession": False,
+        }
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version)

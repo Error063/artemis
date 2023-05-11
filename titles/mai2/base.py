@@ -26,21 +26,21 @@ class Mai2Base:
             self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
-        return {
+        return {            
+            "isDevelop": False,
+            "isAouAccession": False,
             "gameSetting": {
-                "isMaintenance": "false",
-                "requestInterval": 10,
+                "isMaintenance": False,
+                "requestInterval": 1800,
                 "rebootStartTime": "2020-01-01 07:00:00.0",
                 "rebootEndTime": "2020-01-01 07:59:59.0",
-                "movieUploadLimit": 10000,
-                "movieStatus": 0,
-                "movieServerUri": "",
+                "movieUploadLimit": 100,
+                "movieStatus": 1,
+                "movieServerUri": self.old_server + "movie/",
                 "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
                 "oldServerUri": self.old_server + "old",
                 "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
-                "rebootInterval": 0,
             },
-            "isAouAccession": "true",
         }
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
