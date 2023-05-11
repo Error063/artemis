@@ -265,7 +265,7 @@ python dbutils.py --game SDDT upgrade
 
 * Card Maker 1.35:
   * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
-  * maimai DX FESTiVAL: Yes (up to A35) (UNiVERSE PLUS up to A031)
+  * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
   * O.N.G.E.K.I. Bright Memory: Yes
 
 
