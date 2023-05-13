@@ -36,13 +36,7 @@ class Mai2DeliverConfig:
         )
     
     @property
-    def list_folder(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "mai2", "server", "list_folder", default=""
-        )
-
-    @property
-    def list_folder(self) -> int:
+    def content_folder(self) -> int:
         return CoreConfig.get_config_field(
             self.__config, "mai2", "server", "content_folder", default=""
         )

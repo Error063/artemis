@@ -1,4 +1,5 @@
 from twisted.web.http import Request
+from twisted.web.server import NOT_DONE_YET
 import json
 import inflection
 import yaml
@@ -229,8 +230,10 @@ class Mai2Servlet:
                 return zlib.compress(b"ok")
 
         elif url_split[0] == "deliver":
-            if url_split[len(url_split) - 1] == "maimai_deliver.list":
-                self.logger.info(f"v{version} maimai_deliver.list inquire")
+            file = url_split[len(url_split) - 1]
+            self.logger.info(f"v{version} {file} deliver inquire")
+            
+            if not self.game_cfg.deliver.enable or not path.exists(f"{self.game_cfg.deliver.content_folder}/{file}"):
                 return zlib.compress(b"")
         
         else:
