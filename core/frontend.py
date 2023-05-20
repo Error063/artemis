@@ -182,7 +182,7 @@ class FE_Gate(FE_Base):
             access_code: str = request.args[b"access_code"][0].decode()
             username: str = request.args[b"username"][0]
             email: str = request.args[b"email"][0].decode()
-            passwd: str = request.args[b"passwd"][0]
+            passwd: bytes = request.args[b"passwd"][0]
 
             uid = self.data.card.get_user_id_from_card(access_code)
             if uid is None:
@@ -197,7 +197,7 @@ class FE_Gate(FE_Base):
             if result is None:
                 return redirectTo(b"/gate?e=3", request)
 
-            if not self.data.user.check_password(uid, passwd.encode()):
+            if not self.data.user.check_password(uid, passwd):
                 return redirectTo(b"/gate", request)
 
             return redirectTo(b"/user", request)
@@ -227,9 +227,22 @@ class FE_User(FE_Base):
         usr_sesh = IUserSession(sesh)
         if usr_sesh.userId == 0:
             return redirectTo(b"/gate", request)
+        
+        cards = self.data.card.get_user_cards(usr_sesh.userId)
+        user = self.data.user.get_user(usr_sesh.userId)
+        card_data = []
+        for c in cards:
+            if c['is_locked']:
+                status = 'Locked'
+            elif c['is_banned']:
+                status = 'Banned'
+            else:
+                status = 'Active'
+            
+            card_data.append({'access_code': c['access_code'], 'status': status})
 
         return template.render(
-            title=f"{self.core_config.server.name} | Account", sesh=vars(usr_sesh)
+            title=f"{self.core_config.server.name} | Account", sesh=vars(usr_sesh), cards=card_data, username=user['username']
         ).encode("utf-16")
 
 
