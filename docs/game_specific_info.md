@@ -369,7 +369,7 @@ python dbutils.py --game SDFE upgrade
 
 ## SAO
 
-### SDWS
+### SDEW
 
 | Version ID | Version Name  |
 |------------|---------------|
