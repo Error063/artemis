@@ -15,6 +15,7 @@ using the megaime database. Clean installations always create the latest databas
     - [O.N.G.E.K.I.](#o-n-g-e-k-i)
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
+    - [Sword Art Online Arcade](#sao)
 
 
 # Supported Games
@@ -365,3 +366,47 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDFE upgrade
 ```
+
+## SAO
+
+### SDWS
+
+| Version ID | Version Name  |
+|------------|---------------|
+| 0          | SAO           |
+
+
+### Importer
+
+In order to use the importer locate your game installation folder and execute:
+
+```shell
+python read.py --series SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+```
+
+The importer for SAO will import all items, heroes, support skills and titles data.
+
+### Config
+
+Config file is located in `config/sao.yaml`.
+
+| Option             | Info                                                                        |
+|--------------------|-----------------------------------------------------------------------------|
+| `hostname`         | Changes the server listening address for Mucha                              |
+| `port`             | Changes the listing port                                                    |
+| `auto_register`    | Allows the game to handle the automatic registration of new cards           |
+
+
+### Database upgrade
+
+Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEW_1_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+
+```shell
+python dbutils.py --game SDEW upgrade
+```
+
+### Credits for SAO support:
+
+Midorica - Limited Network Support
+Dniel97 - Helping with network base
+tungnotpunk - Source
