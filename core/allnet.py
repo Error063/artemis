@@ -112,6 +112,8 @@ class AllnetServlet:
                 )
                 resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
                 resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
+                
+                self.logger.debug(f"Allnet response: {vars(resp)}")
                 return self.dict_to_http_form_string([vars(resp)])
 
         resp.uri, resp.host = self.uri_registry[req.game_id]
@@ -410,8 +412,8 @@ class AllnetPowerOnResponse3:
         self.uri = ""
         self.host = ""
         self.place_id = "123"
-        self.name = ""
-        self.nickname = ""
+        self.name = "ARTEMiS"
+        self.nickname = "ARTEMiS"
         self.region0 = "1"
         self.region_name0 = "W"
         self.region_name1 = ""
@@ -434,8 +436,8 @@ class AllnetPowerOnResponse2:
         self.uri = ""
         self.host = ""
         self.place_id = "123"
-        self.name = "Test"
-        self.nickname = "Test123"
+        self.name = "ARTEMiS"
+        self.nickname = "ARTEMiS"
         self.region0 = "1"
         self.region_name0 = "W"
         self.region_name1 = "X"
