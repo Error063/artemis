@@ -407,6 +407,6 @@ python dbutils.py --game SDEW upgrade
 
 ### Credits for SAO support:
 
-Midorica - Limited Network Support
-Dniel97 - Helping with network base
-tungnotpunk - Source
+- Midorica - Limited Network Support
+- Dniel97 - Helping with network base
+- tungnotpunk - Source
