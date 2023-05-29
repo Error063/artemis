@@ -478,28 +478,49 @@ class SaoGetHeroLogUserDataListRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
-    def __init__(self, cmd, heroIdsData) -> None:
+    def __init__(self, cmd, hero_data) -> None:
         super().__init__(cmd)
         self.result = 1
         
-        #print(heroIdsData)
-        #print(list(map(str,heroIdsData)))
+        self.user_hero_log_id = []
+        self.log_level = []
+        self.max_log_level_extended_num = []
+        self.log_exp = []
+        self.last_set_skill_slot1_skill_id = []
+        self.last_set_skill_slot2_skill_id = []
+        self.last_set_skill_slot3_skill_id = []
+        self.last_set_skill_slot4_skill_id = []
+        self.last_set_skill_slot5_skill_id = []
+
+        for i in range(len(hero_data)):
+            self.user_hero_log_id.append(hero_data[i][2])
+            self.log_level.append(hero_data[i][3])
+            self.max_log_level_extended_num.append(hero_data[i][3])
+            self.log_exp.append(hero_data[i][4])
+            self.last_set_skill_slot1_skill_id.append(hero_data[i][7])
+            self.last_set_skill_slot2_skill_id.append(hero_data[i][8])
+            self.last_set_skill_slot3_skill_id.append(hero_data[i][9])
+            self.last_set_skill_slot4_skill_id.append(hero_data[i][10])
+            self.last_set_skill_slot5_skill_id.append(hero_data[i][11])
+
+        #print(self.user_hero_log_id)
+        #print(list(map(str,self.user_hero_log_id)))
 
         # hero_log_user_data_list
-        self.user_hero_log_id = list(map(str,heroIdsData)) #str
-        self.hero_log_id = heroIdsData #int
-        self.log_level = 10 #short
-        self.max_log_level_extended_num = 10 #short
-        self.log_exp = 1000 #int
+        self.user_hero_log_id = list(map(str,self.user_hero_log_id)) #str
+        self.hero_log_id = list(map(int,self.user_hero_log_id)) #int
+        self.log_level = list(map(int,self.log_level)) #short
+        self.max_log_level_extended_num = list(map(int,self.log_level)) #short
+        self.log_exp = list(map(int,self.log_level)) #int
         self.possible_awakening_flag = 0 #byte
         self.awakening_stage = 0 #short
         self.awakening_exp = 0 #int
         self.skill_slot_correction_value = 0 #byte
-        self.last_set_skill_slot1_skill_id = 0 #short
-        self.last_set_skill_slot2_skill_id = 0 #short
-        self.last_set_skill_slot3_skill_id = 0 #short
-        self.last_set_skill_slot4_skill_id = 0 #short
-        self.last_set_skill_slot5_skill_id = 0 #short
+        self.last_set_skill_slot1_skill_id = list(map(int,self.last_set_skill_slot1_skill_id)) #short
+        self.last_set_skill_slot2_skill_id = list(map(int,self.last_set_skill_slot2_skill_id)) #short
+        self.last_set_skill_slot3_skill_id = list(map(int,self.last_set_skill_slot3_skill_id)) #short
+        self.last_set_skill_slot4_skill_id = list(map(int,self.last_set_skill_slot4_skill_id)) #short
+        self.last_set_skill_slot5_skill_id = list(map(int,self.last_set_skill_slot5_skill_id)) #short
         self.property1_property_id = 0 #int
         self.property1_value1 = 0 #int
         self.property1_value2 = 0 #int
@@ -573,18 +594,18 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
                 user_hero_log_id_size=len(self.user_hero_log_id[i]) * 2,
                 user_hero_log_id=[ord(x) for x in self.user_hero_log_id[i]],
                 hero_log_id=self.hero_log_id[i],
-                log_level=self.log_level,
-                max_log_level_extended_num=self.max_log_level_extended_num,
-                log_exp=self.log_exp,
+                log_level=self.log_level[i],
+                max_log_level_extended_num=self.max_log_level_extended_num[i],
+                log_exp=self.log_exp[i],
                 possible_awakening_flag=self.possible_awakening_flag,
                 awakening_stage=self.awakening_stage,
                 awakening_exp=self.awakening_exp,
                 skill_slot_correction_value=self.skill_slot_correction_value,
-                last_set_skill_slot1_skill_id=self.last_set_skill_slot1_skill_id,
-                last_set_skill_slot2_skill_id=self.last_set_skill_slot2_skill_id,
-                last_set_skill_slot3_skill_id=self.last_set_skill_slot3_skill_id,
-                last_set_skill_slot4_skill_id=self.last_set_skill_slot4_skill_id,
-                last_set_skill_slot5_skill_id=self.last_set_skill_slot5_skill_id,
+                last_set_skill_slot1_skill_id=self.last_set_skill_slot1_skill_id[i],
+                last_set_skill_slot2_skill_id=self.last_set_skill_slot2_skill_id[i],
+                last_set_skill_slot3_skill_id=self.last_set_skill_slot3_skill_id[i],
+                last_set_skill_slot4_skill_id=self.last_set_skill_slot4_skill_id[i],
+                last_set_skill_slot5_skill_id=self.last_set_skill_slot5_skill_id[i],
                 property1_property_id=self.property1_property_id,
                 property1_value1=self.property1_value1,
                 property1_value2=self.property1_value2,
@@ -926,10 +947,10 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
     
     def make(self) -> bytes:
         episode_data_struct = Struct(
-            "user_episode_append_id_size" / Int32ub,  # big endian
-            "user_episode_append_id" / Int16ul[5], #forced to match the user_episode_append_id_list index which is always 5 chars for the episode ids
-            "user_id_size" / Int32ub,  # big endian
-            "user_id" / Int16ul[6], # has to be exactly 6 chars in the user field... MANDATORY
+            "user_episode_append_id_size" / Rebuild(Int32ub, len_(this.user_episode_append_id) * 2),  # calculates the length of the user_episode_append_id
+            "user_episode_append_id" / PaddedString(this.user_episode_append_id_size, "utf_16_le"),  # user_episode_append_id is a (zero) padded string
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
             "episode_append_id" / Int32ub,
             "own_num" / Int32ub,
         )
@@ -955,10 +976,8 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
         for i in range(len(self.user_id_list)):
             # add the episode_data_struct to the resp_struct.episode_append_data_list
             resp_data.episode_append_data_list.append(dict(
-                user_episode_append_id_size=len(self.user_episode_append_id_list[i]) * 2,
-                user_episode_append_id=[ord(x) for x in self.user_episode_append_id_list[i]],
-                user_id_size=len(self.user_id_list[i]) * 2,
-                user_id=[ord(x) for x in self.user_id_list[i]],
+                user_episode_append_id=self.user_episode_append_id_list[i],
+                user_id=self.user_id_list[i],
                 episode_append_id=self.episode_append_id_list[i],
                 own_num=self.own_num_list[i],
             ))
@@ -974,8 +993,9 @@ class SaoGetPartyDataListRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party 
-    def __init__(self, cmd) -> None:
+    def __init__(self, cmd, hero1_data, hero2_data, hero3_data) -> None:
         super().__init__(cmd)
+        
         self.result = 1
         self.party_data_list_size = 1 # Number of arrays
 
@@ -985,36 +1005,36 @@ class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party
 
         self.user_party_team_id_1 = "0"
         self.arrangement_num_1 = 0
-        self.user_hero_log_id_1 = "101000010"
-        self.main_weapon_user_equipment_id_1 = "101000016"
-        self.sub_equipment_user_equipment_id_1 = "0"
-        self.skill_slot1_skill_id_1 = 30086
-        self.skill_slot2_skill_id_1 = 1001
-        self.skill_slot3_skill_id_1 = 1002
-        self.skill_slot4_skill_id_1 = 1003
-        self.skill_slot5_skill_id_1 = 1005
+        self.user_hero_log_id_1 = str(hero1_data[2])
+        self.main_weapon_user_equipment_id_1 = str(hero1_data[5])
+        self.sub_equipment_user_equipment_id_1 = str(hero1_data[6])
+        self.skill_slot1_skill_id_1 = hero1_data[7]
+        self.skill_slot2_skill_id_1 = hero1_data[8]
+        self.skill_slot3_skill_id_1 = hero1_data[9]
+        self.skill_slot4_skill_id_1 = hero1_data[10]
+        self.skill_slot5_skill_id_1 = hero1_data[11]
 
         self.user_party_team_id_2 = "0"
         self.arrangement_num_2 = 0
-        self.user_hero_log_id_2 = "102000010"
-        self.main_weapon_user_equipment_id_2 = "103000006"
-        self.sub_equipment_user_equipment_id_2 = "0"
-        self.skill_slot1_skill_id_2 = 30086
-        self.skill_slot2_skill_id_2 = 1001
-        self.skill_slot3_skill_id_2 = 1002
-        self.skill_slot4_skill_id_2 = 1003
-        self.skill_slot5_skill_id_2 = 1005
+        self.user_hero_log_id_2 = str(hero2_data[2])
+        self.main_weapon_user_equipment_id_2 = str(hero2_data[5])
+        self.sub_equipment_user_equipment_id_2 = str(hero2_data[6])
+        self.skill_slot1_skill_id_2 = hero2_data[7]
+        self.skill_slot2_skill_id_2 = hero2_data[8]
+        self.skill_slot3_skill_id_2 = hero2_data[9]
+        self.skill_slot4_skill_id_2 = hero2_data[10]
+        self.skill_slot5_skill_id_2 = hero2_data[11]
 
         self.user_party_team_id_3 = "0"
         self.arrangement_num_3 = 0
-        self.user_hero_log_id_3 = "103000010"
-        self.main_weapon_user_equipment_id_3 = "112000009"
-        self.sub_equipment_user_equipment_id_3 = "0"
-        self.skill_slot1_skill_id_3 = 30086
-        self.skill_slot2_skill_id_3 = 1001
-        self.skill_slot3_skill_id_3 = 1002
-        self.skill_slot4_skill_id_3 = 1003
-        self.skill_slot5_skill_id_3 = 1005
+        self.user_hero_log_id_3 = str(hero3_data[2])
+        self.main_weapon_user_equipment_id_3 = str(hero3_data[5])
+        self.sub_equipment_user_equipment_id_3 = str(hero3_data[6])
+        self.skill_slot1_skill_id_3 = hero3_data[7]
+        self.skill_slot2_skill_id_3 = hero3_data[8]
+        self.skill_slot3_skill_id_3 = hero3_data[9]
+        self.skill_slot4_skill_id_3 = hero3_data[10]
+        self.skill_slot5_skill_id_3 = hero3_data[11]
     
     def make(self) -> bytes:
         # create a resp struct

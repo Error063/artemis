@@ -73,7 +73,12 @@ class SaoBase:
                 user_id = -1
                 self.logger.error("Failed to register card!")
 
+            # Create profile with 3 basic heroes
             profile_id = self.game_data.profile.create_profile(user_id)
+            self.game_data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
 
         self.logger.info(f"User Authenticated: { access_code } | { user_id }")
 
@@ -121,9 +126,19 @@ class SaoBase:
         
     def handle_c600(self, request: Any) -> bytes:
         #have_object/get_hero_log_user_data_list
-        heroIdsData = self.game_data.static.get_hero_ids(0, True)
+        req = bytes.fromhex(request)[24:]
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+
+        )
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
+        hero_data = self.game_data.item.get_hero_logs(user_id)
         
-        resp = SaoGetHeroLogUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, heroIdsData)
+        resp = SaoGetHeroLogUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, hero_data)
         return resp.make()
     
     def handle_c602(self, request: Any) -> bytes:
@@ -164,7 +179,23 @@ class SaoBase:
 
     def handle_c804(self, request: Any) -> bytes:
         #custom/get_party_data_list
-        resp = SaoGetPartyDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+
+        req = bytes.fromhex(request)[24:]
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+
+        )
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
+        hero_party = self.game_data.item.get_hero_party(user_id, 0)
+        hero1_data = self.game_data.item.get_hero_log(user_id, hero_party[3])
+        hero2_data = self.game_data.item.get_hero_log(user_id, hero_party[4])
+        hero3_data = self.game_data.item.get_hero_log(user_id, hero_party[5])
+
+        resp = SaoGetPartyDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, hero1_data, hero2_data, hero3_data)
         return resp.make()
 
     def handle_c902(self, request: Any) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
@@ -197,7 +228,7 @@ class SaoBase:
         #home/check_profile_card_used_reward
         resp = SaoCheckProfileCardUsedRewardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
-    
+
     def handle_c806(self, request: Any) -> bytes:
         #custom/change_party
         req = bytes.fromhex(request)[24:]
@@ -228,18 +259,40 @@ class SaoBase:
                 "sub_equipment_user_equipment_id_size" / Rebuild(Int32ub, len_(this.sub_equipment_user_equipment_id) * 2),  # calculates the length of the sub_equipment_user_equipment_id
                 "sub_equipment_user_equipment_id" / PaddedString(this.sub_equipment_user_equipment_id_size, "utf_16_le"),  # sub_equipment_user_equipment_id is a (zero) padded string
                 "skill_slot1_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-                "skill_slot2_skill_id" / Int32ub,  # skill_slot2_skill_id is a int,
-                "skill_slot3_skill_id" / Int32ub,  # skill_slot3_skill_id is a int,
-                "skill_slot4_skill_id" / Int32ub,  # skill_slot4_skill_id is a int,
-                "skill_slot5_skill_id" / Int32ub,  # skill_slot5_skill_id is a int,
+                "skill_slot2_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
+                "skill_slot3_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
+                "skill_slot4_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
+                "skill_slot5_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
             )),
             )),
 
         )
 
         req_data = req_struct.parse(req)
+        user_id = req_data.user_id
 
-        #self.logger.info(f"User Team Data: { req_data }")
+        for party_team in req_data.party_data_list[0].party_team_data_list:
+            hero_data = self.game_data.item.get_hero_log(user_id, party_team["user_hero_log_id"])
+            hero_level = 1
+            hero_exp = 0
+
+            if hero_data:
+                hero_level = hero_data["log_level"]
+                hero_exp = hero_data["log_exp"]
+
+            self.game_data.item.put_hero_log(
+                user_id,
+                party_team["user_hero_log_id"],
+                hero_level,
+                hero_exp,
+                party_team["main_weapon_user_equipment_id"],
+                party_team["sub_equipment_user_equipment_id"],
+                party_team["skill_slot1_skill_id"],
+                party_team["skill_slot2_skill_id"],
+                party_team["skill_slot3_skill_id"],
+                party_team["skill_slot4_skill_id"],
+                party_team["skill_slot5_skill_id"]
+            )
 
         resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
@@ -370,12 +423,6 @@ class SaoBase:
         )
 
         req_data = req_struct.parse(req)
-
-        #self.logger.info(f"User Get Col Data: { req_data.get_col }")
-        #self.logger.info(f"User Hero Log Exp Data: { req_data.get_hero_log_exp }")
-        #self.logger.info(f"User Score Data: { req_data.score_data[0] }")
-        #self.logger.info(f"User Discovery Enemy Data: { req_data.discovery_enemy_data_list }")
-        #self.logger.info(f"User Mission Data: { req_data.mission_data_list }")
 
         resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
