@@ -329,10 +329,18 @@ class SaoBase:
         user_id = req_data.user_id
         profile_data = self.game_data.profile.get_profile(user_id)
 
+        self.game_data.item.create_session(
+            user_id, 
+            int(req_data.play_start_request_data[0].user_party_id), 
+            req_data.episode_id, 
+            req_data.play_mode, 
+            req_data.play_start_request_data[0].quest_drop_boost_apply_flag
+            )
+
         resp = SaoEpisodePlayStartResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
         return resp.make()
 
-    def handle_c908(self, request: Any) -> bytes:
+    def handle_c908(self, request: Any) -> bytes: # Level calculation missing for the profile and heroes
         #quest/episode_play_end
 
         req = bytes.fromhex(request)[24:]
@@ -423,6 +431,52 @@ class SaoBase:
         )
 
         req_data = req_struct.parse(req)
+
+        # Update the profile 
+        profile = self.game_data.profile.get_profile(req_data.user_id)
+        
+        exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
+        col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
+
+        updated_profile = self.game_data.profile.put_profile(
+            req_data.user_id,
+            profile["user_type"], 
+            profile["nick_name"], 
+            profile["rank_num"], 
+            exp,
+            col,
+            profile["own_vp"], 
+            profile["own_yui_medal"], 
+            profile["setting_title_id"]
+            )
+
+        # Update heroes from the used party
+        play_session = self.game_data.item.get_session(req_data.user_id)
+        session_party = self.game_data.item.get_hero_party(req_data.user_id, play_session["user_party_team_id"])
+
+        hero_list = []
+        hero_list.append(session_party["user_hero_log_id_1"])
+        hero_list.append(session_party["user_hero_log_id_2"])
+        hero_list.append(session_party["user_hero_log_id_3"])
+
+        for i in range(0,len(hero_list)):
+            hero_data = self.game_data.item.get_hero_log(req_data.user_id, hero_list[i])
+
+            log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
+
+            self.game_data.item.put_hero_log(
+                req_data.user_id,
+                hero_data["user_hero_log_id"],
+                hero_data["log_level"],
+                log_exp,
+                hero_data["main_weapon"],
+                hero_data["sub_equipment"],
+                hero_data["skill_slot1_skill_id"],
+                hero_data["skill_slot2_skill_id"],
+                hero_data["skill_slot3_skill_id"],
+                hero_data["skill_slot4_skill_id"],
+                hero_data["skill_slot5_skill_id"]
+            )
 
         resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()

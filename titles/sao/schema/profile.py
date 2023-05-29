@@ -40,6 +40,38 @@ class SaoProfileData(BaseData):
             return None
         return result.lastrowid
 
+    def put_profile(self, user_id: int, user_type: int, nick_name: str, rank_num: int, rank_exp: int, own_col: int, own_vp: int, own_yui_medal: int, setting_title_id: int) -> Optional[int]:
+        sql = insert(profile).values(
+            user=user_id,
+            user_type=user_type,
+            nick_name=nick_name,
+            rank_num=rank_num,
+            rank_exp=rank_exp,
+            own_col=own_col,
+            own_vp=own_vp,
+            own_yui_medal=own_yui_medal,
+            setting_title_id=setting_title_id
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            rank_num=rank_num,
+            rank_exp=rank_exp,
+            own_col=own_col,
+            own_vp=own_vp,
+            own_yui_medal=own_yui_medal,
+            setting_title_id=setting_title_id
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to insert profile! user: {user_id}"
+            )
+            return None
+
+        print(result.lastrowid)
+        return result.lastrowid
+
     def get_profile(self, user_id: int) -> Optional[Row]:
         sql = profile.select(profile.c.user == user_id)
         result = self.execute(sql)
