@@ -9,42 +9,44 @@ using the megaime database. Clean installations always create the latest databas
 # Table of content
 
 - [Supported Games](#supported-games)
-    - [Chunithm](#chunithm)
+    - [CHUNITHM](#chunithm)
     - [crossbeats REV.](#crossbeats-rev)
     - [maimai DX](#maimai-dx)
     - [O.N.G.E.K.I.](#o-n-g-e-k-i)
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
+    - [Sword Art Online Arcade](#sao)
 
 
 # Supported Games
 
 Games listed below have been tested and confirmed working.
 
-## Chunithm
+## CHUNITHM
 
 ### SDBT
 
-| Version ID | Version Name       |
-|------------|--------------------|
-| 0          | Chunithm           |
-| 1          | Chunithm+          |
-| 2          | Chunithm Air       |
-| 3          | Chunithm Air +     |
-| 4          | Chunithm Star      |
-| 5          | Chunithm Star +    |
-| 6          | Chunithm Amazon    |
-| 7          | Chunithm Amazon +  |
-| 8          | Chunithm Crystal   |
-| 9          | Chunithm Crystal + |
-| 10         | Chunithm Paradise  |
+| Version ID | Version Name          |
+|------------|-----------------------|
+| 0          | CHUNITHM              |
+| 1          | CHUNITHM PLUS         |
+| 2          | CHUNITHM AIR          |
+| 3          | CHUNITHM AIR PLUS     |
+| 4          | CHUNITHM STAR         |
+| 5          | CHUNITHM STAR PLUS    |
+| 6          | CHUNITHM AMAZON       |
+| 7          | CHUNITHM AMAZON PLUS  |
+| 8          | CHUNITHM CRYSTAL      |
+| 9          | CHUNITHM CRYSTAL PLUS |
+| 10         | CHUNITHM PARADISE     |
 
 ### SDHD/SDBT
 
-| Version ID | Version Name    |
-|------------|-----------------|
-| 11         | Chunithm New!!  |
-| 12         | Chunithm New!!+ |
+| Version ID | Version Name        |
+|------------|---------------------|
+| 11         | CHUNITHM NEW!!      |
+| 12         | CHUNITHM NEW PLUS!! |
+| 13         | CHUNITHM SUN        |
 
 
 ### Importer
@@ -60,12 +62,32 @@ The importer for Chunithm will import: Events, Music, Charge Items and Avatar Ac
 ### Database upgrade
 
 Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDBT_3_upgrade.sql`. In order to upgrade to version 3 in this case you need to
+which version is the latest, f.e. `SDBT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
 perform all previous updates as well:
 
 ```shell
 python dbutils.py --game SDBT upgrade
 ```
+
+### Online Battle
+
+**Only matchmaking (with your imaginary friends) is supported! Online Battle does not (yet?) work!**
+
+The first person to start the Online Battle (now called host) will create a "matching room" with a given `roomId`, after that max 3 other people can join the created room.
+Non used slots during the matchmaking will be filled with CPUs after the timer runs out.
+As soon as a new member will join the room the timer will jump back to 60 secs again.
+Sending those 4 messages to all other users is also working properly.
+In order to use the Online Battle every user needs the same ICF, same rom version and same data version!
+If a room is full a new room will be created if another user starts an Online Battle.
+After a failed Online Battle the room will be deleted. The host is used for the timer countdown, so if the connection failes to the host the timer will stop and could create a "frozen" state.
+
+#### Information/Problems:
+
+- Online Battle uses UDP hole punching and opens port 50201?
+- `reflectorUri` seems related to that?
+- Timer countdown should be handled globally and not by one user
+- Game can freeze or can crash if someone (especially the host) leaves the matchmaking
+
 
 ## crossbeats REV.
 
@@ -111,9 +133,9 @@ Config file is located in `config/cxb.yaml`.
 | 1          | maimai DX PLUS          |
 | 2          | maimai DX Splash        |
 | 3          | maimai DX Splash PLUS   |
-| 4          | maimai DX Universe      |
-| 5          | maimai DX Universe PLUS |
-| 6          | maimai DX Festival      |
+| 4          | maimai DX UNiVERSE      |
+| 5          | maimai DX UNiVERSE PLUS |
+| 6          | maimai DX FESTiVAL      |
 
 ### Importer
 
@@ -238,13 +260,13 @@ python dbutils.py --game SDDT upgrade
 ### Support status
 
 * Card Maker 1.34:
-  * Chunithm New!!: Yes
-  * maimai DX Universe: Yes
+  * CHUNITHM NEW!!: Yes
+  * maimai DX UNiVERSE: Yes
   * O.N.G.E.K.I. Bright: Yes
 
 * Card Maker 1.35:
-  * Chunithm New!!+: Yes
-  * maimai DX Universe PLUS: Yes
+  * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
+  * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
   * O.N.G.E.K.I. Bright Memory: Yes
 
 
@@ -344,3 +366,47 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDFE upgrade
 ```
+
+## SAO
+
+### SDEW
+
+| Version ID | Version Name  |
+|------------|---------------|
+| 0          | SAO           |
+
+
+### Importer
+
+In order to use the importer locate your game installation folder and execute:
+
+```shell
+python read.py --series SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+```
+
+The importer for SAO will import all items, heroes, support skills and titles data.
+
+### Config
+
+Config file is located in `config/sao.yaml`.
+
+| Option             | Info                                                                        |
+|--------------------|-----------------------------------------------------------------------------|
+| `hostname`         | Changes the server listening address for Mucha                              |
+| `port`             | Changes the listing port                                                    |
+| `auto_register`    | Allows the game to handle the automatic registration of new cards           |
+
+
+### Database upgrade
+
+Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEW_1_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+
+```shell
+python dbutils.py --game SDEW upgrade
+```
+
+### Credits for SAO support:
+
+- Midorica - Limited Network Support
+- Dniel97 - Helping with network base
+- tungnotpunk - Source

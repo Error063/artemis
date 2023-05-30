@@ -17,21 +17,23 @@ class ChuniConstants:
     VER_CHUNITHM_PARADISE = 10
     VER_CHUNITHM_NEW = 11
     VER_CHUNITHM_NEW_PLUS = 12
+    VER_CHUNITHM_SUN = 13
 
     VERSION_NAMES = [
-        "Chunithm",
-        "Chunithm+",
-        "Chunithm Air",
-        "Chunithm Air+",
-        "Chunithm Star",
-        "Chunithm Star+",
-        "Chunithm Amazon",
-        "Chunithm Amazon+",
-        "Chunithm Crystal",
-        "Chunithm Crystal+",
-        "Chunithm Paradise",
-        "Chunithm New!!",
-        "Chunithm New!!+",
+        "CHUNITHM",
+        "CHUNITHM PLUS",
+        "CHUNITHM AIR",
+        "CHUNITHM AIR PLUS",
+        "CHUNITHM STAR",
+        "CHUNITHM STAR  PLUS",
+        "CHUNITHM AMAZON",
+        "CHUNITHM AMAZON PLUS",
+        "CHUNITHM CRYSTAL",
+        "CHUNITHM CRYSTAL PLUS",
+        "CHUNITHM PARADISE",
+        "CHUNITHM NEW!!",
+        "CHUNITHM NEW PLUS!!",
+        "CHUNITHM SUN"
     ]
 
     @classmethod

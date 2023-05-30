@@ -1,11 +1,19 @@
 from typing import Dict, List, Optional
-from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    Table,
+    Column,
+    UniqueConstraint,
+    PrimaryKeyConstraint,
+    and_,
+)
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON, Float
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.engine import Row
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
+from datetime import datetime
 
 from core.data.schema import BaseData, metadata
 
@@ -17,6 +25,7 @@ events = Table(
     Column("eventId", Integer),
     Column("type", Integer),
     Column("name", String(255)),
+    Column("startDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", name="chuni_static_events_uk"),
     mysql_charset="utf8mb4",
@@ -125,11 +134,13 @@ gacha_cards = Table(
 login_bonus_preset = Table(
     "chuni_static_login_bonus_preset",
     metadata,
-    Column("id", Integer, primary_key=True, nullable=False),
+    Column("presetId", Integer, nullable=False),
     Column("version", Integer, nullable=False),
     Column("presetName", String(255), nullable=False),
     Column("isEnabled", Boolean, server_default="1"),
-    UniqueConstraint("version", "id", name="chuni_static_login_bonus_preset_uk"),
+    PrimaryKeyConstraint(
+        "presetId", "version", name="chuni_static_login_bonus_preset_pk"
+    ),
     mysql_charset="utf8mb4",
 )
 
@@ -138,15 +149,7 @@ login_bonus = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("version", Integer, nullable=False),
-    Column(
-        "presetId",
-        ForeignKey(
-            "chuni_static_login_bonus_preset.id",
-            ondelete="cascade",
-            onupdate="cascade",
-        ),
-        nullable=False,
-    ),
+    Column("presetId", Integer, nullable=False),
     Column("loginBonusId", Integer, nullable=False),
     Column("loginBonusName", String(255), nullable=False),
     Column("presentId", Integer, nullable=False),
@@ -156,6 +159,16 @@ login_bonus = Table(
     Column("loginBonusCategoryType", Integer, nullable=False),
     UniqueConstraint(
         "version", "presetId", "loginBonusId", name="chuni_static_login_bonus_uk"
+    ),
+    ForeignKeyConstraint(
+        ["presetId", "version"],
+        [
+            "chuni_static_login_bonus_preset.presetId",
+            "chuni_static_login_bonus_preset.version",
+        ],
+        onupdate="CASCADE",
+        ondelete="CASCADE",
+        name="chuni_static_login_bonus_ibfk_1",
     ),
     mysql_charset="utf8mb4",
 )
@@ -236,7 +249,7 @@ class ChuniStaticData(BaseData):
         self, version: int, preset_id: int, preset_name: str, is_enabled: bool
     ) -> Optional[int]:
         sql = insert(login_bonus_preset).values(
-            id=preset_id,
+            presetId=preset_id,
             version=version,
             presetName=preset_name,
             isEnabled=is_enabled,
@@ -410,6 +423,14 @@ class ChuniStaticData(BaseData):
 
     def get_charges(self, version: int) -> Optional[List[Row]]:
         sql = select(charge).where(charge.c.version == version)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_music(self, version: int) -> Optional[List[Row]]:
+        sql = music.select(music.c.version <= version)
 
         result = self.execute(sql)
         if result is None:

@@ -93,13 +93,10 @@ class UserMusicUnlockRequest(BaseRequest):
 
 
 class UserMusicUnlockResponse(BaseResponse):
-    def __init__(self, current_wp: int = 0, tickets_remaining: List = []) -> None:
+    def __init__(self, current_wp: int = 0, tickets_remaining: List[TicketItem] = []) -> None:
         super().__init__()
         self.wp = current_wp
-        self.tickets: List[TicketItem] = []
-
-        for ticket in tickets_remaining:
-            self.tickets.append(TicketItem(ticket[0], ticket[1], ticket[2]))
+        self.tickets = tickets_remaining
 
     def make(self) -> Dict:
         tickets = []
