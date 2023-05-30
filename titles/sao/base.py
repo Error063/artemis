@@ -3,7 +3,9 @@ import json, logging
 from typing import Any, Dict
 import random
 import struct
-import csv
+from csv import *
+from random import choice
+import random as rand
 
 from core.data import Data
 from core import CoreConfig
@@ -495,6 +497,25 @@ class SaoBase:
                 hero_data["skill_slot4_skill_id"],
                 hero_data["skill_slot5_skill_id"]
             )
+        
+        # Generate random hero(es) based off the response    
+        for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
+            
+            with open('titles/sao/data/RewardTable.csv', 'r') as f:
+                keys_unanalyzed = next(f).strip().split(',')
+                data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+
+            randomized_unanalyzed_id = choice(data_unanalyzed)
+            while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != req_data.get_unanalyzed_log_tmp_reward_data_list[a].unanalyzed_log_grade_id:
+                randomized_unanalyzed_id = choice(data_unanalyzed)
+            
+            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+            if heroList:
+                self.game_data.item.put_hero_log(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+            
+            # Item and Equipments saving will be done later here
+            
+        # Send response
 
         resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()

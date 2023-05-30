@@ -246,6 +246,14 @@ class SaoStaticData(BaseData):
             return None
         return [list[2] for list in result.fetchall()]
     
+    def get_hero_id(self, heroLogId: int) -> Optional[Dict]:
+        sql = hero.select(hero.c.heroLogId == heroLogId)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+    
     def get_hero_ids(self, version: int, enabled: bool) -> Optional[List[Dict]]:
         sql = hero.select(hero.c.version == version and hero.c.enabled == enabled).order_by(
             hero.c.heroLogId.asc()
