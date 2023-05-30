@@ -660,19 +660,57 @@ class SaoGetEquipmentUserDataListRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
-    def __init__(self, cmd, equipmentIdsData) -> None:
+    def __init__(self, cmd, equipment_data) -> None:
         super().__init__(cmd)
         self.result = 1
+        
+        self.user_equipment_id = []
+        self.enhancement_value = []
+        self.max_enhancement_value_extended_num = []
+        self.enhancement_exp = []
+        self.awakening_stage = []
+        self.awakening_exp = []
+        self.possible_awakening_flag = []
+        equipment_level = 0
+        
+        for i in range(len(equipment_data)):
+
+            # Calculate level based off experience and the CSV list
+            with open(r'titles/sao/data/EquipmentLevel.csv') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line_count = 0
+                data = []
+                rowf = False
+                for row in csv_reader:
+                    if rowf==False:
+                        rowf=True
+                    else:
+                        data.append(row)
+
+            exp = equipment_data[i][4]
+                
+            for e in range(0,len(data)):
+                if exp>=int(data[e][1]) and exp<int(data[e+1][1]):
+                    equipment_level = int(data[e][0])
+                    break
+
+            self.user_equipment_id.append(equipment_data[i][2])
+            self.enhancement_value.append(equipment_level)
+            self.max_enhancement_value_extended_num.append(equipment_level)
+            self.enhancement_exp.append(equipment_data[i][4])
+            self.awakening_stage.append(equipment_data[i][5])
+            self.awakening_exp.append(equipment_data[i][6])
+            self.possible_awakening_flag.append(equipment_data[i][7])
 
         # equipment_user_data_list
-        self.user_equipment_id = list(map(str,equipmentIdsData)) #str
-        self.equipment_id = equipmentIdsData #int
-        self.enhancement_value = 10 #short
-        self.max_enhancement_value_extended_num = 10 #short
-        self.enhancement_exp = 1000 #int
-        self.possible_awakening_flag = 0 #byte
-        self.awakening_stage = 0 #short
-        self.awakening_exp = 0 #int
+        self.user_equipment_id = list(map(str,self.user_equipment_id)) #str
+        self.equipment_id = list(map(int,self.user_equipment_id)) #int
+        self.enhancement_value = list(map(int,self.enhancement_value)) #short
+        self.max_enhancement_value_extended_num = list(map(int,self.max_enhancement_value_extended_num)) #short
+        self.enhancement_exp = list(map(int,self.enhancement_exp)) #int
+        self.possible_awakening_flag = list(map(int,self.possible_awakening_flag)) #byte
+        self.awakening_stage = list(map(int,self.awakening_stage)) #short
+        self.awakening_exp = list(map(int,self.awakening_exp)) #int
         self.property1_property_id = 0 #int
         self.property1_value1 = 0 #int
         self.property1_value2 = 0 #int
@@ -739,12 +777,12 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
                 user_equipment_id_size=len(self.user_equipment_id[i]) * 2,
                 user_equipment_id=[ord(x) for x in self.user_equipment_id[i]],
                 equipment_id=self.equipment_id[i],
-                enhancement_value=self.enhancement_value,
-                max_enhancement_value_extended_num=self.max_enhancement_value_extended_num,
-                enhancement_exp=self.enhancement_exp,
-                possible_awakening_flag=self.possible_awakening_flag,
-                awakening_stage=self.awakening_stage,
-                awakening_exp=self.awakening_exp,
+                enhancement_value=self.enhancement_value[i],
+                max_enhancement_value_extended_num=self.max_enhancement_value_extended_num[i],
+                enhancement_exp=self.enhancement_exp[i],
+                possible_awakening_flag=self.possible_awakening_flag[i],
+                awakening_stage=self.awakening_stage[i],
+                awakening_exp=self.awakening_exp[i],
                 property1_property_id=self.property1_property_id,
                 property1_value1=self.property1_value1,
                 property1_value2=self.property1_value2,

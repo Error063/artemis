@@ -81,6 +81,9 @@ class SaoBase:
             self.game_data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
             self.game_data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
             self.game_data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
+            self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
+            self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
+            self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
 
         self.logger.info(f"User Authenticated: { access_code } | { user_id }")
 
@@ -145,9 +148,19 @@ class SaoBase:
     
     def handle_c602(self, request: Any) -> bytes:
         #have_object/get_equipment_user_data_list
-        equipmentIdsData = self.game_data.static.get_equipment_ids(0, True)
-        
-        resp = SaoGetEquipmentUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, equipmentIdsData)
+        req = bytes.fromhex(request)[24:]
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+
+        )
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+    
+        equipment_data = self.game_data.item.get_user_equipments(user_id)
+
+        resp = SaoGetEquipmentUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, equipment_data)
         return resp.make()
         
     def handle_c604(self, request: Any) -> bytes:
@@ -510,10 +523,11 @@ class SaoBase:
                 randomized_unanalyzed_id = choice(data_unanalyzed)
             
             heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+            equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
             if heroList:
                 self.game_data.item.put_hero_log(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
-            
-            # Item and Equipments saving will be done later here
+            if equipmentList:
+                self.game_data.item.put_equipment_data(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             
         # Send response
 

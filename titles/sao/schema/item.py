@@ -8,6 +8,26 @@ from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
 
+equipment_data = Table(
+    "sao_equipment_data",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("equipment_id", Integer, nullable=False),
+    Column("enhancement_value", Integer, nullable=False),
+    Column("enhancement_exp", Integer, nullable=False),
+    Column("awakening_exp", Integer, nullable=False),
+    Column("awakening_stage", Integer, nullable=False),
+    Column("possible_awakening_flag", Integer, nullable=False),
+    Column("get_date", TIMESTAMP, nullable=False, server_default=func.now()),
+    UniqueConstraint("user", "equipment_id", name="sao_equipment_data_uk"),
+    mysql_charset="utf8mb4",
+)
+
 hero_log_data = Table(
     "sao_hero_log_data",
     metadata,
@@ -84,6 +104,34 @@ class SaoItemData(BaseData):
             self.logger.error(f"Failed to create SAO session for user {user_id}!")
             return None
         return result.lastrowid
+    
+    def put_equipment_data(self, user_id: int, equipment_id: int, enhancement_value: int, enhancement_exp: int, awakening_exp: int, awakening_stage: int, possible_awakening_flag: int) -> Optional[int]:
+        sql = insert(equipment_data).values(
+            user=user_id,
+            equipment_id=equipment_id,
+            enhancement_value=enhancement_value,
+            enhancement_exp=enhancement_exp,
+            awakening_exp=awakening_exp,
+            awakening_stage=awakening_stage,
+            possible_awakening_flag=possible_awakening_flag,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            enhancement_value=enhancement_value,
+            enhancement_exp=enhancement_exp,
+            awakening_exp=awakening_exp,
+            awakening_stage=awakening_stage,
+            possible_awakening_flag=possible_awakening_flag,
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to insert equipment! user: {user_id}, equipment_id: {equipment_id}"
+            )
+            return None
+
+        return result.lastrowid
 
     def put_hero_log(self, user_id: int, user_hero_log_id: int, log_level: int, log_exp: int, main_weapon: int, sub_equipment: int, skill_slot1_skill_id: int, skill_slot2_skill_id: int, skill_slot3_skill_id: int, skill_slot4_skill_id: int, skill_slot5_skill_id: int) -> Optional[int]:
         sql = insert(hero_log_data).values(
@@ -144,6 +192,23 @@ class SaoItemData(BaseData):
             return None
 
         return result.lastrowid
+    
+    def get_user_equipments(
+        self, user_id: int
+    ) -> Optional[List[Row]]:
+        """
+        A catch-all equipments lookup given a profile
+        """
+        sql = equipment_data.select(
+            and_(
+                equipment_data.c.user == user_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def get_hero_log(
         self, user_id: int, user_hero_log_id: int = None
@@ -167,7 +232,7 @@ class SaoItemData(BaseData):
         self, user_id: int
     ) -> Optional[List[Row]]:
         """
-        A catch-all hero lookup given a profile and user_party_team_id and ID specifiers
+        A catch-all hero lookup given a profile
         """
         sql = hero_log_data.select(
             and_(

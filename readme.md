@@ -30,6 +30,9 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + POKKÉN TOURNAMENT
     + Final Online
 
++ Sword Art Online Arcade (partial support)
+    + Final
+
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)
 - pip

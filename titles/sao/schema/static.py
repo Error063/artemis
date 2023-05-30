@@ -264,6 +264,14 @@ class SaoStaticData(BaseData):
             return None
         return [list[2] for list in result.fetchall()]
     
+    def get_equipment_id(self, equipmentId: int) -> Optional[Dict]:
+        sql = equipment.select(equipment.c.equipmentId == equipmentId)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+    
     def get_equipment_ids(self, version: int, enabled: bool) -> Optional[List[Dict]]:
         sql = equipment.select(equipment.c.version == version and equipment.c.enabled == enabled).order_by(
             equipment.c.equipmentId.asc()
