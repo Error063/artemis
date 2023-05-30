@@ -3,6 +3,7 @@ import json, logging
 from typing import Any, Dict
 import random
 import struct
+import csv
 
 from core.data import Data
 from core import CoreConfig
@@ -29,7 +30,6 @@ class SaoBase:
 
     def handle_c122(self, request: Any) -> bytes:
         #common/get_maintenance_info
-
         resp = SaoGetMaintResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
 
@@ -438,11 +438,29 @@ class SaoBase:
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
         col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
 
+        # Calculate level based off experience and the CSV list
+        with open(r'titles/sao/data/PlayerRank.csv') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            data = []
+            rowf = False
+            for row in csv_reader:
+                if rowf==False:
+                    rowf=True
+                else:
+                    data.append(row)           
+            
+        for i in range(0,len(data)):
+            if exp>=int(data[i][1]) and exp<int(data[i+1][1]):
+                player_level = int(data[i][0])
+                break
+
+        # Update profile
         updated_profile = self.game_data.profile.put_profile(
             req_data.user_id,
             profile["user_type"], 
             profile["nick_name"], 
-            profile["rank_num"], 
+            player_level,
             exp,
             col,
             profile["own_vp"], 

@@ -2,6 +2,7 @@ import struct
 from datetime import datetime
 from construct import *
 import sys
+import csv
 
 class SaoBaseRequest:
     def __init__(self, data: bytes) -> None:
@@ -493,9 +494,29 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
         self.last_set_skill_slot5_skill_id = []
 
         for i in range(len(hero_data)):
+
+            # Calculate level based off experience and the CSV list
+            with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line_count = 0
+                data = []
+                rowf = False
+                for row in csv_reader:
+                    if rowf==False:
+                        rowf=True
+                    else:
+                        data.append(row)
+
+            exp = hero_data[i][4]
+                
+            for e in range(0,len(data)):
+                if exp>=int(data[e][1]) and exp<int(data[e+1][1]):
+                    hero_level = int(data[e][0])
+                    break
+
             self.user_hero_log_id.append(hero_data[i][2])
-            self.log_level.append(hero_data[i][3])
-            self.max_log_level_extended_num.append(hero_data[i][3])
+            self.log_level.append(hero_level)
+            self.max_log_level_extended_num.append(hero_level)
             self.log_exp.append(hero_data[i][4])
             self.last_set_skill_slot1_skill_id.append(hero_data[i][7])
             self.last_set_skill_slot2_skill_id.append(hero_data[i][8])
@@ -510,8 +531,8 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
         self.user_hero_log_id = list(map(str,self.user_hero_log_id)) #str
         self.hero_log_id = list(map(int,self.user_hero_log_id)) #int
         self.log_level = list(map(int,self.log_level)) #short
-        self.max_log_level_extended_num = list(map(int,self.log_level)) #short
-        self.log_exp = list(map(int,self.log_level)) #int
+        self.max_log_level_extended_num = list(map(int,self.max_log_level_extended_num)) #short
+        self.log_exp = list(map(int,self.log_exp)) #int
         self.possible_awakening_flag = 0 #byte
         self.awakening_stage = 0 #short
         self.awakening_exp = 0 #int
