@@ -253,13 +253,13 @@ python dbutils.py --game SDDT upgrade
 
 | Version ID | Version Name    |
 |------------|-----------------|
-| 0          | Card Maker 1.34 |
+| 0          | Card Maker 1.30 |
 | 1          | Card Maker 1.35 |
 
 
 ### Support status
 
-* Card Maker 1.34:
+* Card Maker 1.30:
   * CHUNITHM NEW!!: Yes
   * maimai DX UNiVERSE: Yes
   * O.N.G.E.K.I. Bright: Yes
@@ -285,19 +285,46 @@ python read.py --series SDED --version <version ID> --binfolder titles/cm/cm_dat
 python read.py --series SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
-Also make sure to import all maimai and Chunithm data as well:
+Also make sure to import all maimai DX and CHUNITHM data as well:
 
 ```shell
 python read.py --series SDED --version <version ID> --binfolder /path/to/cardmaker/CardMaker_Data
 ```
 
-The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai/Chunithm) and the hardcoded
+The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai DX/CHUNITHM) and the hardcoded
 Cards for each Gacha (O.N.G.E.K.I. only).
 
 **NOTE: Without executing the importer Card Maker WILL NOT work!**
 
 
-### O.N.G.E.K.I. Gachas
+### Config setup
+
+Make sure to update your `config/cardmaker.yaml` with the correct version for each game. To get the current version required to run a specific game, open every opt (Axxx) folder descending until you find all three folders:
+
+- `MU3`: O.N.G.E.K.I.
+- `MAI`: maimai DX
+- `CHU`: CHUNITHM
+
+Inside each folder is a `DataConfig.xml` file, for example:
+
+`MU3/DataConfig.xml`:
+```xml
+  <cardMakerVersion>
+    <major>1</major>
+    <minor>35</minor>
+    <release>3</release>
+  </cardMakerVersion>
+```
+
+Now update your `config/cardmaker.yaml` with the correct version number, for example:
+
+```yaml
+version:
+  1: # Card Maker 1.35
+    ongeki: 1.35.03
+```	 
+
+### O.N.G.E.K.I.
 
 Gacha "無料ガチャ" can only pull from the free cards with the following probabilities: 94%: R, 5% SR and 1% chance of
 getting an SSR card
@@ -310,19 +337,23 @@ and 3% chance of getting an SSR card
 All other (limited) gachas can pull from every card added to ongeki_static_cards but with the promoted cards
 (click on the green button under the banner) having a 10 times higher chance to get pulled
 
-### Chunithm Gachas
+### CHUNITHM
 
-All cards in Chunithm (basically just the characters) have the same rarity to it just pulls randomly from all cards
+All cards in CHUNITHM (basically just the characters) have the same rarity to it just pulls randomly from all cards
 from a given gacha but made sure you cannot pull the same card twice in the same 5 times gacha roll.
+
+### maimai DX
+
+Printed maimai DX cards: Freedom (`cardTypeId=6`) or Gold Pass (`cardTypeId=4`) can now be selected during the login process. You can only have ONE Freedom and ONE Gold Pass active at a given time. The cards will expire after 15 days.
+
+Thanks GetzeAvenue for the `selectedCardList` rarity hint!
 
 ### Notes
 
-Card Maker 1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35 will only load an O.N.G.E.K.I.
+Card Maker 1.30-1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35+ will only load an O.N.G.E.K.I.
 Bright Memory profile (1.35).
-The gachas inside the `ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
+The gachas inside the `config/ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
 Gacha IDs up to 1140 will be loaded for CM 1.34 and all gachas will be loaded for CM 1.35.
-
-**NOTE: There is currently no way to load/use the (printed) maimai DX cards!**
 
 ## WACCA
 
