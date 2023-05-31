@@ -225,6 +225,7 @@ class AllnetServlet:
         req_file = match["file"].replace("%0A", "")
 
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
+            self.logger.info(f"Request for DL INI file {req_file} successful")
             return open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
             ).read()
