@@ -216,6 +216,7 @@ class AllnetServlet:
                 resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
 
             self.logger.debug(f"Sending download uri {resp.uri}")
+            self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
             return self.dict_to_http_form_string([vars(resp)])
 
     def handle_dlorder_ini(self, request: Request, match: Dict) -> bytes:
@@ -226,6 +227,7 @@ class AllnetServlet:
 
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
             self.logger.info(f"Request for DL INI file {req_file} from {Utils.get_ip_addr(request)} successful")
+            self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
             return open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
             ).read()
