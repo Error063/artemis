@@ -1775,3 +1775,140 @@ class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
 
         self.length = len(resp_data)
         return super().make() + resp_data
+
+class SaoSynthesizeEnhancementEquipment(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
+    def __init__(self, cmd, synthesize_equipment_data) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        equipment_level = 0
+
+        # Calculate level based off experience and the CSV list
+        with open(r'titles/sao/data/EquipmentLevel.csv') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            data = []
+            rowf = False
+            for row in csv_reader:
+                if rowf==False:
+                    rowf=True
+                else:
+                    data.append(row)
+
+        exp = synthesize_equipment_data[4]
+            
+        for e in range(0,len(data)):
+            if exp>=int(data[e][1]) and exp<int(data[e+1][1]):
+                equipment_level = int(data[e][0])
+                break
+
+        # equipment_user_data_list
+        self.user_equipment_id = str(synthesize_equipment_data[2]) #str
+        self.equipment_id = synthesize_equipment_data[2] #int
+        self.enhancement_value = equipment_level #short
+        self.max_enhancement_value_extended_num = equipment_level #short
+        self.enhancement_exp = synthesize_equipment_data[4] #int
+        self.possible_awakening_flag = synthesize_equipment_data[7] #byte
+        self.awakening_stage = synthesize_equipment_data[5] #short
+        self.awakening_exp = synthesize_equipment_data[6] #int
+        self.property1_property_id = 0 #int
+        self.property1_value1 = 0 #int
+        self.property1_value2 = 0 #int
+        self.property2_property_id = 0 #int
+        self.property2_value1 = 0 #int
+        self.property2_value2 = 0 #int
+        self.property3_property_id = 0 #int
+        self.property3_value1 = 0 #int
+        self.property3_value2 = 0 #int
+        self.property4_property_id = 0 #int
+        self.property4_value1 = 0 #int
+        self.property4_value2 = 0 #int
+        self.converted_card_num = 1 #short
+        self.shop_purchase_flag = 1 #byte
+        self.protect_flag = 0 #byte
+        self.get_date = "20230101120000" #str
+    
+    def make(self) -> bytes:
+
+        after_equipment_user_data_struct = Struct(
+            "user_equipment_id_size" / Int32ub,  # big endian
+            "user_equipment_id" / Int16ul[9], #string
+            "equipment_id" / Int32ub, #int
+            "enhancement_value" / Int16ub, #short
+            "max_enhancement_value_extended_num" / Int16ub, #short
+            "enhancement_exp" / Int32ub, #int
+            "possible_awakening_flag" / Int8ul,  # result is either 0 or 1
+            "awakening_stage" / Int16ub, #short
+            "awakening_exp" / Int32ub, #int
+            "property1_property_id" / Int32ub,
+            "property1_value1" / Int32ub,
+            "property1_value2" / Int32ub,
+            "property2_property_id" / Int32ub,
+            "property2_value1" / Int32ub,
+            "property2_value2" / Int32ub,
+            "property3_property_id" / Int32ub,
+            "property3_value1" / Int32ub,
+            "property3_value2" / Int32ub,
+            "property4_property_id" / Int32ub,
+            "property4_value1" / Int32ub,
+            "property4_value2" / Int32ub,
+            "converted_card_num" / Int16ub,
+            "shop_purchase_flag" / Int8ul,  # result is either 0 or 1
+            "protect_flag" / Int8ul,  # result is either 0 or 1
+            "get_date_size" / Int32ub,  # big endian
+            "get_date" / Int16ul[len(self.get_date)],
+        )
+
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul,  # result is either 0 or 1
+            "after_equipment_user_data_size" / Rebuild(Int32ub, len_(this.after_equipment_user_data)),  # big endian
+            "after_equipment_user_data" / Array(this.after_equipment_user_data_size, after_equipment_user_data_struct),
+        )
+
+        resp_data = resp_struct.parse(resp_struct.build(dict(
+            result=self.result,
+            after_equipment_user_data_size=0,
+            after_equipment_user_data=[],
+        )))
+
+        synthesize_equipment_data = dict(
+            user_equipment_id_size=len(self.user_equipment_id) * 2,
+            user_equipment_id=[ord(x) for x in self.user_equipment_id],
+            equipment_id=self.equipment_id,
+            enhancement_value=self.enhancement_value,
+            max_enhancement_value_extended_num=self.max_enhancement_value_extended_num,
+            enhancement_exp=self.enhancement_exp,
+            possible_awakening_flag=self.possible_awakening_flag,
+            awakening_stage=self.awakening_stage,
+            awakening_exp=self.awakening_exp,
+            property1_property_id=self.property1_property_id,
+            property1_value1=self.property1_value1,
+            property1_value2=self.property1_value2,
+            property2_property_id=self.property2_property_id,
+            property2_value1=self.property2_value1,
+            property2_value2=self.property2_value2,
+            property3_property_id=self.property3_property_id,
+            property3_value1=self.property3_value1,
+            property3_value2=self.property3_value2,
+            property4_property_id=self.property4_property_id,
+            property4_value1=self.property4_value1,
+            property4_value2=self.property4_value2,
+            converted_card_num=self.converted_card_num,
+            shop_purchase_flag=self.shop_purchase_flag,
+            protect_flag=self.protect_flag,
+            get_date_size=len(self.get_date) * 2,
+            get_date=[ord(x) for x in self.get_date],
+
+        )
+            
+        resp_data.after_equipment_user_data.append(synthesize_equipment_data)
+
+        # finally, rebuild the resp_data
+        resp_data = resp_struct.build(resp_data)
+
+        self.length = len(resp_data)
+        return super().make() + resp_data

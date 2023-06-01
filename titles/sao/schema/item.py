@@ -192,6 +192,14 @@ class SaoItemData(BaseData):
             return None
 
         return result.lastrowid
+
+    def get_user_equipment(self, user_id: int, equipment_id: int) -> Optional[Dict]:
+        sql = equipment_data.select(equipment_data.c.user == user_id and equipment_data.c.equipment_id == equipment_id)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
     
     def get_user_equipments(
         self, user_id: int
@@ -275,3 +283,30 @@ class SaoItemData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+
+    def remove_hero_log(self, user_id: int, user_hero_log_id: int) -> None:
+        sql = hero_log_data.delete(
+           and_(
+                hero_log_data.c.user == user_id,
+                hero_log_data.c.user_hero_log_id == user_hero_log_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to remove hero log! profile: {user_id}, user_hero_log_id: {user_hero_log_id}"
+            )
+        return None
+
+    def remove_equipment(self, user_id: int, equipment_id: int) -> None:
+        sql = equipment_data.delete(
+            and_(equipment_data.c.user == user_id, equipment_data.c.equipment_id == equipment_id)
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to remove equipment! profile: {user_id}, equipment_id: {equipment_id}"
+            )
+        return None

@@ -244,6 +244,77 @@ class SaoBase:
         resp = SaoCheckProfileCardUsedRewardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
 
+    def handle_c816(self, request: Any) -> bytes: # not fully done yet
+        #custom/synthesize_enhancement_equipment
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(20),
+            "ticket_id" / Bytes(1),  # needs to be parsed as an int
+            Padding(1),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+            "origin_user_equipment_id_size" / Rebuild(Int32ub, len_(this.origin_user_equipment_id) * 2),  # calculates the length of the origin_user_equipment_id
+            "origin_user_equipment_id" / PaddedString(this.origin_user_equipment_id_size, "utf_16_le"),  # origin_user_equipment_id is a (zero) padded string
+            Padding(3),
+            "material_common_reward_user_data_list_length" / Rebuild(Int8ub, len_(this.material_common_reward_user_data_list)),  # material_common_reward_user_data_list is a byte,
+            "material_common_reward_user_data_list" / Array(this.material_common_reward_user_data_list_length, Struct(
+                "common_reward_type" / Int16ub,  # team_no is a byte
+                "user_common_reward_id_size" / Rebuild(Int32ub, len_(this.user_common_reward_id) * 2),  # calculates the length of the user_common_reward_id
+                "user_common_reward_id" / PaddedString(this.user_common_reward_id_size, "utf_16_le"),  # user_common_reward_id is a (zero) padded string
+            )),
+        )
+
+        req_data = req_struct.parse(req)
+
+        user_id = req_data.user_id
+        synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
+
+        for i in range(0,req_data.material_common_reward_user_data_list_length):
+
+            itemList = self.game_data.static.get_item_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+            heroList = self.game_data.static.get_hero_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+            equipmentList = self.game_data.static.get_equipment_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+
+            if itemList:
+                equipment_exp = 2000 + int(synthesize_equipment_data["enhancement_exp"])
+                # Then delete the used item, function for items progression is not done yet...
+
+            if equipmentList:
+                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
+                self.game_data.item.remove_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+
+            if heroList:
+                hero_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
+                self.game_data.item.remove_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+
+            self.game_data.item.put_equipment_data(req_data.user_id, int(req_data.origin_user_equipment_id), synthesize_equipment_data["enhancement_value"], equipment_exp, 0, 0, 0)
+
+            profile = self.game_data.profile.get_profile(req_data.user_id)
+            new_col = int(profile["own_col"]) - 100
+
+            # Update profile
+            
+            self.game_data.profile.put_profile(
+                req_data.user_id,
+                profile["user_type"], 
+                profile["nick_name"], 
+                profile["rank_num"],
+                profile["rank_exp"],
+                new_col,
+                profile["own_vp"], 
+                profile["own_yui_medal"], 
+                profile["setting_title_id"]
+                )
+
+        # Load the item again to push to the response handler  
+        synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
+
+        resp = SaoSynthesizeEnhancementEquipmentResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, synthesize_equipment_data)
+        return resp.make()
+
     def handle_c806(self, request: Any) -> bytes:
         #custom/change_party
         req = bytes.fromhex(request)[24:]
