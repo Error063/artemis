@@ -436,6 +436,12 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 python dbutils.py --game SDEW upgrade
 ```
 
+### Notes
+- Stages are currently force unlocked, no progression
+- Co-Op (matching) is not supported
+- Shop is not functionnal
+- Player title is currently static and cannot be changed in-game
+
 ### Credits for SAO support:
 
 - Midorica - Limited Network Support

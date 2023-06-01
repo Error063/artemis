@@ -28,6 +28,21 @@ equipment_data = Table(
     mysql_charset="utf8mb4",
 )
 
+item_data = Table(
+    "sao_item_data",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("item_id", Integer, nullable=False),
+    Column("get_date", TIMESTAMP, nullable=False, server_default=func.now()),
+    UniqueConstraint("user", "item_id", name="sao_item_data_uk"),
+    mysql_charset="utf8mb4",
+)
+
 hero_log_data = Table(
     "sao_hero_log_data",
     metadata,
@@ -103,6 +118,25 @@ class SaoItemData(BaseData):
         if result is None:
             self.logger.error(f"Failed to create SAO session for user {user_id}!")
             return None
+        return result.lastrowid
+
+    def put_item(self, user_id: int, item_id: int) -> Optional[int]:
+        sql = insert(item_data).values(
+            user=user_id,
+            item_id=item_id,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            item_id=item_id,
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to insert item! user: {user_id}, item_id: {item_id}"
+            )
+            return None
+
         return result.lastrowid
     
     def put_equipment_data(self, user_id: int, equipment_id: int, enhancement_value: int, enhancement_exp: int, awakening_exp: int, awakening_stage: int, possible_awakening_flag: int) -> Optional[int]:
@@ -218,6 +252,23 @@ class SaoItemData(BaseData):
             return None
         return result.fetchall()
 
+    def get_user_items(
+        self, user_id: int
+    ) -> Optional[List[Row]]:
+        """
+        A catch-all items lookup given a profile
+        """
+        sql = item_data.select(
+            and_(
+                item_data.c.user == user_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
     def get_hero_log(
         self, user_id: int, user_hero_log_id: int = None
     ) -> Optional[List[Row]]:
@@ -308,5 +359,17 @@ class SaoItemData(BaseData):
         if result is None:
             self.logger.error(
                 f"{__name__} failed to remove equipment! profile: {user_id}, equipment_id: {equipment_id}"
+            )
+        return None
+
+    def remove_item(self, user_id: int, item_id: int) -> None:
+        sql = item_data.delete(
+            and_(item_data.c.user == user_id, item_data.c.item_id == item_id)
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to remove item! profile: {user_id}, item_id: {item_id}"
             )
         return None

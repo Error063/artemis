@@ -816,13 +816,18 @@ class SaoGetItemUserDataListRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoGetItemUserDataListResponse(SaoBaseResponse):
-    def __init__(self, cmd, itemIdsData) -> None:
+    def __init__(self, cmd, item_data) -> None:
         super().__init__(cmd)
         self.result = 1
 
+        self.user_item_id = []
+
+        for i in range(len(item_data)):
+            self.user_item_id.append(item_data[i][2])
+
         # item_user_data_list
-        self.user_item_id = list(map(str,itemIdsData)) #str
-        self.item_id = itemIdsData #int
+        self.user_item_id = list(map(str,self.user_item_id)) #str
+        self.item_id = list(map(int,self.user_item_id)) #int
         self.protect_flag = 0 #byte
         self.get_date = "20230101120000" #str
     
@@ -1772,6 +1777,161 @@ class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
             get_vp=self.get_vp,
             
         ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
+    def __init__(self, cmd, hero_data) -> None:
+        super().__init__(cmd)
+        self.result = 1
+
+        # Calculate level based off experience and the CSV list
+        with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            data = []
+            rowf = False
+            for row in csv_reader:
+                if rowf==False:
+                    rowf=True
+                else:
+                    data.append(row)
+
+        exp = hero_data[4]
+            
+        for e in range(0,len(data)):
+            if exp>=int(data[e][1]) and exp<int(data[e+1][1]):
+                hero_level = int(data[e][0])
+                break
+
+        # hero_log_user_data_list
+        self.user_hero_log_id = str(hero_data[2])
+        self.hero_log_id = int(self.user_hero_log_id) #int
+        self.log_level = hero_level
+        self.max_log_level_extended_num = hero_level #short
+        self.log_exp = hero_data[4]
+        self.possible_awakening_flag = 0 #byte
+        self.awakening_stage = 0 #short
+        self.awakening_exp = 0 #int
+        self.skill_slot_correction_value = 0 #byte
+        self.last_set_skill_slot1_skill_id = hero_data[7] #short
+        self.last_set_skill_slot2_skill_id = hero_data[8] #short
+        self.last_set_skill_slot3_skill_id = hero_data[9] #short
+        self.last_set_skill_slot4_skill_id = hero_data[10] #short
+        self.last_set_skill_slot5_skill_id = hero_data[11] #short
+        self.property1_property_id = 0 #int
+        self.property1_value1 = 0 #int
+        self.property1_value2 = 0 #int
+        self.property2_property_id = 0 #int
+        self.property2_value1 = 0 #int
+        self.property2_value2 = 0 #int
+        self.property3_property_id = 0 #int
+        self.property3_value1 = 0 #int
+        self.property3_value2 = 0 #int
+        self.property4_property_id = 0 #int
+        self.property4_value1 = 0 #int
+        self.property4_value2 = 0 #int
+        self.converted_card_num = 0 #short
+        self.shop_purchase_flag = 1 #byte
+        self.protect_flag = 0 #byte
+        self.get_date = "20230101120000" #str
+    
+    def make(self) -> bytes:
+        #new stuff
+
+        hero_log_user_data_list_struct = Struct(
+            "user_hero_log_id_size" / Int32ub,  # big endian
+            "user_hero_log_id" / Int16ul[9], #string
+            "hero_log_id" / Int32ub, #int
+            "log_level" / Int16ub, #short
+            "max_log_level_extended_num" / Int16ub, #short
+            "log_exp" / Int32ub, #int
+            "possible_awakening_flag" / Int8ul,  # result is either 0 or 1
+            "awakening_stage" / Int16ub, #short
+            "awakening_exp" / Int32ub, #int
+            "skill_slot_correction_value" / Int8ul,  # result is either 0 or 1
+            "last_set_skill_slot1_skill_id" / Int16ub, #short
+            "last_set_skill_slot2_skill_id" / Int16ub, #short
+            "last_set_skill_slot3_skill_id" / Int16ub, #short
+            "last_set_skill_slot4_skill_id" / Int16ub, #short
+            "last_set_skill_slot5_skill_id" / Int16ub, #short
+            "property1_property_id" / Int32ub,
+            "property1_value1" / Int32ub,
+            "property1_value2" / Int32ub,
+            "property2_property_id" / Int32ub,
+            "property2_value1" / Int32ub,
+            "property2_value2" / Int32ub,
+            "property3_property_id" / Int32ub,
+            "property3_value1" / Int32ub,
+            "property3_value2" / Int32ub,
+            "property4_property_id" / Int32ub,
+            "property4_value1" / Int32ub,
+            "property4_value2" / Int32ub,
+            "converted_card_num" / Int16ub,
+            "shop_purchase_flag" / Int8ul,  # result is either 0 or 1
+            "protect_flag" / Int8ul,  # result is either 0 or 1
+            "get_date_size" / Int32ub,  # big endian
+            "get_date" / Int16ul[len(self.get_date)],
+        )
+
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul,  # result is either 0 or 1
+            "hero_log_user_data_list_size" / Rebuild(Int32ub, len_(this.hero_log_user_data_list)),  # big endian
+            "hero_log_user_data_list" / Array(this.hero_log_user_data_list_size, hero_log_user_data_list_struct),
+        )
+
+        resp_data = resp_struct.parse(resp_struct.build(dict(
+            result=self.result,
+            hero_log_user_data_list_size=0,
+            hero_log_user_data_list=[],
+        )))
+
+        hero_data = dict(
+            user_hero_log_id_size=len(self.user_hero_log_id) * 2,
+            user_hero_log_id=[ord(x) for x in self.user_hero_log_id],
+            hero_log_id=self.hero_log_id,
+            log_level=self.log_level,
+            max_log_level_extended_num=self.max_log_level_extended_num,
+            log_exp=self.log_exp,
+            possible_awakening_flag=self.possible_awakening_flag,
+            awakening_stage=self.awakening_stage,
+            awakening_exp=self.awakening_exp,
+            skill_slot_correction_value=self.skill_slot_correction_value,
+            last_set_skill_slot1_skill_id=self.last_set_skill_slot1_skill_id,
+            last_set_skill_slot2_skill_id=self.last_set_skill_slot2_skill_id,
+            last_set_skill_slot3_skill_id=self.last_set_skill_slot3_skill_id,
+            last_set_skill_slot4_skill_id=self.last_set_skill_slot4_skill_id,
+            last_set_skill_slot5_skill_id=self.last_set_skill_slot5_skill_id,
+            property1_property_id=self.property1_property_id,
+            property1_value1=self.property1_value1,
+            property1_value2=self.property1_value2,
+            property2_property_id=self.property2_property_id,
+            property2_value1=self.property2_value1,
+            property2_value2=self.property2_value2,
+            property3_property_id=self.property3_property_id,
+            property3_value1=self.property3_value1,
+            property3_value2=self.property3_value2,
+            property4_property_id=self.property4_property_id,
+            property4_value1=self.property4_value1,
+            property4_value2=self.property4_value2,
+            converted_card_num=self.converted_card_num,
+            shop_purchase_flag=self.shop_purchase_flag,
+            protect_flag=self.protect_flag,
+            get_date_size=len(self.get_date) * 2,
+            get_date=[ord(x) for x in self.get_date],
+
+        )
+        
+        resp_data.hero_log_user_data_list.append(hero_data)
+
+        # finally, rebuild the resp_data
+        resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
         return super().make() + resp_data
