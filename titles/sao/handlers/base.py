@@ -1530,6 +1530,132 @@ class SaoEpisodePlayEndResponse(SaoBaseResponse):
         self.length = len(resp_data)
         return super().make() + resp_data
 
+class SaoTrialTowerPlayEndRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        self.play_end_response_data_size = 1  # Number of arrays
+        self.multi_play_end_response_data_size = 1  # Unused on solo play
+        self.trial_tower_play_end_updated_notification_data_size = 1 # Number of arrays
+        self.treasure_hunt_play_end_response_data_size = 1 # Number of arrays
+
+        self.dummy_1 = 0
+        self.dummy_2 = 0
+        self.dummy_3 = 0
+
+        self.rarity_up_occurrence_flag = 0
+        self.adventure_ex_area_occurrences_flag = 0
+        self.ex_bonus_data_list_size = 1  # Number of arrays
+        self.play_end_player_trace_reward_data_list_size = 0  # Number of arrays
+
+        self.ex_bonus_table_id = 0  # ExBonusTable.csv values, dont care for now
+        self.achievement_status = 1
+
+        self.common_reward_data_size = 1  # Number of arrays
+
+        self.common_reward_type = 0  # dummy values from 2,101000000,1 from RewardTable.csv
+        self.common_reward_id = 0
+        self.common_reward_num = 0
+
+        self.store_best_score_clear_time_flag = 0
+        self.store_best_score_combo_num_flag = 0
+        self.store_best_score_total_damage_flag = 0
+        self.store_best_score_concurrent_destroying_num_flag = 0
+        self.store_reaching_trial_tower_rank = 0
+
+        self.get_event_point = 0
+        self.total_event_point = 0
+        
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul,  # result is either 0 or 1
+            "play_end_response_data_size" / Int32ub,  # big endian
+
+            "rarity_up_occurrence_flag" / Int8ul,  # result is either 0 or 1
+            "adventure_ex_area_occurrences_flag" / Int8ul,  # result is either 0 or 1
+            "ex_bonus_data_list_size" / Int32ub,  # big endian
+            "play_end_player_trace_reward_data_list_size" / Int32ub,  # big endian
+
+            # ex_bonus_data_list
+            "ex_bonus_table_id" / Int32ub,
+            "achievement_status" / Int8ul,  # result is either 0 or 1
+
+            # play_end_player_trace_reward_data_list
+            "common_reward_data_size" / Int32ub,
+
+            # common_reward_data
+            "common_reward_type" / Int16ub,  # short
+            "common_reward_id" / Int32ub,
+            "common_reward_num" / Int32ub,
+
+            "multi_play_end_response_data_size" / Int32ub,  # big endian
+
+            # multi_play_end_response_data
+            "dummy_1" / Int8ul,  # result is either 0 or 1
+            "dummy_2" / Int8ul,  # result is either 0 or 1
+            "dummy_3" / Int8ul,  # result is either 0 or 1
+
+            "trial_tower_play_end_updated_notification_data_size" / Int32ub,  # big endian
+
+            #trial_tower_play_end_updated_notification_data
+            "store_best_score_clear_time_flag" / Int8ul,  # result is either 0 or 1
+            "store_best_score_combo_num_flag" / Int8ul,  # result is either 0 or 1
+            "store_best_score_total_damage_flag" / Int8ul,  # result is either 0 or 1
+            "store_best_score_concurrent_destroying_num_flag" / Int8ul,  # result is either 0 or 1
+            "store_reaching_trial_tower_rank" / Int32ub,
+
+            "treasure_hunt_play_end_response_data_size" / Int32ub,  # big endian
+
+            #treasure_hunt_play_end_response_data
+            "get_event_point" / Int32ub,
+            "total_event_point" / Int32ub,
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            play_end_response_data_size=self.play_end_response_data_size,
+
+            rarity_up_occurrence_flag=self.rarity_up_occurrence_flag,
+            adventure_ex_area_occurrences_flag=self.adventure_ex_area_occurrences_flag,
+            ex_bonus_data_list_size=self.ex_bonus_data_list_size,
+            play_end_player_trace_reward_data_list_size=self.play_end_player_trace_reward_data_list_size,
+            
+            ex_bonus_table_id=self.ex_bonus_table_id,
+            achievement_status=self.achievement_status,
+            
+            common_reward_data_size=self.common_reward_data_size,
+            
+            common_reward_type=self.common_reward_type,
+            common_reward_id=self.common_reward_id,
+            common_reward_num=self.common_reward_num,
+            
+            multi_play_end_response_data_size=self.multi_play_end_response_data_size,
+            
+            dummy_1=self.dummy_1,
+            dummy_2=self.dummy_2,
+            dummy_3=self.dummy_3,
+
+            trial_tower_play_end_updated_notification_data_size=self.trial_tower_play_end_updated_notification_data_size,
+            store_best_score_clear_time_flag=self.store_best_score_clear_time_flag,
+            store_best_score_combo_num_flag=self.store_best_score_combo_num_flag,
+            store_best_score_total_damage_flag=self.store_best_score_total_damage_flag,
+            store_best_score_concurrent_destroying_num_flag=self.store_best_score_concurrent_destroying_num_flag,
+            store_reaching_trial_tower_rank=self.store_reaching_trial_tower_rank,
+
+            treasure_hunt_play_end_response_data_size=self.treasure_hunt_play_end_response_data_size,
+
+            get_event_point=self.get_event_point,
+            total_event_point=self.total_event_point,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
 class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
     def __init__(self, data: bytes) -> None:
         super().__init__(data)
