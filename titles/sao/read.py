@@ -228,3 +228,27 @@ class SaoReader(BaseReader):
                         continue
         except:
             self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+
+        self.logger.info("Now reading RareDropTable.csv")
+        try:
+            fullPath = bin_dir + "/RareDropTable.csv"
+            with open(fullPath, encoding="UTF-8") as fp:
+                reader = csv.DictReader(fp)
+                for row in reader:
+                    questRareDropId = row["QuestRareDropId"]
+                    commonRewardId = row["CommonRewardId"]
+                    enabled = True
+
+                    self.logger.info(f"Added rare drop {questRareDropId} | Reward: {commonRewardId}")
+                    
+                    try:
+                        self.data.static.put_rare_drop(
+                            0,
+                            questRareDropId,
+                            commonRewardId,
+                            enabled
+                        )
+                    except Exception as err:
+                        print(err)
+        except:
+            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")

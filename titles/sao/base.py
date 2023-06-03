@@ -675,6 +675,22 @@ class SaoBase:
                 hero_data["skill_slot4_skill_id"],
                 hero_data["skill_slot5_skill_id"]
             )
+
+        # Grab the rare loot from the table, match it with the right item and then push to the player profile
+        for r in range(0,req_data.get_rare_drop_data_list_length):
+            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.get_rare_drop_data_list[r].quest_rare_drop_id))
+            commonRewardId = rewardList["commonRewardId"]
+
+            heroList = self.game_data.static.get_hero_id(commonRewardId)
+            equipmentList = self.game_data.static.get_equipment_id(commonRewardId)
+            itemList = self.game_data.static.get_item_id(commonRewardId)
+
+            if heroList:
+                self.game_data.item.put_hero_log(req_data.user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+            if equipmentList:
+                self.game_data.item.put_equipment_data(req_data.user_id, commonRewardId, 1, 200, 0, 0, 0)
+            if itemList:
+                self.game_data.item.put_item(req_data.user_id, commonRewardId)
         
         # Generate random hero(es) based off the response    
         for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
@@ -825,7 +841,6 @@ class SaoBase:
                 player_level = int(data[i][0])
                 break
 
-        # Update profile
         updated_profile = self.game_data.profile.put_profile(
             req_data.user_id,
             profile["user_type"], 
@@ -866,6 +881,22 @@ class SaoBase:
                 hero_data["skill_slot5_skill_id"]
             )
         
+        # Grab the rare loot from the table, match it with the right item and then push to the player profile
+        for r in range(0,req_data.get_rare_drop_data_list_length):
+            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.get_rare_drop_data_list[r].quest_rare_drop_id))
+            commonRewardId = rewardList["commonRewardId"]
+
+            heroList = self.game_data.static.get_hero_id(commonRewardId)
+            equipmentList = self.game_data.static.get_equipment_id(commonRewardId)
+            itemList = self.game_data.static.get_item_id(commonRewardId)
+
+            if heroList:
+                self.game_data.item.put_hero_log(req_data.user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+            if equipmentList:
+                self.game_data.item.put_equipment_data(req_data.user_id, commonRewardId, 1, 200, 0, 0, 0)
+            if itemList:
+                self.game_data.item.put_item(req_data.user_id, commonRewardId)
+
         # Generate random hero(es) based off the response    
         for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
             

@@ -96,6 +96,20 @@ support = Table(
     mysql_charset="utf8mb4",
 )
 
+rare_drop = Table(
+    "sao_static_rare_drop_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer),
+    Column("questRareDropId", Integer),
+    Column("commonRewardId", Integer),
+    Column("enabled", Boolean),
+    UniqueConstraint(
+        "version", "questRareDropId", "commonRewardId", name="sao_static_rare_drop_list_uk"
+    ),
+    mysql_charset="utf8mb4",
+)
+
 title = Table(
     "sao_static_title_list",
     metadata,
@@ -215,6 +229,23 @@ class SaoStaticData(BaseData):
         if result is None:
             return None
         return result.lastrowid
+
+    def put_rare_drop( self, version: int, questRareDropId: int, commonRewardId: int, enabled: bool ) -> Optional[int]:
+        sql = insert(rare_drop).values(
+            version=version,
+            questRareDropId=questRareDropId,
+            commonRewardId=commonRewardId,
+            enabled=enabled,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            questRareDropId=questRareDropId, commonRewardId=commonRewardId, version=version
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            return None
+        return result.lastrowid
     
     def put_title( self, version: int, titleId: int, displayName: str, requirement: int, rank: int, imageFilePath: str, enabled: bool ) -> Optional[int]:
         sql = insert(title).values(
@@ -284,6 +315,14 @@ class SaoStaticData(BaseData):
 
     def get_item_id(self, itemId: int) -> Optional[Dict]:
         sql = item.select(item.c.itemId == itemId)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_rare_drop_id(self, questRareDropId: int) -> Optional[Dict]:
+        sql = rare_drop.select(rare_drop.c.questRareDropId == questRareDropId)
         
         result = self.execute(sql)
         if result is None:
