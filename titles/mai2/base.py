@@ -646,21 +646,30 @@ class Mai2Base:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        songs = self.data.score.get_best_scores(data["userId"])
+        songs = self.data.score.get_best_scores(data.get("userId", 0))
+        if songs is None:
+            return {
+            "userId": data["userId"],
+            "nextIndex": 0,
+            "userMusicList": [],
+        }
+
         music_detail_list = []
-        next_index = 0
+        next_index = data.get("nextIndex", 0)
+        max_ct = data.get("maxCount", 50)
+        upper_lim = next_index + max_ct
+        num_user_songs = len(songs)
 
-        if songs is not None:
-            for song in songs:
-                tmp = song._asdict()
-                tmp.pop("id")
-                tmp.pop("user")
-                music_detail_list.append(tmp)
+        for x in range(next_index, upper_lim):
+            if num_user_songs >= x:
+                break
 
-                if len(music_detail_list) == data["maxCount"]:
-                    next_index = data["maxCount"] + data["nextIndex"]
-                    break
+            tmp = songs[x]._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            music_detail_list.append(tmp)
 
+        next_index = 0 if len(music_detail_list) < max_ct else upper_lim
         return {
             "userId": data["userId"],
             "nextIndex": next_index,

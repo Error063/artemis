@@ -7,6 +7,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
+from core.data import cached
 
 best_score = Table(
     "mai2_score_best",
@@ -190,6 +191,7 @@ class Mai2ScoreData(BaseData):
             return None
         return result.lastrowid
 
+    @cached(2)
     def get_best_scores(self, user_id: int, song_id: int = None) -> Optional[List[Row]]:
         sql = best_score.select(
             and_(
