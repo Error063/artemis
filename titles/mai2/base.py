@@ -18,10 +18,10 @@ class Mai2Base:
         self.logger = logging.getLogger("mai2")
         
         if self.core_config.server.is_develop and self.core_config.title.port > 0:
-            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/100/"
+            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEZ/100/"
         
         else:
-            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/100/"
+            self.old_server = f"http://{self.core_config.title.hostname}/SDEZ/100/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
         # TODO: See if making this epoch 0 breaks things
