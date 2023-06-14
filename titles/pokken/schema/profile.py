@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_, case
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.schema import ForeignKey
@@ -125,7 +125,7 @@ pokemon_data = Table(
     Column("win_vs_lan", Integer),
     Column("battle_num_vs_cpu", Integer),  # 2
     Column("win_cpu", Integer),
-    Column("battle_all_num_tutorial", Integer),
+    Column("battle_all_num_tutorial", Integer), # ???
     Column("battle_num_tutorial", Integer),  # 1?
     Column("bp_point_atk", Integer),
     Column("bp_point_res", Integer),
@@ -147,11 +147,10 @@ class PokkenProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def set_profile_name(self, user_id: int, new_name: str) -> None:
-        sql = (
-            update(profile)
-            .where(profile.c.user == user_id)
-            .values(trainer_name=new_name)
+    def set_profile_name(self, user_id: int, new_name: str, gender: Union[int, None] = None) -> None:
+        sql = update(profile).where(profile.c.user == user_id).values(
+            trainer_name=new_name,
+            avatar_gender=gender if gender is not None else profile.c.avatar_gender
         )
         result = self.execute(sql)
         if result is None:
@@ -159,8 +158,38 @@ class PokkenProfileData(BaseData):
                 f"Failed to update pokken profile name for user {user_id}!"
             )
 
-    def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: Dict) -> None:
-        pass
+    def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: List) -> None:
+        sql = update(profile).where(profile.c.user == user_id).values(
+            tutorial_progress_flag=tutorial_flags,
+        )
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"Failed to update pokken profile tutorial flags for user {user_id}!"
+            )
+
+    def update_profile_achievement_flags(self, user_id: int, achievement_flags: List) -> None:
+        sql = update(profile).where(profile.c.user == user_id).values(
+            achievement_flag=achievement_flags,
+        )
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"Failed to update pokken profile achievement flags for user {user_id}!"
+            )
+
+    def update_profile_event(self, user_id: int, event_state: List, event_flags: List[int], event_param: List[int], last_evt: int = None) -> None:
+        sql = update(profile).where(profile.c.user == user_id).values(
+            event_state=event_state,
+            event_achievement_flag=event_flags,
+            event_achievement_param=event_param,
+            last_play_event_id=last_evt if last_evt is not None else profile.c.last_play_event_id,
+        )
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(
+                f"Failed to update pokken profile event state for user {user_id}!"
+            )
 
     def add_profile_points(
         self, user_id: int, rank_pts: int, money: int, score_pts: int
@@ -174,18 +203,53 @@ class PokkenProfileData(BaseData):
             return None
         return result.fetchone()
 
-    def put_pokemon_data(
+    def put_pokemon(
         self,
         user_id: int,
         pokemon_id: int,
         illust_no: int,
-        get_exp: int,
         atk: int,
         res: int,
         defe: int,
-        sp: int,
+        sp: int
     ) -> Optional[int]:
-        pass
+        sql = insert(pokemon_data).values(
+            user=user_id,
+            char_id=pokemon_id,
+            illustration_book_no=illust_no,
+            bp_point_atk=atk,
+            bp_point_res=res,
+            bp_point_defe=defe,
+            bp_point_sp=sp,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            illustration_book_no=illust_no,
+            bp_point_atk=atk,
+            bp_point_res=res,
+            bp_point_defe=defe,
+            bp_point_sp=sp,
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(f"Failed to insert pokemon ID {pokemon_id} for user {user_id}")
+            return None
+        return result.lastrowid
+
+    def add_pokemon_xp(
+        self,
+        user_id: int,
+        pokemon_id: int,
+        xp: int
+    ) -> None:
+        sql = update(pokemon_data).where(and_(pokemon_data.c.user==user_id, pokemon_data.c.char_id==pokemon_id)).values(
+            pokemon_exp=pokemon_data.c.pokemon_exp + xp
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to add {xp} XP to pokemon ID {pokemon_id} for user {user_id}")
 
     def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
         pass
@@ -193,13 +257,29 @@ class PokkenProfileData(BaseData):
     def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
         pass
 
-    def put_results(
-        self, user_id: int, pokemon_id: int, match_type: int, match_result: int
+    def put_pokemon_battle_result(
+        self, user_id: int, pokemon_id: int, match_type: PokkenConstants.BATTLE_TYPE, match_result: PokkenConstants.BATTLE_RESULT
     ) -> None:
         """
         Records the match stats (type and win/loss) for the pokemon and profile
         """
-        pass
+        sql = update(pokemon_data).where(and_(pokemon_data.c.user==user_id, pokemon_data.c.char_id==pokemon_id)).values(
+            battle_num_tutorial=pokemon_data.c.battle_num_tutorial + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else pokemon_data.c.battle_num_tutorial,
+            battle_all_num_tutorial=pokemon_data.c.battle_all_num_tutorial + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else pokemon_data.c.battle_all_num_tutorial,
+
+            battle_num_vs_cpu=pokemon_data.c.battle_num_vs_cpu + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI else pokemon_data.c.battle_num_vs_cpu,
+            win_cpu=pokemon_data.c.win_cpu + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_cpu,
+
+            battle_num_vs_lan=pokemon_data.c.battle_num_vs_lan + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN else pokemon_data.c.battle_num_vs_lan,
+            win_vs_lan=pokemon_data.c.win_vs_lan + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_vs_lan,
+
+            battle_num_vs_wan=pokemon_data.c.battle_num_vs_wan + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN else pokemon_data.c.battle_num_vs_wan,
+            win_vs_wan=pokemon_data.c.win_vs_wan + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_vs_wan,
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to record match stats for user {user_id}'s pokemon {pokemon_id} (type {match_type.name} | result {match_result.name})")
 
     def put_stats(
         self,
@@ -215,3 +295,17 @@ class PokkenProfileData(BaseData):
         Records profile stats
         """
         pass
+
+    def update_support_team(self, user_id: int, support_id: int, support1: int = 4294967295, support2: int = 4294967295) -> None:
+        sql = update(profile).where(profile.c.user==user_id).values(
+            support_set_1_1=support1 if support_id == 1 else profile.c.support_set_1_1,
+            support_set_1_2=support2 if support_id == 1 else profile.c.support_set_1_2,
+            support_set_2_1=support1 if support_id == 2 else profile.c.support_set_2_1,
+            support_set_2_2=support2 if support_id == 2 else profile.c.support_set_2_2,
+            support_set_3_1=support1 if support_id == 3 else profile.c.support_set_3_1,
+            support_set_3_2=support2 if support_id == 3 else profile.c.support_set_3_2,
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to update support team {support_id} for user {user_id}")

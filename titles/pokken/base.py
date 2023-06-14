@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import json, logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 import random
 
 from core.data import Data
@@ -273,6 +273,60 @@ class PokkenBase:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_USER
+
+        req = request.save_user
+        user_id = req.banapass_id
+        
+        tut_flgs: List[int] = []
+        ach_flgs: List[int] = []
+        evt_flgs: List[int] = []
+        evt_params: List[int] = []
+
+        get_rank_pts: int = req.get_trainer_rank_point if req.get_trainer_rank_point else 0
+        get_money: int = req.get_money
+        get_score_pts: int = req.get_score_point if req.get_score_point else 0
+        grade_max: int = req.grade_max_num
+        extra_counter: int = req.extra_counter
+        evt_reward_get_flg: int = req.event_reward_get_flag
+        num_continues: int = req.continue_num
+        total_play_days: int = req.total_play_days
+        awake_num: int = req.awake_num  # ?
+        use_support_ct: int = req.use_support_num
+        beat_num: int = req.beat_num # ?
+        evt_state: int = req.event_state
+        aid_skill: int = req.aid_skill
+        last_evt: int = req.last_play_event_id
+
+        battle = req.battle_data
+        mon = req.pokemon_data
+
+        self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
+        self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
+        self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
+
+        if req.trainer_name_pending: # we're saving for the first time
+            self.data.profile.set_profile_name(user_id, req.trainer_name_pending, req.avatar_gender if req.avatar_gender else None)
+
+        for tut_flg in req.tutorial_progress_flag:
+            tut_flgs.append(tut_flg)
+        
+        self.data.profile.update_profile_tutorial_flags(user_id, tut_flgs)
+
+        for ach_flg in req.achievement_flag:
+            ach_flgs.append(ach_flg)
+        
+        self.data.profile.update_profile_tutorial_flags(user_id, ach_flg)
+
+        for evt_flg in req.event_achievement_flag:
+            evt_flgs.append(evt_flg)
+
+        for evt_param in req.event_achievement_param:
+            evt_params.append(evt_param)
+
+        self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, )
+        
+        for reward in req.reward_data:
+            self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
 
         return res.SerializeToString()
 
