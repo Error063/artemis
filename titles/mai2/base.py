@@ -668,7 +668,7 @@ class Mai2Base:
         num_user_songs = len(songs)
 
         for x in range(next_index, upper_lim):
-            if num_user_songs >= x:
+            if num_user_songs <= x:
                 break
 
             tmp = songs[x]._asdict()
