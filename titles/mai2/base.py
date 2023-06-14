@@ -660,6 +660,7 @@ class Mai2Base:
         upper_lim = next_index + max_ct
         num_user_songs = len(songs)
 
+
         for x in range(next_index, upper_lim):
             if num_user_songs >= x:
                 break
@@ -669,7 +670,7 @@ class Mai2Base:
             tmp.pop("user")
             music_detail_list.append(tmp)
 
-        next_index = 0 if len(music_detail_list) < max_ct else upper_lim
+        next_index = 0 if len(music_detail_list) < max_ct or num_user_songs == upper_lim else upper_lim
         return {
             "userId": data["userId"],
             "nextIndex": next_index,
