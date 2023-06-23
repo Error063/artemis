@@ -357,15 +357,32 @@ class PokkenBase:
     ) -> Dict:
         """
         "sessionId":"12345678",
+        "A":{
+            "pcb_id": data["data"]["must"]["pcb_id"],
+            "gip": client_ip
+        },
+        "list":[]
+        """
+        return {
+            "data": {
+                "sessionId":"12345678",
                 "A":{
                     "pcb_id": data["data"]["must"]["pcb_id"],
                     "gip": client_ip
                 },
                 "list":[]
-        """
-        return {}
+            }
+        }
 
     def handle_matching_stop_matching(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         return {}
+
+    def handle_admission_joinsession(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+        self.logger.info(f"Admission: JoinSession from {req_ip}")
+        return {
+            'data': {
+                "id": 123
+            }
+        }

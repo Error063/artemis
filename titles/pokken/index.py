@@ -1,6 +1,8 @@
 from typing import Tuple
 from twisted.web.http import Request
 from twisted.web import resource
+from twisted.internet import reactor, endpoints
+from autobahn.twisted.websocket import WebSocketServerFactory
 import json, ast
 from datetime import datetime
 import yaml
@@ -11,10 +13,11 @@ from os import path
 from google.protobuf.message import DecodeError
 
 from core import CoreConfig, Utils
-from titles.pokken.config import PokkenConfig
-from titles.pokken.base import PokkenBase
-from titles.pokken.const import PokkenConstants
-from titles.pokken.proto import jackal_pb2
+from .config import PokkenConfig
+from .base import PokkenBase
+from .const import PokkenConstants
+from .proto import jackal_pb2
+from .services import PokkenStunProtocol, PokkenAdmissionFactory, PokkenAdmissionProtocol
 
 
 class PokkenServlet(resource.Resource):
@@ -91,7 +94,20 @@ class PokkenServlet(resource.Resource):
 
     def setup(self) -> None:
         # TODO: Setup stun, turn (UDP) and admission (WSS) servers
-        pass
+        reactor.listenUDP(
+            self.game_cfg.server.port_stun, PokkenStunProtocol(self.core_cfg, self.game_cfg, "Stun")
+        )
+        
+        reactor.listenUDP(
+            self.game_cfg.server.port_turn, PokkenStunProtocol(self.core_cfg, self.game_cfg, "Turn")
+        )
+
+        factory = WebSocketServerFactory(f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}")
+        factory.protocol = PokkenAdmissionProtocol
+
+        reactor.listenTCP(
+            self.game_cfg.server.port_admission, PokkenAdmissionFactory(self.core_cfg, self.game_cfg)
+        )
 
     def render_POST(
         self, request: Request, version: int = 0, endpoints: str = ""
