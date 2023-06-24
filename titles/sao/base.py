@@ -62,9 +62,26 @@ class SaoBase:
 
     def handle_c11e(self, request: Any) -> bytes:
         #common/get_auth_card_data
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "cabinet_type" / Int8ub,  # cabinet_type is a byte
+            "auth_type" / Int8ub,  # auth_type is a byte
+            "store_id_size" / Rebuild(Int32ub, len_(this.store_id) * 2),  # calculates the length of the store_id
+            "store_id" / PaddedString(this.store_id_size, "utf_16_le"),  # store_id is a (zero) padded string
+            "serial_no_size" / Rebuild(Int32ub, len_(this.serial_no) * 2),  # calculates the length of the serial_no
+            "serial_no" / PaddedString(this.serial_no_size, "utf_16_le"),  # serial_no is a (zero) padded string
+            "access_code_size" / Rebuild(Int32ub, len_(this.access_code) * 2),  # calculates the length of the access_code
+            "access_code" / PaddedString(this.access_code_size, "utf_16_le"),  # access_code is a (zero) padded string
+            "chip_id_size" / Rebuild(Int32ub, len_(this.chip_id) * 2),  # calculates the length of the chip_id
+            "chip_id" / PaddedString(this.chip_id_size, "utf_16_le"),  # chip_id is a (zero) padded string
+        )
+
+        req_data = req_struct.parse(req)
+        access_code = req_data.access_code
 
         #Check authentication
-        access_code = bytes.fromhex(request[188:268]).decode("utf-16le")
         user_id = self.core_data.card.get_user_id_from_card( access_code )
 
         if not user_id:
@@ -92,6 +109,14 @@ class SaoBase:
 
         if user_id and not profile_data:
             profile_id = self.game_data.profile.create_profile(user_id)
+            self.game_data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
+            self.game_data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
+            self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
+            self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
+            self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
+
             profile_data = self.game_data.profile.get_profile(user_id)
 
         resp = SaoGetAuthCardDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
@@ -104,7 +129,28 @@ class SaoBase:
 
     def handle_c104(self, request: Any) -> bytes:
         #common/login
-        access_code = bytes.fromhex(request[228:308]).decode("utf-16le")
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "cabinet_type" / Int8ub,  # cabinet_type is a byte
+            "auth_type" / Int8ub,  # auth_type is a byte
+            "store_id_size" / Rebuild(Int32ub, len_(this.store_id) * 2),  # calculates the length of the store_id
+            "store_id" / PaddedString(this.store_id_size, "utf_16_le"),  # store_id is a (zero) padded string
+            "store_name_size" / Rebuild(Int32ub, len_(this.store_name) * 2),  # calculates the length of the store_name
+            "store_name" / PaddedString(this.store_name_size, "utf_16_le"),  # store_name is a (zero) padded string
+            "serial_no_size" / Rebuild(Int32ub, len_(this.serial_no) * 2),  # calculates the length of the serial_no
+            "serial_no" / PaddedString(this.serial_no_size, "utf_16_le"),  # serial_no is a (zero) padded string
+            "access_code_size" / Rebuild(Int32ub, len_(this.access_code) * 2),  # calculates the length of the access_code
+            "access_code" / PaddedString(this.access_code_size, "utf_16_le"),  # access_code is a (zero) padded string
+            "chip_id_size" / Rebuild(Int32ub, len_(this.chip_id) * 2),  # calculates the length of the chip_id
+            "chip_id" / PaddedString(this.chip_id_size, "utf_16_le"),  # chip_id is a (zero) padded string
+            "free_ticket_distribution_target_flag" / Int8ub,  # free_ticket_distribution_target_flag is a byte
+        )
+
+        req_data = req_struct.parse(req)
+        access_code = req_data.access_code
+
         user_id = self.core_data.card.get_user_id_from_card( access_code )
         profile_data = self.game_data.profile.get_profile(user_id)
 
@@ -123,7 +169,17 @@ class SaoBase:
 
     def handle_c500(self, request: Any) -> bytes:
         #user_info/get_user_basic_data
-        user_id = bytes.fromhex(request[88:112]).decode("utf-16le")
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        )
+
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
         profile_data = self.game_data.profile.get_profile(user_id)
 
         resp = SaoGetUserBasicDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
@@ -132,6 +188,7 @@ class SaoBase:
     def handle_c600(self, request: Any) -> bytes:
         #have_object/get_hero_log_user_data_list
         req = bytes.fromhex(request)[24:]
+        
         req_struct = Struct(
             Padding(16),
             "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
@@ -149,6 +206,7 @@ class SaoBase:
     def handle_c602(self, request: Any) -> bytes:
         #have_object/get_equipment_user_data_list
         req = bytes.fromhex(request)[24:]
+
         req_struct = Struct(
             Padding(16),
             "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
@@ -165,8 +223,8 @@ class SaoBase:
         
     def handle_c604(self, request: Any) -> bytes:
         #have_object/get_item_user_data_list
-        #itemIdsData = self.game_data.static.get_item_ids(0, True)
         req = bytes.fromhex(request)[24:]
+
         req_struct = Struct(
             Padding(16),
             "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
@@ -179,7 +237,6 @@ class SaoBase:
         item_data = self.game_data.item.get_user_items(user_id)
 
         resp = SaoGetItemUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, item_data)
-        #resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
         
     def handle_c606(self, request: Any) -> bytes:
@@ -198,7 +255,17 @@ class SaoBase:
         
     def handle_c608(self, request: Any) -> bytes:
         #have_object/get_episode_append_data_list
-        user_id = bytes.fromhex(request[88:112]).decode("utf-16le")
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        )
+
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
         profile_data = self.game_data.profile.get_profile(user_id)
 
         resp = SaoGetEpisodeAppendDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
@@ -206,8 +273,8 @@ class SaoBase:
 
     def handle_c804(self, request: Any) -> bytes:
         #custom/get_party_data_list
-
         req = bytes.fromhex(request)[24:]
+
         req_struct = Struct(
             Padding(16),
             "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
@@ -479,7 +546,6 @@ class SaoBase:
 
     def handle_c904(self, request: Any) -> bytes:
         #quest/episode_play_start
-
         req = bytes.fromhex(request)[24:]
 
         req_struct = Struct(
@@ -718,10 +784,25 @@ class SaoBase:
         resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
 
-    def handle_c914(self, request: Any) -> bytes:
+    def handle_c914(self, request: Any) -> bytes: # TBD
         #quest/trial_tower_play_start
-        user_id = bytes.fromhex(request[100:124]).decode("utf-16le")
-        floor_id = int(request[130:132], 16) # not required but nice to know
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
+            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+            "trial_tower_id" / Int32ub,  # trial_tower_id is an int
+            "play_mode" / Int8ub,  # play_mode is a byte
+            
+        )
+
+        req_data = req_struct.parse(req)
+
+        user_id = req_data.user_id
+        floor_id = req_data.trial_tower_id
         profile_data = self.game_data.profile.get_profile(user_id)
 
         resp = SaoEpisodePlayStartResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
