@@ -1074,17 +1074,17 @@ class WaccaBase:
                         old_score = self.data.score.get_best_score(
                             user_id, item.itemId, item.quantity
                         )
-                    if not old_score:
-                        self.data.score.put_best_score(
-                            user_id,
-                            item.itemId,
-                            item.quantity,
-                            0,
-                            [0] * 5,
-                            [0] * 13,
-                            0,
-                            0,
-                        )
+                        if not old_score:
+                            self.data.score.put_best_score(
+                                user_id,
+                                item.itemId,
+                                item.quantity,
+                                0,
+                                [0] * 5,
+                                [0] * 13,
+                                0,
+                                0,
+                            )
 
                     if item.quantity == 0:
                         item.quantity = WaccaConstants.Difficulty.HARD.value
