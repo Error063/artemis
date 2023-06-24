@@ -437,7 +437,7 @@ python dbutils.py --game SDEW upgrade
 ```
 
 ### Notes
-- Stages are currently force unlocked, no progression
+- Tower Quests currently force unlocked, no progression
 - Co-Op (matching) is not supported
 - Shop is not functionnal
 - Player title is currently static and cannot be changed in-game

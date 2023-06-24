@@ -1707,24 +1707,43 @@ class SaoGetQuestSceneUserDataListRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
-    def __init__(self, cmd, questIdsData) -> None:
+    def __init__(self, cmd, quest_data) -> None:
         super().__init__(cmd)
         self.result = 1
 
         # quest_scene_user_data_list_size
-        self.quest_type = [1] * len(questIdsData)
-        self.quest_scene_id = questIdsData
-        self.clear_flag = [1] * len(questIdsData)
+        self.quest_type = []
+        self.quest_scene_id = []
+        self.clear_flag = []
 
         # quest_scene_best_score_user_data
-        self.clear_time = 300
-        self.combo_num = 0
-        self.total_damage = "0"
-        self.concurrent_destroying_num = 1
+        self.clear_time = []
+        self.combo_num = []
+        self.total_damage = [] #string
+        self.concurrent_destroying_num = []
+
+        for i in range(len(quest_data)):
+            self.quest_type.append(1)
+            self.quest_scene_id.append(quest_data[i][2])
+            self.clear_flag.append(int(quest_data[i][3]))
+
+            self.clear_time.append(quest_data[i][4])
+            self.combo_num.append(quest_data[i][5])
+            self.total_damage.append(0) #totally absurd but Int16ul[1] is a big problem due to different lenghts...
+            self.concurrent_destroying_num.append(quest_data[i][7])
 
         # quest_scene_ex_bonus_user_data_list
         self.achievement_flag = [[1, 1, 1],[1, 1, 1]]
         self.ex_bonus_table_id = [[1, 2, 3],[4, 5, 6]]
+
+
+        self.quest_type = list(map(int,self.quest_type)) #int
+        self.quest_scene_id = list(map(int,self.quest_scene_id)) #int
+        self.clear_flag = list(map(int,self.clear_flag)) #int
+        self.clear_time = list(map(int,self.clear_time)) #int
+        self.combo_num = list(map(int,self.combo_num)) #int
+        self.total_damage = list(map(str,self.total_damage)) #string
+        self.concurrent_destroying_num = list(map(int,self.combo_num)) #int
     
     def make(self) -> bytes:
         #new stuff
@@ -1737,7 +1756,7 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
             "clear_time" / Int32ub,  # big endian
             "combo_num" / Int32ub,  # big endian
             "total_damage_size" / Int32ub, # big endian
-            "total_damage" / Int16ul[len(self.total_damage)],
+            "total_damage" / Int16ul[1],
             "concurrent_destroying_num" / Int16ub,
         )
 
@@ -1765,7 +1784,7 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
         )))
 
         for i in range(len(self.quest_scene_id)):
-            quest_data = dict(
+            quest_resp_data = dict(
                 quest_type=self.quest_type[i],
                 quest_scene_id=self.quest_scene_id[i],
                 clear_flag=self.clear_flag[i],
@@ -1776,22 +1795,16 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
                 quest_scene_ex_bonus_user_data_list=[],
             )
 
-            quest_data["quest_scene_best_score_user_data"].append(dict(
-                clear_time=self.clear_time,
-                combo_num=self.combo_num,
-                total_damage_size=len(self.total_damage) * 2,
-                total_damage=[ord(x) for x in self.total_damage],
-                concurrent_destroying_num=self.concurrent_destroying_num,
+            quest_resp_data["quest_scene_best_score_user_data"].append(dict(
+                clear_time=self.clear_time[i],
+                combo_num=self.combo_num[i],
+                total_damage_size=len(self.total_damage[i]) * 2,
+                total_damage=[ord(x) for x in self.total_damage[i]],
+                concurrent_destroying_num=self.concurrent_destroying_num[i],
             ))
 
-            '''
-            quest_data["quest_scene_ex_bonus_user_data_list"].append(dict(
-                ex_bonus_table_id=self.ex_bonus_table_id[i],
-                achievement_flag=self.achievement_flag[i],
-            ))
-            '''
             
-            resp_data.quest_scene_user_data_list.append(quest_data)
+            resp_data.quest_scene_user_data_list.append(quest_resp_data)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)

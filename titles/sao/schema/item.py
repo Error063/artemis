@@ -84,6 +84,26 @@ hero_party = Table(
     mysql_charset="utf8mb4",
 )
 
+quest = Table(
+    "sao_player_quest",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("episode_id", Integer, nullable=False),
+    Column("quest_clear_flag", Boolean, nullable=False),
+    Column("clear_time", Integer, nullable=False),
+    Column("combo_num", Integer, nullable=False),
+    Column("total_damage", Integer, nullable=False),
+    Column("concurrent_destroying_num", Integer, nullable=False),
+    Column("play_date", TIMESTAMP, nullable=False, server_default=func.now()),
+    UniqueConstraint("user", "episode_id", name="sao_player_quest_uk"),
+    mysql_charset="utf8mb4",
+)
+
 sessions = Table(
     "sao_play_sessions",
     metadata,
@@ -227,6 +247,34 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
 
+    def put_player_quest(self, user_id: int, episode_id: int, quest_clear_flag: bool, clear_time: int, combo_num: int, total_damage: int, concurrent_destroying_num: int) -> Optional[int]:
+        sql = insert(quest).values(
+            user=user_id,
+            episode_id=episode_id,
+            quest_clear_flag=quest_clear_flag,
+            clear_time=clear_time,
+            combo_num=combo_num,
+            total_damage=total_damage,
+            concurrent_destroying_num=concurrent_destroying_num
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            quest_clear_flag=quest_clear_flag,
+            clear_time=clear_time,
+            combo_num=combo_num,
+            total_damage=total_damage,
+            concurrent_destroying_num=concurrent_destroying_num
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(
+                f"{__name__} failed to insert quest! user: {user_id}, episode_id: {episode_id}"
+            )
+            return None
+
+        return result.lastrowid
+
     def get_user_equipment(self, user_id: int, equipment_id: int) -> Optional[Dict]:
         sql = equipment_data.select(equipment_data.c.user == user_id and equipment_data.c.equipment_id == equipment_id)
         
@@ -318,6 +366,41 @@ class SaoItemData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+
+    def get_quest_log(
+        self, user_id: int, episode_id: int = None
+    ) -> Optional[List[Row]]:
+        """
+        A catch-all quest lookup given a profile and episode_id
+        """
+        sql = quest.select(
+            and_(
+                quest.c.user == user_id,
+                quest.c.episode_id == episode_id if episode_id is not None else True,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_quest_logs(
+        self, user_id: int
+    ) -> Optional[List[Row]]:
+        """
+        A catch-all quest lookup given a profile
+        """
+        sql = quest.select(
+            and_(
+                quest.c.user == user_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def get_session(
         self, user_id: int = None

@@ -101,6 +101,10 @@ class SaoBase:
             self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
             self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
             self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
+            self.game_data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
+
+            # Force the tutorial stage to be completed due to potential crash in-game
+            
 
         self.logger.info(f"User Authenticated: { access_code } | { user_id }")
 
@@ -116,6 +120,10 @@ class SaoBase:
             self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
             self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
             self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
+            self.game_data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
+
+            # Force the tutorial stage to be completed due to potential crash in-game
+
 
             profile_data = self.game_data.profile.get_profile(user_id)
 
@@ -304,8 +312,20 @@ class SaoBase:
 
     def handle_c900(self, request: Any) -> bytes:
         #quest/get_quest_scene_user_data_list // QuestScene.csv
-        questIdsData = self.game_data.static.get_quests_ids(0, True)
-        resp = SaoGetQuestSceneUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, questIdsData)
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+
+        )
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
+        quest_data = self.game_data.item.get_quest_logs(user_id)
+
+        resp = SaoGetQuestSceneUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, quest_data)
         return resp.make()
 
     def handle_c400(self, request: Any) -> bytes:
@@ -678,8 +698,21 @@ class SaoBase:
 
         req_data = req_struct.parse(req)
 
+        # Add stage progression to database
+        user_id = req_data.user_id
+        episode_id = req_data.episode_id
+        quest_clear_flag = bool(req_data.score_data[0].boss_destroying_num)
+        clear_time = req_data.score_data[0].clear_time
+        combo_num = req_data.score_data[0].combo_num
+        total_damage = req_data.score_data[0].total_damage
+        concurrent_destroying_num = req_data.score_data[0].concurrent_destroying_num
+
+        if quest_clear_flag is True:
+            # Save stage progression - to be revised to avoid saving worse score
+            self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
+
         # Update the profile 
-        profile = self.game_data.profile.get_profile(req_data.user_id)
+        profile = self.game_data.profile.get_profile(user_id)
         
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
         col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
@@ -703,7 +736,7 @@ class SaoBase:
 
         # Update profile
         updated_profile = self.game_data.profile.put_profile(
-            req_data.user_id,
+            user_id,
             profile["user_type"], 
             profile["nick_name"], 
             player_level,
@@ -715,8 +748,8 @@ class SaoBase:
             )
 
         # Update heroes from the used party
-        play_session = self.game_data.item.get_session(req_data.user_id)
-        session_party = self.game_data.item.get_hero_party(req_data.user_id, play_session["user_party_team_id"])
+        play_session = self.game_data.item.get_session(user_id)
+        session_party = self.game_data.item.get_hero_party(user_id, play_session["user_party_team_id"])
 
         hero_list = []
         hero_list.append(session_party["user_hero_log_id_1"])
@@ -724,12 +757,12 @@ class SaoBase:
         hero_list.append(session_party["user_hero_log_id_3"])
 
         for i in range(0,len(hero_list)):
-            hero_data = self.game_data.item.get_hero_log(req_data.user_id, hero_list[i])
+            hero_data = self.game_data.item.get_hero_log(user_id, hero_list[i])
 
             log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
 
             self.game_data.item.put_hero_log(
-                req_data.user_id,
+                user_id,
                 hero_data["user_hero_log_id"],
                 hero_data["log_level"],
                 log_exp,
@@ -752,11 +785,11 @@ class SaoBase:
             itemList = self.game_data.static.get_item_id(commonRewardId)
 
             if heroList:
-                self.game_data.item.put_hero_log(req_data.user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                self.game_data.item.put_hero_log(user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(req_data.user_id, commonRewardId, 1, 200, 0, 0, 0)
+                self.game_data.item.put_equipment_data(user_id, commonRewardId, 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(req_data.user_id, commonRewardId)
+                self.game_data.item.put_item(user_id, commonRewardId)
         
         # Generate random hero(es) based off the response    
         for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
@@ -773,11 +806,11 @@ class SaoBase:
             equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
             itemList = self.game_data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
             if heroList:
-                self.game_data.item.put_hero_log(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
+                self.game_data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(req_data.user_id, randomized_unanalyzed_id['CommonRewardId'])
+                self.game_data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
             
         # Send response
 
