@@ -935,6 +935,7 @@ class SaoBase:
         # Add tower progression to database
         user_id = req_data.user_id
         trial_tower_id = req_data.trial_tower_id
+        next_tower_id = 0
         quest_clear_flag = bool(req_data.score_data[0].boss_destroying_num)
         clear_time = req_data.score_data[0].clear_time
         combo_num = req_data.score_data[0].combo_num
@@ -945,17 +946,23 @@ class SaoBase:
             # Save tower progression - to be revised to avoid saving worse score
             if trial_tower_id == 10:
                 trial_tower_id = 10001
+                next_tower_id = 3011
             elif trial_tower_id == 20:
                 trial_tower_id = 10002
+                next_tower_id = 3021
             elif trial_tower_id == 30:
                 trial_tower_id = 10003
+                next_tower_id = 3031
             elif trial_tower_id == 40:
                 trial_tower_id = 10004
+                next_tower_id = 3041
             elif trial_tower_id == 50:
                 trial_tower_id = 10005
+                next_tower_id = 3051
             else:
                 trial_tower_id = trial_tower_id + 3000
-            self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
+            self.game_data.item.put_player_quest(user_id, trial_tower_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
+            self.game_data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
 
         # Update the profile 
         profile = self.game_data.profile.get_profile(user_id)
