@@ -961,6 +961,8 @@ class SaoBase:
                 next_tower_id = 3051
             else:
                 trial_tower_id = trial_tower_id + 3000
+                next_tower_id = trial_tower_id + 1
+            
             self.game_data.item.put_player_quest(user_id, trial_tower_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
             self.game_data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
 
