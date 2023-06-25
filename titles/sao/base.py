@@ -709,6 +709,15 @@ class SaoBase:
 
         if quest_clear_flag is True:
             # Save stage progression - to be revised to avoid saving worse score
+
+            # Reference Episode.csv but Chapter 3,4 and 5 reports id 0
+            if episode_id > 10000 and episode_id < 11000:
+                episode_id = episode_id - 9000
+            elif episode_id > 20000 and episode_id < 21000:
+                episode_id = episode_id - 19000
+            elif episode_id > 30000 and episode_id < 31000:
+                episode_id = episode_id - 29000
+
             self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 
         # Update the profile 
@@ -829,7 +838,17 @@ class SaoBase:
             "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
             "trial_tower_id" / Int32ub,  # trial_tower_id is an int
             "play_mode" / Int8ub,  # play_mode is a byte
-            
+            Padding(3),
+            "play_start_request_data_length" / Rebuild(Int8ub, len_(this.play_start_request_data)),  # play_start_request_data_length is a byte,
+            "play_start_request_data" / Array(this.play_start_request_data_length, Struct(
+                "user_party_id_size" / Rebuild(Int32ub, len_(this.user_party_id) * 2),  # calculates the length of the user_party_id
+                "user_party_id" / PaddedString(this.user_party_id_size, "utf_16_le"),  # user_party_id is a (zero) padded string
+                "appoint_leader_resource_card_code_size" / Rebuild(Int32ub, len_(this.appoint_leader_resource_card_code) * 2),  # calculates the length of the total_damage
+                "appoint_leader_resource_card_code" / PaddedString(this.appoint_leader_resource_card_code_size, "utf_16_le"),  # total_damage is a (zero) padded string
+                "use_profile_card_code_size" / Rebuild(Int32ub, len_(this.use_profile_card_code) * 2),  # calculates the length of the total_damage
+                "use_profile_card_code" / PaddedString(this.use_profile_card_code_size, "utf_16_le"),  # use_profile_card_code is a (zero) padded string
+                "quest_drop_boost_apply_flag" / Int8ub,  # quest_drop_boost_apply_flag is a byte
+            )),
         )
 
         req_data = req_struct.parse(req)
@@ -837,6 +856,14 @@ class SaoBase:
         user_id = req_data.user_id
         floor_id = req_data.trial_tower_id
         profile_data = self.game_data.profile.get_profile(user_id)
+
+        self.game_data.item.create_session(
+            user_id, 
+            int(req_data.play_start_request_data[0].user_party_id), 
+            req_data.trial_tower_id, 
+            req_data.play_mode, 
+            req_data.play_start_request_data[0].quest_drop_boost_apply_flag
+            )
 
         resp = SaoEpisodePlayStartResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
         return resp.make()
@@ -972,9 +999,14 @@ class SaoBase:
             else:
                 trial_tower_id = trial_tower_id + 3000
                 next_tower_id = trial_tower_id + 1
-            
+
             self.game_data.item.put_player_quest(user_id, trial_tower_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
-            self.game_data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
+
+            # Check if next stage is already done
+            checkQuest = self.game_data.item.get_quest_log(user_id, next_tower_id)
+            if not checkQuest:
+                if next_tower_id != 3101:
+                    self.game_data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
 
         # Update the profile 
         profile = self.game_data.profile.get_profile(user_id)
