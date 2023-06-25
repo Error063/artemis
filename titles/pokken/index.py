@@ -1,8 +1,7 @@
 from typing import Tuple
 from twisted.web.http import Request
 from twisted.web import resource
-from twisted.internet import reactor, endpoints
-from autobahn.twisted.websocket import WebSocketServerFactory
+from twisted.internet import reactor
 import json, ast
 from datetime import datetime
 import yaml
@@ -17,7 +16,7 @@ from .config import PokkenConfig
 from .base import PokkenBase
 from .const import PokkenConstants
 from .proto import jackal_pb2
-from .services import PokkenStunProtocol, PokkenAdmissionFactory, PokkenAdmissionProtocol
+from .services import PokkenAdmissionFactory
 
 
 class PokkenServlet(resource.Resource):
@@ -72,7 +71,7 @@ class PokkenServlet(resource.Resource):
 
         return (
             True,
-            f"https://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
+            f"https://{game_cfg.server.hostname}:{game_cfg.ports.game}/{game_code}/$v/",
             f"{game_cfg.server.hostname}/SDAK/$v/",
         )
 
@@ -93,21 +92,10 @@ class PokkenServlet(resource.Resource):
         return (True, "PKF1")
 
     def setup(self) -> None:
-        # TODO: Setup stun, turn (UDP) and admission (WSS) servers
-        reactor.listenUDP(
-            self.game_cfg.server.port_stun, PokkenStunProtocol(self.core_cfg, self.game_cfg, "Stun")
-        )
-        
-        reactor.listenUDP(
-            self.game_cfg.server.port_turn, PokkenStunProtocol(self.core_cfg, self.game_cfg, "Turn")
-        )
-
-        factory = WebSocketServerFactory(f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}")
-        factory.protocol = PokkenAdmissionProtocol
-
-        reactor.listenTCP(
-            self.game_cfg.server.port_admission, PokkenAdmissionFactory(self.core_cfg, self.game_cfg)
-        )
+        if self.game_cfg.server.enable_matching:
+            reactor.listenTCP(
+                self.game_cfg.ports.admission, PokkenAdmissionFactory(self.core_cfg, self.game_cfg)
+            )
 
     def render_POST(
         self, request: Request, version: int = 0, endpoints: str = ""
@@ -144,6 +132,9 @@ class PokkenServlet(resource.Resource):
         return ret
 
     def handle_matching(self, request: Request) -> bytes:
+        if not self.game_cfg.server.enable_matching:
+            return b""
+        
         content = request.content.getvalue()
         client_ip = Utils.get_ip_addr(request)
 

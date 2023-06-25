@@ -44,19 +44,19 @@ class PokkenBase:
         biwa_setting = {
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
-                "port": self.game_cfg.server.port,
+                "port": self.game_cfg.ports.game,
                 "url": "/SDAK/100/matching",
             },
             "StunServer": {
-                "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_stun,
+                "addr": self.game_cfg.server.stun_server_host,
+                "port": self.game_cfg.server.stun_server_port,
             },
             "TurnServer": {
-                "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_turn,
+                "addr": self.game_cfg.server.stun_server_host,
+                "port": self.game_cfg.server.stun_server_port,
             },
-            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}",
-            "locationId": 123,
+            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.ports.admission}",
+            "locationId": 123, # FIXME: Get arcade's ID from the database
             "logfilename": "JackalMatchingLibrary.log",
             "biwalogfilename": "./biwa.log",
         }
@@ -94,6 +94,7 @@ class PokkenBase:
         res.type = jackal_pb2.MessageType.LOAD_CLIENT_SETTINGS
         settings = jackal_pb2.LoadClientSettingsResponseData()
 
+        # TODO: Make configurable
         settings.money_magnification = 1
         settings.continue_bonus_exp = 100
         settings.continue_fight_money = 100
@@ -356,12 +357,11 @@ class PokkenBase:
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         """
-        "sessionId":"12345678",
-        "A":{
-            "pcb_id": data["data"]["must"]["pcb_id"],
-            "gip": client_ip
-        },
-        "list":[]
+                "sessionId":"12345678",
+                "A":{
+                    "pcb_id": data["data"]["must"]["pcb_id"],
+                    "gip": client_ip
+                },
         """
         return {
             "data": {
@@ -379,10 +379,13 @@ class PokkenBase:
     ) -> Dict:
         return {}
 
+    def handle_admission_noop(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+        return {}
+    
     def handle_admission_joinsession(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
         self.logger.info(f"Admission: JoinSession from {req_ip}")
         return {
             'data': {
-                "id": 123
+                "id": 12345678
             }
         }

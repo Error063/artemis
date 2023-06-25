@@ -2,8 +2,11 @@ server:
   hostname: "localhost"
   enable: True
   loglevel: "info"
-  port: 9000
-  port_stun: 9001
-  port_turn: 9002
-  port_admission: 9003
   auto_register: True
+  enable_matching: False
+  stun_server_host: "stunserver.stunprotocol.org"
+  stun_server_port: 3478
+
+ports:
+  game: 9000
+  admission: 9001
