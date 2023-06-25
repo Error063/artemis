@@ -707,6 +707,11 @@ class SaoBase:
         total_damage = req_data.score_data[0].total_damage
         concurrent_destroying_num = req_data.score_data[0].concurrent_destroying_num
 
+        profile = self.game_data.profile.get_profile(user_id)
+        vp = int(profile["own_vp"])
+        exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
+        col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
+
         if quest_clear_flag is True:
             # Save stage progression - to be revised to avoid saving worse score
 
@@ -720,11 +725,8 @@ class SaoBase:
 
             self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 
-        # Update the profile 
-        profile = self.game_data.profile.get_profile(user_id)
-        
-        exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
-        col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
+            vp = int(profile["own_vp"]) + 10 #always 10 VP per cleared stage
+
 
         # Calculate level based off experience and the CSV list
         with open(r'titles/sao/data/PlayerRank.csv') as csv_file:
@@ -751,7 +753,7 @@ class SaoBase:
             player_level,
             exp,
             col,
-            profile["own_vp"], 
+            vp, 
             profile["own_yui_medal"], 
             profile["setting_title_id"]
             )
@@ -770,10 +772,27 @@ class SaoBase:
 
             log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
 
+            # Calculate hero level based off experience and the CSV list
+            with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line_count = 0
+                data = []
+                rowf = False
+                for row in csv_reader:
+                    if rowf==False:
+                        rowf=True
+                    else:
+                        data.append(row)
+                
+            for e in range(0,len(data)):
+                if log_exp>=int(data[e][1]) and log_exp<int(data[e+1][1]):
+                    hero_level = int(data[e][0])
+                    break
+
             self.game_data.item.put_hero_log(
                 user_id,
                 hero_data["user_hero_log_id"],
-                hero_data["log_level"],
+                hero_level,
                 log_exp,
                 hero_data["main_weapon"],
                 hero_data["sub_equipment"],
@@ -1057,10 +1076,27 @@ class SaoBase:
 
             log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
 
+            # Calculate hero level based off experience and the CSV list
+            with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                line_count = 0
+                data = []
+                rowf = False
+                for row in csv_reader:
+                    if rowf==False:
+                        rowf=True
+                    else:
+                        data.append(row)
+                
+            for e in range(0,len(data)):
+                if log_exp>=int(data[e][1]) and log_exp<int(data[e+1][1]):
+                    hero_level = int(data[e][0])
+                    break
+
             self.game_data.item.put_hero_log(
                 user_id,
                 hero_data["user_hero_log_id"],
-                hero_data["log_level"],
+                hero_level,
                 log_exp,
                 hero_data["main_weapon"],
                 hero_data["sub_equipment"],
