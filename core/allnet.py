@@ -112,6 +112,8 @@ class AllnetServlet:
                 )
                 resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
                 resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
+                
+                self.logger.debug(f"Allnet response: {vars(resp)}")
                 return self.dict_to_http_form_string([vars(resp)])
 
         resp.uri, resp.host = self.uri_registry[req.game_id]
@@ -204,16 +206,17 @@ class AllnetServlet:
 
         else:  # TODO: Keychip check
             if path.exists(
-                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-app.ini"
+                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver.replace('.', '')}-app.ini"
             ):
                 resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-app.ini"
 
             if path.exists(
-                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver}-opt.ini"
+                f"{self.config.allnet.update_cfg_folder}/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
             ):
                 resp.uri += f"|http://{self.config.title.hostname}:{self.config.title.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
 
             self.logger.debug(f"Sending download uri {resp.uri}")
+            self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
             return self.dict_to_http_form_string([vars(resp)])
 
     def handle_dlorder_ini(self, request: Request, match: Dict) -> bytes:
@@ -223,6 +226,8 @@ class AllnetServlet:
         req_file = match["file"].replace("%0A", "")
 
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
+            self.logger.info(f"Request for DL INI file {req_file} from {Utils.get_ip_addr(request)} successful")
+            self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
             return open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
             ).read()
@@ -410,8 +415,8 @@ class AllnetPowerOnResponse3:
         self.uri = ""
         self.host = ""
         self.place_id = "123"
-        self.name = ""
-        self.nickname = ""
+        self.name = "ARTEMiS"
+        self.nickname = "ARTEMiS"
         self.region0 = "1"
         self.region_name0 = "W"
         self.region_name1 = ""
@@ -435,8 +440,8 @@ class AllnetPowerOnResponse2:
         self.uri = ""
         self.host = ""
         self.place_id = "123"
-        self.name = "Test"
-        self.nickname = "Test123"
+        self.name = "ARTEMiS"
+        self.nickname = "ARTEMiS"
         self.region0 = "1"
         self.region_name0 = "W"
         self.region_name1 = "X"

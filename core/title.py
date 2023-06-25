@@ -84,7 +84,7 @@ class TitleServlet:
             request.setResponseCode(405)
             return b""
 
-        return index.render_GET(request, endpoints["version"], endpoints["endpoint"])
+        return index.render_GET(request, int(endpoints["version"]), endpoints["endpoint"])
 
     def render_POST(self, request: Request, endpoints: dict) -> bytes:
         code = endpoints["game"]

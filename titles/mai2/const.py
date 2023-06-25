@@ -71,9 +71,9 @@ class Mai2Constants:
         "maimai DX PLUS",
         "maimai DX Splash",
         "maimai DX Splash PLUS",
-        "maimai DX Universe",
-        "maimai DX Universe PLUS",
-        "maimai DX Festival",
+        "maimai DX UNiVERSE",
+        "maimai DX UNiVERSE PLUS",
+        "maimai DX FESTiVAL",
     )
 
     @classmethod

@@ -30,7 +30,7 @@ class CardMakerServlet:
 
         self.versions = [
             CardMakerBase(core_cfg, self.game_cfg),
-            CardMaker135(core_cfg, self.game_cfg),
+            CardMaker135(core_cfg, self.game_cfg)
         ]
 
         self.logger = logging.getLogger("cardmaker")
@@ -89,7 +89,7 @@ class CardMakerServlet:
 
         if version >= 130 and version < 135:  # Card Maker
             internal_ver = CardMakerConstants.VER_CARD_MAKER
-        elif version >= 135 and version < 136:  # Card Maker 1.35
+        elif version >= 135 and version < 140:  # Card Maker 1.35
             internal_ver = CardMakerConstants.VER_CARD_MAKER_135
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:

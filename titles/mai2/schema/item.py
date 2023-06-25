@@ -39,8 +39,8 @@ card = Table(
     Column("cardTypeId", Integer, nullable=False),
     Column("charaId", Integer, nullable=False),
     Column("mapId", Integer, nullable=False),
-    Column("startDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
-    Column("endDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    Column("startDate", TIMESTAMP, nullable=False, server_default=func.now()),
+    Column("endDate", TIMESTAMP, nullable=False),
     UniqueConstraint("user", "cardId", "cardTypeId", name="mai2_item_card_uk"),
     mysql_charset="utf8mb4",
 )
@@ -444,6 +444,8 @@ class Mai2ItemData(BaseData):
         card_kind: int,
         chara_id: int,
         map_id: int,
+        start_date: datetime,
+        end_date: datetime,
     ) -> Optional[Row]:
         sql = insert(card).values(
             user=user_id,
@@ -451,9 +453,13 @@ class Mai2ItemData(BaseData):
             cardTypeId=card_kind,
             charaId=chara_id,
             mapId=map_id,
+            startDate=start_date,
+            endDate=end_date,
         )
 
-        conflict = sql.on_duplicate_key_update(charaId=chara_id, mapId=map_id)
+        conflict = sql.on_duplicate_key_update(
+            charaId=chara_id, mapId=map_id, startDate=start_date, endDate=end_date
+        )
 
         result = self.execute(conflict)
         if result is None:

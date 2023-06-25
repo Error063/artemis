@@ -632,21 +632,38 @@ class Mai2Base:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        songs = self.data.score.get_best_scores(data["userId"])
+        user_id = data.get("userId", 0)        
+        next_index = data.get("nextIndex", 0)
+        max_ct = data.get("maxCount", 50)
+        upper_lim = next_index + max_ct
         music_detail_list = []
-        next_index = 0
 
-        if songs is not None:
-            for song in songs:
-                tmp = song._asdict()
-                tmp.pop("id")
-                tmp.pop("user")
-                music_detail_list.append(tmp)
+        if user_id <= 0:
+            self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
+            return {}
+        
+        songs = self.data.score.get_best_scores(user_id)
+        if songs is None:
+            self.logger.debug("handle_get_user_music_api_request: get_best_scores returned None!")
+            return {
+            "userId": data["userId"],
+            "nextIndex": 0,
+            "userMusicList": [],
+        }
 
-                if len(music_detail_list) == data["maxCount"]:
-                    next_index = data["maxCount"] + data["nextIndex"]
-                    break
+        num_user_songs = len(songs)
 
+        for x in range(next_index, upper_lim):
+            if num_user_songs <= x:
+                break
+
+            tmp = songs[x]._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            music_detail_list.append(tmp)
+
+        next_index = 0 if len(music_detail_list) < max_ct or num_user_songs == upper_lim else upper_lim
+        self.logger.info(f"Send songs {next_index}-{upper_lim} ({len(music_detail_list)}) out of {num_user_songs} for user {user_id} (next idx {next_index})")
         return {
             "userId": data["userId"],
             "nextIndex": next_index,

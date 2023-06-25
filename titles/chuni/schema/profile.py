@@ -89,8 +89,6 @@ profile = Table(
         Integer,
         ForeignKey("chuni_profile_team.id", ondelete="SET NULL", onupdate="SET NULL"),
     ),
-    Column("avatarBack", Integer, server_default="0"),
-    Column("avatarFace", Integer, server_default="0"),
     Column("eliteRankPoint", Integer, server_default="0"),
     Column("stockedGridCount", Integer, server_default="0"),
     Column("netBattleLoseCount", Integer, server_default="0"),
@@ -98,10 +96,8 @@ profile = Table(
     Column("netBattle4thCount", Integer, server_default="0"),
     Column("overPowerRate", Integer, server_default="0"),
     Column("battleRewardStatus", Integer, server_default="0"),
-    Column("avatarPoint", Integer, server_default="0"),
     Column("netBattle1stCount", Integer, server_default="0"),
     Column("charaIllustId", Integer, server_default="0"),
-    Column("avatarItem", Integer, server_default="0"),
     Column("userNameEx", String(8), server_default=""),
     Column("netBattleWinCount", Integer, server_default="0"),
     Column("netBattleCorrection", Integer, server_default="0"),
@@ -112,7 +108,6 @@ profile = Table(
     Column("netBattle3rdCount", Integer, server_default="0"),
     Column("netBattleConsecutiveWinCount", Integer, server_default="0"),
     Column("overPowerLowerRank", Integer, server_default="0"),
-    Column("avatarWear", Integer, server_default="0"),
     Column("classEmblemBase", Integer, server_default="0"),
     Column("battleRankPoint", Integer, server_default="0"),
     Column("netBattle2ndCount", Integer, server_default="0"),
@@ -120,13 +115,19 @@ profile = Table(
     Column("skillId", Integer, server_default="0"),
     Column("lastCountryCode", String(5), server_default="JPN"),
     Column("isNetBattleHost", Boolean, server_default="0"),
-    Column("avatarFront", Integer, server_default="0"),
-    Column("avatarSkin", Integer, server_default="0"),
     Column("battleRewardCount", Integer, server_default="0"),
     Column("battleRewardIndex", Integer, server_default="0"),
     Column("netBattlePlayCount", Integer, server_default="0"),
     Column("exMapLoopCount", Integer, server_default="0"),
     Column("netBattleEndState", Integer, server_default="0"),
+    Column("rankUpChallengeResults", JSON),
+    Column("avatarBack", Integer, server_default="0"),
+    Column("avatarFace", Integer, server_default="0"),
+    Column("avatarPoint", Integer, server_default="0"),
+    Column("avatarItem", Integer, server_default="0"),
+    Column("avatarWear", Integer, server_default="0"),
+    Column("avatarFront", Integer, server_default="0"),
+    Column("avatarSkin", Integer, server_default="0"),
     Column("avatarHead", Integer, server_default="0"),
     UniqueConstraint("user", "version", name="chuni_profile_profile_uk"),
     mysql_charset="utf8mb4",
@@ -417,8 +418,8 @@ class ChuniProfileData(BaseData):
         sql = (
             select([profile, option])
             .join(option, profile.c.user == option.c.user)
-            .filter(and_(profile.c.user == aime_id, profile.c.version == version))
-        )
+            .filter(and_(profile.c.user == aime_id, profile.c.version <= version))
+        ).order_by(profile.c.version.desc())
 
         result = self.execute(sql)
         if result is None:
@@ -429,9 +430,9 @@ class ChuniProfileData(BaseData):
         sql = select(profile).where(
             and_(
                 profile.c.user == aime_id,
-                profile.c.version == version,
+                profile.c.version <= version,
             )
-        )
+        ).order_by(profile.c.version.desc())
 
         result = self.execute(sql)
         if result is None:
@@ -461,9 +462,9 @@ class ChuniProfileData(BaseData):
         sql = select(profile_ex).where(
             and_(
                 profile_ex.c.user == aime_id,
-                profile_ex.c.version == version,
+                profile_ex.c.version <= version,
             )
-        )
+        ).order_by(profile_ex.c.version.desc())
 
         result = self.execute(sql)
         if result is None:

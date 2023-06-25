@@ -83,7 +83,13 @@ class IDZUserDBProtocol(Protocol):
     def dataReceived(self, data: bytes) -> None:
         self.logger.debug(f"Receive data {data.hex()}")
         crypt = AES.new(self.static_key, AES.MODE_ECB)
-        data_dec = crypt.decrypt(data)
+        
+        try:
+            data_dec = crypt.decrypt(data)
+        
+        except Exception as e:
+            self.logger.error(f"Failed to decrypt UserDB request from {self.transport.getPeer().host} because {e} - {data.hex()}")
+        
         self.logger.debug(f"Decrypt data {data_dec.hex()}")
 
         magic = struct.unpack_from("<I", data_dec, 0)[0]

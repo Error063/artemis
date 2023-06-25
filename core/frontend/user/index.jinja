@@ -1,4 +1,31 @@
 {% extends "core/frontend/index.jinja" %}
 {% block content %}
-<h1>testing</h1>
+<h1>Management for {{ username }}</h1>
+<h2>Cards <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#card_add">Add</button></h2>
+<ul>
+{% for c in cards %}
+<li>{{ c.access_code }}: {{ c.status }} <button class="btn-danger btn">Delete</button></li>
+{% endfor %}
+</ul>
+<div class="modal fade" id="card_add" tabindex="-1" aria-labelledby="card_add_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="card_add_label">Add Card</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        HOW TO:<br>
+        Scan your card on any networked game and press the "View Access Code" button (varies by game) and enter the 20 digit code below.<br>
+        !!FOR AMUSEIC CARDS: DO NOT ENTER THE CODE SHOWN ON THE BACK OF THE CARD ITSELF OR IT WILL NOT WORK!!
+        <p /><label for="card_add_frm_access_code">Access Code:&nbsp;</label><input id="card_add_frm_access_code" maxlength="20" type="text" required> 
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Add</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock content %}

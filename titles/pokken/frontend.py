@@ -2,8 +2,9 @@ import yaml
 import jinja2
 from twisted.web.http import Request
 from os import path
+from twisted.web.server import Session
 
-from core.frontend import FE_Base
+from core.frontend import FE_Base, IUserSession
 from core.config import CoreConfig
 from .database import PokkenData
 from .config import PokkenConfig
@@ -27,7 +28,12 @@ class PokkenFrontend(FE_Base):
         template = self.environment.get_template(
             "titles/pokken/frontend/pokken_index.jinja"
         )
+
+        sesh: Session = request.getSession()
+        usr_sesh = IUserSession(sesh)
+
         return template.render(
             title=f"{self.core_config.server.name} | {self.nav_name}",
             game_list=self.environment.globals["game_list"],
+            sesh=vars(usr_sesh)
         ).encode("utf-16")

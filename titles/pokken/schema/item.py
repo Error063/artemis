@@ -31,4 +31,16 @@ class PokkenItemData(BaseData):
     Items obtained as rewards
     """
 
-    pass
+    def add_reward(self, user_id: int, category: int, content: int, item_type: int) -> Optional[int]:
+        sql = insert(item).values(
+            user=user_id,
+            category=category,
+            content=content,
+            type=item_type,
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to insert reward for user {user_id}: {category}-{content}-{item_type}")
+            return None
+        return result.lastrowid

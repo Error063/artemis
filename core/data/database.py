@@ -333,3 +333,8 @@ class Data:
 
             if not failed:
                 self.base.set_schema_ver(latest_ver, game)
+    
+    def show_versions(self) -> None:
+        all_game_versions = self.base.get_all_schema_vers()
+        for ver in all_game_versions:
+            self.logger.info(f"{ver['game']} -> v{ver['version']}")

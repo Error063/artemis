@@ -33,8 +33,8 @@ class MuchaServlet:
         self.logger.addHandler(fileHandler)
         self.logger.addHandler(consoleHandler)
 
-        self.logger.setLevel(logging.INFO)
-        coloredlogs.install(level=logging.INFO, logger=self.logger, fmt=log_fmt_str)
+        self.logger.setLevel(cfg.mucha.loglevel)
+        coloredlogs.install(level=cfg.mucha.loglevel, logger=self.logger, fmt=log_fmt_str)
 
         all_titles = Utils.get_all_titles()
 

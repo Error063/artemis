@@ -26,30 +26,6 @@ class PokkenServerConfig:
         )
 
     @property
-    def port(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "port", default=9000
-        )
-
-    @property
-    def port_stun(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "port_stun", default=9001
-        )
-
-    @property
-    def port_turn(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "port_turn", default=9002
-        )
-
-    @property
-    def port_admission(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "pokken", "server", "port_admission", default=9003
-        )
-
-    @property
     def auto_register(self) -> bool:
         """
         Automatically register users in `aime_user` on first carding in with pokken
@@ -59,7 +35,51 @@ class PokkenServerConfig:
             self.__config, "pokken", "server", "auto_register", default=True
         )
 
+    @property
+    def enable_matching(self) -> bool:
+        """
+        If global matching should happen
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "server", "enable_matching", default=False
+        )
+    
+    @property
+    def stun_server_host(self) -> str:
+        """
+        Hostname of the EXTERNAL stun server the game should connect to. This is not handled by artemis.
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "server", "stun_server_host", default="stunserver.stunprotocol.org"
+        )
+
+    @property
+    def stun_server_port(self) -> int:
+        """
+        Port of the EXTERNAL stun server the game should connect to. This is not handled by artemis.
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "server", "stun_server_port", default=3478
+        )
+
+class PokkenPortsConfig:
+    def __init__(self, parent_config: "PokkenConfig"):
+        self.__config = parent_config
+    
+    @property
+    def game(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "ports", "game", default=9000
+        )
+
+    @property
+    def admission(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "pokken", "ports", "admission", default=9001
+        )
+    
 
 class PokkenConfig(dict):
     def __init__(self) -> None:
         self.server = PokkenServerConfig(self)
+        self.ports = PokkenPortsConfig(self)

@@ -624,10 +624,10 @@ class WaccaBase:
         current_wp = profile["wp"]
 
         tickets = self.data.item.get_tickets(user_id)
-        new_tickets = []
+        new_tickets: List[TicketItem] = []
 
         for ticket in tickets:
-            new_tickets.append([ticket["id"], ticket["ticket_id"], 9999999999])
+            new_tickets.append(TicketItem(ticket["id"], ticket["ticket_id"], 9999999999))
 
         for item in req.itemsUsed:
             if (
@@ -645,11 +645,11 @@ class WaccaBase:
                 and not self.game_config.mods.infinite_tickets
             ):
                 for x in range(len(new_tickets)):
-                    if new_tickets[x][1] == item.itemId:
+                    if new_tickets[x].ticketId == item.itemId:
                         self.logger.debug(
-                            f"Remove ticket ID {new_tickets[x][0]} type {new_tickets[x][1]} from {user_id}"
+                            f"Remove ticket ID {new_tickets[x].userTicketId} type {new_tickets[x].ticketId} from {user_id}"
                         )
-                        self.data.item.spend_ticket(new_tickets[x][0])
+                        self.data.item.spend_ticket(new_tickets[x].userTicketId)
                         new_tickets.pop(x)
                         break
 
@@ -1074,17 +1074,17 @@ class WaccaBase:
                         old_score = self.data.score.get_best_score(
                             user_id, item.itemId, item.quantity
                         )
-                    if not old_score:
-                        self.data.score.put_best_score(
-                            user_id,
-                            item.itemId,
-                            item.quantity,
-                            0,
-                            [0] * 5,
-                            [0] * 13,
-                            0,
-                            0,
-                        )
+                        if not old_score:
+                            self.data.score.put_best_score(
+                                user_id,
+                                item.itemId,
+                                item.quantity,
+                                0,
+                                [0] * 5,
+                                [0] * 13,
+                                0,
+                                0,
+                            )
 
                     if item.quantity == 0:
                         item.quantity = WaccaConstants.Difficulty.HARD.value
