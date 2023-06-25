@@ -113,7 +113,7 @@ class Mai2Servlet:
         if url_path.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
         
-        elif url_path.startswith("movie/"):
+        elif url_path.startswith("api/movie/"):
             self.logger.info(f"Movie data: {url_path} - {request.content.getvalue()}")
             return b""
 
@@ -215,8 +215,8 @@ class Mai2Servlet:
         self.logger.info(f"v{version} GET {url_path}")
         url_split = url_path.split("/")
 
-        if url_split[0] == "movie":
-            if url_split[1] == "moviestart":
+        if (url_split[0] == "api" and url_split[1] == "movie") or url_split[0] == "movie":
+            if url_split[2] == "moviestart":
                 return json.dumps({"moviestart":{"status":"OK"}}).encode()
 
         if url_split[0] == "old":
