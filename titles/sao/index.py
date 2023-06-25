@@ -97,20 +97,20 @@ class SaoServlet(resource.Resource):
         req_url = request.uri.decode()
         if req_url == "/matching":
             self.logger.info("Matching request")
-
+        
         request.responseHeaders.addRawHeader(b"content-type", b"text/html; charset=utf-8")
 
         sao_request = request.content.getvalue().hex()
-        #sao_request = sao_request[:32]
 
         handler = getattr(self.base, f"handle_{sao_request[:4]}", None)
         if handler is None:
             self.logger.info(f"Generic Handler for {req_url} - {sao_request[:4]}")
-            #self.logger.debug(f"Request: {request.content.getvalue().hex()}")
+            self.logger.debug(f"Request: {request.content.getvalue().hex()}")
             resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(sao_request[:4]), "big")+1)
             self.logger.debug(f"Response: {resp.make().hex()}")
             return resp.make()
 
         self.logger.info(f"Handler {req_url} - {sao_request[:4]} request")
         self.logger.debug(f"Request: {request.content.getvalue().hex()}")
+        self.logger.debug(f"Response: {handler(sao_request).hex()}")
         return handler(sao_request)
