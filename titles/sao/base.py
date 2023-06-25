@@ -537,6 +537,7 @@ class SaoBase:
 
         req_data = req_struct.parse(req)
         user_id = req_data.user_id
+        party_hero_list = []
 
         for party_team in req_data.party_data_list[0].party_team_data_list:
             hero_data = self.game_data.item.get_hero_log(user_id, party_team["user_hero_log_id"])
@@ -560,6 +561,10 @@ class SaoBase:
                 party_team["skill_slot4_skill_id"],
                 party_team["skill_slot5_skill_id"]
             )
+
+            party_hero_list.append(party_team["user_hero_log_id"])
+
+        self.game_data.item.put_hero_party(user_id, req_data.party_data_list[0].party_team_data_list[0].user_party_team_id, party_hero_list[0], party_hero_list[1], party_hero_list[2])
 
         resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
