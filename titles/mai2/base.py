@@ -36,7 +36,7 @@ class Mai2Base:
                 "rebootEndTime": "2020-01-01 07:59:59.0",
                 "movieUploadLimit": 100,
                 "movieStatus": 1,
-                "movieServerUri": self.old_server + "movie/",
+                "movieServerUri": self.old_server + "movie",
                 "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
                 "oldServerUri": self.old_server + "old",
                 "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",

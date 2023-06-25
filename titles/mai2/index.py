@@ -112,6 +112,10 @@ class Mai2Servlet:
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         if url_path.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
+        
+        elif url_path.startswith("movie/"):
+            self.logger.info(f"Movie data: {url_path} - {request.content.getvalue()}")
+            return b""
 
         req_raw = request.content.getvalue()
         url = request.uri.decode()
@@ -210,6 +214,10 @@ class Mai2Servlet:
     def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
         self.logger.info(f"v{version} GET {url_path}")
         url_split = url_path.split("/")
+
+        if url_split[0] == "movie":
+            if url_split[1] == "moviestart":
+                return json.dumps({"moviestart":{"status":"OK"}}).encode()
 
         if url_split[0] == "old":
             if url_split[1] == "ping":
