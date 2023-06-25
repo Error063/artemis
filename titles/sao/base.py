@@ -944,18 +944,28 @@ class SaoBase:
 
         if quest_clear_flag is True:
             # Save tower progression - to be revised to avoid saving worse score
-            if trial_tower_id == 10:
+            if trial_tower_id == 9: 
+                next_tower_id = 10001
+            elif trial_tower_id == 10: 
                 trial_tower_id = 10001
                 next_tower_id = 3011
+            elif trial_tower_id == 19: 
+                next_tower_id = 10002
             elif trial_tower_id == 20:
                 trial_tower_id = 10002
                 next_tower_id = 3021
+            elif trial_tower_id == 29: 
+                next_tower_id = 10003
             elif trial_tower_id == 30:
                 trial_tower_id = 10003
                 next_tower_id = 3031
+            elif trial_tower_id == 39: 
+                next_tower_id = 10004
             elif trial_tower_id == 40:
                 trial_tower_id = 10004
                 next_tower_id = 3041
+            elif trial_tower_id == 49: 
+                next_tower_id = 10005
             elif trial_tower_id == 50:
                 trial_tower_id = 10005
                 next_tower_id = 3051
