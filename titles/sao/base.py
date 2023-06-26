@@ -720,13 +720,19 @@ class SaoBase:
         if quest_clear_flag is True:
             # Save stage progression - to be revised to avoid saving worse score
 
-            # Reference Episode.csv but Chapter 3,4 and 5 reports id 0
+            # Reference Episode.csv but Chapter 2,3,4 and 5 reports id -1, match using /10 + last digits
             if episode_id > 10000 and episode_id < 11000:
+                # Starts at 1001
                 episode_id = episode_id - 9000
-            elif episode_id > 20000 and episode_id < 21000:
-                episode_id = episode_id - 19000
-            elif episode_id > 30000 and episode_id < 31000:
-                episode_id = episode_id - 29000
+            elif episode_id > 20000:
+                # Starts at 2001
+                stage_id = str(episode_id)[-2:]
+                episode_id = episode_id / 10
+                episode_id = int(episode_id) + int(stage_id)
+
+                # Match episode_id with the questSceneId saved in the DB through sortNo
+                questId = self.game_data.static.get_quests_id(episode_id)
+                episode_id = questId[2]
 
             self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 

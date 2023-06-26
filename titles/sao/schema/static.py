@@ -267,6 +267,14 @@ class SaoStaticData(BaseData):
             return None
         return result.lastrowid
 
+    def get_quests_id(self, sortNo: int) -> Optional[Dict]:
+        sql = quest.select(quest.c.sortNo == sortNo)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
     def get_quests_ids(self, version: int, enabled: bool) -> Optional[List[Dict]]:
         sql = quest.select(quest.c.version == version and quest.c.enabled == enabled).order_by(
             quest.c.questSceneId.asc()
