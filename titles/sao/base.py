@@ -1169,3 +1169,23 @@ class SaoBase:
         #quest/trial_tower_play_end_unanalyzed_log_fixed
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
+
+    def handle_cd00(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_basic_data
+        resp = SaoGetDefragMatchBasicDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd02(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_ranking_user_data
+        resp = SaoGetDefragMatchRankingUserDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd04(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_league_point_ranking_list
+        resp = SaoGetDefragMatchLeaguePointRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd06(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_league_score_ranking_list
+        resp = SaoGetDefragMatchLeagueScoreRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
