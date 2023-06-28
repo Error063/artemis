@@ -1189,3 +1189,13 @@ class SaoBase:
         #defrag_match/get_defrag_match_league_score_ranking_list
         resp = SaoGetDefragMatchLeagueScoreRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
+    
+    def handle_d404(self, request: Any) -> bytes:
+        #other/bnid_serial_code_check
+        resp = SaoBnidSerialCodeCheckResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_c306(self, request: Any) -> bytes:
+        #card/scan_qr_quest_profile_card
+        resp = SaoScanQrQuestProfileCardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()

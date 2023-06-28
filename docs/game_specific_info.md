@@ -437,9 +437,11 @@ python dbutils.py --game SDEW upgrade
 ```
 
 ### Notes
-- Co-Op (matching) is not supported
+- Defrag Match will crash at loading
+- Co-Op Online is not supported
 - Shop is not functionnal
 - Player title is currently static and cannot be changed in-game
+- QR Card Scanning currently only load a static hero
 
 ### Credits for SAO support:
 
