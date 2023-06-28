@@ -1661,7 +1661,7 @@ class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
-    def __init__(self, cmd) -> None:
+    def __init__(self, cmd, randomized_unanalyzed_id) -> None:
         super().__init__(cmd)
         self.result = 1
         self.play_end_unanalyzed_log_reward_data_list_size = 1 # Number of arrays
@@ -1670,7 +1670,7 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
         self.common_reward_data_size = 1
 
         self.common_reward_type_1 = 1
-        self.common_reward_id_1 = 102000070
+        self.common_reward_id_1 = int(randomized_unanalyzed_id)
         self.common_reward_num_1 = 1
     
     def make(self) -> bytes:
