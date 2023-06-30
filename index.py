@@ -64,6 +64,13 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
         self.map_post.connect(
+            "allnet_loaderstaterecorder",
+            "/sys/servlet/LoaderStateRecorder",
+            controller="allnet",
+            action="handle_loaderstaterecorder",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
             "allnet_billing",
             "/request",
             controller="allnet",

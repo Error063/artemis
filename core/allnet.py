@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from twisted.web.http import Request
@@ -240,6 +240,22 @@ class AllnetServlet:
             f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}"
         )
         return b""
+
+    def handle_loaderstaterecorder(self, request: Request, match: Dict) -> bytes:
+        req_data = request.content.getvalue()
+        req_dict = self.kvp_to_dict([req_data.decode()])[0]
+
+        serial: Union[str, None] = req_dict.get("serial", None)
+        num_files_to_dl: Union[str, None] = req_dict.get("nb_ftd", None)
+        num_files_dld: Union[str, None] = req_dict.get("nb_dld", None)
+        dl_state: Union[str, None] = req_dict.get("dld_st", None)
+        ip = Utils.get_ip_addr(request)
+
+        if serial is None or num_files_dld is None or num_files_to_dl is None or dl_state is None:
+            return "NG".encode()
+
+        self.logger.info(f"LoaderStateRecorder Request from {ip} {serial}: {num_files_dld}/{num_files_to_dl} Files download (State: {dl_state})")
+        return "OK".encode()
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())
