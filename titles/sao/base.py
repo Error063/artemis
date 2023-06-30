@@ -720,13 +720,19 @@ class SaoBase:
         if quest_clear_flag is True:
             # Save stage progression - to be revised to avoid saving worse score
 
-            # Reference Episode.csv but Chapter 3,4 and 5 reports id 0
+            # Reference Episode.csv but Chapter 2,3,4 and 5 reports id -1, match using /10 + last digits
             if episode_id > 10000 and episode_id < 11000:
+                # Starts at 1001
                 episode_id = episode_id - 9000
-            elif episode_id > 20000 and episode_id < 21000:
-                episode_id = episode_id - 19000
-            elif episode_id > 30000 and episode_id < 31000:
-                episode_id = episode_id - 29000
+            elif episode_id > 20000:
+                # Starts at 2001
+                stage_id = str(episode_id)[-2:]
+                episode_id = episode_id / 10
+                episode_id = int(episode_id) + int(stage_id)
+
+                # Match episode_id with the questSceneId saved in the DB through sortNo
+                questId = self.game_data.static.get_quests_id(episode_id)
+                episode_id = questId[2]
 
             self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 
@@ -1154,12 +1160,119 @@ class SaoBase:
         resp = SaoTrialTowerPlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
 
-    def handle_c90a(self, request: Any) -> bytes: #should be tweaked for proper item unlock
+    def handle_c90a(self, request: Any) -> bytes:
         #quest/episode_play_end_unanalyzed_log_fixed
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
+            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        )
+
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
+        with open('titles/sao/data/RewardTable.csv', 'r') as f:
+            keys_unanalyzed = next(f).strip().split(',')
+            data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+
+        randomized_unanalyzed_id = choice(data_unanalyzed)
+        heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+        i = 0
+
+        # Create a loop to check if the id is a hero or else try 15 times before closing the loop and sending a dummy hero
+        while not heroList:
+            if i == 15:
+                # Return the dummy hero but not save it
+                resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, 102000070)
+                return resp.make()
+
+            i += 1
+            randomized_unanalyzed_id = choice(data_unanalyzed)
+            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+
+        hero_data = self.game_data.item.get_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'])
+
+        # Avoid having a duplicated card and cause an overwrite
+        if not hero_data:
+            self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, randomized_unanalyzed_id['CommonRewardId'])
         return resp.make()
 
     def handle_c91a(self, request: Any) -> bytes: # handler is identical to the episode
         #quest/trial_tower_play_end_unanalyzed_log_fixed
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        req = bytes.fromhex(request)[24:]
+
+        req_struct = Struct(
+            Padding(16),
+            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
+            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
+            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
+            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        )
+
+        req_data = req_struct.parse(req)
+        user_id = req_data.user_id
+
+        with open('titles/sao/data/RewardTable.csv', 'r') as f:
+            keys_unanalyzed = next(f).strip().split(',')
+            data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+
+        randomized_unanalyzed_id = choice(data_unanalyzed)
+        heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+        i = 0
+
+        # Create a loop to check if the id is a hero or else try 15 times before closing the loop and sending a dummy hero
+        while not heroList:
+            if i == 15:
+                # Return the dummy hero but not save it
+                resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, 102000070)
+                return resp.make()
+
+            i += 1
+            randomized_unanalyzed_id = choice(data_unanalyzed)
+            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+
+        hero_data = self.game_data.item.get_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'])
+
+        # Avoid having a duplicated card and cause an overwrite
+        if not hero_data:
+            self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, randomized_unanalyzed_id['CommonRewardId'])
+        return resp.make()
+
+    def handle_cd00(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_basic_data
+        resp = SaoGetDefragMatchBasicDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd02(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_ranking_user_data
+        resp = SaoGetDefragMatchRankingUserDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd04(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_league_point_ranking_list
+        resp = SaoGetDefragMatchLeaguePointRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_cd06(self, request: Any) -> bytes:
+        #defrag_match/get_defrag_match_league_score_ranking_list
+        resp = SaoGetDefragMatchLeagueScoreRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_d404(self, request: Any) -> bytes:
+        #other/bnid_serial_code_check
+        resp = SaoBnidSerialCodeCheckResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        return resp.make()
+
+    def handle_c306(self, request: Any) -> bytes:
+        #card/scan_qr_quest_profile_card
+        resp = SaoScanQrQuestProfileCardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()

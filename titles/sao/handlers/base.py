@@ -1661,7 +1661,7 @@ class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
-    def __init__(self, cmd) -> None:
+    def __init__(self, cmd, randomized_unanalyzed_id) -> None:
         super().__init__(cmd)
         self.result = 1
         self.play_end_unanalyzed_log_reward_data_list_size = 1 # Number of arrays
@@ -1670,7 +1670,7 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
         self.common_reward_data_size = 1
 
         self.common_reward_type_1 = 1
-        self.common_reward_id_1 = 102000070
+        self.common_reward_id_1 = int(randomized_unanalyzed_id)
         self.common_reward_num_1 = 1
     
     def make(self) -> bytes:
@@ -1821,8 +1821,8 @@ class SaoCheckYuiMedalGetConditionResponse(SaoBaseResponse):
         super().__init__(cmd)
         self.result = 1
         self.get_flag = 1
-        self.elapsed_days = 1
-        self.get_yui_medal_num = 1
+        self.elapsed_days = 0
+        self.get_yui_medal_num = 0
     
     def make(self) -> bytes:
         # create a resp struct
@@ -2205,6 +2205,506 @@ class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
         )
             
         resp_data.after_equipment_user_data.append(synthesize_equipment_data)
+
+        # finally, rebuild the resp_data
+        resp_data = resp_struct.build(resp_data)
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoGetDefragMatchBasicDataRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoGetDefragMatchBasicDataResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        self.defrag_match_basic_user_data_size = 1 # number of arrays
+
+        self.seed_flag = 1
+        self.ad_confirm_flag = 1
+        self.total_league_point = 0
+        self.have_league_score = 0
+        self.class_num = 1 # 1 to 6
+        self.hall_of_fame_confirm_flag = 0
+    
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul, # result is either 0 or 1
+            "defrag_match_basic_user_data_size" / Int32ub, # big endian
+
+            "seed_flag" / Int16ub, #short
+            "ad_confirm_flag" / Int8ul, # result is either 0 or 1
+            "total_league_point" / Int32ub, #int
+            "have_league_score" / Int16ub, #short
+            "class_num" / Int16ub, #short
+            "hall_of_fame_confirm_flag" / Int8ul, # result is either 0 or 1
+
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            defrag_match_basic_user_data_size=self.defrag_match_basic_user_data_size,
+
+            seed_flag=self.seed_flag,
+            ad_confirm_flag=self.ad_confirm_flag,
+            total_league_point=self.total_league_point,
+            have_league_score=self.have_league_score,
+            class_num=self.class_num,
+            hall_of_fame_confirm_flag=self.hall_of_fame_confirm_flag,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoGetDefragMatchRankingUserDataRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoGetDefragMatchRankingUserDataResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        self.ranking_user_data_size = 1 # number of arrays
+
+        self.league_point_rank = 1
+        self.league_score_rank = 1
+        self.nick_name = "PLAYER"
+        self.setting_title_id = 20005 # Default saved during profile creation, no changing for those atm
+        self.favorite_hero_log_id = 101000010 # Default saved during profile creation
+        self.favorite_hero_log_awakening_stage = 0
+        self.favorite_support_log_id = 0
+        self.favorite_support_log_awakening_stage = 0
+        self.total_league_point = 1
+        self.have_league_score = 1
+    
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul, # result is either 0 or 1
+            "ranking_user_data_size" / Int32ub, # big endian
+
+            "league_point_rank" / Int32ub, #int
+            "league_score_rank" / Int32ub, #int
+            "nick_name_size" / Int32ub,  # big endian
+            "nick_name" / Int16ul[len(self.nick_name)],
+            "setting_title_id" / Int32ub, #int
+            "favorite_hero_log_id" / Int32ub, #int
+            "favorite_hero_log_awakening_stage" / Int16ub, #short
+            "favorite_support_log_id" / Int32ub, #int
+            "favorite_support_log_awakening_stage" / Int16ub, #short
+            "total_league_point" / Int32ub, #int
+            "have_league_score" / Int16ub, #short
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            ranking_user_data_size=self.ranking_user_data_size,
+
+            league_point_rank=self.league_point_rank,
+            league_score_rank=self.league_score_rank,
+            nick_name_size=len(self.nick_name) * 2,
+            nick_name=[ord(x) for x in self.nick_name],
+            setting_title_id=self.setting_title_id,
+            favorite_hero_log_id=self.favorite_hero_log_id,
+            favorite_hero_log_awakening_stage=self.favorite_hero_log_awakening_stage,
+            favorite_support_log_id=self.favorite_support_log_id,
+            favorite_support_log_awakening_stage=self.favorite_support_log_awakening_stage,
+            total_league_point=self.total_league_point,
+            have_league_score=self.have_league_score,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoGetDefragMatchLeaguePointRankingListRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoGetDefragMatchLeaguePointRankingListResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        self.ranking_user_data_size = 1 # number of arrays
+
+        self.rank = 1
+        self.user_id = "1"
+        self.store_id = "123"
+        self.store_name = "ARTEMiS"
+        self.nick_name = "PLAYER"
+        self.setting_title_id = 20005
+        self.favorite_hero_log_id = 101000010
+        self.favorite_hero_log_awakening_stage = 0
+        self.favorite_support_log_id = 0
+        self.favorite_support_log_awakening_stage = 0
+        self.class_num = 1
+        self.total_league_point = 1
+    
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul, # result is either 0 or 1
+            "ranking_user_data_size" / Int32ub, # big endian
+
+            "rank" / Int32ub, #int
+            "user_id_size" / Int32ub,  # big endian
+            "user_id" / Int16ul[len(self.user_id)],
+            "store_id_size" / Int32ub,  # big endian
+            "store_id" / Int16ul[len(self.store_id)],
+            "store_name_size" / Int32ub,  # big endian
+            "store_name" / Int16ul[len(self.store_name)],
+            "nick_name_size" / Int32ub,  # big endian
+            "nick_name" / Int16ul[len(self.nick_name)],
+            "setting_title_id" / Int32ub, #int
+            "favorite_hero_log_id" / Int32ub, #int
+            "favorite_hero_log_awakening_stage" / Int16ub, #short
+            "favorite_support_log_id" / Int32ub, #int
+            "favorite_support_log_awakening_stage" / Int16ub, #short
+            "class_num" / Int16ub, #short
+            "total_league_point" / Int32ub, #int
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            ranking_user_data_size=self.ranking_user_data_size,
+
+            rank=self.rank,
+            user_id_size=len(self.user_id) * 2,
+            user_id=[ord(x) for x in self.user_id],
+            store_id_size=len(self.store_id) * 2,
+            store_id=[ord(x) for x in self.store_id],
+            store_name_size=len(self.store_name) * 2,
+            store_name=[ord(x) for x in self.store_name],
+            nick_name_size=len(self.nick_name) * 2,
+            nick_name=[ord(x) for x in self.nick_name],
+            setting_title_id=self.setting_title_id,
+            favorite_hero_log_id=self.favorite_hero_log_id,
+            favorite_hero_log_awakening_stage=self.favorite_hero_log_awakening_stage,
+            favorite_support_log_id=self.favorite_support_log_id,
+            favorite_support_log_awakening_stage=self.favorite_support_log_awakening_stage,
+            class_num=self.class_num,
+            total_league_point=self.total_league_point,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoGetDefragMatchLeagueScoreRankingListRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+        self.ranking_user_data_size = 1 # number of arrays
+
+        self.rank = 1
+        self.user_id = "1"
+        self.store_id = "123"
+        self.store_name = "ARTEMiS"
+        self.nick_name = "PLAYER"
+        self.setting_title_id = 20005
+        self.favorite_hero_log_id = 101000010
+        self.favorite_hero_log_awakening_stage = 0
+        self.favorite_support_log_id = 0
+        self.favorite_support_log_awakening_stage = 0
+        self.class_num = 1
+        self.have_league_score = 1
+    
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul, # result is either 0 or 1
+            "ranking_user_data_size" / Int32ub, # big endian
+
+            "rank" / Int32ub, #int
+            "user_id_size" / Int32ub,  # big endian
+            "user_id" / Int16ul[len(self.user_id)],
+            "store_id_size" / Int32ub,  # big endian
+            "store_id" / Int16ul[len(self.store_id)],
+            "store_name_size" / Int32ub,  # big endian
+            "store_name" / Int16ul[len(self.store_name)],
+            "nick_name_size" / Int32ub,  # big endian
+            "nick_name" / Int16ul[len(self.nick_name)],
+            "setting_title_id" / Int32ub, #int
+            "favorite_hero_log_id" / Int32ub, #int
+            "favorite_hero_log_awakening_stage" / Int16ub, #short
+            "favorite_support_log_id" / Int32ub, #int
+            "favorite_support_log_awakening_stage" / Int16ub, #short
+            "class_num" / Int16ub, #short
+            "have_league_score" / Int16ub, #short
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            ranking_user_data_size=self.ranking_user_data_size,
+
+            rank=self.rank,
+            user_id_size=len(self.user_id) * 2,
+            user_id=[ord(x) for x in self.user_id],
+            store_id_size=len(self.store_id) * 2,
+            store_id=[ord(x) for x in self.store_id],
+            store_name_size=len(self.store_name) * 2,
+            store_name=[ord(x) for x in self.store_name],
+            nick_name_size=len(self.nick_name) * 2,
+            nick_name=[ord(x) for x in self.nick_name],
+            setting_title_id=self.setting_title_id,
+            favorite_hero_log_id=self.favorite_hero_log_id,
+            favorite_hero_log_awakening_stage=self.favorite_hero_log_awakening_stage,
+            favorite_support_log_id=self.favorite_support_log_id,
+            favorite_support_log_awakening_stage=self.favorite_support_log_awakening_stage,
+            class_num=self.class_num,
+            have_league_score=self.have_league_score,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+    
+class SaoBnidSerialCodeCheckRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoBnidSerialCodeCheckResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+
+        self.result = 1
+        self.bnid_item_id = "130050"
+        self.use_status = 0
+    
+    def make(self) -> bytes:
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul,  # result is either 0 or 1
+            "bnid_item_id_size" / Int32ub,  # big endian
+            "bnid_item_id" / Int16ul[len(self.bnid_item_id)],
+            "use_status" / Int8ul,  # result is either 0 or 1
+        )
+
+        resp_data = resp_struct.build(dict(
+            result=self.result,
+            bnid_item_id_size=len(self.bnid_item_id) * 2,
+            bnid_item_id=[ord(x) for x in self.bnid_item_id],
+            use_status=self.use_status,
+        ))
+
+        self.length = len(resp_data)
+        return super().make() + resp_data
+
+class SaoScanQrQuestProfileCardRequest(SaoBaseRequest):
+    def __init__(self, data: bytes) -> None:
+        super().__init__(data)
+
+class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
+    def __init__(self, cmd) -> None:
+        super().__init__(cmd)
+        self.result = 1
+
+        # read_profile_card_data
+        self.profile_card_code = "1234123412341234123" # ID of the QR code
+        self.nick_name = "PLAYER"
+        self.rank_num = 1 #short
+        self.setting_title_id = 20005 #int
+        self.skill_id = 0 #short
+        self.hero_log_hero_log_id = 118000230 #int
+        self.hero_log_log_level = 1 #short
+        self.hero_log_awakening_stage = 1 #short
+
+        self.hero_log_property1_property_id = 0 #int
+        self.hero_log_property1_value1 = 0 #int
+        self.hero_log_property1_value2 = 0 #int
+        self.hero_log_property2_property_id = 0 #int
+        self.hero_log_property2_value1 = 0 #int
+        self.hero_log_property2_value2 = 0 #int
+        self.hero_log_property3_property_id = 0 #int
+        self.hero_log_property3_value1 = 0 #int
+        self.hero_log_property3_value2 = 0 #int
+        self.hero_log_property4_property_id = 0 #int
+        self.hero_log_property4_value1 = 0 #int
+        self.hero_log_property4_value2 = 0 #int
+
+        self.main_weapon_equipment_id = 0 #int
+        self.main_weapon_enhancement_value = 0 #short
+        self.main_weapon_awakening_stage = 0 #short
+
+        self.main_weapon_property1_property_id = 0 #int
+        self.main_weapon_property1_value1 = 0 #int
+        self.main_weapon_property1_value2 = 0 #int
+        self.main_weapon_property2_property_id = 0 #int
+        self.main_weapon_property2_value1 = 0 #int
+        self.main_weapon_property2_value2 = 0 #int
+        self.main_weapon_property3_property_id = 0 #int
+        self.main_weapon_property3_value1 = 0 #int
+        self.main_weapon_property3_value2 = 0 #int
+        self.main_weapon_property4_property_id = 0 #int
+        self.main_weapon_property4_value1 = 0 #int
+        self.main_weapon_property4_value2 = 0 #int
+
+        self.sub_equipment_equipment_id = 0 #int
+        self.sub_equipment_enhancement_value = 0 #short
+        self.sub_equipment_awakening_stage = 0 #short
+
+        self.sub_equipment_property1_property_id = 0 #int
+        self.sub_equipment_property1_value1 = 0 #int
+        self.sub_equipment_property1_value2 = 0 #int
+        self.sub_equipment_property2_property_id = 0 #int
+        self.sub_equipment_property2_value1 = 0 #int
+        self.sub_equipment_property2_value2 = 0 #int
+        self.sub_equipment_property3_property_id = 0 #int
+        self.sub_equipment_property3_value1 = 0 #int
+        self.sub_equipment_property3_value2 = 0 #int
+        self.sub_equipment_property4_property_id = 0 #int
+        self.sub_equipment_property4_value1 = 0 #int
+        self.sub_equipment_property4_value2 = 0 #int
+
+        self.holographic_flag = 1 #byte
+    
+    def make(self) -> bytes:
+        #new stuff
+
+        read_profile_card_data_struct = Struct(
+            "profile_card_code_size" / Int32ub,  # big endian
+            "profile_card_code" / Int16ul[len(self.profile_card_code)],
+            "nick_name_size" / Int32ub,  # big endian
+            "nick_name" / Int16ul[len(self.nick_name)],
+            "rank_num" / Int16ub, #short
+            "setting_title_id" / Int32ub, #int
+            "skill_id" / Int16ub, #short
+            "hero_log_hero_log_id" / Int32ub, #int
+            "hero_log_log_level" / Int16ub, #short
+            "hero_log_awakening_stage" / Int16ub, #short
+
+            "hero_log_property1_property_id" / Int32ub, #int
+            "hero_log_property1_value1" / Int32ub, #int
+            "hero_log_property1_value2" / Int32ub, #int
+            "hero_log_property2_property_id" / Int32ub, #int
+            "hero_log_property2_value1" / Int32ub, #int
+            "hero_log_property2_value2" / Int32ub, #int
+            "hero_log_property3_property_id" / Int32ub, #int
+            "hero_log_property3_value1" / Int32ub, #int
+            "hero_log_property3_value2" / Int32ub, #int
+            "hero_log_property4_property_id" / Int32ub, #int
+            "hero_log_property4_value1" / Int32ub, #int
+            "hero_log_property4_value2" / Int32ub, #int
+
+            "main_weapon_equipment_id" / Int32ub, #int
+            "main_weapon_enhancement_value" / Int16ub, #short
+            "main_weapon_awakening_stage" / Int16ub, #short
+
+            "main_weapon_property1_property_id" / Int32ub, #int
+            "main_weapon_property1_value1" / Int32ub, #int
+            "main_weapon_property1_value2" / Int32ub, #int
+            "main_weapon_property2_property_id" / Int32ub, #int
+            "main_weapon_property2_value1" / Int32ub, #int
+            "main_weapon_property2_value2" / Int32ub, #int
+            "main_weapon_property3_property_id" / Int32ub, #int
+            "main_weapon_property3_value1" / Int32ub, #int
+            "main_weapon_property3_value2" / Int32ub, #int
+            "main_weapon_property4_property_id" / Int32ub, #int
+            "main_weapon_property4_value1" / Int32ub, #int
+            "main_weapon_property4_value2" / Int32ub, #int
+
+            "sub_equipment_equipment_id" / Int32ub, #int
+            "sub_equipment_enhancement_value" / Int16ub, #short
+            "sub_equipment_awakening_stage" / Int16ub, #short
+
+            "sub_equipment_property1_property_id" / Int32ub, #int
+            "sub_equipment_property1_value1" / Int32ub, #int
+            "sub_equipment_property1_value2" / Int32ub, #int
+            "sub_equipment_property2_property_id" / Int32ub, #int
+            "sub_equipment_property2_value1" / Int32ub, #int
+            "sub_equipment_property2_value2" / Int32ub, #int
+            "sub_equipment_property3_property_id" / Int32ub, #int
+            "sub_equipment_property3_value1" / Int32ub, #int
+            "sub_equipment_property3_value2" / Int32ub, #int
+            "sub_equipment_property4_property_id" / Int32ub, #int
+            "sub_equipment_property4_value1" / Int32ub, #int
+            "sub_equipment_property4_value2" / Int32ub, #int
+
+            "holographic_flag" / Int8ul,  # result is either 0 or 1
+
+        )
+
+        # create a resp struct
+        resp_struct = Struct(
+            "result" / Int8ul,  # result is either 0 or 1
+            "read_profile_card_data_size" / Rebuild(Int32ub, len_(this.read_profile_card_data)),  # big endian
+            "read_profile_card_data" / Array(this.read_profile_card_data_size, read_profile_card_data_struct),
+        )
+
+        resp_data = resp_struct.parse(resp_struct.build(dict(
+            result=self.result,
+            read_profile_card_data_size=0,
+            read_profile_card_data=[],
+        )))
+
+        hero_data = dict(
+            profile_card_code_size=len(self.profile_card_code) * 2,
+            profile_card_code=[ord(x) for x in self.profile_card_code],
+            nick_name_size=len(self.nick_name) * 2,
+            nick_name=[ord(x) for x in self.nick_name],
+
+            rank_num=self.rank_num,
+            setting_title_id=self.setting_title_id,
+            skill_id=self.skill_id,
+            hero_log_hero_log_id=self.hero_log_hero_log_id,
+            hero_log_log_level=self.hero_log_log_level,
+            hero_log_awakening_stage=self.hero_log_awakening_stage,
+
+            hero_log_property1_property_id=self.hero_log_property1_property_id,
+            hero_log_property1_value1=self.hero_log_property1_value1,
+            hero_log_property1_value2=self.hero_log_property1_value2,
+            hero_log_property2_property_id=self.hero_log_property2_property_id,
+            hero_log_property2_value1=self.hero_log_property2_value1,
+            hero_log_property2_value2=self.hero_log_property2_value2,
+            hero_log_property3_property_id=self.hero_log_property3_property_id,
+            hero_log_property3_value1=self.hero_log_property3_value1,
+            hero_log_property3_value2=self.hero_log_property3_value2,
+            hero_log_property4_property_id=self.hero_log_property4_property_id,
+            hero_log_property4_value1=self.hero_log_property4_value1,
+            hero_log_property4_value2=self.hero_log_property4_value2,
+
+            main_weapon_equipment_id=self.main_weapon_equipment_id,
+            main_weapon_enhancement_value=self.main_weapon_enhancement_value,
+            main_weapon_awakening_stage=self.main_weapon_awakening_stage,
+
+            main_weapon_property1_property_id=self.main_weapon_property1_property_id,
+            main_weapon_property1_value1=self.main_weapon_property1_value1,
+            main_weapon_property1_value2=self.main_weapon_property1_value2,
+            main_weapon_property2_property_id=self.main_weapon_property2_property_id,
+            main_weapon_property2_value1=self.main_weapon_property2_value1,
+            main_weapon_property2_value2=self.main_weapon_property2_value2,
+            main_weapon_property3_property_id=self.main_weapon_property3_property_id,
+            main_weapon_property3_value1=self.main_weapon_property3_value1,
+            main_weapon_property3_value2=self.main_weapon_property3_value2,
+            main_weapon_property4_property_id=self.main_weapon_property4_property_id,
+            main_weapon_property4_value1=self.main_weapon_property4_value1,
+            main_weapon_property4_value2=self.main_weapon_property4_value2,
+
+            sub_equipment_equipment_id=self.sub_equipment_equipment_id,
+            sub_equipment_enhancement_value=self.sub_equipment_enhancement_value,
+            sub_equipment_awakening_stage=self.sub_equipment_awakening_stage,
+
+            sub_equipment_property1_property_id=self.sub_equipment_property1_property_id,
+            sub_equipment_property1_value1=self.sub_equipment_property1_value1,
+            sub_equipment_property1_value2=self.sub_equipment_property1_value2,
+            sub_equipment_property2_property_id=self.sub_equipment_property2_property_id,
+            sub_equipment_property2_value1=self.sub_equipment_property2_value1,
+            sub_equipment_property2_value2=self.sub_equipment_property2_value2,
+            sub_equipment_property3_property_id=self.sub_equipment_property3_property_id,
+            sub_equipment_property3_value1=self.sub_equipment_property3_value1,
+            sub_equipment_property3_value2=self.sub_equipment_property3_value2,
+            sub_equipment_property4_property_id=self.sub_equipment_property4_property_id,
+            sub_equipment_property4_value1=self.sub_equipment_property4_value1,
+            sub_equipment_property4_value2=self.sub_equipment_property4_value2,
+
+            holographic_flag=self.holographic_flag,
+        )
+        
+        resp_data.read_profile_card_data.append(hero_data)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
