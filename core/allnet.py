@@ -256,6 +256,9 @@ class AllnetServlet:
 
         self.logger.info(f"LoaderStateRecorder Request from {ip} {serial}: {num_files_dld}/{num_files_to_dl} Files download (State: {dl_state})")
         return "OK".encode()
+    
+    def handle_alive(self, request: Request, match: Dict) -> bytes:
+        return "OK".encode()
 
     def handle_billing_request(self, request: Request, _: Dict):
         req_dict = self.billing_req_to_dict(request.content.getvalue())

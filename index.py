@@ -71,6 +71,20 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
         self.map_post.connect(
+            "allnet_alive",
+            "/sys/servlet/Alive",
+            controller="allnet",
+            action="handle_alive",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_get.connect(
+            "allnet_alive",
+            "/sys/servlet/Alive",
+            controller="allnet",
+            action="handle_alive",
+            conditions=dict(method=["GET"]),
+        )
+        self.map_post.connect(
             "allnet_billing",
             "/request",
             controller="allnet",
