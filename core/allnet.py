@@ -256,7 +256,9 @@ class AllnetServlet:
 
     def handle_loaderstaterecorder(self, request: Request, match: Dict) -> bytes:
         req_data = request.content.getvalue()
-        req_dict = self.kvp_to_dict([req_data.decode()])[0]
+        sections = req_data.decode("utf-8").split("\r\n")
+        
+        req_dict = dict(urllib.parse.parse_qsl(sections[0]))
 
         serial: Union[str, None] = req_dict.get("serial", None)
         num_files_to_dl: Union[str, None] = req_dict.get("nb_ftd", None)
@@ -347,21 +349,6 @@ class AllnetServlet:
         self.logger.info(f"Ping from {Utils.get_ip_addr(request)}")
         return b"naomi ok"
 
-    def kvp_to_dict(self, kvp: List[str]) -> List[Dict[str, Any]]:
-        ret: List[Dict[str, Any]] = []
-        for x in kvp:
-            items = x.split("&")
-            tmp = {}
-
-            for item in items:
-                kvp = item.split("=")
-                if len(kvp) == 2:
-                    tmp[kvp[0]] = kvp[1]
-
-            ret.append(tmp)
-
-        return ret
-
     def billing_req_to_dict(self, data: bytes):
         """
         Parses an billing request string into a python dictionary
@@ -371,7 +358,10 @@ class AllnetServlet:
             unzipped = decomp.decompress(data)
             sections = unzipped.decode("ascii").split("\r\n")
 
-            return self.kvp_to_dict(sections)
+            ret = []
+            for x in sections:
+                ret.append(dict(urllib.parse.parse_qsl(x)))
+            return ret
 
         except Exception as e:
             self.logger.error(f"billing_req_to_dict: {e} while parsing {data}")
@@ -386,7 +376,10 @@ class AllnetServlet:
             unzipped = zlib.decompress(zipped)
             sections = unzipped.decode("utf-8").split("\r\n")
 
-            return self.kvp_to_dict(sections)
+            ret = []
+            for x in sections:
+                ret.append(dict(urllib.parse.parse_qsl(x)))
+            return ret
 
         except Exception as e:
             self.logger.error(f"allnet_req_to_dict: {e} while parsing {data}")
