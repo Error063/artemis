@@ -226,7 +226,7 @@ class Mai2Base:
                 self.data.profile.put_profile_ghost(user_id, self.version, ghost)
 
         if "userRecentRatingList" in upsert:
-            self.data.profile.put_recent_rating(user_id, self.version, upsert["userRecentRatingList"])
+            self.data.profile.put_recent_rating(user_id, upsert["userRecentRatingList"])
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
             self.data.profile.put_profile_option(
