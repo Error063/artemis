@@ -112,7 +112,7 @@ class Mai2Base:
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_detail(data["userId"], self.version, True)
+        p = self.data.profile.get_profile_detail(data["userId"], self.version, False)
         w = self.data.profile.get_web_option(data["userId"], self.version)
         if p is None or w is None:
             return {}  # Register
@@ -124,7 +124,7 @@ class Mai2Base:
             "userName": profile["userName"],
             "isLogin": False,
             "lastDataVersion": profile["lastDataVersion"],
-            "lastLoginDate": profile["lastLoginDate"],
+            "lastLoginDate": profile["lastPlayDate"],
             "lastPlayDate": profile["lastPlayDate"],
             "playerRating": profile["playerRating"],
             "nameplateId": profile["nameplateId"],
