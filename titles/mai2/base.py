@@ -213,7 +213,7 @@ class Mai2Base:
         if "userPlaylogList" in upsert and len(upsert["userPlaylogList"]) > 0:
             for playlog in upsert["userPlaylogList"]:
                 self.data.score.put_playlog(
-                    user_id, playlog
+                    user_id, playlog, False
                 )
 
         if "userExtend" in upsert and len(upsert["userExtend"]) > 0:
