@@ -434,8 +434,8 @@ activity = Table(
     mysql_charset="utf8mb4",
 )
 
-boss_list = Table(
-    "mai2_profile_boss_list",
+boss = Table(
+    "maimai_profile_boss",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
@@ -447,12 +447,12 @@ boss_list = Table(
     Column("pandoraFlagList5", Integer),
     Column("pandoraFlagList6", Integer),
     Column("emblemFlagList", Integer),
-    UniqueConstraint("user", name="mai2_profile_boss_list_uk"),
+    UniqueConstraint("user", name="mai2_profile_boss_uk"),
     mysql_charset="utf8mb4",
 )
 
 recent_rating = Table(
-    "mai2_profile_recent_rating",
+    "maimai_profile_recent_rating",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
@@ -721,7 +721,7 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
-        sql = insert(boss_list).values(**boss_stat)
+        sql = insert(boss).values(**boss_stat)
 
         conflict = sql.on_duplicate_key_update(**boss_stat)
 
@@ -734,7 +734,7 @@ class Mai2ProfileData(BaseData):
         return result.lastrowid
     
     def get_boss_list(self, user_id: int) -> Optional[Row]:
-        sql = boss_list.select(boss_list.c.user == user_id)
+        sql = boss.select(boss.c.user == user_id)
 
         result = self.execute(sql)
         if result is None:
