@@ -748,7 +748,7 @@ class Mai2ProfileData(BaseData):
     def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
         sql = insert(recent_rating).values(user=user_id, userRecentRatingList=rr)
 
-        conflict = sql.on_duplicate_key_update(userRecentRatingList=rr)
+        conflict = sql.on_duplicate_key_update({'userRecentRatingList': rr})
 
         result = self.execute(conflict)
         if result is None:
