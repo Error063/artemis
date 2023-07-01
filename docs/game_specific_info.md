@@ -127,28 +127,49 @@ Config file is located in `config/cxb.yaml`.
 
 ### SDEZ
 
-| Version ID | Version Name            |
-|------------|-------------------------|
-| 0          | maimai DX               |
-| 1          | maimai DX PLUS          |
-| 2          | maimai DX Splash        |
-| 3          | maimai DX Splash PLUS   |
-| 4          | maimai DX UNiVERSE      |
-| 5          | maimai DX UNiVERSE PLUS |
-| 6          | maimai DX FESTiVAL      |
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+| SDEZ      | 0          | maimai DX               |
+| SDEZ      | 1          | maimai DX PLUS          |
+| SDEZ      | 2          | maimai DX Splash        |
+| SDEZ      | 3          | maimai DX Splash PLUS   |
+| SDEZ      | 4          | maimai DX Universe      |
+| SDEZ      | 5          | maimai DX Universe PLUS |
+| SDEZ      | 6          | maimai DX Festival      |
+
+For versions pre-dx
+| Game Code | Version ID | Version Name         |
+|-----------|------------|----------------------|
+| SBXL      | 1000       | maimai               |
+| SBXL      | 1001       | maimai PLUS          |
+| SBZF      | 1002       | maimai GreeN         |
+| SBZF      | 1003       | maimai GreeN PLUS    |
+| SDBM      | 1004       | maimai ORANGE        |
+| SDBM      | 1005       | maimai ORANGE PLUS   |
+| SDCQ      | 1006       | maimai PiNK          |
+| SDCQ      | 1007       | maimai PiNK PLUS     |
+| SDDK      | 1008       | maimai MURASAKI      |
+| SDDK      | 1009       | maimai MURASAKI PLUS |
+| SDDZ      | 1010       | maimai MILK          |
+| SDDZ      | 1011       | maimai MILK PLUS     |
+| SDEY      | 1012       | maimai FiNALE        |
 
 ### Importer
 
 In order to use the importer locate your game installation folder and execute:
-
+DX:
 ```shell
-python read.py --series SDEZ --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/StreamingAssets --optfolder /path/to/game/option/folder
 ```
-
+Pre-DX:
+```shell
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
+```
 The importer for maimai DX will import Events, Music and Tickets.
 
-**NOTE: It is required to use the importer because the game will
-crash without Events!**
+The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers. For games that do use encryption, provide the key, as a hex string, with the `--extra` flag. Ex `--extra 00112233445566778899AABBCCDDEEFF`
+
+**Important: It is required to use the importer because some games may not function properly or even crash without Events!**
 
 ### Database upgrade
 
@@ -157,6 +178,7 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDEZ upgrade
 ```
+Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 
 ## Hatsune Miku Project Diva
 

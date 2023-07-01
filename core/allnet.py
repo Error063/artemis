@@ -208,7 +208,7 @@ class AllnetServlet:
         self.logger.info(
             f"DownloadOrder from {request_ip} -> {req.game_id} v{req.ver} serial {req.serial}"
         )
-        resp = AllnetDownloadOrderResponse()
+        resp = AllnetDownloadOrderResponse(serial=req.serial)
 
         if (
             not self.config.allnet.allow_online_updates

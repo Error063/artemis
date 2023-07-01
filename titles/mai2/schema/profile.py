@@ -99,6 +99,68 @@ detail = Table(
     mysql_charset="utf8mb4",
 )
 
+detail_old = Table(
+   "maimai_profile_detail",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("lastDataVersion", Integer),
+    Column("userName", String(8)),
+    Column("point", Integer),
+    Column("totalPoint", Integer),
+    Column("iconId", Integer),
+    Column("nameplateId", Integer),
+    Column("frameId", Integer),
+    Column("trophyId", Integer),
+    Column("playCount", Integer),
+    Column("playVsCount", Integer),
+    Column("playSyncCount", Integer),
+    Column("winCount", Integer),
+    Column("helpCount", Integer),
+    Column("comboCount", Integer),
+    Column("feverCount", Integer),
+    Column("totalHiScore", Integer),
+    Column("totalEasyHighScore", Integer),
+    Column("totalBasicHighScore", Integer),
+    Column("totalAdvancedHighScore", Integer),
+    Column("totalExpertHighScore", Integer),
+    Column("totalMasterHighScore", Integer),
+    Column("totalReMasterHighScore", Integer),
+    Column("totalHighSync", Integer),
+    Column("totalEasySync", Integer),
+    Column("totalBasicSync", Integer),
+    Column("totalAdvancedSync", Integer),
+    Column("totalExpertSync", Integer),
+    Column("totalMasterSync", Integer),
+    Column("totalReMasterSync", Integer),
+    Column("playerRating", Integer),
+    Column("highestRating", Integer),
+    Column("rankAuthTailId", Integer),
+    Column("eventWatchedDate", String(255)),
+    Column("webLimitDate", String(255)),
+    Column("challengeTrackPhase", Integer),
+    Column("firstPlayBits", Integer),
+    Column("lastPlayDate", String(255)),
+    Column("lastPlaceId", Integer),
+    Column("lastPlaceName", String(255)),
+    Column("lastRegionId", Integer),
+    Column("lastRegionName", String(255)),
+    Column("lastClientId", String(255)),
+    Column("lastCountryCode", String(255)),
+    Column("eventPoint", Integer),
+    Column("totalLv", Integer),
+    Column("lastLoginBonusDay", Integer),
+    Column("lastSurvivalBonusDay", Integer),
+    Column("loginBonusLv", Integer),
+    UniqueConstraint("user", "version", name="maimai_profile_detail_uk"),
+    mysql_charset="utf8mb4",
+)
+
 ghost = Table(
     "mai2_profile_ghost",
     metadata,
@@ -223,6 +285,99 @@ option = Table(
     mysql_charset="utf8mb4",
 )
 
+option_old = Table(
+    "maimai_profile_option",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("soudEffect", Integer),
+    Column("mirrorMode", Integer),
+    Column("guideSpeed", Integer),
+    Column("bgInfo", Integer),
+    Column("brightness", Integer),
+    Column("isStarRot", Integer),
+    Column("breakSe", Integer),
+    Column("slideSe", Integer),
+    Column("hardJudge", Integer),
+    Column("isTagJump", Integer),
+    Column("breakSeVol", Integer),
+    Column("slideSeVol", Integer),
+    Column("isUpperDisp", Integer),
+    Column("trackSkip", Integer),
+    Column("optionMode", Integer),
+    Column("simpleOptionParam", Integer),
+    Column("adjustTiming", Integer),
+    Column("dispTiming", Integer),
+    Column("timingPos", Integer),
+    Column("ansVol", Integer),
+    Column("noteVol", Integer),
+    Column("dmgVol", Integer),
+    Column("appealFlame", Integer),
+    Column("isFeverDisp", Integer),
+    Column("dispJudge", Integer),
+    Column("judgePos", Integer),
+    Column("ratingGuard", Integer),
+    Column("selectChara", Integer),
+    Column("sortType", Integer),
+    Column("filterGenre", Integer),
+    Column("filterLevel", Integer),
+    Column("filterRank", Integer),
+    Column("filterVersion", Integer),
+    Column("filterRec", Integer),
+    Column("filterFullCombo", Integer),
+    Column("filterAllPerfect", Integer),
+    Column("filterDifficulty", Integer),
+    Column("filterFullSync", Integer),
+    Column("filterReMaster", Integer),
+    Column("filterMaxFever", Integer),
+    Column("finalSelectId", Integer),
+    Column("finalSelectCategory", Integer),
+    UniqueConstraint("user", "version", name="maimai_profile_option_uk"),
+    mysql_charset="utf8mb4",
+)
+
+web_opt = Table(
+    "maimai_profile_web_option",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("isNetMember", Boolean),
+    Column("dispRate", Integer),
+    Column("dispJudgeStyle", Integer),
+    Column("dispRank", Integer),
+    Column("dispHomeRanker", Integer),
+    Column("dispTotalLv", Integer),
+    UniqueConstraint("user", "version", name="maimai_profile_web_option_uk"),
+    mysql_charset="utf8mb4",
+)
+
+grade_status = Table(
+    "maimai_profile_grade_status",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("gradeVersion", Integer),
+    Column("gradeLevel", Integer),
+    Column("gradeSubLevel", Integer),
+    Column("gradeMaxId", Integer),
+    UniqueConstraint("user", "gradeVersion", name="maimai_profile_grade_status_uk"),
+    mysql_charset="utf8mb4",
+)
+
 rating = Table(
     "mai2_profile_rating",
     metadata,
@@ -268,42 +423,80 @@ activity = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("kind", Integer, nullable=False),
-    Column("activityId", Integer, nullable=False),
-    Column("param1", Integer, nullable=False),
-    Column("param2", Integer, nullable=False),
-    Column("param3", Integer, nullable=False),
-    Column("param4", Integer, nullable=False),
-    Column("sortNumber", Integer, nullable=False),
+    Column("kind", Integer),
+    Column("activityId", Integer),
+    Column("param1", Integer),
+    Column("param2", Integer),
+    Column("param3", Integer),
+    Column("param4", Integer),
+    Column("sortNumber", Integer),
     UniqueConstraint("user", "kind", "activityId", name="mai2_profile_activity_uk"),
     mysql_charset="utf8mb4",
 )
 
+boss = Table(
+    "maimai_profile_boss",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("pandoraFlagList0", Integer),
+    Column("pandoraFlagList1", Integer),
+    Column("pandoraFlagList2", Integer),
+    Column("pandoraFlagList3", Integer),
+    Column("pandoraFlagList4", Integer),
+    Column("pandoraFlagList5", Integer),
+    Column("pandoraFlagList6", Integer),
+    Column("emblemFlagList", Integer),
+    UniqueConstraint("user", name="mai2_profile_boss_uk"),
+    mysql_charset="utf8mb4",
+)
+
+recent_rating = Table(
+    "maimai_profile_recent_rating",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("userRecentRatingList", JSON),
+    UniqueConstraint("user", name="mai2_profile_recent_rating_uk"),
+    mysql_charset="utf8mb4",
+)
 
 class Mai2ProfileData(BaseData):
     def put_profile_detail(
-        self, user_id: int, version: int, detail_data: Dict
+        self, user_id: int, version: int, detail_data: Dict, is_dx: bool = True
     ) -> Optional[Row]:
         detail_data["user"] = user_id
         detail_data["version"] = version
-        sql = insert(detail).values(**detail_data)
+
+        if is_dx:
+            sql = insert(detail).values(**detail_data)
+        else:
+            sql = insert(detail_old).values(**detail_data)
 
         conflict = sql.on_duplicate_key_update(**detail_data)
 
         result = self.execute(conflict)
         if result is None:
             self.logger.warn(
-                f"put_profile: Failed to create profile! user_id {user_id}"
+                f"put_profile: Failed to create profile! user_id {user_id} is_dx {is_dx}"
             )
             return None
         return result.lastrowid
 
-    def get_profile_detail(self, user_id: int, version: int) -> Optional[Row]:
-        sql = (
-            select(detail)
-            .where(and_(detail.c.user == user_id, detail.c.version <= version))
-            .order_by(detail.c.version.desc())
-        )
+    def get_profile_detail(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+        if is_dx:
+            sql = (
+                select(detail)
+                .where(and_(detail.c.user == user_id, detail.c.version <= version))
+                .order_by(detail.c.version.desc())
+            )
+        
+        else:
+            sql = (
+                select(detail_old)
+                .where(and_(detail_old.c.user == user_id, detail_old.c.version <= version))
+                .order_by(detail_old.c.version.desc())
+            )
 
         result = self.execute(sql)
         if result is None:
@@ -365,26 +558,36 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_profile_option(
-        self, user_id: int, version: int, option_data: Dict
+        self, user_id: int, version: int, option_data: Dict, is_dx: bool = True
     ) -> Optional[int]:
         option_data["user"] = user_id
         option_data["version"] = version
 
-        sql = insert(option).values(**option_data)
+        if is_dx:
+            sql = insert(option).values(**option_data)
+        else:
+            sql = insert(option_old).values(**option_data)
         conflict = sql.on_duplicate_key_update(**option_data)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_option: failed to update! {user_id}")
+            self.logger.warn(f"put_profile_option: failed to update! {user_id} is_dx {is_dx}")
             return None
         return result.lastrowid
 
-    def get_profile_option(self, user_id: int, version: int) -> Optional[Row]:
-        sql = (
-            select(option)
-            .where(and_(option.c.user == user_id, option.c.version <= version))
-            .order_by(option.c.version.desc())
-        )
+    def get_profile_option(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+        if is_dx:
+            sql = (
+                select(option)
+                .where(and_(option.c.user == user_id, option.c.version <= version))
+                .order_by(option.c.version.desc())
+            )
+        else:
+            sql = (
+                select(option_old)
+                .where(and_(option_old.c.user == user_id, option_old.c.version <= version))
+                .order_by(option_old.c.version.desc())
+            )
 
         result = self.execute(sql)
         if result is None:
@@ -474,3 +677,91 @@ class Mai2ProfileData(BaseData):
         if result is None:
             return None
         return result.fetchall()
+
+    def put_web_option(self, user_id: int, version: int, web_opts: Dict) -> Optional[int]:
+        web_opts["user"] = user_id
+        web_opts["version"] = version
+        sql = insert(web_opt).values(**web_opts)
+
+        conflict = sql.on_duplicate_key_update(**web_opts)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_web_option: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_web_option(self, user_id: int, version: int) -> Optional[Row]:
+        sql = web_opt.select(and_(web_opt.c.user == user_id, web_opt.c.version == version))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_grade_status(self, user_id: int, grade_stat: Dict) -> Optional[int]:
+        grade_stat["user"] = user_id
+        sql = insert(grade_status).values(**grade_stat)
+
+        conflict = sql.on_duplicate_key_update(**grade_stat)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_grade_status: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_grade_status(self, user_id: int) -> Optional[Row]:
+        sql = grade_status.select(grade_status.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
+        boss_stat["user"] = user_id
+        sql = insert(boss).values(**boss_stat)
+
+        conflict = sql.on_duplicate_key_update(**boss_stat)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_boss_list: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_boss_list(self, user_id: int) -> Optional[Row]:
+        sql = boss.select(boss.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
+        sql = insert(recent_rating).values(user=user_id, userRecentRatingList=rr)
+
+        conflict = sql.on_duplicate_key_update({'userRecentRatingList': rr})
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_recent_rating: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_recent_rating(self, user_id: int) -> Optional[Row]:
+        sql = recent_rating.select(recent_rating.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
