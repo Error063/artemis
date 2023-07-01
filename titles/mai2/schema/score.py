@@ -273,28 +273,39 @@ best_score_old = Table(
 )
 
 class Mai2ScoreData(BaseData):
-    def put_best_score(self, user_id: int, score_data: Dict) -> Optional[int]:
+    def put_best_score(self, user_id: int, score_data: Dict, is_dx: bool = True) -> Optional[int]:
         score_data["user"] = user_id
-        sql = insert(best_score).values(**score_data)
 
+        if is_dx:
+            sql = insert(best_score).values(**score_data)
+        else:
+            sql = insert(best_score_old).values(**score_data)
         conflict = sql.on_duplicate_key_update(**score_data)
 
         result = self.execute(conflict)
         if result is None:
             self.logger.error(
-                f"put_best_score:  Failed to insert best score! user_id {user_id}"
+                f"put_best_score:  Failed to insert best score! user_id {user_id} is_dx {is_dx}"
             )
             return None
         return result.lastrowid
 
     @cached(2)
-    def get_best_scores(self, user_id: int, song_id: int = None) -> Optional[List[Row]]:
-        sql = best_score.select(
-            and_(
-                best_score.c.user == user_id,
-                (best_score.c.song_id == song_id) if song_id is not None else True,
+    def get_best_scores(self, user_id: int, song_id: int = None, is_dx: bool = True) -> Optional[List[Row]]:
+        if is_dx:
+            sql = best_score.select(
+                and_(
+                    best_score.c.user == user_id,
+                    (best_score.c.song_id == song_id) if song_id is not None else True,
+                )
             )
-        )
+        else:
+            sql = best_score_old.select(
+                and_(
+                    best_score_old.c.user == user_id,
+                    (best_score_old.c.song_id == song_id) if song_id is not None else True,
+                )
+            )
 
         result = self.execute(sql)
         if result is None:
@@ -317,15 +328,19 @@ class Mai2ScoreData(BaseData):
             return None
         return result.fetchone()
 
-    def put_playlog(self, user_id: int, playlog_data: Dict) -> Optional[int]:
+    def put_playlog(self, user_id: int, playlog_data: Dict, is_dx: bool = True) -> Optional[int]:
         playlog_data["user"] = user_id
-        sql = insert(playlog).values(**playlog_data)
+
+        if is_dx:
+            sql = insert(playlog).values(**playlog_data)
+        else:
+            sql = insert(playlog_old).values(**playlog_data)
 
         conflict = sql.on_duplicate_key_update(**playlog_data)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"put_playlog:  Failed to insert! user_id {user_id}")
+            self.logger.error(f"put_playlog:  Failed to insert! user_id {user_id} is_dx {is_dx}")
             return None
         return result.lastrowid
 

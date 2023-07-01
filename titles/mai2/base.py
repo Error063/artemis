@@ -112,12 +112,12 @@ class Mai2Base:
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_detail(data["userId"], self.version)
-        o = self.data.profile.get_profile_option(data["userId"], self.version)
-        if p is None or o is None:
+        p = self.data.profile.get_profile_detail(data["userId"], self.version, True)
+        w = self.data.profile.get_web_option(data["userId"], self.version)
+        if p is None or w is None:
             return {}  # Register
         profile = p._asdict()
-        option = o._asdict()
+        web_opt = w._asdict()
 
         return {
             "userId": data["userId"],
@@ -127,16 +127,15 @@ class Mai2Base:
             "lastLoginDate": profile["lastLoginDate"],
             "lastPlayDate": profile["lastPlayDate"],
             "playerRating": profile["playerRating"],
-            "nameplateId": 0,  # Unused            
+            "nameplateId": profile["nameplateId"],
             "frameId": profile["frameId"],
             "iconId": profile["iconId"],
-            "trophyId": 0,  # Unused
-            "partnerId": profile["partnerId"],
-            "dispRate": option["dispRate"],  # 0: all, 1: dispRate, 2: dispDan, 3: hide
-            "dispRank": 0,  # TODO
-            "dispHomeRanker": 0,  # TODO
-            "dispTotalLv": 0,  # TODO
-            "totalLv": 0,  # TODO
+            "trophyId": profile["trophyId"],
+            "dispRate": web_opt["dispRate"],  # 0: all, 1: dispRate, 2: dispDan, 3: hide
+            "dispRank": web_opt["dispRank"],
+            "dispHomeRanker": web_opt["dispHomeRanker"],
+            "dispTotalLv": web_opt["dispTotalLv"],
+            "totalLv": profile["totalLv"],
         }
 
     def handle_user_login_api_request(self, data: Dict) -> Dict:
@@ -188,11 +187,34 @@ class Mai2Base:
         upsert = data["upsertUserAll"]
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
-            upsert["userData"][0]["isNetMember"] = 1
             upsert["userData"][0].pop("accessCode")
+            upsert["userData"][0].pop("userId")
+
             self.data.profile.put_profile_detail(
-                user_id, self.version, upsert["userData"][0]
+                user_id, self.version, upsert["userData"][0], False
             )
+        
+        if "UserWebOption" in upsert and len(upsert["UserWebOption"]) > 0:            
+            upsert["UserWebOption"][0]["isNetMember"] = True
+            self.data.profile.put_web_option(
+                user_id, self.version, upsert["UserWebOption"][0]
+            )
+
+        if "userGradeStatusList" in upsert and len(upsert["userGradeStatusList"]) > 0:
+            self.data.profile.put_web_option(
+                user_id, self.version, upsert["userGradeStatusList"][0]
+            )
+
+        if "userBossList" in upsert and len(upsert["userBossList"]) > 0:
+            self.data.profile.put_boss_list(
+                user_id, self.version, upsert["userBossList"][0]
+            )
+
+        if "userPlaylogList" in upsert and len(upsert["userPlaylogList"]) > 0:
+            for playlog in upsert["userPlaylogList"]:
+                self.data.score.put_playlog(
+                    user_id, self.version, playlog
+                )
 
         if "userExtend" in upsert and len(upsert["userExtend"]) > 0:
             self.data.profile.put_profile_extend(
@@ -201,11 +223,14 @@ class Mai2Base:
 
         if "userGhost" in upsert:
             for ghost in upsert["userGhost"]:
-                self.data.profile.put_profile_extend(user_id, self.version, ghost)
+                self.data.profile.put_profile_ghost(user_id, self.version, ghost)
+
+        if "userRecentRatingList" in upsert:
+            self.data.profile.put_recent_rating(user_id, self.version, upsert["userRecentRatingList"])
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
             self.data.profile.put_profile_option(
-                user_id, self.version, upsert["userOption"][0]
+                user_id, self.version, upsert["userOption"][0], False
             )
 
         if "userRatingList" in upsert and len(upsert["userRatingList"]) > 0:
@@ -305,7 +330,7 @@ class Mai2Base:
         return {"returnCode": 1}
 
     def handle_get_user_data_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_detail(data["userId"], self.version)
+        profile = self.data.profile.get_profile_detail(data["userId"], self.version, False)
         if profile is None:
             return
 
@@ -329,7 +354,7 @@ class Mai2Base:
         return {"userId": data["userId"], "userExtend": extend_dict}
 
     def handle_get_user_option_api_request(self, data: Dict) -> Dict:
-        options = self.data.profile.get_profile_option(data["userId"], self.version)
+        options = self.data.profile.get_profile_option(data["userId"], self.version, False)
         if options is None:
             return
 
@@ -399,6 +424,25 @@ class Mai2Base:
             "userChargeList": user_charge_list,
         }
 
+    def handle_get_user_present_api_request(self, data: Dict) -> Dict:
+        return { "userId": data.get("userId", 0), "length": 0, "userPresentList": []}
+    
+    def handle_get_transfer_friend_api_request(self, data: Dict) -> Dict:
+        return {}
+
+    def handle_get_user_present_event_api_request(self, data: Dict) -> Dict:
+        return { "userId": data.get("userId", 0), "length": 0, "userPresentEventList": []}
+    
+    def handle_get_user_boss_api_request(self, data: Dict) -> Dict:
+        b = self.data.profile.get_boss_list(data["userId"])
+        if b is None:
+            return { "userId": data.get("userId", 0), "userBossData": {}}
+        boss_lst = b._asdict()
+        boss_lst.pop("id")
+        boss_lst.pop("user")
+
+        return { "userId": data.get("userId", 0), "userBossData": boss_lst}
+
     def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
         next_idx = int(data["nextIndex"] % 10000000000)
@@ -435,6 +479,8 @@ class Mai2Base:
             tmp = chara._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("awakening")
+            tmp.pop("useCount")
             chara_list.append(tmp)
 
         return {"userId": data["userId"], "userCharacterList": chara_list}
@@ -467,6 +513,16 @@ class Mai2Base:
         ghost_dict.pop("version_int")
 
         return {"userId": data["userId"], "userGhost": ghost_dict}
+
+    def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
+        rating = self.data.profile.get_recent_rating(data["userId"])
+        if rating is None:
+            return
+        
+        r = rating._asdict()
+        lst = r.get("userRecentRatingList", [])
+        
+        return {"userId": data["userId"], "length": len(lst), "userRecentRatingList": lst}
 
     def handle_get_user_rating_api_request(self, data: Dict) -> Dict:
         rating = self.data.profile.get_profile_rating(data["userId"], self.version)

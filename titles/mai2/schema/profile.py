@@ -423,42 +423,80 @@ activity = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("kind", Integer, nullable=False),
-    Column("activityId", Integer, nullable=False),
-    Column("param1", Integer, nullable=False),
-    Column("param2", Integer, nullable=False),
-    Column("param3", Integer, nullable=False),
-    Column("param4", Integer, nullable=False),
-    Column("sortNumber", Integer, nullable=False),
+    Column("kind", Integer),
+    Column("activityId", Integer),
+    Column("param1", Integer),
+    Column("param2", Integer),
+    Column("param3", Integer),
+    Column("param4", Integer),
+    Column("sortNumber", Integer),
     UniqueConstraint("user", "kind", "activityId", name="mai2_profile_activity_uk"),
     mysql_charset="utf8mb4",
 )
 
+boss_list = Table(
+    "mai2_profile_boss_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("pandoraFlagList0", Integer),
+    Column("pandoraFlagList1", Integer),
+    Column("pandoraFlagList2", Integer),
+    Column("pandoraFlagList3", Integer),
+    Column("pandoraFlagList4", Integer),
+    Column("pandoraFlagList5", Integer),
+    Column("pandoraFlagList6", Integer),
+    Column("emblemFlagList", Integer),
+    UniqueConstraint("user", name="mai2_profile_boss_list_uk"),
+    mysql_charset="utf8mb4",
+)
+
+recent_rating = Table(
+    "mai2_profile_recent_rating",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("userRecentRatingList", Integer),
+    UniqueConstraint("user", name="mai2_profile_recent_rating_uk"),
+    mysql_charset="utf8mb4",
+)
 
 class Mai2ProfileData(BaseData):
     def put_profile_detail(
-        self, user_id: int, version: int, detail_data: Dict
+        self, user_id: int, version: int, detail_data: Dict, is_dx: bool = True
     ) -> Optional[Row]:
         detail_data["user"] = user_id
         detail_data["version"] = version
-        sql = insert(detail).values(**detail_data)
+
+        if is_dx:
+            sql = insert(detail).values(**detail_data)
+        else:
+            sql = insert(detail_old).values(**detail_data)
 
         conflict = sql.on_duplicate_key_update(**detail_data)
 
         result = self.execute(conflict)
         if result is None:
             self.logger.warn(
-                f"put_profile: Failed to create profile! user_id {user_id}"
+                f"put_profile: Failed to create profile! user_id {user_id} is_dx {is_dx}"
             )
             return None
         return result.lastrowid
 
-    def get_profile_detail(self, user_id: int, version: int) -> Optional[Row]:
-        sql = (
-            select(detail)
-            .where(and_(detail.c.user == user_id, detail.c.version <= version))
-            .order_by(detail.c.version.desc())
-        )
+    def get_profile_detail(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+        if is_dx:
+            sql = (
+                select(detail)
+                .where(and_(detail.c.user == user_id, detail.c.version <= version))
+                .order_by(detail.c.version.desc())
+            )
+        
+        else:
+            sql = (
+                select(detail_old)
+                .where(and_(detail_old.c.user == user_id, detail_old.c.version <= version))
+                .order_by(detail_old.c.version.desc())
+            )
 
         result = self.execute(sql)
         if result is None:
@@ -520,26 +558,36 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_profile_option(
-        self, user_id: int, version: int, option_data: Dict
+        self, user_id: int, version: int, option_data: Dict, is_dx: bool = True
     ) -> Optional[int]:
         option_data["user"] = user_id
         option_data["version"] = version
 
-        sql = insert(option).values(**option_data)
+        if is_dx:
+            sql = insert(option).values(**option_data)
+        else:
+            sql = insert(option_old).values(**option_data)
         conflict = sql.on_duplicate_key_update(**option_data)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_option: failed to update! {user_id}")
+            self.logger.warn(f"put_profile_option: failed to update! {user_id} is_dx {is_dx}")
             return None
         return result.lastrowid
 
-    def get_profile_option(self, user_id: int, version: int) -> Optional[Row]:
-        sql = (
-            select(option)
-            .where(and_(option.c.user == user_id, option.c.version <= version))
-            .order_by(option.c.version.desc())
-        )
+    def get_profile_option(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+        if is_dx:
+            sql = (
+                select(option)
+                .where(and_(option.c.user == user_id, option.c.version <= version))
+                .order_by(option.c.version.desc())
+            )
+        else:
+            sql = (
+                select(option_old)
+                .where(and_(option_old.c.user == user_id, option_old.c.version <= version))
+                .order_by(option_old.c.version.desc())
+            )
 
         result = self.execute(sql)
         if result is None:
@@ -629,3 +677,87 @@ class Mai2ProfileData(BaseData):
         if result is None:
             return None
         return result.fetchall()
+
+    def put_web_option(self, user_id: int, web_opts: Dict) -> Optional[int]:
+        sql = insert(web_opt).values(**web_opts)
+
+        conflict = sql.on_duplicate_key_update(**web_opts)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_web_option: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_web_option(self, user_id: int) -> Optional[Row]:
+        sql = web_opt.select(web_opt.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_grade_status(self, user_id: int, grade_stat: Dict) -> Optional[int]:
+        sql = insert(grade_status).values(**grade_stat)
+
+        conflict = sql.on_duplicate_key_update(**grade_stat)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_grade_status: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_grade_status(self, user_id: int) -> Optional[Row]:
+        sql = grade_status.select(grade_status.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
+        sql = insert(boss_list).values(**boss_stat)
+
+        conflict = sql.on_duplicate_key_update(**boss_stat)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_boss_list: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_boss_list(self, user_id: int) -> Optional[Row]:
+        sql = boss_list.select(boss_list.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
+        sql = insert(recent_rating).values(**rr)
+
+        conflict = sql.on_duplicate_key_update(**rr)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_recent_rating: failed to update! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
+    
+    def get_recent_rating(self, user_id: int) -> Optional[Row]:
+        sql = recent_rating.select(recent_rating.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()

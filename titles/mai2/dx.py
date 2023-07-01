@@ -75,27 +75,6 @@ class Mai2DX(Mai2Base):
             else 0,  # New with uni+
         }
 
-    def handle_user_login_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_detail(data["userId"], self.version)
-
-        if profile is not None:
-            lastLoginDate = profile["lastLoginDate"]
-            loginCt = profile["playCount"]
-
-            if "regionId" in data:
-                self.data.profile.put_profile_region(data["userId"], data["regionId"])
-        else:
-            loginCt = 0
-            lastLoginDate = "2017-12-05 07:00:00.0"
-
-        return {
-            "returnCode": 1,
-            "lastLoginDate": lastLoginDate,
-            "loginCount": loginCt,
-            "consecutiveLoginCount": 0,  # We don't really have a way to track this...
-            "loginId": loginCt,  # Used with the playlog!
-        }
-
     def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         playlog = data["userPlaylog"]
