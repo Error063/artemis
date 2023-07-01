@@ -746,9 +746,9 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
-        sql = insert(recent_rating).values(**rr)
+        sql = insert(recent_rating).values(rr)
 
-        conflict = sql.on_duplicate_key_update(**rr)
+        conflict = sql.on_duplicate_key_update(rr)
 
         result = self.execute(conflict)
         if result is None:
