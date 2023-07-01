@@ -113,7 +113,7 @@ class Mai2Base:
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version, True)
-        w = self.data.profile.get_web_option(data["userId"], self.version)
+        w = self.data.profile.get_web_option(data["userId"])
         if p is None or w is None:
             return {}  # Register
         profile = p._asdict()
@@ -201,19 +201,19 @@ class Mai2Base:
             )
 
         if "userGradeStatusList" in upsert and len(upsert["userGradeStatusList"]) > 0:
-            self.data.profile.put_web_option(
-                user_id, self.version, upsert["userGradeStatusList"][0]
+            self.data.profile.put_grade_status(
+                user_id, upsert["userGradeStatusList"][0]
             )
 
         if "userBossList" in upsert and len(upsert["userBossList"]) > 0:
             self.data.profile.put_boss_list(
-                user_id, self.version, upsert["userBossList"][0]
+                user_id, upsert["userBossList"][0]
             )
 
         if "userPlaylogList" in upsert and len(upsert["userPlaylogList"]) > 0:
             for playlog in upsert["userPlaylogList"]:
                 self.data.score.put_playlog(
-                    user_id, self.version, playlog
+                    user_id, playlog
                 )
 
         if "userExtend" in upsert and len(upsert["userExtend"]) > 0:
