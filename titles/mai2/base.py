@@ -194,10 +194,10 @@ class Mai2Base:
                 user_id, self.version, upsert["userData"][0], False
             )
         
-        if "UserWebOption" in upsert and len(upsert["UserWebOption"]) > 0:            
-            upsert["UserWebOption"][0]["isNetMember"] = True
+        if "userWebOption" in upsert and len(upsert["userWebOption"]) > 0:            
+            upsert["userWebOption"][0]["isNetMember"] = True
             self.data.profile.put_web_option(
-                user_id, self.version, upsert["UserWebOption"][0]
+                user_id, self.version, upsert["userWebOption"][0]
             )
 
         if "userGradeStatusList" in upsert and len(upsert["userGradeStatusList"]) > 0:
