@@ -683,6 +683,31 @@ class Mai2Base:
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
+    
+    def handle_get_user_web_option_api_request(self, data: Dict) -> Dict:
+        w = self.data.profile.get_web_option(data["userId"], self.version)
+        if  w is None:
+            return {"userId": data["userId"], "userWebOption": {}}
+        
+        web_opt = w._asdict()        
+        web_opt.pop("id")
+        web_opt.pop("user")
+        web_opt.pop("version")
+
+        return {"userId": data["userId"], "userWebOption": web_opt}
+
+    def handle_get_user_survival_api_request(self, data: Dict) -> Dict:
+        return {"userId": data["userId"], "length": 0, "userSurvivalList": []}
+
+    def handle_get_user_grade_api_request(self, data: Dict) -> Dict:
+        g = self.data.profile.get_grade_status(data["userId"])
+        if g is None:
+            return {"userId": data["userId"], "userGradeStatus": {}, "length": 0, "userGradeList": []}
+        grade_stat = g._asdict()
+        grade_stat.pop("id")
+        grade_stat.pop("user")
+
+        return {"userId": data["userId"], "userGradeStatus": grade_stat, "length": 0, "userGradeList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
         user_id = data.get("userId", 0)        
@@ -695,7 +720,7 @@ class Mai2Base:
             self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
             return {}
         
-        songs = self.data.score.get_best_scores(user_id)
+        songs = self.data.score.get_best_scores(user_id, is_dx=False)
         if songs is None:
             self.logger.debug("handle_get_user_music_api_request: get_best_scores returned None!")
             return {
