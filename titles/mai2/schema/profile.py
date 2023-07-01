@@ -678,7 +678,9 @@ class Mai2ProfileData(BaseData):
             return None
         return result.fetchall()
 
-    def put_web_option(self, user_id: int, web_opts: Dict) -> Optional[int]:
+    def put_web_option(self, user_id: int, version: int, web_opts: Dict) -> Optional[int]:
+        web_opts["user"] = user_id
+        web_opts["version"] = version
         sql = insert(web_opt).values(**web_opts)
 
         conflict = sql.on_duplicate_key_update(**web_opts)
@@ -691,8 +693,8 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
     
-    def get_web_option(self, user_id: int) -> Optional[Row]:
-        sql = web_opt.select(web_opt.c.user == user_id)
+    def get_web_option(self, user_id: int, version: int) -> Optional[Row]:
+        sql = web_opt.select(and_(web_opt.c.user == user_id, web_opt.c.version == version))
 
         result = self.execute(sql)
         if result is None:
@@ -700,6 +702,7 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_grade_status(self, user_id: int, grade_stat: Dict) -> Optional[int]:
+        grade_stat["user"] = user_id
         sql = insert(grade_status).values(**grade_stat)
 
         conflict = sql.on_duplicate_key_update(**grade_stat)
@@ -721,6 +724,7 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
+        boss_stat["user"] = user_id
         sql = insert(boss).values(**boss_stat)
 
         conflict = sql.on_duplicate_key_update(**boss_stat)

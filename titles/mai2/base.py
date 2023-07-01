@@ -113,7 +113,7 @@ class Mai2Base:
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version, True)
-        w = self.data.profile.get_web_option(data["userId"])
+        w = self.data.profile.get_web_option(data["userId"], self.version)
         if p is None or w is None:
             return {}  # Register
         profile = p._asdict()
@@ -229,6 +229,7 @@ class Mai2Base:
             self.data.profile.put_recent_rating(user_id, upsert["userRecentRatingList"])
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
+            upsert["userOption"][0].pop("userId")
             self.data.profile.put_profile_option(
                 user_id, self.version, upsert["userOption"][0], False
             )
@@ -239,9 +240,8 @@ class Mai2Base:
             )
 
         if "userActivityList" in upsert and len(upsert["userActivityList"]) > 0:
-            for k, v in upsert["userActivityList"][0].items():
-                for act in v:
-                    self.data.profile.put_profile_activity(user_id, act)
+            for act in upsert["userActivityList"]:
+                self.data.profile.put_profile_activity(user_id, act)
 
         if "userChargeList" in upsert and len(upsert["userChargeList"]) > 0:
             for charge in upsert["userChargeList"]:
@@ -265,8 +265,7 @@ class Mai2Base:
                     user_id,
                     char["characterId"],
                     char["level"],
-                    char["awakening"],
-                    char["useCount"],
+                    char["point"],
                 )
 
         if "userItemList" in upsert and len(upsert["userItemList"]) > 0:
@@ -276,7 +275,6 @@ class Mai2Base:
                     int(item["itemKind"]),
                     item["itemId"],
                     item["stock"],
-                    item["isValid"],
                 )
 
         if "userLoginBonusList" in upsert and len(upsert["userLoginBonusList"]) > 0:
@@ -302,7 +300,7 @@ class Mai2Base:
 
         if "userMusicDetailList" in upsert and len(upsert["userMusicDetailList"]) > 0:
             for music in upsert["userMusicDetailList"]:
-                self.data.score.put_best_score(user_id, music)
+                self.data.score.put_best_score(user_id, music, False)
 
         if "userCourseList" in upsert and len(upsert["userCourseList"]) > 0:
             for course in upsert["userCourseList"]:
