@@ -333,6 +333,19 @@ class Mai2ItemData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+    
+    def put_character_(self, user_id: int, char_data: Dict) -> Optional[int]:
+        char_data["user"] = user_id
+        sql = insert(character).values(**char_data)
+
+        conflict = sql.on_duplicate_key_update(**char_data)
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_character_: failed to insert item! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
 
     def put_character(
         self,

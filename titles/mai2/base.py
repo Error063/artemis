@@ -261,11 +261,9 @@ class Mai2Base:
 
         if "userCharacterList" in upsert and len(upsert["userCharacterList"]) > 0:
             for char in upsert["userCharacterList"]:
-                self.data.item.put_character(
+                self.data.item.put_character_(
                     user_id,
-                    char["characterId"],
-                    char["level"],
-                    char["point"],
+                    char
                 )
 
         if "userItemList" in upsert and len(upsert["userItemList"]) > 0:
@@ -275,6 +273,7 @@ class Mai2Base:
                     int(item["itemKind"]),
                     item["itemId"],
                     item["stock"],
+                    True
                 )
 
         if "userLoginBonusList" in upsert and len(upsert["userLoginBonusList"]) > 0:

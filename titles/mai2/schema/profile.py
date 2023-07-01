@@ -456,7 +456,7 @@ recent_rating = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
-    Column("userRecentRatingList", Integer),
+    Column("userRecentRatingList", JSON),
     UniqueConstraint("user", name="mai2_profile_recent_rating_uk"),
     mysql_charset="utf8mb4",
 )
