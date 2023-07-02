@@ -815,6 +815,8 @@ class SaoBase:
             )
 
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
+        json_data = {"data": []}
+
         for r in range(0,req_data.get_rare_drop_data_list_length):
             rewardList = self.game_data.static.get_rare_drop_id(int(req_data.get_rare_drop_data_list[r].quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
@@ -850,8 +852,12 @@ class SaoBase:
                 self.game_data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             if itemList:
                 self.game_data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
+
+            json_data["data"].append(randomized_unanalyzed_id['CommonRewardId'])
             
         # Send response
+
+        self.game_data.item.create_end_session(user_id, episode_id, quest_clear_flag, json_data["data"])
 
         resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
@@ -1117,6 +1123,8 @@ class SaoBase:
                 hero_data["skill_slot4_skill_id"],
                 hero_data["skill_slot5_skill_id"]
             )
+
+        json_data = {"data": []}
         
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
         for r in range(0,req_data.get_rare_drop_data_list_length):
@@ -1154,8 +1162,12 @@ class SaoBase:
                 self.game_data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             if itemList:
                 self.game_data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
+
+            json_data["data"].append(randomized_unanalyzed_id['CommonRewardId'])
             
         # Send response
+
+        self.game_data.item.create_end_session(user_id, trial_tower_id, quest_clear_flag, json_data["data"])
 
         resp = SaoTrialTowerPlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
         return resp.make()
@@ -1176,32 +1188,9 @@ class SaoBase:
         req_data = req_struct.parse(req)
         user_id = req_data.user_id
 
-        with open('titles/sao/data/RewardTable.csv', 'r') as f:
-            keys_unanalyzed = next(f).strip().split(',')
-            data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+        end_session_data = self.game_data.item.get_end_session(user_id)
 
-        randomized_unanalyzed_id = choice(data_unanalyzed)
-        heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-        i = 0
-
-        # Create a loop to check if the id is a hero or else try 15 times before closing the loop and sending a dummy hero
-        while not heroList:
-            if i == 15:
-                # Return the dummy hero but not save it
-                resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, 102000070)
-                return resp.make()
-
-            i += 1
-            randomized_unanalyzed_id = choice(data_unanalyzed)
-            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-
-        hero_data = self.game_data.item.get_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'])
-
-        # Avoid having a duplicated card and cause an overwrite
-        if not hero_data:
-            self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
-
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, randomized_unanalyzed_id['CommonRewardId'])
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, end_session_data[4])
         return resp.make()
 
     def handle_c91a(self, request: Any) -> bytes: # handler is identical to the episode

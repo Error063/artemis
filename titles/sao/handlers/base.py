@@ -3,6 +3,7 @@ from datetime import datetime
 from construct import *
 import sys
 import csv
+from csv import *
 
 class SaoBaseRequest:
     def __init__(self, data: bytes) -> None:
@@ -1661,43 +1662,77 @@ class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
         super().__init__(data)
 
 class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
-    def __init__(self, cmd, randomized_unanalyzed_id) -> None:
+    def __init__(self, cmd, end_session_data) -> None:
         super().__init__(cmd)
         self.result = 1
-        self.play_end_unanalyzed_log_reward_data_list_size = 1 # Number of arrays
 
-        self.unanalyzed_log_grade_id = 3 # RewardTable.csv
-        self.common_reward_data_size = 1
+        self.unanalyzed_log_grade_id = []
 
-        self.common_reward_type_1 = 1
-        self.common_reward_id_1 = int(randomized_unanalyzed_id)
-        self.common_reward_num_1 = 1
+        self.common_reward_type = []
+        self.common_reward_id = []
+        self.common_reward_num = 1
+
+        for x in range(len(end_session_data)):
+            self.common_reward_id.append(end_session_data[x])
+
+            with open('titles/sao/data/RewardTable.csv', 'r') as f:
+                keys_unanalyzed = next(f).strip().split(',')
+                data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+
+                for i in range(len(data_unanalyzed)):
+                    if int(data_unanalyzed[i]["CommonRewardId"]) == int(end_session_data[x]):
+                        self.unanalyzed_log_grade_id.append(int(data_unanalyzed[i]["UnanalyzedLogGradeId"]))
+                        self.common_reward_type.append(int(data_unanalyzed[i]["CommonRewardType"]))
+                        break
+
+        self.unanalyzed_log_grade_id = list(map(int,self.unanalyzed_log_grade_id)) #int
+        self.common_reward_type = list(map(int,self.common_reward_type)) #int
+        self.common_reward_id = list(map(int,self.common_reward_id)) #int
     
     def make(self) -> bytes:
+        #new stuff
+        common_reward_data_struct = Struct(
+            "common_reward_type" / Int16ub,
+            "common_reward_id" / Int32ub,
+            "common_reward_num" / Int32ub,
+        )
+
+        play_end_unanalyzed_log_reward_data_list_struct = Struct(
+            "unanalyzed_log_grade_id" / Int32ub,
+            "common_reward_data_size" / Rebuild(Int32ub, len_(this.common_reward_data)),  # big endian
+            "common_reward_data" / Array(this.common_reward_data_size, common_reward_data_struct),
+        )
+
         # create a resp struct
         resp_struct = Struct(
             "result" / Int8ul,  # result is either 0 or 1
-            "play_end_unanalyzed_log_reward_data_list_size" / Int32ub,  # big endian
-
-            "unanalyzed_log_grade_id" / Int32ub,
-            "common_reward_data_size" / Int32ub,
-
-            "common_reward_type_1" / Int16ub,
-            "common_reward_id_1" / Int32ub,
-            "common_reward_num_1" / Int32ub,
+            "play_end_unanalyzed_log_reward_data_list_size" / Rebuild(Int32ub, len_(this.play_end_unanalyzed_log_reward_data_list)),  # big endian
+            "play_end_unanalyzed_log_reward_data_list" / Array(this.play_end_unanalyzed_log_reward_data_list_size, play_end_unanalyzed_log_reward_data_list_struct),
         )
 
-        resp_data = resp_struct.build(dict(
+        resp_data = resp_struct.parse(resp_struct.build(dict(
             result=self.result,
-            play_end_unanalyzed_log_reward_data_list_size=self.play_end_unanalyzed_log_reward_data_list_size,
-            
-            unanalyzed_log_grade_id=self.unanalyzed_log_grade_id,
-            common_reward_data_size=self.common_reward_data_size,
+            play_end_unanalyzed_log_reward_data_list_size=0,
+            play_end_unanalyzed_log_reward_data_list=[],
+        )))
 
-            common_reward_type_1=self.common_reward_type_1,
-            common_reward_id_1=self.common_reward_id_1,
-            common_reward_num_1=self.common_reward_num_1,
-        ))
+        for i in range(len(self.common_reward_id)):
+            reward_resp_data = dict(
+                unanalyzed_log_grade_id=self.unanalyzed_log_grade_id[i],
+                common_reward_data_size=0,
+                common_reward_data=[],
+            )
+
+            reward_resp_data["common_reward_data"].append(dict(
+                common_reward_type=self.common_reward_type[i],
+                common_reward_id=self.common_reward_id[i],
+                common_reward_num=self.common_reward_num,
+            ))
+            
+            resp_data.play_end_unanalyzed_log_reward_data_list.append(reward_resp_data)
+
+        # finally, rebuild the resp_data
+        resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
         return super().make() + resp_data
@@ -1733,8 +1768,8 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
             self.concurrent_destroying_num.append(quest_data[i][7])
 
         # quest_scene_ex_bonus_user_data_list
-        self.achievement_flag = [[1, 1, 1],[1, 1, 1]]
-        self.ex_bonus_table_id = [[1, 2, 3],[4, 5, 6]]
+        self.achievement_flag = [1,1,1]
+        self.ex_bonus_table_id = [1,2,3]
 
 
         self.quest_type = list(map(int,self.quest_type)) #int
@@ -1748,8 +1783,8 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
     def make(self) -> bytes:
         #new stuff
         quest_scene_ex_bonus_user_data_list_struct = Struct(
-            "achievement_flag" / Int32ub,  # big endian
             "ex_bonus_table_id" / Int32ub,  # big endian
+            "achievement_flag" / Int8ul, # result is either 0 or 1
         )
 
         quest_scene_best_score_user_data_struct = Struct(
@@ -1802,7 +1837,6 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
                 total_damage=[ord(x) for x in self.total_damage[i]],
                 concurrent_destroying_num=self.concurrent_destroying_num[i],
             ))
-
             
             resp_data.quest_scene_user_data_list.append(quest_resp_data)
 
@@ -2462,7 +2496,7 @@ class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
 
         self.length = len(resp_data)
         return super().make() + resp_data
-    
+
 class SaoBnidSerialCodeCheckRequest(SaoBaseRequest):
     def __init__(self, data: bytes) -> None:
         super().__init__(data)

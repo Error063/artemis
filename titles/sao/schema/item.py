@@ -1,6 +1,6 @@
 from typing import Optional, Dict, List
 from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_, case
-from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean
+from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func, select, update, delete
 from sqlalchemy.engine import Row
@@ -122,6 +122,22 @@ sessions = Table(
     mysql_charset="utf8mb4",
 )
 
+end_sessions = Table(
+    "sao_end_sessions",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("quest_id", Integer, nullable=False),
+    Column("play_result_flag", Boolean, nullable=False),
+    Column("reward_data", JSON, nullable=True),
+    Column("play_date", TIMESTAMP, nullable=False, server_default=func.now()),
+    mysql_charset="utf8mb4",
+)
+
 class SaoItemData(BaseData):
     def create_session(self, user_id: int, user_party_team_id: int, episode_id: int, play_mode: int, quest_drop_boost_apply_flag: int) -> Optional[int]:
         sql = insert(sessions).values(
@@ -137,6 +153,22 @@ class SaoItemData(BaseData):
         result = self.execute(conflict)
         if result is None:
             self.logger.error(f"Failed to create SAO session for user {user_id}!")
+            return None
+        return result.lastrowid
+
+    def create_end_session(self, user_id: int, quest_id: int, play_result_flag: bool, reward_data: JSON) -> Optional[int]:
+        sql = insert(end_sessions).values(
+            user=user_id,
+            quest_id=quest_id,
+            play_result_flag=play_result_flag,
+            reward_data=reward_data,
+            )
+
+        conflict = sql.on_duplicate_key_update(user=user_id)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(f"Failed to create SAO end session for user {user_id}!")
             return None
         return result.lastrowid
 
@@ -411,6 +443,22 @@ class SaoItemData(BaseData):
             )
         ).order_by(
             sessions.c.play_date.asc()
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_end_session(
+        self, user_id: int = None
+    ) -> Optional[List[Row]]:
+        sql = end_sessions.select(
+            and_(
+                end_sessions.c.user == user_id,
+            )
+        ).order_by(
+            end_sessions.c.play_date.asc()
         )
 
         result = self.execute(sql)
