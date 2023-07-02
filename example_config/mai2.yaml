@@ -1,3 +1,8 @@
 server:
   enable: True
   loglevel: "info"
+
+deliver:
+  enable: False
+  udbdl_enable: False
+  content_folder: ""

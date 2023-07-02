@@ -64,6 +64,27 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
         self.map_post.connect(
+            "allnet_loaderstaterecorder",
+            "/sys/servlet/LoaderStateRecorder",
+            controller="allnet",
+            action="handle_loaderstaterecorder",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
+            "allnet_alive",
+            "/sys/servlet/Alive",
+            controller="allnet",
+            action="handle_alive",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_get.connect(
+            "allnet_alive",
+            "/sys/servlet/Alive",
+            controller="allnet",
+            action="handle_alive",
+            conditions=dict(method=["GET"]),
+        )
+        self.map_post.connect(
             "allnet_billing",
             "/request",
             controller="allnet",
@@ -111,7 +132,6 @@ class HttpDispatcher(resource.Resource):
         )
 
     def render_GET(self, request: Request) -> bytes:
-        self.logger.debug(request.uri)
         test = self.map_get.match(request.uri.decode())
         client_ip = Utils.get_ip_addr(request)
 
@@ -161,9 +181,16 @@ class HttpDispatcher(resource.Resource):
 
         if type(ret) == str:
             return ret.encode()
-        elif type(ret) == bytes:
+        
+        elif type(ret) == bytes or type(ret) == tuple: # allow for bytes or tuple (data, response code) responses
             return ret
+        
+        elif ret is None:
+            self.logger.warn(f"None returned by controller for {request.uri.decode()} endpoint")
+            return b""
+        
         else:
+            self.logger.warn(f"Unknown data type returned by controller for {request.uri.decode()} endpoint")
             return b""
 
 

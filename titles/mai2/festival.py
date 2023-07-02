@@ -1,12 +1,12 @@
 from typing import Dict
 
 from core.config import CoreConfig
-from titles.mai2.universeplus import Mai2UniversePlus
+from titles.mai2.dx import Mai2DX
 from titles.mai2.const import Mai2Constants
 from titles.mai2.config import Mai2Config
 
 
-class Mai2Festival(Mai2UniversePlus):
+class Mai2Festival(Mai2DX):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
