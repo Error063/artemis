@@ -421,6 +421,41 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 python dbutils.py --game SDFE upgrade
 ```
 
+### VIP Rewards
+Below is a list of VIP rewards. Currently, VIP is not implemented, and thus these are not obtainable. These 23 rewards were distributed once per month for VIP users on the real network.
+
+	Plates:
+		211004 リッチ
+		211018 特盛えりざべす
+		211025 イースター
+		211026 特盛りりぃ
+		311004 ファンシー
+		311005 インカンテーション
+		311014 夜明け
+		311015 ネイビー
+		311016 特盛るーん
+	
+	Ring Colors:
+		203002 Gold Rushイエロー
+		203009 トロピカル
+		303005 ネイチャー
+	
+	Icons:
+		202020 どらみんぐ
+		202063 ユニコーン
+		202086 ゴリラ
+		302014 ローズ
+		302015 ファラオ
+		302045 肉球
+		302046 WACCA
+		302047 WACCA Lily
+		302048 WACCA Reverse
+	
+	Note Sound Effect:
+		205002 テニス
+		205008 シャワー
+		305003 タンバリンMk-Ⅱ
+
 ## SAO
 
 ### SDEW
