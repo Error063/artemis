@@ -129,30 +129,31 @@ Config file is located in `config/cxb.yaml`.
 
 | Game Code | Version ID | Version Name            |
 |-----------|------------|-------------------------|
-| SDEZ      | 0          | maimai DX               |
-| SDEZ      | 1          | maimai DX PLUS          |
-| SDEZ      | 2          | maimai DX Splash        |
-| SDEZ      | 3          | maimai DX Splash PLUS   |
-| SDEZ      | 4          | maimai DX Universe      |
-| SDEZ      | 5          | maimai DX Universe PLUS |
-| SDEZ      | 6          | maimai DX Festival      |
+
 
 For versions pre-dx
-| Game Code | Version ID | Version Name         |
-|-----------|------------|----------------------|
-| SBXL      | 1000       | maimai               |
-| SBXL      | 1001       | maimai PLUS          |
-| SBZF      | 1002       | maimai GreeN         |
-| SBZF      | 1003       | maimai GreeN PLUS    |
-| SDBM      | 1004       | maimai ORANGE        |
-| SDBM      | 1005       | maimai ORANGE PLUS   |
-| SDCQ      | 1006       | maimai PiNK          |
-| SDCQ      | 1007       | maimai PiNK PLUS     |
-| SDDK      | 1008       | maimai MURASAKI      |
-| SDDK      | 1009       | maimai MURASAKI PLUS |
-| SDDZ      | 1010       | maimai MILK          |
-| SDDZ      | 1011       | maimai MILK PLUS     |
-| SDEY      | 1012       | maimai FiNALE        |
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+| SBXL      | 0          | maimai                  |
+| SBXL      | 1          | maimai PLUS             |
+| SBZF      | 2          | maimai GreeN            |
+| SBZF      | 3          | maimai GreeN PLUS       |
+| SDBM      | 4          | maimai ORANGE           |
+| SDBM      | 5          | maimai ORANGE PLUS      |
+| SDCQ      | 6          | maimai PiNK             |
+| SDCQ      | 7          | maimai PiNK PLUS        |
+| SDDK      | 8          | maimai MURASAKI         |
+| SDDK      | 9          | maimai MURASAKI PLUS    |
+| SDDZ      | 10         | maimai MILK             |
+| SDDZ      | 11         | maimai MILK PLUS        |
+| SDEY      | 12         | maimai FiNALE           |
+| SDEZ      | 13         | maimai DX               |
+| SDEZ      | 14         | maimai DX PLUS          |
+| SDEZ      | 15         | maimai DX Splash        |
+| SDEZ      | 16         | maimai DX Splash PLUS   |
+| SDEZ      | 17         | maimai DX Universe      |
+| SDEZ      | 18         | maimai DX Universe PLUS |
+| SDEZ      | 19         | maimai DX Festival      |
 
 ### Importer
 

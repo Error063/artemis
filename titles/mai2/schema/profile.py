@@ -461,6 +461,17 @@ recent_rating = Table(
     mysql_charset="utf8mb4",
 )
 
+consec_logins = Table(
+        "mai2_profile_consec_logins",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("logins", Integer),
+    UniqueConstraint("user", "version", name="mai2_profile_consec_logins_uk"),
+    mysql_charset="utf8mb4",
+)
+
 class Mai2ProfileData(BaseData):
     def put_profile_detail(
         self, user_id: int, version: int, detail_data: Dict, is_dx: bool = True
@@ -760,6 +771,45 @@ class Mai2ProfileData(BaseData):
     
     def get_recent_rating(self, user_id: int) -> Optional[Row]:
         sql = recent_rating.select(recent_rating.c.user == user_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+    
+    def add_consec_login(self, user_id: int, version: int) -> None:
+        sql = insert(consec_logins).values(
+            user=user_id,
+            version=version,
+            logins=1
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            logins=consec_logins.c.logins + 1
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(f"Failed to update consecutive login count for user {user_id} version {version}")
+
+    def get_consec_login(self, user_id: int, version: int) -> Optional[Row]:
+        sql = select(consec_logins).where(and_(
+            consec_logins.c.user==user_id,
+            consec_logins.c.version==version,
+        ))
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def reset_consec_login(self, user_id: int, version: int) -> Optional[Row]:
+        sql = consec_logins.update(and_(
+            consec_logins.c.user==user_id,
+            consec_logins.c.version==version,
+        )).values(
+            logins=1
+        )
 
         result = self.execute(sql)
         if result is None:

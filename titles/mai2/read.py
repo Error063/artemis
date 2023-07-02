@@ -37,7 +37,7 @@ class Mai2Reader(BaseReader):
 
     def read(self) -> None:
         data_dirs = []
-        if self.version < Mai2Constants.VER_MAIMAI:
+        if self.version >= Mai2Constants.VER_MAIMAI_DX:
             if self.bin_dir is not None:
                 data_dirs += self.get_data_directories(self.bin_dir)
 
@@ -52,7 +52,6 @@ class Mai2Reader(BaseReader):
                 self.read_tickets(f"{dir}/ticket")
         
         else:
-            self.logger.warn("Pre-DX Readers are not yet implemented!")
             if not os.path.exists(f"{self.bin_dir}/tables"):
                 self.logger.error(f"tables directory not found in {self.bin_dir}")
                 return

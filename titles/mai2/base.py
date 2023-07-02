@@ -140,6 +140,7 @@ class Mai2Base:
 
     def handle_user_login_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_detail(data["userId"], self.version)
+        consec = self.data.profile.get_consec_login(data["userId"], self.version)
 
         if profile is not None:
             lastLoginDate = profile["lastLoginDate"]
@@ -150,12 +151,32 @@ class Mai2Base:
         else:
             loginCt = 0
             lastLoginDate = "2017-12-05 07:00:00.0"
+        
+        if consec is None or not consec:
+            consec_ct = 1
+        
+        else:
+            lastlogindate_ = datetime.strptime(profile["lastLoginDate"], "%Y-%m-%d %H:%M:%S.%f").timestamp()
+            today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+            yesterday_midnight = today_midnight - 86400
+
+            if lastlogindate_ < today_midnight:
+                consec_ct = consec['logins'] + 1                
+                self.data.profile.add_consec_login(data["userId"], self.version)
+            
+            elif lastlogindate_ < yesterday_midnight:
+                consec_ct = 1
+                self.data.profile.reset_consec_login(data["userId"], self.version)
+
+            else:
+                consec_ct = consec['logins']
+        
 
         return {
             "returnCode": 1,
             "lastLoginDate": lastLoginDate,
             "loginCount": loginCt,
-            "consecutiveLoginCount": 0,  # We don't really have a way to track this...
+            "consecutiveLoginCount": consec_ct, # Number of consecutive days we've logged in.
         }
 
     def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
@@ -747,3 +768,9 @@ class Mai2Base:
             "nextIndex": next_index,
             "userMusicList": [{"userMusicDetailList": music_detail_list}],
         }
+
+    def handle_upload_user_portrait_api_request(self, data: Dict) -> Dict:
+        self.logger.debug(data)
+
+    def handle_upload_user_photo_api_request(self, data: Dict) -> Dict:
+        self.logger.debug(data)

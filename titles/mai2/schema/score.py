@@ -362,4 +362,4 @@ class Mai2ScoreData(BaseData):
         result = self.execute(sql)
         if result is None:
             return None
-        return result.fetchone()
+        return result.fetchall()
