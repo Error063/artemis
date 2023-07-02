@@ -1208,32 +1208,9 @@ class SaoBase:
         req_data = req_struct.parse(req)
         user_id = req_data.user_id
 
-        with open('titles/sao/data/RewardTable.csv', 'r') as f:
-            keys_unanalyzed = next(f).strip().split(',')
-            data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
+        end_session_data = self.game_data.item.get_end_session(user_id)
 
-        randomized_unanalyzed_id = choice(data_unanalyzed)
-        heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-        i = 0
-
-        # Create a loop to check if the id is a hero or else try 15 times before closing the loop and sending a dummy hero
-        while not heroList:
-            if i == 15:
-                # Return the dummy hero but not save it
-                resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, 102000070)
-                return resp.make()
-
-            i += 1
-            randomized_unanalyzed_id = choice(data_unanalyzed)
-            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-
-        hero_data = self.game_data.item.get_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'])
-
-        # Avoid having a duplicated card and cause an overwrite
-        if not hero_data:
-            self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
-
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, randomized_unanalyzed_id['CommonRewardId'])
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, end_session_data[4])
         return resp.make()
 
     def handle_cd00(self, request: Any) -> bytes:
