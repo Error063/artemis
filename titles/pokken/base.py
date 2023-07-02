@@ -8,6 +8,7 @@ from core import CoreConfig
 from .config import PokkenConfig
 from .proto import jackal_pb2
 from .database import PokkenData
+from .const import PokkenConstants
 
 
 class PokkenBase:
@@ -301,11 +302,11 @@ class PokkenBase:
         battle = req.battle_data
         mon = req.pokemon_data
 
-        self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
-        self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
-        self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
+        p = self.data.profile.touch_profile(user_id)
+        if p is None or not p:
+            self.data.profile.create_profile(user_id)
 
-        if req.trainer_name_pending: # we're saving for the first time
+        if req.trainer_name_pending is not None and req.trainer_name_pending: # we're saving for the first time
             self.data.profile.set_profile_name(user_id, req.trainer_name_pending, req.avatar_gender if req.avatar_gender else None)
 
         for tut_flg in req.tutorial_progress_flag:
@@ -328,6 +329,46 @@ class PokkenBase:
         
         for reward in req.reward_data:
             self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
+        
+        self.data.profile.add_profile_points(user_id, get_rank_pts, get_money, get_score_pts, grade_max)
+        
+        self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
+        self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
+        self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
+
+        self.data.profile.put_pokemon(user_id, mon.char_id, mon.illustration_book_no, mon.bp_point_atk, mon.bp_point_res, mon.bp_point_def, mon.bp_point_sp)
+        self.data.profile.add_pokemon_xp(user_id, mon.char_id, mon.get_pokemon_exp)
+        
+        for x in range(len(battle.play_mode)):
+            self.data.profile.put_pokemon_battle_result(
+                user_id, 
+                mon.char_id, 
+                PokkenConstants.BATTLE_TYPE(battle.play_mode[x]), 
+                PokkenConstants.BATTLE_RESULT(battle.result[x])
+            )
+
+        self.data.profile.put_stats(
+            user_id,
+            battle.ex_ko_num,
+            battle.wko_num,
+            battle.timeup_win_num,
+            battle.cool_ko_num,
+            battle.perfect_ko_num,
+            num_continues
+        )
+
+        self.data.profile.put_extra(
+            user_id,
+            extra_counter,
+            evt_reward_get_flg,
+            total_play_days,
+            awake_num,
+            use_support_ct,
+            beat_num,
+            aid_skill,
+            last_evt
+        )
+
 
         return res.SerializeToString()
 

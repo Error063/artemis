@@ -137,6 +137,14 @@ pokemon_data = Table(
 
 
 class PokkenProfileData(BaseData):
+    def touch_profile(self, user_id: int) -> Optional[int]:
+        sql = select([profile.c.id]).where(profile.c.user == user_id)
+        
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()['id']
+
     def create_profile(self, user_id: int) -> Optional[int]:
         sql = insert(profile).values(user=user_id)
         conflict = sql.on_duplicate_key_update(user=user_id)
@@ -157,6 +165,33 @@ class PokkenProfileData(BaseData):
             self.logger.error(
                 f"Failed to update pokken profile name for user {user_id}!"
             )
+
+    def put_extra(
+        self, 
+        user_id: int, 
+        extra_counter: int,
+        evt_reward_get_flg: int,
+        total_play_days: int,
+        awake_num: int,
+        use_support_ct: int,
+        beat_num: int,
+        aid_skill: int,
+        last_evt: int
+    ) -> None:
+        sql = update(profile).where(profile.c.user == user_id).values(
+            extra_counter=extra_counter,
+            event_reward_get_flag=evt_reward_get_flg,
+            total_play_days=total_play_days,
+            awake_num=awake_num,
+            use_support_num=use_support_ct,
+            beat_num=beat_num,
+            aid_skill=aid_skill,
+            last_play_event_id=last_evt
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(f"Failed to put extra data for user {user_id}")
 
     def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: List) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
@@ -192,9 +227,14 @@ class PokkenProfileData(BaseData):
             )
 
     def add_profile_points(
-        self, user_id: int, rank_pts: int, money: int, score_pts: int
+        self, user_id: int, rank_pts: int, money: int, score_pts: int, grade_max: int
     ) -> None:
-        pass
+        sql = update(profile).where(profile.c.user == user_id).values(
+            trainer_rank_point = profile.c.trainer_rank_point + rank_pts,
+            fight_money = profile.c.fight_money + money,
+            score_point = profile.c.score_point + score_pts,
+            grade_max_num = grade_max
+        )
 
     def get_profile(self, user_id: int) -> Optional[Row]:
         sql = profile.select(profile.c.user == user_id)
@@ -294,7 +334,18 @@ class PokkenProfileData(BaseData):
         """
         Records profile stats
         """
-        pass
+        sql = update(profile).where(profile.c.user==user_id).values(
+            ex_ko_num=profile.c.ex_ko_num + exkos,
+            wko_num=profile.c.wko_num + wkos,
+            timeup_win_num=profile.c.timeup_win_num + timeout_wins,
+            cool_ko_num=profile.c.cool_ko_num + cool_kos,
+            perfect_ko_num=profile.c.perfect_ko_num + perfects,
+            continue_num=continues,
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to update stats for user {user_id}")
 
     def update_support_team(self, user_id: int, support_id: int, support1: int = 4294967295, support2: int = 4294967295) -> None:
         sql = update(profile).where(profile.c.user==user_id).values(
