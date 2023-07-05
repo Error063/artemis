@@ -268,7 +268,7 @@ class OngekiBase:
         }
 
     def handle_get_game_id_list_api_request(self, data: Dict) -> Dict:
-        game_idlist: list[str, Any] = []  # 1 to 230 & 8000 to 8050
+        game_idlist: List[str, Any] = []  # 1 to 230 & 8000 to 8050
 
         if data["type"] == 1:
             for i in range(1, 231):
@@ -443,7 +443,7 @@ class OngekiBase:
                 "userItemList": [],
             }
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(data["nextIndex"] % 10000000000, len(p)):
             if len(items) > data["maxCount"]:
                 break

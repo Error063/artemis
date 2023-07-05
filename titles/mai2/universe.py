@@ -180,7 +180,7 @@ class Mai2Universe(Mai2DX):
             extend = extend._asdict()
             # parse the selectedCardList
             # 6 = Freedom Pass, 4 = Gold Pass (cardTypeId)
-            selected_cards: list = extend["selectedCardList"]
+            selected_cards: List = extend["selectedCardList"]
 
             # if no pass is already added, add the corresponding pass
             if not user_card["cardTypeId"] in selected_cards:

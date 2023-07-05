@@ -2,7 +2,7 @@ import logging
 import json
 from decimal import Decimal
 from base64 import b64encode
-from typing import Any, Dict
+from typing import Any, Dict, List
 from hashlib import md5
 from datetime import datetime
 
@@ -416,7 +416,7 @@ class CxbBase:
         self.logger.info(f"Get best rankings for {uid}")
         p = self.data.score.get_best_rankings(uid)
 
-        rankList: list[Dict[str, Any]] = []
+        rankList: List[Dict[str, Any]] = []
 
         for rank in p:
             if rank["song_id"] is not None:

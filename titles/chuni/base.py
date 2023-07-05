@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from time import strftime
 
 import pytz
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from core.config import CoreConfig
 from titles.chuni.const import ChuniConstants
@@ -401,7 +401,7 @@ class ChuniBase:
                 "userItemList": [],
             }
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(next_idx, len(user_item_list)):
             tmp = user_item_list[i]._asdict()
             tmp.pop("user")

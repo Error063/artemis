@@ -320,7 +320,7 @@ class Mai2DX(Mai2Base):
         next_idx = int(data["nextIndex"] % 10000000000)
         user_item_list = self.data.item.get_items(data["userId"], kind)
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(next_idx, len(user_item_list)):
             tmp = user_item_list[i]._asdict()
             tmp.pop("user")

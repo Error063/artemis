@@ -296,7 +296,7 @@ class ChuniItemData(BaseData):
         self,
         version: int,
         room_id: int,
-        matching_member_info_list: list,
+        matching_member_info_list: List,
         user_id: int = None,
         rest_sec: int = 60,
         is_full: bool = False
