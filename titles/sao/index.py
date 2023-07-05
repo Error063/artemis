@@ -112,4 +112,6 @@ class SaoServlet(resource.Resource):
 
         self.logger.info(f"Handler {req_url} - {sao_request[:4]} request")
         self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-        return handler(sao_request)
+        resp = handler(sao_request)
+        self.logger.debug(f"Response: {resp.hex()}")
+        return resp
