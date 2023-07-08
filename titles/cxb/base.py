@@ -11,6 +11,7 @@ from titles.cxb.config import CxbConfig
 from titles.cxb.const import CxbConstants
 from titles.cxb.database import CxbData
 
+from threading import Thread
 
 class CxbBase:
     def __init__(self, cfg: CoreConfig, game_cfg: CxbConfig) -> None:
@@ -53,6 +54,151 @@ class CxbBase:
 
         self.logger.warn(f"User {data['login']['authid']} does not have a profile")
         return {}
+
+    def task_generateCoupon(index, data1):
+        # Coupons
+        for i in range(500, 510):
+            index.append(str(i))
+            couponid = int(i) - 500
+            dataValue = [
+                {
+                    "couponId": str(couponid),
+                    "couponNum": "1",
+                    "couponLog": [],
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateShopListTitle(index, data1):
+        # ShopList_Title
+        for i in range(200000, 201451):
+            index.append(str(i))
+            shopid = int(i) - 200000
+            dataValue = [
+                {
+                    "shopId": shopid,
+                    "shopState": "2",
+                    "isDisable": "t",
+                    "isDeleted": "f",
+                    "isSpecialFlag": "f",
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateShopListIcon(index, data1):
+        # ShopList_Icon
+        for i in range(202000, 202264):
+            index.append(str(i))
+            shopid = int(i) - 200000
+            dataValue = [
+                {
+                    "shopId": shopid,
+                    "shopState": "2",
+                    "isDisable": "t",
+                    "isDeleted": "f",
+                    "isSpecialFlag": "f",
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateStories(index, data1):
+        # Stories
+        for i in range(900000, 900003):
+            index.append(str(i))
+            storyid = int(i) - 900000
+            dataValue = [
+                {
+                    "storyId": storyid,
+                    "unlockState1": ["t"] * 10,
+                    "unlockState2": ["t"] * 10,
+                    "unlockState3": ["t"] * 10,
+                    "unlockState4": ["t"] * 10,
+                    "unlockState5": ["t"] * 10,
+                    "unlockState6": ["t"] * 10,
+                    "unlockState7": ["t"] * 10,
+                    "unlockState8": ["t"] * 10,
+                    "unlockState9": ["t"] * 10,
+                    "unlockState10": ["t"] * 10,
+                    "unlockState11": ["t"] * 10,
+                    "unlockState12": ["t"] * 10,
+                    "unlockState13": ["t"] * 10,
+                    "unlockState14": ["t"] * 10,
+                    "unlockState15": ["t"] * 10,
+                    "unlockState16": ["t"] * 10,
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateScoreData(song, index, data1):
+        song_data = song["data"]
+        songCode = []
+
+        songCode.append(
+            {
+                "mcode": song_data["mcode"],
+                "musicState": song_data["musicState"],
+                "playCount": song_data["playCount"],
+                "totalScore": song_data["totalScore"],
+                "highScore": song_data["highScore"],
+                "everHighScore": song_data["everHighScore"]
+                if "everHighScore" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "clearRate": song_data["clearRate"],
+                "rankPoint": song_data["rankPoint"],
+                "normalCR": song_data["normalCR"]
+                if "normalCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "survivalCR": song_data["survivalCR"]
+                if "survivalCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "ultimateCR": song_data["ultimateCR"]
+                if "ultimateCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "nohopeCR": song_data["nohopeCR"]
+                if "nohopeCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "combo": song_data["combo"],
+                "coupleUserId": song_data["coupleUserId"],
+                "difficulty": song_data["difficulty"],
+                "isFullCombo": song_data["isFullCombo"],
+                "clearGaugeType": song_data["clearGaugeType"],
+                "fieldType": song_data["fieldType"],
+                "gameType": song_data["gameType"],
+                "grade": song_data["grade"],
+                "unlockState": song_data["unlockState"],
+                "extraState": song_data["extraState"],
+            }
+        )
+        index.append(song_data["index"])
+        data1.append(
+            b64encode(
+                bytes(json.dumps(songCode[0], separators=(",", ":")), "utf-8")
+            ).decode("utf-8")
+        )
+
+    def task_generateIndexData(versionindex):
+        try:
+            v_profile = self.data.profile.get_profile_index(0, uid, self.version)
+            v_profile_data = v_profile["data"]
+            versionindex.append(int(v_profile_data["appVersion"]))
+        except:
+            versionindex.append("10400")
 
     def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
@@ -107,146 +253,29 @@ class CxbBase:
         900000 = Stories
         """
 
-        # Coupons
-        for i in range(500, 510):
-            index.append(str(i))
-            couponid = int(i) - 500
-            dataValue = [
-                {
-                    "couponId": str(couponid),
-                    "couponNum": "1",
-                    "couponLog": [],
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        # Async threads to generate the response
+        thread_Coupon = Thread(target=CxbBase.task_generateCoupon(index, data1))
+        thread_ShopListTitle = Thread(target=CxbBase.task_generateShopListTitle(index, data1))
+        thread_ShopListIcon = Thread(target=CxbBase.task_generateShopListIcon(index, data1))
+        thread_Stories = Thread(target=CxbBase.task_generateStories(index, data1))
 
-        # ShopList_Title
-        for i in range(200000, 201451):
-            index.append(str(i))
-            shopid = int(i) - 200000
-            dataValue = [
-                {
-                    "shopId": shopid,
-                    "shopState": "2",
-                    "isDisable": "t",
-                    "isDeleted": "f",
-                    "isSpecialFlag": "f",
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        thread_Coupon.start()
+        thread_ShopListTitle.start()
+        thread_ShopListIcon.start()
+        thread_Stories.start()
 
-        # ShopList_Icon
-        for i in range(202000, 202264):
-            index.append(str(i))
-            shopid = int(i) - 200000
-            dataValue = [
-                {
-                    "shopId": shopid,
-                    "shopState": "2",
-                    "isDisable": "t",
-                    "isDeleted": "f",
-                    "isSpecialFlag": "f",
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
-
-        # Stories
-        for i in range(900000, 900003):
-            index.append(str(i))
-            storyid = int(i) - 900000
-            dataValue = [
-                {
-                    "storyId": storyid,
-                    "unlockState1": ["t"] * 10,
-                    "unlockState2": ["t"] * 10,
-                    "unlockState3": ["t"] * 10,
-                    "unlockState4": ["t"] * 10,
-                    "unlockState5": ["t"] * 10,
-                    "unlockState6": ["t"] * 10,
-                    "unlockState7": ["t"] * 10,
-                    "unlockState8": ["t"] * 10,
-                    "unlockState9": ["t"] * 10,
-                    "unlockState10": ["t"] * 10,
-                    "unlockState11": ["t"] * 10,
-                    "unlockState12": ["t"] * 10,
-                    "unlockState13": ["t"] * 10,
-                    "unlockState14": ["t"] * 10,
-                    "unlockState15": ["t"] * 10,
-                    "unlockState16": ["t"] * 10,
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        thread_Coupon.join()
+        thread_ShopListTitle.join()
+        thread_ShopListIcon.join()
+        thread_Stories.join()
 
         for song in songs:
-            song_data = song["data"]
-            songCode = []
-
-            songCode.append(
-                {
-                    "mcode": song_data["mcode"],
-                    "musicState": song_data["musicState"],
-                    "playCount": song_data["playCount"],
-                    "totalScore": song_data["totalScore"],
-                    "highScore": song_data["highScore"],
-                    "everHighScore": song_data["everHighScore"]
-                    if "everHighScore" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "clearRate": song_data["clearRate"],
-                    "rankPoint": song_data["rankPoint"],
-                    "normalCR": song_data["normalCR"]
-                    if "normalCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "survivalCR": song_data["survivalCR"]
-                    if "survivalCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "ultimateCR": song_data["ultimateCR"]
-                    if "ultimateCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "nohopeCR": song_data["nohopeCR"]
-                    if "nohopeCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "combo": song_data["combo"],
-                    "coupleUserId": song_data["coupleUserId"],
-                    "difficulty": song_data["difficulty"],
-                    "isFullCombo": song_data["isFullCombo"],
-                    "clearGaugeType": song_data["clearGaugeType"],
-                    "fieldType": song_data["fieldType"],
-                    "gameType": song_data["gameType"],
-                    "grade": song_data["grade"],
-                    "unlockState": song_data["unlockState"],
-                    "extraState": song_data["extraState"],
-                }
-            )
-            index.append(song_data["index"])
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(songCode[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+            thread_ScoreData = Thread(target=CxbBase.task_generateScoreData(song, index, data1))
+            thread_ScoreData.start()
 
         for v in index:
-            try:
-                v_profile = self.data.profile.get_profile_index(0, uid, self.version)
-                v_profile_data = v_profile["data"]
-                versionindex.append(int(v_profile_data["appVersion"]))
-            except:
-                versionindex.append("10400")
+            thread_IndexData = Thread(target=CxbBase.task_generateIndexData(versionindex))
+            thread_IndexData.start()
 
         return {"index": index, "data": data1, "version": versionindex}
 
