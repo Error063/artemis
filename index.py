@@ -11,7 +11,7 @@ from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
 from twisted.web.http import Request
 from routes import Mapper
-
+from threading import Thread
 
 class HttpDispatcher(resource.Resource):
     def __init__(self, cfg: CoreConfig, config_dir: str):
@@ -283,4 +283,4 @@ if __name__ == "__main__":
             server.Site(dispatcher)
         )
 
-    reactor.run()  # type: ignore
+    Thread(target=reactor.run, args=(False,)).start()
