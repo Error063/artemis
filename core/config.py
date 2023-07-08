@@ -37,6 +37,12 @@ class ServerConfig:
         )
 
     @property
+    def threading(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "server", "threading", default=False
+        )
+
+    @property
     def log_dir(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "core", "server", "log_dir", default="logs"

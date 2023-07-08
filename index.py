@@ -283,4 +283,7 @@ if __name__ == "__main__":
             server.Site(dispatcher)
         )
 
-    Thread(target=reactor.run, args=(False,)).start()
+    if cfg.server.threading:
+        Thread(target=reactor.run, args=(False,)).start()
+    else:
+        reactor.run()
