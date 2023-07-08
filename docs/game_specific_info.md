@@ -127,28 +127,50 @@ Config file is located in `config/cxb.yaml`.
 
 ### SDEZ
 
-| Version ID | Version Name            |
-|------------|-------------------------|
-| 0          | maimai DX               |
-| 1          | maimai DX PLUS          |
-| 2          | maimai DX Splash        |
-| 3          | maimai DX Splash PLUS   |
-| 4          | maimai DX UNiVERSE      |
-| 5          | maimai DX UNiVERSE PLUS |
-| 6          | maimai DX FESTiVAL      |
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+
+
+For versions pre-dx
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+| SBXL      | 0          | maimai                  |
+| SBXL      | 1          | maimai PLUS             |
+| SBZF      | 2          | maimai GreeN            |
+| SBZF      | 3          | maimai GreeN PLUS       |
+| SDBM      | 4          | maimai ORANGE           |
+| SDBM      | 5          | maimai ORANGE PLUS      |
+| SDCQ      | 6          | maimai PiNK             |
+| SDCQ      | 7          | maimai PiNK PLUS        |
+| SDDK      | 8          | maimai MURASAKI         |
+| SDDK      | 9          | maimai MURASAKI PLUS    |
+| SDDZ      | 10         | maimai MILK             |
+| SDDZ      | 11         | maimai MILK PLUS        |
+| SDEY      | 12         | maimai FiNALE           |
+| SDEZ      | 13         | maimai DX               |
+| SDEZ      | 14         | maimai DX PLUS          |
+| SDEZ      | 15         | maimai DX Splash        |
+| SDEZ      | 16         | maimai DX Splash PLUS   |
+| SDEZ      | 17         | maimai DX Universe      |
+| SDEZ      | 18         | maimai DX Universe PLUS |
+| SDEZ      | 19         | maimai DX Festival      |
 
 ### Importer
 
 In order to use the importer locate your game installation folder and execute:
-
+DX:
 ```shell
-python read.py --series SDEZ --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/StreamingAssets --optfolder /path/to/game/option/folder
 ```
-
+Pre-DX:
+```shell
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
+```
 The importer for maimai DX will import Events, Music and Tickets.
 
-**NOTE: It is required to use the importer because the game will
-crash without Events!**
+The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers. For games that do use encryption, provide the key, as a hex string, with the `--extra` flag. Ex `--extra 00112233445566778899AABBCCDDEEFF`
+
+**Important: It is required to use the importer because some games may not function properly or even crash without Events!**
 
 ### Database upgrade
 
@@ -157,6 +179,7 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDEZ upgrade
 ```
+Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 
 ## Hatsune Miku Project Diva
 
@@ -253,13 +276,13 @@ python dbutils.py --game SDDT upgrade
 
 | Version ID | Version Name    |
 |------------|-----------------|
-| 0          | Card Maker 1.34 |
+| 0          | Card Maker 1.30 |
 | 1          | Card Maker 1.35 |
 
 
 ### Support status
 
-* Card Maker 1.34:
+* Card Maker 1.30:
   * CHUNITHM NEW!!: Yes
   * maimai DX UNiVERSE: Yes
   * O.N.G.E.K.I. Bright: Yes
@@ -285,19 +308,46 @@ python read.py --series SDED --version <version ID> --binfolder titles/cm/cm_dat
 python read.py --series SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
-Also make sure to import all maimai and Chunithm data as well:
+Also make sure to import all maimai DX and CHUNITHM data as well:
 
 ```shell
 python read.py --series SDED --version <version ID> --binfolder /path/to/cardmaker/CardMaker_Data
 ```
 
-The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai/Chunithm) and the hardcoded
+The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai DX/CHUNITHM) and the hardcoded
 Cards for each Gacha (O.N.G.E.K.I. only).
 
 **NOTE: Without executing the importer Card Maker WILL NOT work!**
 
 
-### O.N.G.E.K.I. Gachas
+### Config setup
+
+Make sure to update your `config/cardmaker.yaml` with the correct version for each game. To get the current version required to run a specific game, open every opt (Axxx) folder descending until you find all three folders:
+
+- `MU3`: O.N.G.E.K.I.
+- `MAI`: maimai DX
+- `CHU`: CHUNITHM
+
+Inside each folder is a `DataConfig.xml` file, for example:
+
+`MU3/DataConfig.xml`:
+```xml
+  <cardMakerVersion>
+    <major>1</major>
+    <minor>35</minor>
+    <release>3</release>
+  </cardMakerVersion>
+```
+
+Now update your `config/cardmaker.yaml` with the correct version number, for example:
+
+```yaml
+version:
+  1: # Card Maker 1.35
+    ongeki: 1.35.03
+```	 
+
+### O.N.G.E.K.I.
 
 Gacha "無料ガチャ" can only pull from the free cards with the following probabilities: 94%: R, 5% SR and 1% chance of
 getting an SSR card
@@ -310,19 +360,23 @@ and 3% chance of getting an SSR card
 All other (limited) gachas can pull from every card added to ongeki_static_cards but with the promoted cards
 (click on the green button under the banner) having a 10 times higher chance to get pulled
 
-### Chunithm Gachas
+### CHUNITHM
 
-All cards in Chunithm (basically just the characters) have the same rarity to it just pulls randomly from all cards
+All cards in CHUNITHM (basically just the characters) have the same rarity to it just pulls randomly from all cards
 from a given gacha but made sure you cannot pull the same card twice in the same 5 times gacha roll.
+
+### maimai DX
+
+Printed maimai DX cards: Freedom (`cardTypeId=6`) or Gold Pass (`cardTypeId=4`) can now be selected during the login process. You can only have ONE Freedom and ONE Gold Pass active at a given time. The cards will expire after 15 days.
+
+Thanks GetzeAvenue for the `selectedCardList` rarity hint!
 
 ### Notes
 
-Card Maker 1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35 will only load an O.N.G.E.K.I.
+Card Maker 1.30-1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35+ will only load an O.N.G.E.K.I.
 Bright Memory profile (1.35).
-The gachas inside the `ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
+The gachas inside the `config/ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
 Gacha IDs up to 1140 will be loaded for CM 1.34 and all gachas will be loaded for CM 1.35.
-
-**NOTE: There is currently no way to load/use the (printed) maimai DX cards!**
 
 ## WACCA
 
@@ -367,6 +421,41 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 python dbutils.py --game SDFE upgrade
 ```
 
+### VIP Rewards
+Below is a list of VIP rewards. Currently, VIP is not implemented, and thus these are not obtainable. These 23 rewards were distributed once per month for VIP users on the real network.
+
+	Plates:
+		211004 リッチ
+		211018 特盛えりざべす
+		211025 イースター
+		211026 特盛りりぃ
+		311004 ファンシー
+		311005 インカンテーション
+		311014 夜明け
+		311015 ネイビー
+		311016 特盛るーん
+	
+	Ring Colors:
+		203002 Gold Rushイエロー
+		203009 トロピカル
+		303005 ネイチャー
+	
+	Icons:
+		202020 どらみんぐ
+		202063 ユニコーン
+		202086 ゴリラ
+		302014 ローズ
+		302015 ファラオ
+		302045 肉球
+		302046 WACCA
+		302047 WACCA Lily
+		302048 WACCA Reverse
+	
+	Note Sound Effect:
+		205002 テニス
+		205008 シャワー
+		305003 タンバリンMk-Ⅱ
+
 ## SAO
 
 ### SDEW
@@ -404,6 +493,13 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDEW upgrade
 ```
+
+### Notes
+- Defrag Match will crash at loading
+- Co-Op Online is not supported
+- Shop is not functionnal
+- Player title is currently static and cannot be changed in-game
+- QR Card Scanning currently only load a static hero
 
 ### Credits for SAO support:
 

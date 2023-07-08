@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import json, logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 import random
 
 from core.data import Data
@@ -8,6 +8,7 @@ from core import CoreConfig
 from .config import PokkenConfig
 from .proto import jackal_pb2
 from .database import PokkenData
+from .const import PokkenConstants
 
 
 class PokkenBase:
@@ -44,19 +45,19 @@ class PokkenBase:
         biwa_setting = {
             "MatchingServer": {
                 "host": f"https://{self.game_cfg.server.hostname}",
-                "port": self.game_cfg.server.port,
+                "port": self.game_cfg.ports.game,
                 "url": "/SDAK/100/matching",
             },
             "StunServer": {
-                "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_stun,
+                "addr": self.game_cfg.server.stun_server_host,
+                "port": self.game_cfg.server.stun_server_port,
             },
             "TurnServer": {
-                "addr": self.game_cfg.server.hostname,
-                "port": self.game_cfg.server.port_turn,
+                "addr": self.game_cfg.server.stun_server_host,
+                "port": self.game_cfg.server.stun_server_port,
             },
-            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.server.port_admission}",
-            "locationId": 123,
+            "AdmissionUrl": f"ws://{self.game_cfg.server.hostname}:{self.game_cfg.ports.admission}",
+            "locationId": 123, # FIXME: Get arcade's ID from the database
             "logfilename": "JackalMatchingLibrary.log",
             "biwalogfilename": "./biwa.log",
         }
@@ -94,6 +95,7 @@ class PokkenBase:
         res.type = jackal_pb2.MessageType.LOAD_CLIENT_SETTINGS
         settings = jackal_pb2.LoadClientSettingsResponseData()
 
+        # TODO: Make configurable
         settings.money_magnification = 1
         settings.continue_bonus_exp = 100
         settings.continue_fight_money = 100
@@ -274,6 +276,100 @@ class PokkenBase:
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_USER
 
+        req = request.save_user
+        user_id = req.banapass_id
+        
+        tut_flgs: List[int] = []
+        ach_flgs: List[int] = []
+        evt_flgs: List[int] = []
+        evt_params: List[int] = []
+
+        get_rank_pts: int = req.get_trainer_rank_point if req.get_trainer_rank_point else 0
+        get_money: int = req.get_money
+        get_score_pts: int = req.get_score_point if req.get_score_point else 0
+        grade_max: int = req.grade_max_num
+        extra_counter: int = req.extra_counter
+        evt_reward_get_flg: int = req.event_reward_get_flag
+        num_continues: int = req.continue_num
+        total_play_days: int = req.total_play_days
+        awake_num: int = req.awake_num  # ?
+        use_support_ct: int = req.use_support_num
+        beat_num: int = req.beat_num # ?
+        evt_state: int = req.event_state
+        aid_skill: int = req.aid_skill
+        last_evt: int = req.last_play_event_id
+
+        battle = req.battle_data
+        mon = req.pokemon_data
+
+        p = self.data.profile.touch_profile(user_id)
+        if p is None or not p:
+            self.data.profile.create_profile(user_id)
+
+        if req.trainer_name_pending is not None and req.trainer_name_pending: # we're saving for the first time
+            self.data.profile.set_profile_name(user_id, req.trainer_name_pending, req.avatar_gender if req.avatar_gender else None)
+
+        for tut_flg in req.tutorial_progress_flag:
+            tut_flgs.append(tut_flg)
+        
+        self.data.profile.update_profile_tutorial_flags(user_id, tut_flgs)
+
+        for ach_flg in req.achievement_flag:
+            ach_flgs.append(ach_flg)
+        
+        self.data.profile.update_profile_tutorial_flags(user_id, ach_flg)
+
+        for evt_flg in req.event_achievement_flag:
+            evt_flgs.append(evt_flg)
+
+        for evt_param in req.event_achievement_param:
+            evt_params.append(evt_param)
+
+        self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, )
+        
+        for reward in req.reward_data:
+            self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
+        
+        self.data.profile.add_profile_points(user_id, get_rank_pts, get_money, get_score_pts, grade_max)
+        
+        self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
+        self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
+        self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
+
+        self.data.profile.put_pokemon(user_id, mon.char_id, mon.illustration_book_no, mon.bp_point_atk, mon.bp_point_res, mon.bp_point_def, mon.bp_point_sp)
+        self.data.profile.add_pokemon_xp(user_id, mon.char_id, mon.get_pokemon_exp)
+        
+        for x in range(len(battle.play_mode)):
+            self.data.profile.put_pokemon_battle_result(
+                user_id, 
+                mon.char_id, 
+                PokkenConstants.BATTLE_TYPE(battle.play_mode[x]), 
+                PokkenConstants.BATTLE_RESULT(battle.result[x])
+            )
+
+        self.data.profile.put_stats(
+            user_id,
+            battle.ex_ko_num,
+            battle.wko_num,
+            battle.timeup_win_num,
+            battle.cool_ko_num,
+            battle.perfect_ko_num,
+            num_continues
+        )
+
+        self.data.profile.put_extra(
+            user_id,
+            extra_counter,
+            evt_reward_get_flg,
+            total_play_days,
+            awake_num,
+            use_support_ct,
+            beat_num,
+            aid_skill,
+            last_evt
+        )
+
+
         return res.SerializeToString()
 
     def handle_save_ingame_log(self, data: jackal_pb2.Request) -> bytes:
@@ -302,16 +398,35 @@ class PokkenBase:
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         """
-        "sessionId":"12345678",
+                "sessionId":"12345678",
+                "A":{
+                    "pcb_id": data["data"]["must"]["pcb_id"],
+                    "gip": client_ip
+                },
+        """
+        return {
+            "data": {
+                "sessionId":"12345678",
                 "A":{
                     "pcb_id": data["data"]["must"]["pcb_id"],
                     "gip": client_ip
                 },
                 "list":[]
-        """
-        return {}
+            }
+        }
 
     def handle_matching_stop_matching(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         return {}
+
+    def handle_admission_noop(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+        return {}
+    
+    def handle_admission_joinsession(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+        self.logger.info(f"Admission: JoinSession from {req_ip}")
+        return {
+            'data': {
+                "id": 12345678
+            }
+        }

@@ -17,7 +17,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + All versions
 
 + Card Maker
-    + 1.34
+    + 1.30
     + 1.35
 
 + O.N.G.E.K.I.
@@ -29,6 +29,9 @@ Games listed below have been tested and confirmed working. Only game versions ol
 
 + POKKÉN TOURNAMENT
     + Final Online
+
++ Sword Art Online Arcade (partial support)
+    + Final
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)

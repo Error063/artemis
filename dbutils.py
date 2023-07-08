@@ -84,5 +84,8 @@ if __name__ == "__main__":
 
     elif args.action == "cleanup":
         data.delete_hanging_users()
+    
+    elif args.action == "version":
+        data.show_versions()
 
     data.logger.info("Done")

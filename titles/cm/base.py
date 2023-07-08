@@ -23,19 +23,40 @@ class CardMakerBase:
         self.game = CardMakerConstants.GAME_CODE
         self.version = CardMakerConstants.VER_CARD_MAKER
 
+    @staticmethod
+    def _parse_int_ver(version: str) -> str:
+        return version.replace(".", "")[:3]
+
     def handle_get_game_connect_api_request(self, data: Dict) -> Dict:
         if self.core_cfg.server.is_develop:
             uri = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}"
         else:
             uri = f"http://{self.core_cfg.title.hostname}"
 
-        # CHUNITHM = 0, maimai = 1, ONGEKI = 2
+        # grab the dict with all games version numbers from user config
+        games_ver = self.game_cfg.version.version(self.version)
+
         return {
             "length": 3,
             "gameConnectList": [
-                {"modelKind": 0, "type": 1, "titleUri": f"{uri}/SDHD/200/"},
-                {"modelKind": 1, "type": 1, "titleUri": f"{uri}/SDEZ/120/"},
-                {"modelKind": 2, "type": 1, "titleUri": f"{uri}/SDDT/130/"},
+                # CHUNITHM
+                {
+                    "modelKind": 0,
+                    "type": 1,
+                    "titleUri": f"{uri}/SDHD/{self._parse_int_ver(games_ver['chuni'])}/",
+                },
+                # maimai DX
+                {
+                    "modelKind": 1,
+                    "type": 1,
+                    "titleUri": f"{uri}/SDEZ/{self._parse_int_ver(games_ver['maimai'])}/",
+                },
+                # ONGEKI
+                {
+                    "modelKind": 2,
+                    "type": 1,
+                    "titleUri": f"{uri}/SDDT/{self._parse_int_ver(games_ver['ongeki'])}/",
+                },
             ],
         }
 
@@ -47,12 +68,15 @@ class CardMakerBase:
             datetime.now() + timedelta(hours=4), self.date_time_format
         )
 
+        # grab the dict with all games version numbers from user config
+        games_ver = self.game_cfg.version.version(self.version)
+
         return {
             "gameSetting": {
                 "dataVersion": "1.30.00",
-                "ongekiCmVersion": "1.30.01",
-                "chuniCmVersion": "2.00.00",
-                "maimaiCmVersion": "1.20.00",
+                "ongekiCmVersion": games_ver["ongeki"],
+                "chuniCmVersion": games_ver["chuni"],
+                "maimaiCmVersion": games_ver["maimai"],
                 "requestInterval": 10,
                 "rebootStartTime": reboot_start,
                 "rebootEndTime": reboot_end,

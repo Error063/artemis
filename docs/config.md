@@ -5,6 +5,7 @@
 - `allow_unregistered_serials`: Allows games that do not have registered keychips to connect and authenticate. Disable to restrict who can connect to your server. Recomended to disable for production setups. Default `True`
 - `name`: Name for the server, used by some games in their default MOTDs. Default `ARTEMiS`
 - `is_develop`: Flags that the server is a development instance without a proxy standing in front of it. Setting to `False` tells the server not to listen for SSL, because the proxy should be handling all SSL-related things, among other things. Default `True`
+- `threading`: Flags that `reactor.run` should be called via the `Thread` standard library. May provide a speed boost, but removes the ability to kill the server via `Ctrl + C`. Default: `False`
 - `log_dir`: Directory to store logs. Server MUST have read and write permissions to this directory or you will have issues. Default `logs`
 ## Title
 - `loglevel`: Logging level for the title server. Default `info`

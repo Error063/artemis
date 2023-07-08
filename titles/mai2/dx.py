@@ -1,34 +1,28 @@
-from datetime import datetime, date, timedelta
-from typing import Any, Dict, List
-import logging
+from typing import Any, List, Dict
+from datetime import datetime, timedelta
+import pytz
+import json
+from random import randint
 
 from core.config import CoreConfig
-from titles.mai2.const import Mai2Constants
+from titles.mai2.base import Mai2Base
 from titles.mai2.config import Mai2Config
-from titles.mai2.database import Mai2Data
+from titles.mai2.const import Mai2Constants
 
 
-class Mai2Base:
+class Mai2DX(Mai2Base):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
-        self.core_config = cfg
-        self.game_config = game_cfg
-        self.version = Mai2Constants.VER_MAIMAI
-        self.data = Mai2Data(cfg)
-        self.logger = logging.getLogger("mai2")
-        self.can_deliver = False
-        self.can_usbdl = False
-        self.old_server = ""
+        super().__init__(cfg, game_cfg)
+        self.version = Mai2Constants.VER_MAIMAI_DX
         
         if self.core_config.server.is_develop and self.core_config.title.port > 0:
-            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/197/"
+            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEZ/100/"
         
         else:
-            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
-
+            self.old_server = f"http://{self.core_config.title.hostname}/SDEZ/100/"
+    
     def handle_get_game_setting_api_request(self, data: Dict):
-        return {            
-            "isDevelop": False,
-            "isAouAccession": False,
+        return {
             "gameSetting": {
                 "isMaintenance": False,
                 "requestInterval": 1800,
@@ -36,147 +30,49 @@ class Mai2Base:
                 "rebootEndTime": "2020-01-01 07:59:59.0",
                 "movieUploadLimit": 100,
                 "movieStatus": 1,
-                "movieServerUri": self.old_server + "api/movie" if self.game_config.uploads.movies else "movie",
+                "movieServerUri": self.old_server + "movie/",
                 "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
                 "oldServerUri": self.old_server + "old",
                 "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
+                "rebootInterval": 0,
             },
+            "isAouAccession": False,
         }
-
-    def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameRankingList": []}
-
-    def handle_get_game_tournament_info_api_request(self, data: Dict) -> Dict:
-        # TODO: Tournament support
-        return {"length": 0, "gameTournamentInfoList": []}
-
-    def handle_get_game_event_api_request(self, data: Dict) -> Dict:
-        events = self.data.static.get_enabled_events(self.version)
-        events_lst = []
-        if events is None or not events:
-            self.logger.warn("No enabled events, did you run the reader?")
-            return {"type": data["type"], "length": 0, "gameEventList": []}
-
-        for event in events:
-            events_lst.append(
-                {
-                    "type": event["type"],
-                    "id": event["eventId"],
-                    # actually use the startDate from the import so it
-                    # properly shows all the events when new ones are imported
-                    "startDate": datetime.strftime(
-                        event["startDate"], f"{Mai2Constants.DATE_TIME_FORMAT}.0"
-                    ),
-                    "endDate": "2099-12-31 00:00:00.0",
-                }
-            )
-
-        return {
-            "type": data["type"],
-            "length": len(events_lst),
-            "gameEventList": events_lst,
-        }
-
-    def handle_get_game_ng_music_id_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "musicIdList": []}
-
-    def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
-        game_charge_list = self.data.static.get_enabled_tickets(self.version, 1)
-        if game_charge_list is None:
-            return {"length": 0, "gameChargeList": []}
-
-        charge_list = []
-        for i, charge in enumerate(game_charge_list):
-            charge_list.append(
-                {
-                    "orderId": i,
-                    "chargeId": charge["ticketId"],
-                    "price": charge["price"],
-                    "startDate": "2017-12-05 07:00:00.0",
-                    "endDate": "2099-12-31 00:00:00.0",
-                }
-            )
-
-        return {"length": len(charge_list), "gameChargeList": charge_list}
-
-    def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
-        return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
-
-    def handle_upsert_client_upload_api_request(self, data: Dict) -> Dict:
-        return {"returnCode": 1, "apiName": "UpsertClientUploadApi"}
-
-    def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
-        return {"returnCode": 1, "apiName": "UpsertClientBookkeepingApi"}
-
-    def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
-        return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_detail(data["userId"], self.version, False)
-        w = self.data.profile.get_web_option(data["userId"], self.version)
-        if p is None or w is None:
+        p = self.data.profile.get_profile_detail(data["userId"], self.version)
+        o = self.data.profile.get_profile_option(data["userId"], self.version)
+        if p is None or o is None:
             return {}  # Register
         profile = p._asdict()
-        web_opt = w._asdict()
+        option = o._asdict()
 
         return {
             "userId": data["userId"],
             "userName": profile["userName"],
             "isLogin": False,
+            "lastGameId": profile["lastGameId"],
             "lastDataVersion": profile["lastDataVersion"],
-            "lastLoginDate": profile["lastPlayDate"],
+            "lastRomVersion": profile["lastRomVersion"],
+            "lastLoginDate": profile["lastLoginDate"],
             "lastPlayDate": profile["lastPlayDate"],
             "playerRating": profile["playerRating"],
-            "nameplateId": profile["nameplateId"],
-            "frameId": profile["frameId"],
+            "nameplateId": 0,  # Unused
             "iconId": profile["iconId"],
-            "trophyId": profile["trophyId"],
-            "dispRate": web_opt["dispRate"],  # 0: all, 1: dispRate, 2: dispDan, 3: hide
-            "dispRank": web_opt["dispRank"],
-            "dispHomeRanker": web_opt["dispHomeRanker"],
-            "dispTotalLv": web_opt["dispTotalLv"],
-            "totalLv": profile["totalLv"],
-        }
-
-    def handle_user_login_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_detail(data["userId"], self.version)
-        consec = self.data.profile.get_consec_login(data["userId"], self.version)
-
-        if profile is not None:
-            lastLoginDate = profile["lastLoginDate"]
-            loginCt = profile["playCount"]
-
-            if "regionId" in data:
-                self.data.profile.put_profile_region(data["userId"], data["regionId"])
-        else:
-            loginCt = 0
-            lastLoginDate = "2017-12-05 07:00:00.0"
-        
-        if consec is None or not consec:
-            consec_ct = 1
-        
-        else:
-            lastlogindate_ = datetime.strptime(profile["lastLoginDate"], "%Y-%m-%d %H:%M:%S.%f").timestamp()
-            today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
-            yesterday_midnight = today_midnight - 86400
-
-            if lastlogindate_ < today_midnight:
-                consec_ct = consec['logins'] + 1                
-                self.data.profile.add_consec_login(data["userId"], self.version)
-            
-            elif lastlogindate_ < yesterday_midnight:
-                consec_ct = 1
-                self.data.profile.reset_consec_login(data["userId"], self.version)
-
-            else:
-                consec_ct = consec['logins']
-        
-
-        return {
-            "returnCode": 1,
-            "lastLoginDate": lastLoginDate,
-            "loginCount": loginCt,
-            "consecutiveLoginCount": consec_ct, # Number of consecutive days we've logged in.
+            "trophyId": 0,  # Unused
+            "partnerId": profile["partnerId"],
+            "frameId": profile["frameId"],
+            "dispRate": option[
+                "dispRate"
+            ],  # 0: all/begin, 1: disprate, 2: dispDan, 3: hide, 4: end
+            "totalAwake": profile["totalAwake"],
+            "isNetMember": profile["isNetMember"],
+            "dailyBonusDate": profile["dailyBonusDate"],
+            "headPhoneVolume": option["headPhoneVolume"],
+            "isInherit": False,  # Not sure what this is or does??
+            "banState": profile["banState"]
+            if profile["banState"] is not None
+            else 0,  # New with uni+
         }
 
     def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
@@ -208,34 +104,11 @@ class Mai2Base:
         upsert = data["upsertUserAll"]
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
+            upsert["userData"][0]["isNetMember"] = 1
             upsert["userData"][0].pop("accessCode")
-            upsert["userData"][0].pop("userId")
-
             self.data.profile.put_profile_detail(
-                user_id, self.version, upsert["userData"][0], False
+                user_id, self.version, upsert["userData"][0]
             )
-        
-        if "userWebOption" in upsert and len(upsert["userWebOption"]) > 0:            
-            upsert["userWebOption"][0]["isNetMember"] = True
-            self.data.profile.put_web_option(
-                user_id, self.version, upsert["userWebOption"][0]
-            )
-
-        if "userGradeStatusList" in upsert and len(upsert["userGradeStatusList"]) > 0:
-            self.data.profile.put_grade_status(
-                user_id, upsert["userGradeStatusList"][0]
-            )
-
-        if "userBossList" in upsert and len(upsert["userBossList"]) > 0:
-            self.data.profile.put_boss_list(
-                user_id, upsert["userBossList"][0]
-            )
-
-        if "userPlaylogList" in upsert and len(upsert["userPlaylogList"]) > 0:
-            for playlog in upsert["userPlaylogList"]:
-                self.data.score.put_playlog(
-                    user_id, playlog, False
-                )
 
         if "userExtend" in upsert and len(upsert["userExtend"]) > 0:
             self.data.profile.put_profile_extend(
@@ -244,15 +117,11 @@ class Mai2Base:
 
         if "userGhost" in upsert:
             for ghost in upsert["userGhost"]:
-                self.data.profile.put_profile_ghost(user_id, self.version, ghost)
-
-        if "userRecentRatingList" in upsert:
-            self.data.profile.put_recent_rating(user_id, upsert["userRecentRatingList"])
+                self.data.profile.put_profile_extend(user_id, self.version, ghost)
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
-            upsert["userOption"][0].pop("userId")
             self.data.profile.put_profile_option(
-                user_id, self.version, upsert["userOption"][0], False
+                user_id, self.version, upsert["userOption"][0]
             )
 
         if "userRatingList" in upsert and len(upsert["userRatingList"]) > 0:
@@ -261,8 +130,9 @@ class Mai2Base:
             )
 
         if "userActivityList" in upsert and len(upsert["userActivityList"]) > 0:
-            for act in upsert["userActivityList"]:
-                self.data.profile.put_profile_activity(user_id, act)
+            for k, v in upsert["userActivityList"][0].items():
+                for act in v:
+                    self.data.profile.put_profile_activity(user_id, act)
 
         if "userChargeList" in upsert and len(upsert["userChargeList"]) > 0:
             for charge in upsert["userChargeList"]:
@@ -282,9 +152,12 @@ class Mai2Base:
 
         if "userCharacterList" in upsert and len(upsert["userCharacterList"]) > 0:
             for char in upsert["userCharacterList"]:
-                self.data.item.put_character_(
+                self.data.item.put_character(
                     user_id,
-                    char
+                    char["characterId"],
+                    char["level"],
+                    char["awakening"],
+                    char["useCount"],
                 )
 
         if "userItemList" in upsert and len(upsert["userItemList"]) > 0:
@@ -294,7 +167,7 @@ class Mai2Base:
                     int(item["itemKind"]),
                     item["itemId"],
                     item["stock"],
-                    True
+                    item["isValid"],
                 )
 
         if "userLoginBonusList" in upsert and len(upsert["userLoginBonusList"]) > 0:
@@ -320,7 +193,7 @@ class Mai2Base:
 
         if "userMusicDetailList" in upsert and len(upsert["userMusicDetailList"]) > 0:
             for music in upsert["userMusicDetailList"]:
-                self.data.score.put_best_score(user_id, music, False)
+                self.data.score.put_best_score(user_id, music)
 
         if "userCourseList" in upsert and len(upsert["userCourseList"]) > 0:
             for course in upsert["userCourseList"]:
@@ -348,7 +221,7 @@ class Mai2Base:
         return {"returnCode": 1}
 
     def handle_get_user_data_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_detail(data["userId"], self.version, False)
+        profile = self.data.profile.get_profile_detail(data["userId"], self.version)
         if profile is None:
             return
 
@@ -372,7 +245,7 @@ class Mai2Base:
         return {"userId": data["userId"], "userExtend": extend_dict}
 
     def handle_get_user_option_api_request(self, data: Dict) -> Dict:
-        options = self.data.profile.get_profile_option(data["userId"], self.version, False)
+        options = self.data.profile.get_profile_option(data["userId"], self.version)
         if options is None:
             return
 
@@ -442,25 +315,6 @@ class Mai2Base:
             "userChargeList": user_charge_list,
         }
 
-    def handle_get_user_present_api_request(self, data: Dict) -> Dict:
-        return { "userId": data.get("userId", 0), "length": 0, "userPresentList": []}
-    
-    def handle_get_transfer_friend_api_request(self, data: Dict) -> Dict:
-        return {}
-
-    def handle_get_user_present_event_api_request(self, data: Dict) -> Dict:
-        return { "userId": data.get("userId", 0), "length": 0, "userPresentEventList": []}
-    
-    def handle_get_user_boss_api_request(self, data: Dict) -> Dict:
-        b = self.data.profile.get_boss_list(data["userId"])
-        if b is None:
-            return { "userId": data.get("userId", 0), "userBossData": {}}
-        boss_lst = b._asdict()
-        boss_lst.pop("id")
-        boss_lst.pop("user")
-
-        return { "userId": data.get("userId", 0), "userBossData": boss_lst}
-
     def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
         next_idx = int(data["nextIndex"] % 10000000000)
@@ -497,8 +351,6 @@ class Mai2Base:
             tmp = chara._asdict()
             tmp.pop("id")
             tmp.pop("user")
-            tmp.pop("awakening")
-            tmp.pop("useCount")
             chara_list.append(tmp)
 
         return {"userId": data["userId"], "userCharacterList": chara_list}
@@ -531,16 +383,6 @@ class Mai2Base:
         ghost_dict.pop("version_int")
 
         return {"userId": data["userId"], "userGhost": ghost_dict}
-
-    def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
-        rating = self.data.profile.get_recent_rating(data["userId"])
-        if rating is None:
-            return
-        
-        r = rating._asdict()
-        lst = r.get("userRecentRatingList", [])
-        
-        return {"userId": data["userId"], "length": len(lst), "userRecentRatingList": lst}
 
     def handle_get_user_rating_api_request(self, data: Dict) -> Dict:
         rating = self.data.profile.get_profile_rating(data["userId"], self.version)
@@ -704,73 +546,198 @@ class Mai2Base:
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
-    
-    def handle_get_user_web_option_api_request(self, data: Dict) -> Dict:
-        w = self.data.profile.get_web_option(data["userId"], self.version)
-        if  w is None:
-            return {"userId": data["userId"], "userWebOption": {}}
-        
-        web_opt = w._asdict()        
-        web_opt.pop("id")
-        web_opt.pop("user")
-        web_opt.pop("version")
-
-        return {"userId": data["userId"], "userWebOption": web_opt}
-
-    def handle_get_user_survival_api_request(self, data: Dict) -> Dict:
-        return {"userId": data["userId"], "length": 0, "userSurvivalList": []}
-
-    def handle_get_user_grade_api_request(self, data: Dict) -> Dict:
-        g = self.data.profile.get_grade_status(data["userId"])
-        if g is None:
-            return {"userId": data["userId"], "userGradeStatus": {}, "length": 0, "userGradeList": []}
-        grade_stat = g._asdict()
-        grade_stat.pop("id")
-        grade_stat.pop("user")
-
-        return {"userId": data["userId"], "userGradeStatus": grade_stat, "length": 0, "userGradeList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        user_id = data.get("userId", 0)        
-        next_index = data.get("nextIndex", 0)
-        max_ct = data.get("maxCount", 50)
-        upper_lim = next_index + max_ct
+        songs = self.data.score.get_best_scores(data["userId"])
         music_detail_list = []
+        next_index = 0
 
-        if user_id <= 0:
-            self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
-            return {}
-        
-        songs = self.data.score.get_best_scores(user_id, is_dx=False)
-        if songs is None:
-            self.logger.debug("handle_get_user_music_api_request: get_best_scores returned None!")
-            return {
-            "userId": data["userId"],
-            "nextIndex": 0,
-            "userMusicList": [],
-        }
+        if songs is not None:
+            for song in songs:
+                tmp = song._asdict()
+                tmp.pop("id")
+                tmp.pop("user")
+                music_detail_list.append(tmp)
 
-        num_user_songs = len(songs)
+                if len(music_detail_list) == data["maxCount"]:
+                    next_index = data["maxCount"] + data["nextIndex"]
+                    break
 
-        for x in range(next_index, upper_lim):
-            if num_user_songs <= x:
-                break
-
-            tmp = songs[x]._asdict()
-            tmp.pop("id")
-            tmp.pop("user")
-            music_detail_list.append(tmp)
-
-        next_index = 0 if len(music_detail_list) < max_ct or num_user_songs == upper_lim else upper_lim
-        self.logger.info(f"Send songs {next_index}-{upper_lim} ({len(music_detail_list)}) out of {num_user_songs} for user {user_id} (next idx {next_index})")
         return {
             "userId": data["userId"],
             "nextIndex": next_index,
             "userMusicList": [{"userMusicDetailList": music_detail_list}],
         }
 
-    def handle_upload_user_portrait_api_request(self, data: Dict) -> Dict:
-        self.logger.debug(data)
+    def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
+        p = self.data.profile.get_profile_detail(data["userId"], self.version)
+        if p is None:
+            return {}
 
-    def handle_upload_user_photo_api_request(self, data: Dict) -> Dict:
-        self.logger.debug(data)
+        return {
+            "userName": p["userName"],
+            "rating": p["playerRating"],
+            # hardcode lastDataVersion for CardMaker 1.34
+            "lastDataVersion": "1.20.00",
+            "isLogin": False,
+            "isExistSellingCard": False,
+        }
+
+    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
+        # user already exists, because the preview checks that already
+        p = self.data.profile.get_profile_detail(data["userId"], self.version)
+
+        cards = self.data.card.get_user_cards(data["userId"])
+        if cards is None or len(cards) == 0:
+            # This should never happen
+            self.logger.error(
+                f"handle_get_user_data_api_request: Internal error - No cards found for user id {data['userId']}"
+            )
+            return {}
+
+        # get the dict representation of the row so we can modify values
+        user_data = p._asdict()
+
+        # remove the values the game doesn't want
+        user_data.pop("id")
+        user_data.pop("user")
+        user_data.pop("version")
+
+        return {"userId": data["userId"], "userData": user_data}
+
+    def handle_cm_login_api_request(self, data: Dict) -> Dict:
+        return {"returnCode": 1}
+
+    def handle_cm_logout_api_request(self, data: Dict) -> Dict:
+        return {"returnCode": 1}
+
+    def handle_cm_get_selling_card_api_request(self, data: Dict) -> Dict:
+        selling_cards = self.data.static.get_enabled_cards(self.version)
+        if selling_cards is None:
+            return {"length": 0, "sellingCardList": []}
+
+        selling_card_list = []
+        for card in selling_cards:
+            tmp = card._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            tmp.pop("cardName")
+            tmp.pop("enabled")
+
+            tmp["startDate"] = datetime.strftime(tmp["startDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["endDate"] = datetime.strftime(tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["noticeStartDate"] = datetime.strftime(
+                tmp["noticeStartDate"], "%Y-%m-%d %H:%M:%S"
+            )
+            tmp["noticeEndDate"] = datetime.strftime(
+                tmp["noticeEndDate"], "%Y-%m-%d %H:%M:%S"
+            )
+
+            selling_card_list.append(tmp)
+
+        return {"length": len(selling_card_list), "sellingCardList": selling_card_list}
+
+    def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
+        user_cards = self.data.item.get_cards(data["userId"])
+        if user_cards is None:
+            return {"returnCode": 1, "length": 0, "nextIndex": 0, "userCardList": []}
+
+        max_ct = data["maxCount"]
+        next_idx = data["nextIndex"]
+        start_idx = next_idx
+        end_idx = max_ct + start_idx
+
+        if len(user_cards[start_idx:]) > max_ct:
+            next_idx += max_ct
+        else:
+            next_idx = 0
+
+        card_list = []
+        for card in user_cards:
+            tmp = card._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+
+            tmp["startDate"] = datetime.strftime(tmp["startDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["endDate"] = datetime.strftime(tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            card_list.append(tmp)
+
+        return {
+            "returnCode": 1,
+            "length": len(card_list[start_idx:end_idx]),
+            "nextIndex": next_idx,
+            "userCardList": card_list[start_idx:end_idx],
+        }
+
+    def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
+        super().handle_get_user_item_api_request(data)
+
+    def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
+        characters = self.data.item.get_characters(data["userId"])
+
+        chara_list = []
+        for chara in characters:
+            chara_list.append(
+                {
+                    "characterId": chara["characterId"],
+                    # no clue why those values are even needed
+                    "point": 0,
+                    "count": 0,
+                    "level": chara["level"],
+                    "nextAwake": 0,
+                    "nextAwakePercent": 0,
+                    "favorite": False,
+                    "awakening": chara["awakening"],
+                    "useCount": chara["useCount"],
+                }
+            )
+
+        return {
+            "returnCode": 1,
+            "length": len(chara_list),
+            "userCharacterList": chara_list,
+        }
+
+    def handle_cm_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
+        return {"length": 0, "userPrintDetailList": []}
+
+    def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
+        user_id = data["userId"]
+        upsert = data["userPrintDetail"]
+
+        # set a random card serial number
+        serial_id = "".join([str(randint(0, 9)) for _ in range(20)])
+
+        user_card = upsert["userCard"]
+        self.data.item.put_card(
+            user_id,
+            user_card["cardId"],
+            user_card["cardTypeId"],
+            user_card["charaId"],
+            user_card["mapId"],
+        )
+
+        # properly format userPrintDetail for the database
+        upsert.pop("userCard")
+        upsert.pop("serialId")
+        upsert["printDate"] = datetime.strptime(upsert["printDate"], "%Y-%m-%d")
+
+        self.data.item.put_user_print_detail(user_id, serial_id, upsert)
+
+        return {
+            "returnCode": 1,
+            "orderId": 0,
+            "serialId": serial_id,
+            "startDate": "2018-01-01 00:00:00",
+            "endDate": "2038-01-01 00:00:00",
+        }
+
+    def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
+        return {
+            "returnCode": 1,
+            "orderId": 0,
+            "serialId": data["userPrintlog"]["serialId"],
+        }
+
+    def handle_cm_upsert_buy_card_api_request(self, data: Dict) -> Dict:
+        return {"returnCode": 1}
