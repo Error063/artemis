@@ -4,6 +4,7 @@ from logging.handlers import TimedRotatingFileHandler
 from twisted.web import resource
 from twisted.web.http import Request
 from datetime import datetime
+from Crypto.Cipher import Blowfish
 import pytz
 
 from core import CoreConfig
@@ -56,17 +57,21 @@ class MuchaServlet:
             self.logger.error(
                 f"Error processing mucha request {request.content.getvalue()}"
             )
-            return b""
+            return b"RESULTS=000"
 
         req = MuchaAuthRequest(req_dict)
+        self.logger.info(f"Boardauth request from {client_ip} for {req.gameVer}")        
         self.logger.debug(f"Mucha request {vars(req)}")
-        self.logger.info(f"Boardauth request from {client_ip} for {req.gameVer}")
 
         if req.gameCd not in self.mucha_registry:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
-            return b""
+            return b"RESULTS=000"
 
         # TODO: Decrypt S/N
+
+        #cipher = Blowfish.new(req.sendDate.encode(), Blowfish.MODE_ECB)
+        #sn_decrypt = cipher.decrypt(bytes.fromhex(req.serialNum))
+        #self.logger.debug(f"Decrypt SN to {sn_decrypt.hex()}")
 
         resp = MuchaAuthResponse(
             f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}"
@@ -84,21 +89,36 @@ class MuchaServlet:
             self.logger.error(
                 f"Error processing mucha request {request.content.getvalue()}"
             )
-            return b""
+            return b"RESULTS=000"
 
         req = MuchaUpdateRequest(req_dict)
+        self.logger.info(f"Updatecheck request from {client_ip} for {req.gameVer}")        
         self.logger.debug(f"Mucha request {vars(req)}")
-        self.logger.info(f"Updatecheck request from {client_ip} for {req.gameVer}")
 
         if req.gameCd not in self.mucha_registry:
             self.logger.warn(f"Unknown gameCd {req.gameCd}")
-            return b""
+            return b"RESULTS=000"
 
-        resp = MuchaUpdateResponseStub(req.gameVer)
+        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
         return self.mucha_postprocess(vars(resp))
+
+    def handle_dlstate(self, request: Request, _: Dict) -> bytes:
+        req_dict = self.mucha_preprocess(request.content.getvalue())
+        client_ip = Utils.get_ip_addr(request)
+
+        if req_dict is None:
+            self.logger.error(
+                f"Error processing mucha request {request.content.getvalue()}"
+            )
+            return b""
+        
+        req = MuchaDownloadStateRequest(req_dict)
+        self.logger.info(f"DownloadState request from {client_ip} for {req.gameCd} -> {req.updateVer}")        
+        self.logger.debug(f"request {vars(req)}")
+        return b"RESULTS=001"
 
     def mucha_preprocess(self, data: bytes) -> Optional[Dict]:
         try:
@@ -202,22 +222,57 @@ class MuchaUpdateRequest:
 
 class MuchaUpdateResponse:
     def __init__(self, game_ver: str, mucha_url: str) -> None:
-        self.RESULTS = "001"
+        self.RESULTS = "001"        
+        self.EXE_VER = game_ver
+
         self.UPDATE_VER_1 = game_ver
-        self.UPDATE_URL_1 = f"https://{mucha_url}/updUrl1/"
-        self.UPDATE_SIZE_1 = "0"
-        self.UPDATE_CRC_1 = "0000000000000000"
-        self.CHECK_URL_1 = f"https://{mucha_url}/checkUrl/"
-        self.EXE_VER_1 = game_ver
+        self.UPDATE_URL_1 = f"http://{mucha_url}/updUrl1/"
+        self.UPDATE_SIZE_1 = "20"
+
+        self.CHECK_CRC_1 = "0000000000000000"
+        self.CHECK_URL_1 = f"http://{mucha_url}/checkUrl/"
+        self.CHECK_SIZE_1 = "20"
+
         self.INFO_SIZE_1 = "0"
         self.COM_SIZE_1 = "0"
         self.COM_TIME_1 = "0"
         self.LAN_INFO_SIZE_1 = "0"
+
         self.USER_ID = ""
         self.PASSWORD = ""
 
+"""
+RESULTS
+EXE_VER
 
+UPDATE_VER_%d
+UPDATE_URL_%d
+UPDATE_SIZE_%d
+
+CHECK_CRC_%d
+CHECK_URL_%d
+CHECK_SIZE_%d
+
+INFO_SIZE_1
+COM_SIZE_1
+COM_TIME_1
+LAN_INFO_SIZE_1
+
+USER_ID
+PASSWORD
+"""
 class MuchaUpdateResponseStub:
     def __init__(self, game_ver: str) -> None:
         self.RESULTS = "001"
         self.UPDATE_VER_1 = game_ver
+
+class MuchaDownloadStateRequest:
+    def __init__(self, request: Dict) -> None:        
+        self.gameCd = request.get("gameCd", "")
+        self.updateVer = request.get("updateVer", "")
+        self.serialNum = request.get("serialNum", "")
+        self.fileSize = request.get("fileSize", "")
+        self.compFileSize = request.get("compFileSize", "")
+        self.boardId = request.get("boardId", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")

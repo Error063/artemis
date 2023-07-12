@@ -113,6 +113,13 @@ class HttpDispatcher(resource.Resource):
             action="handle_updatecheck",
             conditions=dict(method=["POST"]),
         )
+        self.map_post.connect(
+            "mucha_dlstate",
+            "/mucha/downloadstate.do",
+            controller="mucha",
+            action="handle_dlstate",
+            conditions=dict(method=["POST"]),
+        )
 
         self.map_get.connect(
             "title_get",
