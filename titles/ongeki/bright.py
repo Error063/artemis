@@ -43,15 +43,15 @@ class OngekiBright(OngekiBase):
         user_data.pop("user")
         user_data.pop("version")
 
-        # TODO: replace datetime objects with strings
-
         # add access code that we don't store
         user_data["accessCode"] = cards[0]["access_code"]
 
-        # hardcode Card Maker version for now
-        # Card Maker 1.34.00 = 1.30.01
-        # Card Maker 1.36.00 = 1.35.04
-        user_data["compatibleCmVersion"] = "1.30.01"
+        # add the compatible card maker version from config
+        card_maker_ver = self.game_cfg.version.version(self.version)
+        if card_maker_ver and card_maker_ver.get("card_maker"):
+            # Card Maker 1.30 = 1.30.01+
+            # Card Maker 1.35 = 1.35.03+
+            user_data["compatibleCmVersion"] = card_maker_ver.get("card_maker")
 
         return {"userId": data["userId"], "userData": user_data}
 
@@ -333,6 +333,8 @@ class OngekiBright(OngekiBase):
         select_point = data["selectPoint"]
 
         total_gacha_count, ceiling_gacha_count = 0, 0
+        # 0 = can still use Gacha Select, 1 = already used Gacha Select
+        use_select_point = 0
         daily_gacha_cnt, five_gacha_cnt, eleven_gacha_cnt = 0, 0, 0
         daily_gacha_date = datetime.strptime("2000-01-01", "%Y-%m-%d")
 
@@ -344,6 +346,9 @@ class OngekiBright(OngekiBase):
             daily_gacha_cnt = user_gacha["dailyGachaCnt"]
             five_gacha_cnt = user_gacha["fiveGachaCnt"]
             eleven_gacha_cnt = user_gacha["elevenGachaCnt"]
+            # if the Gacha Select has been used, make sure to keep it
+            if user_gacha["useSelectPoint"] == 1:
+                use_select_point = 1
             # parse just the year, month and date
             daily_gacha_date = user_gacha["dailyGachaDate"]
 
@@ -359,7 +364,7 @@ class OngekiBright(OngekiBase):
             totalGachaCnt=total_gacha_count + gacha_count,
             ceilingGachaCnt=ceiling_gacha_count + gacha_count,
             selectPoint=select_point,
-            useSelectPoint=0,
+            useSelectPoint=use_select_point,
             dailyGachaCnt=daily_gacha_cnt + gacha_count,
             fiveGachaCnt=five_gacha_cnt + 1 if gacha_count == 5 else five_gacha_cnt,
             elevenGachaCnt=eleven_gacha_cnt + 1

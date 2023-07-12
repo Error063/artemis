@@ -136,14 +136,3 @@ class OngekiBrightMemory(OngekiBright):
 
     def handle_get_game_music_release_state_api_request(self, data: Dict) -> Dict:
         return {"techScore": 0, "cardNum": 0}
-
-    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
-        # check for a bright memory profile
-        user_data = super().handle_cm_get_user_data_api_request(data)
-
-        # hardcode Card Maker version for now
-        # Card Maker 1.34 = 1.30.01
-        # Card Maker 1.35 = 1.35.03
-        user_data["userData"]["compatibleCmVersion"] = "1.35.03"
-
-        return user_data

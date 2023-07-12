@@ -11,6 +11,7 @@ from os import path
 from typing import Tuple
 
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.ongeki.config import OngekiConfig
 from titles.ongeki.const import OngekiConstants
 from titles.ongeki.base import OngekiBase
@@ -101,6 +102,7 @@ class OngekiServlet:
         url_split = url_path.split("/")
         internal_ver = 0
         endpoint = url_split[len(url_split) - 1]
+        client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0
             internal_ver = OngekiConstants.VER_ONGEKI
@@ -137,7 +139,10 @@ class OngekiServlet:
 
         req_data = json.loads(unzip)
 
-        self.logger.info(f"v{version} {endpoint} request - {req_data}")
+        self.logger.info(
+            f"v{version} {endpoint} request from {client_ip}"
+        )
+        self.logger.debug(req_data)
 
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
 
@@ -156,6 +161,6 @@ class OngekiServlet:
         if resp == None:
             resp = {"returnCode": 1}
 
-        self.logger.info(f"Response {resp}")
+        self.logger.debug(f"Response {resp}")
 
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
