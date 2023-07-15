@@ -89,8 +89,7 @@ class CardMakerReader(BaseReader):
         version_ids = {
             "v2_00": ChuniConstants.VER_CHUNITHM_NEW,
             "v2_05": ChuniConstants.VER_CHUNITHM_NEW_PLUS,
-            # Chunithm SUN, ignore for now
-            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1,
+            "v2_10": ChuniConstants.VER_CHUNITHM_SUN,
         }
 
         for root, dirs, files in os.walk(base_dir):
@@ -138,8 +137,7 @@ class CardMakerReader(BaseReader):
         version_ids = {
             "v2_00": ChuniConstants.VER_CHUNITHM_NEW,
             "v2_05": ChuniConstants.VER_CHUNITHM_NEW_PLUS,
-            # Chunithm SUN, ignore for now
-            "v2_10": ChuniConstants.VER_CHUNITHM_NEW_PLUS + 1,
+            "v2_10": ChuniConstants.VER_CHUNITHM_SUN,
         }
 
         for root, dirs, files in os.walk(base_dir):
@@ -224,6 +222,12 @@ class CardMakerReader(BaseReader):
 
                         enabled = (
                             True if troot.find("disable").text == "false" else False
+                        )
+
+                        # check if a date is part of the name and disable the
+                        # card if it is
+                        enabled = (
+                            False if re.search(r"\d{2}/\d{2}/\d{2}", name) else enabled
                         )
 
                         self.mai2_data.static.put_card(

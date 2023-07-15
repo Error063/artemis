@@ -5,12 +5,12 @@ import pytz
 import json
 
 from core.config import CoreConfig
-from titles.mai2.dx import Mai2DX
+from titles.mai2.splashplus import Mai2SplashPlus
 from titles.mai2.const import Mai2Constants
 from titles.mai2.config import Mai2Config
 
 
-class Mai2Universe(Mai2DX):
+class Mai2Universe(Mai2SplashPlus):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
@@ -70,13 +70,13 @@ class Mai2Universe(Mai2DX):
             tmp.pop("cardName")
             tmp.pop("enabled")
 
-            tmp["startDate"] = datetime.strftime(tmp["startDate"], "%Y-%m-%d %H:%M:%S")
-            tmp["endDate"] = datetime.strftime(tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["startDate"] = datetime.strftime(tmp["startDate"], Mai2Constants.DATE_TIME_FORMAT)
+            tmp["endDate"] = datetime.strftime(tmp["endDate"], Mai2Constants.DATE_TIME_FORMAT)
             tmp["noticeStartDate"] = datetime.strftime(
-                tmp["noticeStartDate"], "%Y-%m-%d %H:%M:%S"
+                tmp["noticeStartDate"], Mai2Constants.DATE_TIME_FORMAT
             )
             tmp["noticeEndDate"] = datetime.strftime(
-                tmp["noticeEndDate"], "%Y-%m-%d %H:%M:%S"
+                tmp["noticeEndDate"], Mai2Constants.DATE_TIME_FORMAT
             )
 
             selling_card_list.append(tmp)
