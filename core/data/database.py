@@ -27,9 +27,9 @@ class Data:
 
         if self.config.database.sha2_password:
             passwd = sha256(self.config.database.password.encode()).digest()
-            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{passwd.hex()}@{self.config.database.host}/{self.config.database.name}?charset=utf8mb4"
+            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{passwd.hex()}@{self.config.database.host}:{self.config.database.port}/{self.config.database.name}?charset=utf8mb4"
         else:
-            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{self.config.database.password}@{self.config.database.host}/{self.config.database.name}?charset=utf8mb4"
+            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{self.config.database.password}@{self.config.database.host}:{self.config.database.port}/{self.config.database.name}?charset=utf8mb4"
 
         if Data.engine is None:
             Data.engine = create_engine(self.__url, pool_recycle=3600)
@@ -94,7 +94,7 @@ class Data:
                     game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
-                self.base.set_schema_ver(
+                self.base.touch_schema_ver(
                     game_mod.current_schema_version, game_mod.game_codes[0]
                 )
 

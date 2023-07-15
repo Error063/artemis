@@ -102,6 +102,18 @@ class BaseData:
             return None
 
         return row["version"]
+    
+    def touch_schema_ver(self, ver: int, game: str = "CORE") -> Optional[int]:
+        sql = insert(schema_ver).values(game=game, version=ver)
+        conflict = sql.on_duplicate_key_update(version=schema_ver.c.version)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.error(
+                f"Failed to update schema version for game {game} (v{ver})"
+            )
+            return None
+        return result.lastrowid
 
     def set_schema_ver(self, ver: int, game: str = "CORE") -> Optional[int]:
         sql = insert(schema_ver).values(game=game, version=ver)
