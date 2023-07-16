@@ -221,5 +221,5 @@ class WaccaConstants:
                 cls.Region.YAMANASHI,
                 cls.Region.WAKAYAMA,
             ][region]
-        except:
+        except Exception:
             return None

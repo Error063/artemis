@@ -130,7 +130,7 @@ class FE_Gate(FE_Base):
         if b"e" in request.args:
             try:
                 err = int(request.args[b"e"][0].decode())
-            except:
+            except Exception:
                 err = 0
 
         else:

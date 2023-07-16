@@ -197,7 +197,7 @@ class CxbBase:
             v_profile = self.data.profile.get_profile_index(0, uid, self.version)
             v_profile_data = v_profile["data"]
             versionindex.append(int(v_profile_data["appVersion"]))
-        except:
+        except Exception:
             versionindex.append("10400")
 
     def handle_action_loadrange_request(self, data: Dict) -> Dict:
@@ -286,7 +286,7 @@ class CxbBase:
             # REV Omnimix Version Fetcher
             gameversion = data["saveindex"]["data"][0][2]
             self.logger.warning(f"Game Version is {gameversion}")
-        except:
+        except Exception:
             pass
 
         if "10205" in gameversion:
@@ -348,7 +348,7 @@ class CxbBase:
         # Sunrise
         try:
             profileIndex = save_data["index"].index("0")
-        except:
+        except Exception:
             return {"data": ""}  # Maybe
 
         profile = json.loads(save_data["data"][profileIndex])
@@ -496,7 +496,7 @@ class CxbBase:
                         score=int(rid["sc"][0]),
                         clear=rid["clear"],
                     )
-                except:
+                except Exception:
                     self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
@@ -514,7 +514,7 @@ class CxbBase:
                         score=int(rid["sc"][0]),
                         clear=0,
                     )
-                except:
+                except Exception:
                     self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),

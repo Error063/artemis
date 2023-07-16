@@ -644,7 +644,7 @@ class ChuniBase:
                 upsert["userData"][0]["userName"] = self.read_wtf8(
                     upsert["userData"][0]["userName"]
                 )
-            except:
+            except Exception:
                 pass
 
             self.data.profile.put_profile_data(

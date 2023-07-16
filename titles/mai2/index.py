@@ -113,13 +113,13 @@ class Mai2Servlet:
         if self.game_cfg.uploads.photos and self.game_cfg.uploads.photos_dir and not path.exists(self.game_cfg.uploads.photos_dir):
             try:
                 mkdir(self.game_cfg.uploads.photos_dir)
-            except:
+            except Exception:
                 self.logger.error(f"Failed to make photo upload directory at {self.game_cfg.uploads.photos_dir}")
 
         if self.game_cfg.uploads.movies and self.game_cfg.uploads.movies_dir and not path.exists(self.game_cfg.uploads.movies_dir):
             try:
                 mkdir(self.game_cfg.uploads.movies_dir)
-            except:
+            except Exception:
                 self.logger.error(f"Failed to make movie upload directory at {self.game_cfg.uploads.movies_dir}")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:

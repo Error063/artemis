@@ -68,10 +68,13 @@ class MuchaServlet:
             return b"RESULTS=000"
 
         # TODO: Decrypt S/N
+        b_key = b""
+        for x in range(8):
+            b_key += req.sendDate[(x - 1) & 7].encode()
 
-        #cipher = Blowfish.new(req.sendDate.encode(), Blowfish.MODE_ECB)
-        #sn_decrypt = cipher.decrypt(bytes.fromhex(req.serialNum))
-        #self.logger.debug(f"Decrypt SN to {sn_decrypt.hex()}")
+        cipher = Blowfish.new(b_key, Blowfish.MODE_ECB)
+        sn_decrypt = cipher.decrypt(bytes.fromhex(req.serialNum))
+        self.logger.debug(f"Decrypt SN to {sn_decrypt.hex()}")
 
         resp = MuchaAuthResponse(
             f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}"
@@ -131,7 +134,7 @@ class MuchaServlet:
 
             return ret
 
-        except:
+        except Exception:
             self.logger.error(f"Error processing mucha request {data}")
             return None
 
@@ -143,7 +146,7 @@ class MuchaServlet:
 
             return urlencode.encode()
 
-        except:
+        except Exception:
             self.logger.error("Error processing mucha response")
             return None
 
