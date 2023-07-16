@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Any, Dict, List
 import logging
 from base64 import b64decode
-from os import path, stat
+from os import path, stat, remove
+from PIL import ImageFile
 
 from core.config import CoreConfig
 from titles.mai2.const import Mai2Constants
@@ -91,7 +92,7 @@ class Mai2Base:
         for i, charge in enumerate(game_charge_list):
             charge_list.append(
                 {
-                    "orderId": i,
+                    "orderId": i + 1,
                     "chargeId": charge["ticketId"],
                     "price": charge["price"],
                     "startDate": "2017-12-05 07:00:00.0",
@@ -812,27 +813,52 @@ class Mai2Base:
             self.logger.warn(f"Photo too large ({div_len} * 10240 = {div_len * 10240} bytes)")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
+        ret_code = order_id + 1
         photo_chunk = b64decode(div_data)
 
         if len(photo_chunk) > 10240 or (len(photo_chunk) < 10240 and div_num + 1 != div_len):
             self.logger.warn(f"Incorrect data size after decoding (Expected 10240, got {len(photo_chunk)})")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        out_name = f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}"
 
-        if not path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg") and div_num != 0:
+        if not path.exists(f"{out_name}.bin") and div_num != 0:
             self.logger.warn(f"Out of order photo upload (div_num {div_num})")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
     
-        if path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg") and div_num == 0:
+        if path.exists(f"{out_name}.bin") and div_num == 0:
             self.logger.warn(f"Duplicate file upload")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
-        elif path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg"):
-            fstats = stat(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg")
+        elif path.exists(f"{out_name}.bin"):
+            fstats = stat(f"{out_name}.bin")
             if fstats.st_size != 10240 * div_num:
                 self.logger.warn(f"Out of order photo upload (trying to upload div {div_num}, expected div {fstats.st_size / 10240} for file sized {fstats.st_size} bytes)")
                 return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
-            
-        with open(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg", "ab") as f:
-            f.write(photo_chunk)
+        
+        try:
+            with open(f"{out_name}.bin", "ab") as f:
+                f.write(photo_chunk)
+        
+        except Exception:
+            self.logger.error(f"Failed writing to {out_name}.bin")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
 
-        return {'returnCode': order_id + 1, 'apiName': 'UploadUserPhotoApi'}
+        if div_num + 1 == div_len and path.exists(f"{out_name}.bin"):
+            try:
+                p = ImageFile.Parser()
+                with open(f"{out_name}.bin", "rb") as f:
+                    p.feed(f.read())
+                
+                im = p.close()
+                im.save(f"{out_name}.jpeg")
+            except Exception:
+                self.logger.error(f"File {out_name}.bin failed image validation")
+            
+            try:
+                remove(f"{out_name}.bin")
+            
+            except Exception:
+                self.logger.error(f"Failed to delete {out_name}.bin, please remove it manually")
+
+        return {'returnCode': ret_code, 'apiName': 'UploadUserPhotoApi'}
