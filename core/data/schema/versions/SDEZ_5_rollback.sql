@@ -51,7 +51,7 @@ ALTER TABLE mai2_item_favorite MODIFY COLUMN itemKind int(11) NOT NULL;
 
 ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN seasonId int(11) NOT NULL;
 ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN point int(11) NOT NULL;
-ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN rank int(11) NOT NULL;
+ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN `rank` int(11) NOT NULL;
 ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN rewardGet tinyint(1) NOT NULL;
 ALTER TABLE mai2_item_friend_season_ranking MODIFY COLUMN userName varchar(8) NOT NULL;
 

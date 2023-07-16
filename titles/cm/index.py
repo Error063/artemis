@@ -129,6 +129,6 @@ class CardMakerServlet:
         if resp is None:
             resp = {"returnCode": 1}
 
-        self.logger.info(f"Response {resp}")
+        self.logger.debug(f"Response {resp}")
 
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
