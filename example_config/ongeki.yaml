@@ -29,3 +29,9 @@ gachas:
     - 1156
     - 1163
     - 1164
+
+version:
+  6:
+    card_maker: 1.30.01
+  7:
+    card_maker: 1.35.03

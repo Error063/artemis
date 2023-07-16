@@ -16,6 +16,7 @@ events = Table(
     Column("eventId", Integer),
     Column("type", Integer),
     Column("name", String(255)),
+    Column("startDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", "type", name="ongeki_static_events_uk"),
     mysql_charset="utf8mb4",

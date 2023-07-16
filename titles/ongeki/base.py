@@ -142,7 +142,7 @@ class OngekiBase:
 
     def handle_get_game_point_api_request(self, data: Dict) -> Dict:
         """
-        Sets the GP ammount for A and B sets for 1 - 3 crdits
+        Sets the GP amount for A and B sets for 1 - 3 credits
         """
         return {
             "length": 6,
@@ -155,13 +155,13 @@ class OngekiBase:
                 },
                 {
                     "type": 1,
-                    "cost": 200,
+                    "cost": 230,
                     "startDate": "2000-01-01 05:00:00.0",
                     "endDate": "2099-01-01 05:00:00.0",
                 },
                 {
                     "type": 2,
-                    "cost": 300,
+                    "cost": 370,
                     "startDate": "2000-01-01 05:00:00.0",
                     "endDate": "2099-01-01 05:00:00.0",
                 },
@@ -256,7 +256,11 @@ class OngekiBase:
                 {
                     "type": event["type"],
                     "id": event["eventId"],
-                    "startDate": "2017-12-05 07:00:00.0",
+                    # actually use the startDate from the import so it
+                    # properly shows all the events when new ones are imported
+                    "startDate": datetime.strftime(
+                        event["startDate"], "%Y-%m-%d %H:%M:%S.0"
+                    ),
                     "endDate": "2099-12-31 00:00:00.0",
                 }
             )
@@ -268,7 +272,7 @@ class OngekiBase:
         }
 
     def handle_get_game_id_list_api_request(self, data: Dict) -> Dict:
-        game_idlist: list[str, Any] = []  # 1 to 230 & 8000 to 8050
+        game_idlist: List[str, Any] = []  # 1 to 230 & 8000 to 8050
 
         if data["type"] == 1:
             for i in range(1, 231):
@@ -443,7 +447,7 @@ class OngekiBase:
                 "userItemList": [],
             }
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(data["nextIndex"] % 10000000000, len(p)):
             if len(items) > data["maxCount"]:
                 break
@@ -560,7 +564,11 @@ class OngekiBase:
     def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
         recent_rating = self.data.profile.get_profile_recent_rating(data["userId"])
         if recent_rating is None:
-            return {}
+            return {
+                "userId": data["userId"],
+                "length": 0,
+                "userRecentRatingList": [],
+            }
 
         userRecentRatingList = recent_rating["recentRating"]
 

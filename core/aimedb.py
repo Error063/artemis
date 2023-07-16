@@ -63,7 +63,7 @@ class AimedbProtocol(Protocol):
 
         try:
             decrypted = cipher.decrypt(data)
-        except:
+        except Exception:
             self.logger.error(f"Failed to decrypt {data.hex()}")
             return None
 

@@ -1,5 +1,12 @@
 from typing import Dict, List, Optional
-from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
+from sqlalchemy import (
+    Table,
+    Column,
+    UniqueConstraint,
+    PrimaryKeyConstraint,
+    and_,
+    delete,
+)
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.schema import ForeignKey
@@ -203,8 +210,141 @@ login_bonus = Table(
     mysql_charset="utf8mb4",
 )
 
+favorite = Table(
+    "chuni_item_favorite",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("favId", Integer, nullable=False),
+    Column("favKind", Integer, nullable=False, server_default="1"),
+    UniqueConstraint("version", "user", "favId", name="chuni_item_favorite_uk"),
+    mysql_charset="utf8mb4",
+)
+
+matching = Table(
+    "chuni_item_matching",
+    metadata,
+    Column("roomId", Integer, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("restMSec", Integer, nullable=False, server_default="60"),
+    Column("isFull", Boolean, nullable=False, server_default="0"),
+    PrimaryKeyConstraint("roomId", "version", name="chuni_item_matching_pk"),
+    Column("matchingMemberInfoList", JSON, nullable=False),
+    mysql_charset="utf8mb4",
+)
+
 
 class ChuniItemData(BaseData):
+    def get_oldest_free_matching(self, version: int) -> Optional[Row]:
+        sql = matching.select(
+            and_(
+                matching.c.version == version,
+                matching.c.isFull == False
+            )
+        ).order_by(matching.c.roomId.asc())
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_newest_matching(self, version: int) -> Optional[Row]:
+        sql = matching.select(
+            and_(
+                matching.c.version == version
+            )
+        ).order_by(matching.c.roomId.desc())
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_all_matchings(self, version: int) -> Optional[List[Row]]:
+        sql = matching.select(
+            and_(
+                matching.c.version == version
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def get_matching(self, version: int, room_id: int) -> Optional[Row]:
+        sql = matching.select(
+            and_(matching.c.version == version, matching.c.roomId == room_id)
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def put_matching(
+        self,
+        version: int,
+        room_id: int,
+        matching_member_info_list: List,
+        user_id: int = None,
+        rest_sec: int = 60,
+        is_full: bool = False
+    ) -> Optional[int]:
+        sql = insert(matching).values(
+            roomId=room_id,
+            version=version,
+            restMSec=rest_sec,
+            user=user_id,
+            isFull=is_full,
+            matchingMemberInfoList=matching_member_info_list,
+        )
+
+        conflict = sql.on_duplicate_key_update(
+            restMSec=rest_sec, matchingMemberInfoList=matching_member_info_list
+        )
+
+        result = self.execute(conflict)
+        if result is None:
+            return None
+        return result.lastrowid
+
+    def delete_matching(self, version: int, room_id: int):
+        sql = delete(matching).where(
+            and_(matching.c.roomId == room_id, matching.c.version == version)
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.lastrowid
+
+    def get_all_favorites(
+        self, user_id: int, version: int, fav_kind: int = 1
+    ) -> Optional[List[Row]]:
+        sql = favorite.select(
+            and_(
+                favorite.c.version == version,
+                favorite.c.user == user_id,
+                favorite.c.favKind == fav_kind,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
     def put_login_bonus(
         self, user_id: int, version: int, preset_id: int, **login_bonus_data
     ) -> Optional[int]:

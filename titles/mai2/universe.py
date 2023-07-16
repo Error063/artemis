@@ -5,12 +5,12 @@ import pytz
 import json
 
 from core.config import CoreConfig
-from titles.mai2.base import Mai2Base
+from titles.mai2.splashplus import Mai2SplashPlus
 from titles.mai2.const import Mai2Constants
 from titles.mai2.config import Mai2Config
 
 
-class Mai2Universe(Mai2Base):
+class Mai2Universe(Mai2SplashPlus):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
@@ -70,13 +70,13 @@ class Mai2Universe(Mai2Base):
             tmp.pop("cardName")
             tmp.pop("enabled")
 
-            tmp["startDate"] = datetime.strftime(tmp["startDate"], "%Y-%m-%d %H:%M:%S")
-            tmp["endDate"] = datetime.strftime(tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["startDate"] = datetime.strftime(tmp["startDate"], Mai2Constants.DATE_TIME_FORMAT)
+            tmp["endDate"] = datetime.strftime(tmp["endDate"], Mai2Constants.DATE_TIME_FORMAT)
             tmp["noticeStartDate"] = datetime.strftime(
-                tmp["noticeStartDate"], "%Y-%m-%d %H:%M:%S"
+                tmp["noticeStartDate"], Mai2Constants.DATE_TIME_FORMAT
             )
             tmp["noticeEndDate"] = datetime.strftime(
-                tmp["noticeEndDate"], "%Y-%m-%d %H:%M:%S"
+                tmp["noticeEndDate"], Mai2Constants.DATE_TIME_FORMAT
             )
 
             selling_card_list.append(tmp)
@@ -104,8 +104,12 @@ class Mai2Universe(Mai2Base):
             tmp.pop("id")
             tmp.pop("user")
 
-            tmp["startDate"] = datetime.strftime(tmp["startDate"], "%Y-%m-%d %H:%M:%S")
-            tmp["endDate"] = datetime.strftime(tmp["endDate"], "%Y-%m-%d %H:%M:%S")
+            tmp["startDate"] = datetime.strftime(
+                tmp["startDate"], Mai2Constants.DATE_TIME_FORMAT
+            )
+            tmp["endDate"] = datetime.strftime(
+                tmp["endDate"], Mai2Constants.DATE_TIME_FORMAT
+            )
             card_list.append(tmp)
 
         return {
@@ -154,6 +158,10 @@ class Mai2Universe(Mai2Base):
         # set a random card serial number
         serial_id = "".join([str(randint(0, 9)) for _ in range(20)])
 
+        # calculate start and end date of the card
+        start_date = datetime.utcnow()
+        end_date = datetime.utcnow() + timedelta(days=15)
+
         user_card = upsert["userCard"]
         self.data.item.put_card(
             user_id,
@@ -161,7 +169,25 @@ class Mai2Universe(Mai2Base):
             user_card["cardTypeId"],
             user_card["charaId"],
             user_card["mapId"],
+            # add the correct start date and also the end date in 15 days
+            start_date,
+            end_date,
         )
+
+        # get the profile extend to save the new bought card
+        extend = self.data.profile.get_profile_extend(user_id, self.version)
+        if extend:
+            extend = extend._asdict()
+            # parse the selectedCardList
+            # 6 = Freedom Pass, 4 = Gold Pass (cardTypeId)
+            selected_cards: List = extend["selectedCardList"]
+
+            # if no pass is already added, add the corresponding pass
+            if not user_card["cardTypeId"] in selected_cards:
+                selected_cards.insert(0, user_card["cardTypeId"])
+
+            extend["selectedCardList"] = selected_cards
+            self.data.profile.put_profile_extend(user_id, self.version, extend)
 
         # properly format userPrintDetail for the database
         upsert.pop("userCard")
@@ -174,8 +200,8 @@ class Mai2Universe(Mai2Base):
             "returnCode": 1,
             "orderId": 0,
             "serialId": serial_id,
-            "startDate": "2018-01-01 00:00:00",
-            "endDate": "2038-01-01 00:00:00",
+            "startDate": datetime.strftime(start_date, Mai2Constants.DATE_TIME_FORMAT),
+            "endDate": datetime.strftime(end_date, Mai2Constants.DATE_TIME_FORMAT),
         }
 
     def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:

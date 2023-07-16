@@ -18,10 +18,11 @@ character = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("characterId", Integer, nullable=False),
-    Column("level", Integer, nullable=False, server_default="1"),
-    Column("awakening", Integer, nullable=False, server_default="0"),
-    Column("useCount", Integer, nullable=False, server_default="0"),
+    Column("characterId", Integer),
+    Column("level", Integer),
+    Column("awakening", Integer),
+    Column("useCount", Integer),
+    Column("point", Integer),
     UniqueConstraint("user", "characterId", name="mai2_item_character_uk"),
     mysql_charset="utf8mb4",
 )
@@ -35,12 +36,12 @@ card = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("cardId", Integer, nullable=False),
-    Column("cardTypeId", Integer, nullable=False),
-    Column("charaId", Integer, nullable=False),
-    Column("mapId", Integer, nullable=False),
-    Column("startDate", TIMESTAMP, server_default="2018-01-01 00:00:00.0"),
-    Column("endDate", TIMESTAMP, server_default="2038-01-01 00:00:00.0"),
+    Column("cardId", Integer),
+    Column("cardTypeId", Integer),
+    Column("charaId", Integer),
+    Column("mapId", Integer),
+    Column("startDate", TIMESTAMP, server_default=func.now()),
+    Column("endDate", TIMESTAMP),
     UniqueConstraint("user", "cardId", "cardTypeId", name="mai2_item_card_uk"),
     mysql_charset="utf8mb4",
 )
@@ -54,10 +55,10 @@ item = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("itemId", Integer, nullable=False),
-    Column("itemKind", Integer, nullable=False),
-    Column("stock", Integer, nullable=False, server_default="1"),
-    Column("isValid", Boolean, nullable=False, server_default="1"),
+    Column("itemId", Integer),
+    Column("itemKind", Integer),
+    Column("stock", Integer),
+    Column("isValid", Boolean),
     UniqueConstraint("user", "itemId", "itemKind", name="mai2_item_item_uk"),
     mysql_charset="utf8mb4",
 )
@@ -71,11 +72,11 @@ map = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("mapId", Integer, nullable=False),
-    Column("distance", Integer, nullable=False),
-    Column("isLock", Boolean, nullable=False, server_default="0"),
-    Column("isClear", Boolean, nullable=False, server_default="0"),
-    Column("isComplete", Boolean, nullable=False, server_default="0"),
+    Column("mapId", Integer),
+    Column("distance", Integer),
+    Column("isLock", Boolean),
+    Column("isClear", Boolean),
+    Column("isComplete", Boolean),
     UniqueConstraint("user", "mapId", name="mai2_item_map_uk"),
     mysql_charset="utf8mb4",
 )
@@ -89,10 +90,10 @@ login_bonus = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("bonusId", Integer, nullable=False),
-    Column("point", Integer, nullable=False),
-    Column("isCurrent", Boolean, nullable=False, server_default="0"),
-    Column("isComplete", Boolean, nullable=False, server_default="0"),
+    Column("bonusId", Integer),
+    Column("point", Integer),
+    Column("isCurrent", Boolean),
+    Column("isComplete", Boolean),
     UniqueConstraint("user", "bonusId", name="mai2_item_login_bonus_uk"),
     mysql_charset="utf8mb4",
 )
@@ -106,12 +107,12 @@ friend_season_ranking = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("seasonId", Integer, nullable=False),
-    Column("point", Integer, nullable=False),
-    Column("rank", Integer, nullable=False),
-    Column("rewardGet", Boolean, nullable=False),
-    Column("userName", String(8), nullable=False),
-    Column("recordDate", TIMESTAMP, nullable=False),
+    Column("seasonId", Integer),
+    Column("point", Integer),
+    Column("rank", Integer),
+    Column("rewardGet", Boolean),
+    Column("userName", String(8)),
+    Column("recordDate", TIMESTAMP),
     UniqueConstraint(
         "user", "seasonId", "userName", name="mai2_item_friend_season_ranking_uk"
     ),
@@ -127,7 +128,7 @@ favorite = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("itemKind", Integer, nullable=False),
+    Column("itemKind", Integer),
     Column("itemIdList", JSON),
     UniqueConstraint("user", "itemKind", name="mai2_item_favorite_uk"),
     mysql_charset="utf8mb4",
@@ -142,10 +143,10 @@ charge = Table(
         ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
         nullable=False,
     ),
-    Column("chargeId", Integer, nullable=False),
-    Column("stock", Integer, nullable=False),
-    Column("purchaseDate", String(255), nullable=False),
-    Column("validDate", String(255), nullable=False),
+    Column("chargeId", Integer),
+    Column("stock", Integer),
+    Column("purchaseDate", String(255)),
+    Column("validDate", String(255)),
     UniqueConstraint("user", "chargeId", name="mai2_item_charge_uk"),
     mysql_charset="utf8mb4",
 )
@@ -161,11 +162,11 @@ print_detail = Table(
     ),
     Column("orderId", Integer),
     Column("printNumber", Integer),
-    Column("printDate", TIMESTAMP, nullable=False, server_default=func.now()),
-    Column("serialId", String(20), nullable=False),
-    Column("placeId", Integer, nullable=False),
-    Column("clientId", String(11), nullable=False),
-    Column("printerSerialId", String(20), nullable=False),
+    Column("printDate", TIMESTAMP, server_default=func.now()),
+    Column("serialId", String(20)),
+    Column("placeId", Integer),
+    Column("clientId", String(11)),
+    Column("printerSerialId", String(20)),
     Column("cardRomVersion", Integer),
     Column("isHolograph", Boolean, server_default="1"),
     Column("printOption1", Boolean, server_default="0"),
@@ -332,6 +333,19 @@ class Mai2ItemData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+    
+    def put_character_(self, user_id: int, char_data: Dict) -> Optional[int]:
+        char_data["user"] = user_id
+        sql = insert(character).values(**char_data)
+
+        conflict = sql.on_duplicate_key_update(**char_data)
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warn(
+                f"put_character_: failed to insert item! user_id: {user_id}"
+            )
+            return None
+        return result.lastrowid
 
     def put_character(
         self,
@@ -444,6 +458,8 @@ class Mai2ItemData(BaseData):
         card_kind: int,
         chara_id: int,
         map_id: int,
+        start_date: datetime,
+        end_date: datetime,
     ) -> Optional[Row]:
         sql = insert(card).values(
             user=user_id,
@@ -451,9 +467,13 @@ class Mai2ItemData(BaseData):
             cardTypeId=card_kind,
             charaId=chara_id,
             mapId=map_id,
+            startDate=start_date,
+            endDate=end_date,
         )
 
-        conflict = sql.on_duplicate_key_update(charaId=chara_id, mapId=map_id)
+        conflict = sql.on_duplicate_key_update(
+            charaId=chara_id, mapId=map_id, startDate=start_date, endDate=end_date
+        )
 
         result = self.execute(conflict)
         if result is None:

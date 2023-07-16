@@ -8,12 +8,12 @@ from titles.wacca.handlers.helpers import Notice
 class GetNewsResponseV1(BaseResponse):
     def __init__(self) -> None:
         super().__init__()
-        self.notices: list[Notice] = []
-        self.copywrightListings: list[str] = []
-        self.stoppedSongs: list[int] = []
-        self.stoppedJackets: list[int] = []
-        self.stoppedMovies: list[int] = []
-        self.stoppedIcons: list[int] = []
+        self.notices: List[Notice] = []
+        self.copywrightListings: List[str] = []
+        self.stoppedSongs: List[int] = []
+        self.stoppedJackets: List[int] = []
+        self.stoppedMovies: List[int] = []
+        self.stoppedIcons: List[int] = []
 
     def make(self) -> Dict:
         note = []
@@ -34,7 +34,7 @@ class GetNewsResponseV1(BaseResponse):
 
 
 class GetNewsResponseV2(GetNewsResponseV1):
-    stoppedProducts: list[int] = []
+    stoppedProducts: List[int] = []
 
     def make(self) -> Dict:
         super().make()
@@ -44,8 +44,8 @@ class GetNewsResponseV2(GetNewsResponseV1):
 
 
 class GetNewsResponseV3(GetNewsResponseV2):
-    stoppedNavs: list[int] = []
-    stoppedNavVoices: list[int] = []
+    stoppedNavs: List[int] = []
+    stoppedNavVoices: List[int] = []
 
     def make(self) -> Dict:
         super().make()

@@ -123,5 +123,5 @@ class CxbReader(BaseReader):
                             genre,
                             int(row["easy"].replace("Easy ", "").replace("N/A", "0")),
                         )
-        except:
+        except Exception:
             self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")

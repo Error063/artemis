@@ -1,6 +1,9 @@
-from datetime import datetime, date, timedelta
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any, Dict, List
 import logging
+from base64 import b64decode
+from os import path, stat, remove
+from PIL import ImageFile
 
 from core.config import CoreConfig
 from titles.mai2.const import Mai2Constants
@@ -12,33 +15,35 @@ class Mai2Base:
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         self.core_config = cfg
         self.game_config = game_cfg
-        self.game = Mai2Constants.GAME_CODE
-        self.version = Mai2Constants.VER_MAIMAI_DX
+        self.version = Mai2Constants.VER_MAIMAI
         self.data = Mai2Data(cfg)
         self.logger = logging.getLogger("mai2")
+        self.can_deliver = False
+        self.can_usbdl = False
+        self.old_server = ""
+        
+        if self.core_config.server.is_develop and self.core_config.title.port > 0:
+            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/197/"
+        
+        else:
+            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
-        reboot_start = date.strftime(
-            datetime.now() + timedelta(hours=3), Mai2Constants.DATE_TIME_FORMAT
-        )
-        reboot_end = date.strftime(
-            datetime.now() + timedelta(hours=4), Mai2Constants.DATE_TIME_FORMAT
-        )
-        return {
+        return {            
+            "isDevelop": False,
+            "isAouAccession": False,
             "gameSetting": {
-                "isMaintenance": "false",
-                "requestInterval": 10,
-                "rebootStartTime": reboot_start,
-                "rebootEndTime": reboot_end,
-                "movieUploadLimit": 10000,
-                "movieStatus": 0,
-                "movieServerUri": "",
-                "deliverServerUri": "",
-                "oldServerUri": "",
-                "usbDlServerUri": "",
-                "rebootInterval": 0,
+                "isMaintenance": False,
+                "requestInterval": 1800,
+                "rebootStartTime": "2020-01-01 07:00:00.0",
+                "rebootEndTime": "2020-01-01 07:59:59.0",
+                "movieUploadLimit": 100,
+                "movieStatus": 1,
+                "movieServerUri": self.old_server + "api/movie" if self.game_config.uploads.movies else "movie",
+                "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
+                "oldServerUri": self.old_server + "old",
+                "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
             },
-            "isAouAccession": "true",
         }
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
@@ -51,7 +56,7 @@ class Mai2Base:
     def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         events = self.data.static.get_enabled_events(self.version)
         events_lst = []
-        if events is None:
+        if events is None or not events:
             self.logger.warn("No enabled events, did you run the reader?")
             return {"type": data["type"], "length": 0, "gameEventList": []}
 
@@ -87,7 +92,7 @@ class Mai2Base:
         for i, charge in enumerate(game_charge_list):
             charge_list.append(
                 {
-                    "orderId": i,
+                    "orderId": i + 1,
                     "chargeId": charge["ticketId"],
                     "price": charge["price"],
                     "startDate": "2017-12-05 07:00:00.0",
@@ -110,43 +115,35 @@ class Mai2Base:
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_detail(data["userId"], self.version)
-        o = self.data.profile.get_profile_option(data["userId"], self.version)
-        if p is None or o is None:
+        p = self.data.profile.get_profile_detail(data["userId"], self.version, False)
+        w = self.data.profile.get_web_option(data["userId"], self.version)
+        if p is None or w is None:
             return {}  # Register
         profile = p._asdict()
-        option = o._asdict()
+        web_opt = w._asdict()
 
         return {
             "userId": data["userId"],
             "userName": profile["userName"],
             "isLogin": False,
-            "lastGameId": profile["lastGameId"],
             "lastDataVersion": profile["lastDataVersion"],
-            "lastRomVersion": profile["lastRomVersion"],
-            "lastLoginDate": profile["lastLoginDate"],
+            "lastLoginDate": profile["lastPlayDate"],
             "lastPlayDate": profile["lastPlayDate"],
             "playerRating": profile["playerRating"],
-            "nameplateId": 0,  # Unused
-            "iconId": profile["iconId"],
-            "trophyId": 0,  # Unused
-            "partnerId": profile["partnerId"],
+            "nameplateId": profile["nameplateId"],
             "frameId": profile["frameId"],
-            "dispRate": option[
-                "dispRate"
-            ],  # 0: all/begin, 1: disprate, 2: dispDan, 3: hide, 4: end
-            "totalAwake": profile["totalAwake"],
-            "isNetMember": profile["isNetMember"],
-            "dailyBonusDate": profile["dailyBonusDate"],
-            "headPhoneVolume": option["headPhoneVolume"],
-            "isInherit": False,  # Not sure what this is or does??
-            "banState": profile["banState"]
-            if profile["banState"] is not None
-            else 0,  # New with uni+
+            "iconId": profile["iconId"],
+            "trophyId": profile["trophyId"],
+            "dispRate": web_opt["dispRate"],  # 0: all, 1: dispRate, 2: dispDan, 3: hide
+            "dispRank": web_opt["dispRank"],
+            "dispHomeRanker": web_opt["dispHomeRanker"],
+            "dispTotalLv": web_opt["dispTotalLv"],
+            "totalLv": profile["totalLv"],
         }
 
     def handle_user_login_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_detail(data["userId"], self.version)
+        consec = self.data.profile.get_consec_login(data["userId"], self.version)
 
         if profile is not None:
             lastLoginDate = profile["lastLoginDate"]
@@ -157,13 +154,32 @@ class Mai2Base:
         else:
             loginCt = 0
             lastLoginDate = "2017-12-05 07:00:00.0"
+        
+        if consec is None or not consec:
+            consec_ct = 1
+        
+        else:
+            lastlogindate_ = datetime.strptime(profile["lastLoginDate"], "%Y-%m-%d %H:%M:%S.%f").timestamp()
+            today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+            yesterday_midnight = today_midnight - 86400
+
+            if lastlogindate_ < today_midnight:
+                consec_ct = consec['logins'] + 1                
+                self.data.profile.add_consec_login(data["userId"], self.version)
+            
+            elif lastlogindate_ < yesterday_midnight:
+                consec_ct = 1
+                self.data.profile.reset_consec_login(data["userId"], self.version)
+
+            else:
+                consec_ct = consec['logins']
+        
 
         return {
             "returnCode": 1,
             "lastLoginDate": lastLoginDate,
             "loginCount": loginCt,
-            "consecutiveLoginCount": 0,  # We don't really have a way to track this...
-            "loginId": loginCt,  # Used with the playlog!
+            "consecutiveLoginCount": consec_ct, # Number of consecutive days we've logged in.
         }
 
     def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
@@ -195,11 +211,34 @@ class Mai2Base:
         upsert = data["upsertUserAll"]
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
-            upsert["userData"][0]["isNetMember"] = 1
             upsert["userData"][0].pop("accessCode")
+            upsert["userData"][0].pop("userId")
+
             self.data.profile.put_profile_detail(
-                user_id, self.version, upsert["userData"][0]
+                user_id, self.version, upsert["userData"][0], False
             )
+        
+        if "userWebOption" in upsert and len(upsert["userWebOption"]) > 0:            
+            upsert["userWebOption"][0]["isNetMember"] = True
+            self.data.profile.put_web_option(
+                user_id, self.version, upsert["userWebOption"][0]
+            )
+
+        if "userGradeStatusList" in upsert and len(upsert["userGradeStatusList"]) > 0:
+            self.data.profile.put_grade_status(
+                user_id, upsert["userGradeStatusList"][0]
+            )
+
+        if "userBossList" in upsert and len(upsert["userBossList"]) > 0:
+            self.data.profile.put_boss_list(
+                user_id, upsert["userBossList"][0]
+            )
+
+        if "userPlaylogList" in upsert and len(upsert["userPlaylogList"]) > 0:
+            for playlog in upsert["userPlaylogList"]:
+                self.data.score.put_playlog(
+                    user_id, playlog, False
+                )
 
         if "userExtend" in upsert and len(upsert["userExtend"]) > 0:
             self.data.profile.put_profile_extend(
@@ -208,11 +247,15 @@ class Mai2Base:
 
         if "userGhost" in upsert:
             for ghost in upsert["userGhost"]:
-                self.data.profile.put_profile_extend(user_id, self.version, ghost)
+                self.data.profile.put_profile_ghost(user_id, self.version, ghost)
+
+        if "userRecentRatingList" in upsert:
+            self.data.profile.put_recent_rating(user_id, upsert["userRecentRatingList"])
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
+            upsert["userOption"][0].pop("userId")
             self.data.profile.put_profile_option(
-                user_id, self.version, upsert["userOption"][0]
+                user_id, self.version, upsert["userOption"][0], False
             )
 
         if "userRatingList" in upsert and len(upsert["userRatingList"]) > 0:
@@ -221,9 +264,8 @@ class Mai2Base:
             )
 
         if "userActivityList" in upsert and len(upsert["userActivityList"]) > 0:
-            for k, v in upsert["userActivityList"][0].items():
-                for act in v:
-                    self.data.profile.put_profile_activity(user_id, act)
+            for act in upsert["userActivityList"]:
+                self.data.profile.put_profile_activity(user_id, act)
 
         if "userChargeList" in upsert and len(upsert["userChargeList"]) > 0:
             for charge in upsert["userChargeList"]:
@@ -243,12 +285,9 @@ class Mai2Base:
 
         if "userCharacterList" in upsert and len(upsert["userCharacterList"]) > 0:
             for char in upsert["userCharacterList"]:
-                self.data.item.put_character(
+                self.data.item.put_character_(
                     user_id,
-                    char["characterId"],
-                    char["level"],
-                    char["awakening"],
-                    char["useCount"],
+                    char
                 )
 
         if "userItemList" in upsert and len(upsert["userItemList"]) > 0:
@@ -258,7 +297,7 @@ class Mai2Base:
                     int(item["itemKind"]),
                     item["itemId"],
                     item["stock"],
-                    item["isValid"],
+                    True
                 )
 
         if "userLoginBonusList" in upsert and len(upsert["userLoginBonusList"]) > 0:
@@ -284,7 +323,7 @@ class Mai2Base:
 
         if "userMusicDetailList" in upsert and len(upsert["userMusicDetailList"]) > 0:
             for music in upsert["userMusicDetailList"]:
-                self.data.score.put_best_score(user_id, music)
+                self.data.score.put_best_score(user_id, music, False)
 
         if "userCourseList" in upsert and len(upsert["userCourseList"]) > 0:
             for course in upsert["userCourseList"]:
@@ -312,7 +351,7 @@ class Mai2Base:
         return {"returnCode": 1}
 
     def handle_get_user_data_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_detail(data["userId"], self.version)
+        profile = self.data.profile.get_profile_detail(data["userId"], self.version, False)
         if profile is None:
             return
 
@@ -336,7 +375,7 @@ class Mai2Base:
         return {"userId": data["userId"], "userExtend": extend_dict}
 
     def handle_get_user_option_api_request(self, data: Dict) -> Dict:
-        options = self.data.profile.get_profile_option(data["userId"], self.version)
+        options = self.data.profile.get_profile_option(data["userId"], self.version, False)
         if options is None:
             return
 
@@ -406,12 +445,31 @@ class Mai2Base:
             "userChargeList": user_charge_list,
         }
 
+    def handle_get_user_present_api_request(self, data: Dict) -> Dict:
+        return { "userId": data.get("userId", 0), "length": 0, "userPresentList": []}
+    
+    def handle_get_transfer_friend_api_request(self, data: Dict) -> Dict:
+        return {}
+
+    def handle_get_user_present_event_api_request(self, data: Dict) -> Dict:
+        return { "userId": data.get("userId", 0), "length": 0, "userPresentEventList": []}
+    
+    def handle_get_user_boss_api_request(self, data: Dict) -> Dict:
+        b = self.data.profile.get_boss_list(data["userId"])
+        if b is None:
+            return { "userId": data.get("userId", 0), "userBossData": {}}
+        boss_lst = b._asdict()
+        boss_lst.pop("id")
+        boss_lst.pop("user")
+
+        return { "userId": data.get("userId", 0), "userBossData": boss_lst}
+
     def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
         next_idx = int(data["nextIndex"] % 10000000000)
         user_item_list = self.data.item.get_items(data["userId"], kind)
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(next_idx, len(user_item_list)):
             tmp = user_item_list[i]._asdict()
             tmp.pop("user")
@@ -442,6 +500,8 @@ class Mai2Base:
             tmp = chara._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("awakening")
+            tmp.pop("useCount")
             chara_list.append(tmp)
 
         return {"userId": data["userId"], "userCharacterList": chara_list}
@@ -474,6 +534,16 @@ class Mai2Base:
         ghost_dict.pop("version_int")
 
         return {"userId": data["userId"], "userGhost": ghost_dict}
+
+    def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
+        rating = self.data.profile.get_recent_rating(data["userId"])
+        if rating is None:
+            return
+        
+        r = rating._asdict()
+        lst = r.get("userRecentRatingList", [])
+        
+        return {"userId": data["userId"], "length": len(lst), "userRecentRatingList": lst}
 
     def handle_get_user_rating_api_request(self, data: Dict) -> Dict:
         rating = self.data.profile.get_profile_rating(data["userId"], self.version)
@@ -637,25 +707,158 @@ class Mai2Base:
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
+    
+    def handle_get_user_web_option_api_request(self, data: Dict) -> Dict:
+        w = self.data.profile.get_web_option(data["userId"], self.version)
+        if  w is None:
+            return {"userId": data["userId"], "userWebOption": {}}
+        
+        web_opt = w._asdict()        
+        web_opt.pop("id")
+        web_opt.pop("user")
+        web_opt.pop("version")
+
+        return {"userId": data["userId"], "userWebOption": web_opt}
+
+    def handle_get_user_survival_api_request(self, data: Dict) -> Dict:
+        return {"userId": data["userId"], "length": 0, "userSurvivalList": []}
+
+    def handle_get_user_grade_api_request(self, data: Dict) -> Dict:
+        g = self.data.profile.get_grade_status(data["userId"])
+        if g is None:
+            return {"userId": data["userId"], "userGradeStatus": {}, "length": 0, "userGradeList": []}
+        grade_stat = g._asdict()
+        grade_stat.pop("id")
+        grade_stat.pop("user")
+
+        return {"userId": data["userId"], "userGradeStatus": grade_stat, "length": 0, "userGradeList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        songs = self.data.score.get_best_scores(data["userId"])
+        user_id = data.get("userId", 0)        
+        next_index = data.get("nextIndex", 0)
+        max_ct = data.get("maxCount", 50)
+        upper_lim = next_index + max_ct
         music_detail_list = []
-        next_index = 0
 
-        if songs is not None:
-            for song in songs:
-                tmp = song._asdict()
-                tmp.pop("id")
-                tmp.pop("user")
-                music_detail_list.append(tmp)
+        if user_id <= 0:
+            self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
+            return {}
+        
+        songs = self.data.score.get_best_scores(user_id, is_dx=False)
+        if songs is None:
+            self.logger.debug("handle_get_user_music_api_request: get_best_scores returned None!")
+            return {
+            "userId": data["userId"],
+            "nextIndex": 0,
+            "userMusicList": [],
+        }
 
-                if len(music_detail_list) == data["maxCount"]:
-                    next_index = data["maxCount"] + data["nextIndex"]
-                    break
+        num_user_songs = len(songs)
 
+        for x in range(next_index, upper_lim):
+            if num_user_songs <= x:
+                break
+
+            tmp = songs[x]._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            music_detail_list.append(tmp)
+
+        next_index = 0 if len(music_detail_list) < max_ct or num_user_songs == upper_lim else upper_lim
+        self.logger.info(f"Send songs {next_index}-{upper_lim} ({len(music_detail_list)}) out of {num_user_songs} for user {user_id} (next idx {next_index})")
         return {
             "userId": data["userId"],
             "nextIndex": next_index,
             "userMusicList": [{"userMusicDetailList": music_detail_list}],
         }
+
+    def handle_upload_user_portrait_api_request(self, data: Dict) -> Dict:
+        self.logger.debug(data)
+
+    def handle_upload_user_photo_api_request(self, data: Dict) -> Dict:
+        if not self.game_config.uploads.photos or not self.game_config.uploads.photos_dir:
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        photo = data.get("userPhoto", {})
+
+        if photo is None or not photo:
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        order_id = int(photo.get("orderId", -1))
+        user_id = int(photo.get("userId", -1))
+        div_num = int(photo.get("divNumber", -1))
+        div_len = int(photo.get("divLength", -1))
+        div_data = photo.get("divData", "")
+        playlog_id = int(photo.get("playlogId", -1))
+        track_num = int(photo.get("trackNo", -1))
+        upload_date = photo.get("uploadDate", "")
+
+        if order_id < 0 or user_id <= 0 or div_num < 0 or div_len <= 0 or not div_data or playlog_id < 0 or track_num <= 0 or not upload_date:
+            self.logger.warn(f"Malformed photo upload request")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        if order_id == 0 and div_num > 0:
+            self.logger.warn(f"Failed to set orderId properly (still 0 after first chunk)")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if div_num == 0 and order_id > 0:
+            self.logger.warn(f"First chuck re-send, Ignore")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        if div_num >= div_len:
+            self.logger.warn(f"Sent extra chunks ({div_num} >= {div_len})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if div_len >= 100:
+            self.logger.warn(f"Photo too large ({div_len} * 10240 = {div_len * 10240} bytes)")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        ret_code = order_id + 1
+        photo_chunk = b64decode(div_data)
+
+        if len(photo_chunk) > 10240 or (len(photo_chunk) < 10240 and div_num + 1 != div_len):
+            self.logger.warn(f"Incorrect data size after decoding (Expected 10240, got {len(photo_chunk)})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        out_name = f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}"
+
+        if not path.exists(f"{out_name}.bin") and div_num != 0:
+            self.logger.warn(f"Out of order photo upload (div_num {div_num})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+    
+        if path.exists(f"{out_name}.bin") and div_num == 0:
+            self.logger.warn(f"Duplicate file upload")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        elif path.exists(f"{out_name}.bin"):
+            fstats = stat(f"{out_name}.bin")
+            if fstats.st_size != 10240 * div_num:
+                self.logger.warn(f"Out of order photo upload (trying to upload div {div_num}, expected div {fstats.st_size / 10240} for file sized {fstats.st_size} bytes)")
+                return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        try:
+            with open(f"{out_name}.bin", "ab") as f:
+                f.write(photo_chunk)
+        
+        except Exception:
+            self.logger.error(f"Failed writing to {out_name}.bin")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if div_num + 1 == div_len and path.exists(f"{out_name}.bin"):
+            try:
+                p = ImageFile.Parser()
+                with open(f"{out_name}.bin", "rb") as f:
+                    p.feed(f.read())
+                
+                im = p.close()
+                im.save(f"{out_name}.jpeg")
+            except Exception:
+                self.logger.error(f"File {out_name}.bin failed image validation")
+            
+            try:
+                remove(f"{out_name}.bin")
+            
+            except Exception:
+                self.logger.error(f"Failed to delete {out_name}.bin, please remove it manually")
+
+        return {'returnCode': ret_code, 'apiName': 'UploadUserPhotoApi'}

@@ -79,6 +79,9 @@ class UserData(BaseData):
 
         if usr["password"] is None:
             return False
+        
+        if passwd is None or not passwd:
+            return False
 
         return bcrypt.checkpw(passwd, usr["password"].encode())
 

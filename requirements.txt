@@ -16,3 +16,5 @@ Routes
 bcrypt
 jinja2
 protobuf
+autobahn
+pillow

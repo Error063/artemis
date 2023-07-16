@@ -15,31 +15,48 @@ from core.utils import Utils
 
 
 class Data:
+    current_schema_version = 4
+    engine = None
+    session = None
+    user = None
+    arcade = None
+    card = None
+    base = None
     def __init__(self, cfg: CoreConfig) -> None:
         self.config = cfg
 
         if self.config.database.sha2_password:
             passwd = sha256(self.config.database.password.encode()).digest()
-            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{passwd.hex()}@{self.config.database.host}/{self.config.database.name}?charset=utf8mb4"
+            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{passwd.hex()}@{self.config.database.host}:{self.config.database.port}/{self.config.database.name}?charset=utf8mb4"
         else:
-            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{self.config.database.password}@{self.config.database.host}/{self.config.database.name}?charset=utf8mb4"
+            self.__url = f"{self.config.database.protocol}://{self.config.database.username}:{self.config.database.password}@{self.config.database.host}:{self.config.database.port}/{self.config.database.name}?charset=utf8mb4"
 
-        self.__engine = create_engine(self.__url, pool_recycle=3600)
-        session = sessionmaker(bind=self.__engine, autoflush=True, autocommit=True)
-        self.session = scoped_session(session)
+        if Data.engine is None:
+            Data.engine = create_engine(self.__url, pool_recycle=3600)
+            self.__engine = Data.engine
 
-        self.user = UserData(self.config, self.session)
-        self.arcade = ArcadeData(self.config, self.session)
-        self.card = CardData(self.config, self.session)
-        self.base = BaseData(self.config, self.session)
-        self.current_schema_version = 4
+        if Data.session is None:
+            s = sessionmaker(bind=Data.engine, autoflush=True, autocommit=True)
+            Data.session = scoped_session(s)
 
-        log_fmt_str = "[%(asctime)s] %(levelname)s | Database | %(message)s"
-        log_fmt = logging.Formatter(log_fmt_str)
+        if Data.user is None:
+            Data.user = UserData(self.config, self.session)
+        
+        if Data.arcade is None:
+            Data.arcade = ArcadeData(self.config, self.session)
+        
+        if Data.card is None:
+            Data.card = CardData(self.config, self.session)
+        
+        if Data.base is None:
+            Data.base = BaseData(self.config, self.session)
+
         self.logger = logging.getLogger("database")
 
         # Prevent the logger from adding handlers multiple times
-        if not getattr(self.logger, "handler_set", None):
+        if not getattr(self.logger, "handler_set", None):            
+            log_fmt_str = "[%(asctime)s] %(levelname)s | Database | %(message)s"
+            log_fmt = logging.Formatter(log_fmt_str)
             fileHandler = TimedRotatingFileHandler(
                 "{0}/{1}.log".format(self.config.server.log_dir, "db"),
                 encoding="utf-8",
@@ -77,7 +94,7 @@ class Data:
                     game_mod.database(self.config)
                 metadata.create_all(self.__engine.connect())
 
-                self.base.set_schema_ver(
+                self.base.touch_schema_ver(
                     game_mod.current_schema_version, game_mod.game_codes[0]
                 )
 
@@ -333,3 +350,8 @@ class Data:
 
             if not failed:
                 self.base.set_schema_ver(latest_ver, game)
+    
+    def show_versions(self) -> None:
+        all_game_versions = self.base.get_all_schema_vers()
+        for ver in all_game_versions:
+            self.logger.info(f"{ver['game']} -> v{ver['version']}")

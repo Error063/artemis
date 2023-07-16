@@ -4,6 +4,7 @@ server:
   allow_unregistered_serials: True
   name: "ARTEMiS"
   is_develop: True
+  threading: False
   log_dir: "logs"
 
 title:

@@ -266,16 +266,17 @@ class DivaBase:
     def handle_festa_info_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
-            "fi_id": "1,-1",
-            "fi_name": f"{self.core_cfg.server.name} Opening,xxx",
-            "fi_kind": "0,0",
+            "fi_id": "1,2",
+            "fi_name": f"{self.core_cfg.server.name} Opening,Project DIVA Festa",
+            # 0=PINK, 1=GREEN
+            "fi_kind": "1,0",
             "fi_difficulty": "-1,-1",
             "fi_pv_id_lst": "ALL,ALL",
             "fi_attr": "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-            "fi_add_vp": "20,0",
-            "fi_mul_vp": "1,1",
-            "fi_st": "2022-06-17 17:00:00.0,2014-07-08 18:10:11.0",
-            "fi_et": "2029-01-01 10:00:00.0,2014-07-08 18:10:11.0",
+            "fi_add_vp": "20,5",
+            "fi_mul_vp": "1,2",
+            "fi_st": "2019-01-01 00:00:00.0,2019-01-01 00:00:00.0",
+            "fi_et": "2029-01-01 00:00:00.0,2029-01-01 00:00:00.0",
             "fi_lut": "{self.time_lut}",
         }
 
@@ -401,10 +402,10 @@ class DivaBase:
             response += f"&lv_pnt={profile['lv_pnt']}"
             response += f"&vcld_pts={profile['vcld_pts']}"
             response += f"&skn_eqp={profile['use_pv_skn_eqp']}"
-            response += f"&btn_se_eqp={profile['use_pv_btn_se_eqp']}"
-            response += f"&sld_se_eqp={profile['use_pv_sld_se_eqp']}"
-            response += f"&chn_sld_se_eqp={profile['use_pv_chn_sld_se_eqp']}"
-            response += f"&sldr_tch_se_eqp={profile['use_pv_sldr_tch_se_eqp']}"
+            response += f"&btn_se_eqp={profile['btn_se_eqp']}"
+            response += f"&sld_se_eqp={profile['sld_se_eqp']}"
+            response += f"&chn_sld_se_eqp={profile['chn_sld_se_eqp']}"
+            response += f"&sldr_tch_se_eqp={profile['sldr_tch_se_eqp']}"
             response += f"&passwd_stat={profile['passwd_stat']}"
 
             # Store stuff to add to rework
@@ -478,6 +479,21 @@ class DivaBase:
         response += f"&dsp_clr_sts={profile['dsp_clr_sts']}"
         response += f"&rgo_sts={profile['rgo_sts']}"
 
+        # Contest progress
+        response += f"&cv_cid=-1,-1,-1,-1"
+        response += f"&cv_sc=-1,-1,-1,-1"
+        response += f"&cv_bv=-1,-1,-1,-1"
+        response += f"&cv_bv=-1,-1,-1,-1"
+        response += f"&cv_bf=-1,-1,-1,-1"
+
+        # Contest now playing id, return -1 if no current playing contest
+        response += f"&cnp_cid={profile['cnp_cid']}"
+        response += f"&cnp_val={profile['cnp_val']}"
+        # border can be 0=bronzem 1=silver, 2=gold
+        response += f"&cnp_rr={profile['cnp_rr']}"
+        # only show contest specifier if it is not empty
+        response += f"&cnp_sp={profile['cnp_sp']}" if profile["cnp_sp"] != "" else ""
+
         # To be fully fixed
         if "my_qst_id" not in profile:
             response += f"&my_qst_id=-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
@@ -488,7 +504,63 @@ class DivaBase:
 
         response += f"&my_qst_prgrs=0,0,0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
         response += f"&my_qst_et=2022-06-19%2010%3A28%3A52.0,2022-06-19%2010%3A28%3A52.0,2022-06-19%2010%3A28%3A52.0,2100-01-01%2008%3A59%3A59.0,2100-01-01%2008%3A59%3A59.0,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx,xxx"
-        response += f"&clr_sts=0,0,0,0,0,0,0,0,56,52,35,6,6,3,1,0,0,0,0,0"
+
+        # define a helper class to store all counts for clear, great,
+        # excellent and perfect
+        class ClearSet:
+            def __init__(self):
+                self.clear = 0
+                self.great = 0
+                self.excellent = 0
+                self.perfect = 0
+
+        # create a dict to store the ClearSets per difficulty
+        clear_set_dict = {
+            0: ClearSet(),  # easy
+            1: ClearSet(),  # normal
+            2: ClearSet(),  # hard
+            3: ClearSet(),  # extreme
+            4: ClearSet(),  # exExtreme
+        }
+
+        # get clear status from user scores
+        pv_records = self.data.score.get_best_scores(data["pd_id"])
+        clear_status = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+
+        if pv_records is not None:
+            for score in pv_records:
+                if score["edition"] == 0:
+                    # cheap and standard both count to "clear"
+                    if score["clr_kind"] in {1, 2}:
+                        clear_set_dict[score["difficulty"]].clear += 1
+                    elif score["clr_kind"] == 3:
+                        clear_set_dict[score["difficulty"]].great += 1
+                    elif score["clr_kind"] == 4:
+                        clear_set_dict[score["difficulty"]].excellent += 1
+                    elif score["clr_kind"] == 5:
+                        clear_set_dict[score["difficulty"]].perfect += 1
+                else:
+                    # 4=ExExtreme
+                    if score["clr_kind"] in {1, 2}:
+                        clear_set_dict[4].clear += 1
+                    elif score["clr_kind"] == 3:
+                        clear_set_dict[4].great += 1
+                    elif score["clr_kind"] == 4:
+                        clear_set_dict[4].excellent += 1
+                    elif score["clr_kind"] == 5:
+                        clear_set_dict[4].perfect += 1
+
+            # now add all values to a list
+            clear_list = []
+            for clear_set in clear_set_dict.values():
+                clear_list.append(clear_set.clear)
+                clear_list.append(clear_set.great)
+                clear_list.append(clear_set.excellent)
+                clear_list.append(clear_set.perfect)
+
+            clear_status = ",".join(map(str, clear_list))
+
+        response += f"&clr_sts={clear_status}"
 
         # Store stuff to add to rework
         response += f"&mdl_eqp_tm={self.time_lut}"

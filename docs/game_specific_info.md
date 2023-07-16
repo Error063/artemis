@@ -9,42 +9,44 @@ using the megaime database. Clean installations always create the latest databas
 # Table of content
 
 - [Supported Games](#supported-games)
-    - [Chunithm](#chunithm)
+    - [CHUNITHM](#chunithm)
     - [crossbeats REV.](#crossbeats-rev)
     - [maimai DX](#maimai-dx)
     - [O.N.G.E.K.I.](#o-n-g-e-k-i)
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
+    - [Sword Art Online Arcade](#sao)
 
 
 # Supported Games
 
 Games listed below have been tested and confirmed working.
 
-## Chunithm
+## CHUNITHM
 
 ### SDBT
 
-| Version ID | Version Name       |
-|------------|--------------------|
-| 0          | Chunithm           |
-| 1          | Chunithm+          |
-| 2          | Chunithm Air       |
-| 3          | Chunithm Air +     |
-| 4          | Chunithm Star      |
-| 5          | Chunithm Star +    |
-| 6          | Chunithm Amazon    |
-| 7          | Chunithm Amazon +  |
-| 8          | Chunithm Crystal   |
-| 9          | Chunithm Crystal + |
-| 10         | Chunithm Paradise  |
+| Version ID | Version Name          |
+|------------|-----------------------|
+| 0          | CHUNITHM              |
+| 1          | CHUNITHM PLUS         |
+| 2          | CHUNITHM AIR          |
+| 3          | CHUNITHM AIR PLUS     |
+| 4          | CHUNITHM STAR         |
+| 5          | CHUNITHM STAR PLUS    |
+| 6          | CHUNITHM AMAZON       |
+| 7          | CHUNITHM AMAZON PLUS  |
+| 8          | CHUNITHM CRYSTAL      |
+| 9          | CHUNITHM CRYSTAL PLUS |
+| 10         | CHUNITHM PARADISE     |
 
 ### SDHD/SDBT
 
-| Version ID | Version Name    |
-|------------|-----------------|
-| 11         | Chunithm New!!  |
-| 12         | Chunithm New!!+ |
+| Version ID | Version Name        |
+|------------|---------------------|
+| 11         | CHUNITHM NEW!!      |
+| 12         | CHUNITHM NEW PLUS!! |
+| 13         | CHUNITHM SUN        |
 
 
 ### Importer
@@ -60,12 +62,32 @@ The importer for Chunithm will import: Events, Music, Charge Items and Avatar Ac
 ### Database upgrade
 
 Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDBT_3_upgrade.sql`. In order to upgrade to version 3 in this case you need to
+which version is the latest, f.e. `SDBT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
 perform all previous updates as well:
 
 ```shell
 python dbutils.py --game SDBT upgrade
 ```
+
+### Online Battle
+
+**Only matchmaking (with your imaginary friends) is supported! Online Battle does not (yet?) work!**
+
+The first person to start the Online Battle (now called host) will create a "matching room" with a given `roomId`, after that max 3 other people can join the created room.
+Non used slots during the matchmaking will be filled with CPUs after the timer runs out.
+As soon as a new member will join the room the timer will jump back to 60 secs again.
+Sending those 4 messages to all other users is also working properly.
+In order to use the Online Battle every user needs the same ICF, same rom version and same data version!
+If a room is full a new room will be created if another user starts an Online Battle.
+After a failed Online Battle the room will be deleted. The host is used for the timer countdown, so if the connection failes to the host the timer will stop and could create a "frozen" state.
+
+#### Information/Problems:
+
+- Online Battle uses UDP hole punching and opens port 50201?
+- `reflectorUri` seems related to that?
+- Timer countdown should be handled globally and not by one user
+- Game can freeze or can crash if someone (especially the host) leaves the matchmaking
+
 
 ## crossbeats REV.
 
@@ -105,28 +127,50 @@ Config file is located in `config/cxb.yaml`.
 
 ### SDEZ
 
-| Version ID | Version Name            |
-|------------|-------------------------|
-| 0          | maimai DX               |
-| 1          | maimai DX PLUS          |
-| 2          | maimai DX Splash        |
-| 3          | maimai DX Splash PLUS   |
-| 4          | maimai DX Universe      |
-| 5          | maimai DX Universe PLUS |
-| 6          | maimai DX Festival      |
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+
+
+For versions pre-dx
+| Game Code | Version ID | Version Name            |
+|-----------|------------|-------------------------|
+| SBXL      | 0          | maimai                  |
+| SBXL      | 1          | maimai PLUS             |
+| SBZF      | 2          | maimai GreeN            |
+| SBZF      | 3          | maimai GreeN PLUS       |
+| SDBM      | 4          | maimai ORANGE           |
+| SDBM      | 5          | maimai ORANGE PLUS      |
+| SDCQ      | 6          | maimai PiNK             |
+| SDCQ      | 7          | maimai PiNK PLUS        |
+| SDDK      | 8          | maimai MURASAKI         |
+| SDDK      | 9          | maimai MURASAKI PLUS    |
+| SDDZ      | 10         | maimai MILK             |
+| SDDZ      | 11         | maimai MILK PLUS        |
+| SDEY      | 12         | maimai FiNALE           |
+| SDEZ      | 13         | maimai DX               |
+| SDEZ      | 14         | maimai DX PLUS          |
+| SDEZ      | 15         | maimai DX Splash        |
+| SDEZ      | 16         | maimai DX Splash PLUS   |
+| SDEZ      | 17         | maimai DX Universe      |
+| SDEZ      | 18         | maimai DX Universe PLUS |
+| SDEZ      | 19         | maimai DX Festival      |
 
 ### Importer
 
 In order to use the importer locate your game installation folder and execute:
-
+DX:
 ```shell
-python read.py --series SDEZ --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/StreamingAssets --optfolder /path/to/game/option/folder
 ```
-
+Pre-DX:
+```shell
+python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
+```
 The importer for maimai DX will import Events, Music and Tickets.
 
-**NOTE: It is required to use the importer because the game will
-crash without Events!**
+The importer for maimai Pre-DX will import Events and Music. Not all games will have patch data. Milk - Finale have file encryption, and need an AES key. That key is not provided by the developers. For games that do use encryption, provide the key, as a hex string, with the `--extra` flag. Ex `--extra 00112233445566778899AABBCCDDEEFF`
+
+**Important: It is required to use the importer because some games may not function properly or even crash without Events!**
 
 ### Database upgrade
 
@@ -135,6 +179,7 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDEZ upgrade
 ```
+Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 
 ## Hatsune Miku Project Diva
 
@@ -185,12 +230,12 @@ python dbutils.py --game SBZV upgrade
 |------------|----------------------------|
 | 0          | O.N.G.E.K.I.               |
 | 1          | O.N.G.E.K.I. +             |
-| 2          | O.N.G.E.K.I. Summer        |
-| 3          | O.N.G.E.K.I. Summer +      |
-| 4          | O.N.G.E.K.I. Red           |
-| 5          | O.N.G.E.K.I. Red +         |
-| 6          | O.N.G.E.K.I. Bright        |
-| 7          | O.N.G.E.K.I. Bright Memory |
+| 2          | O.N.G.E.K.I. SUMMER        |
+| 3          | O.N.G.E.K.I. SUMMER +      |
+| 4          | O.N.G.E.K.I. R.E.D.        |
+| 5          | O.N.G.E.K.I. R.E.D. +      |
+| 6          | O.N.G.E.K.I. bright        |
+| 7          | O.N.G.E.K.I. bright MEMORY |
 
 
 ### Importer
@@ -231,21 +276,21 @@ python dbutils.py --game SDDT upgrade
 
 | Version ID | Version Name    |
 |------------|-----------------|
-| 0          | Card Maker 1.34 |
+| 0          | Card Maker 1.30 |
 | 1          | Card Maker 1.35 |
 
 
 ### Support status
 
-* Card Maker 1.34:
-  * Chunithm New!!: Yes
-  * maimai DX Universe: Yes
-  * O.N.G.E.K.I. Bright: Yes
+* Card Maker 1.30:
+  * CHUNITHM NEW!!: Yes
+  * maimai DX UNiVERSE: Yes
+  * O.N.G.E.K.I. bright: Yes
 
 * Card Maker 1.35:
-  * Chunithm New!!+: Yes
-  * maimai DX Universe PLUS: Yes
-  * O.N.G.E.K.I. Bright Memory: Yes
+  * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
+  * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
+  * O.N.G.E.K.I. bright MEMORY: Yes
 
 
 ### Importer
@@ -263,19 +308,54 @@ python read.py --series SDED --version <version ID> --binfolder titles/cm/cm_dat
 python read.py --series SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
-Also make sure to import all maimai and Chunithm data as well:
+Also make sure to import all maimai DX and CHUNITHM data as well:
 
 ```shell
 python read.py --series SDED --version <version ID> --binfolder /path/to/cardmaker/CardMaker_Data
 ```
 
-The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai/Chunithm) and the hardcoded
+The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai DX/CHUNITHM) and the hardcoded
 Cards for each Gacha (O.N.G.E.K.I. only).
 
 **NOTE: Without executing the importer Card Maker WILL NOT work!**
 
 
-### O.N.G.E.K.I. Gachas
+### Config setup
+
+Make sure to update your `config/cardmaker.yaml` with the correct version for each game. To get the current version required to run a specific game, open every opt (Axxx) folder descending until you find all three folders:
+
+- `MU3`: O.N.G.E.K.I.
+- `MAI`: maimai DX
+- `CHU`: CHUNITHM
+
+Inside each folder is a `DataConfig.xml` file, for example:
+
+`MU3/DataConfig.xml`:
+```xml
+  <cardMakerVersion>
+    <major>1</major>
+    <minor>35</minor>
+    <release>3</release>
+  </cardMakerVersion>
+```
+
+Now update your `config/cardmaker.yaml` with the correct version number, for example:
+
+```yaml
+version:
+  1: # Card Maker 1.35
+    ongeki: 1.35.03
+```
+
+For now you also need to update your `config/ongeki.yaml` with the correct version number, for example:
+
+```yaml
+version:
+  7: # O.N.G.E.K.I. bright MEMORY
+    card_maker: 1.35.03
+```
+
+### O.N.G.E.K.I.
 
 Gacha "無料ガチャ" can only pull from the free cards with the following probabilities: 94%: R, 5% SR and 1% chance of
 getting an SSR card
@@ -288,19 +368,23 @@ and 3% chance of getting an SSR card
 All other (limited) gachas can pull from every card added to ongeki_static_cards but with the promoted cards
 (click on the green button under the banner) having a 10 times higher chance to get pulled
 
-### Chunithm Gachas
+### CHUNITHM
 
-All cards in Chunithm (basically just the characters) have the same rarity to it just pulls randomly from all cards
+All cards in CHUNITHM (basically just the characters) have the same rarity to it just pulls randomly from all cards
 from a given gacha but made sure you cannot pull the same card twice in the same 5 times gacha roll.
+
+### maimai DX
+
+Printed maimai DX cards: Freedom (`cardTypeId=6`) or Gold Pass (`cardTypeId=4`) can now be selected during the login process. You can only have ONE Freedom and ONE Gold Pass active at a given time. The cards will expire after 15 days.
+
+Thanks GetzeAvenue for the `selectedCardList` rarity hint!
 
 ### Notes
 
-Card Maker 1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35 will only load an O.N.G.E.K.I.
+Card Maker 1.30-1.34 will only load an O.N.G.E.K.I. Bright profile (1.30). Card Maker 1.35+ will only load an O.N.G.E.K.I.
 Bright Memory profile (1.35).
-The gachas inside the `ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
+The gachas inside the `config/ongeki.yaml` will make sure only the right gacha ids for the right CM version will be loaded.
 Gacha IDs up to 1140 will be loaded for CM 1.34 and all gachas will be loaded for CM 1.35.
-
-**NOTE: There is currently no way to load/use the (printed) maimai DX cards!**
 
 ## WACCA
 
@@ -344,3 +428,89 @@ Always make sure your database (tables) are up-to-date, to do so go to the `core
 ```shell
 python dbutils.py --game SDFE upgrade
 ```
+
+### VIP Rewards
+Below is a list of VIP rewards. Currently, VIP is not implemented, and thus these are not obtainable. These 23 rewards were distributed once per month for VIP users on the real network.
+
+	Plates:
+		211004 リッチ
+		211018 特盛えりざべす
+		211025 イースター
+		211026 特盛りりぃ
+		311004 ファンシー
+		311005 インカンテーション
+		311014 夜明け
+		311015 ネイビー
+		311016 特盛るーん
+	
+	Ring Colors:
+		203002 Gold Rushイエロー
+		203009 トロピカル
+		303005 ネイチャー
+	
+	Icons:
+		202020 どらみんぐ
+		202063 ユニコーン
+		202086 ゴリラ
+		302014 ローズ
+		302015 ファラオ
+		302045 肉球
+		302046 WACCA
+		302047 WACCA Lily
+		302048 WACCA Reverse
+	
+	Note Sound Effect:
+		205002 テニス
+		205008 シャワー
+		305003 タンバリンMk-Ⅱ
+
+## SAO
+
+### SDEW
+
+| Version ID | Version Name  |
+|------------|---------------|
+| 0          | SAO           |
+
+
+### Importer
+
+In order to use the importer locate your game installation folder and execute:
+
+```shell
+python read.py --series SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+```
+
+The importer for SAO will import all items, heroes, support skills and titles data.
+
+### Config
+
+Config file is located in `config/sao.yaml`.
+
+| Option             | Info                                                                        |
+|--------------------|-----------------------------------------------------------------------------|
+| `hostname`         | Changes the server listening address for Mucha                              |
+| `port`             | Changes the listing port                                                    |
+| `auto_register`    | Allows the game to handle the automatic registration of new cards           |
+
+
+### Database upgrade
+
+Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEW_1_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+
+```shell
+python dbutils.py --game SDEW upgrade
+```
+
+### Notes
+- Defrag Match will crash at loading
+- Co-Op Online is not supported
+- Shop is not functionnal
+- Player title is currently static and cannot be changed in-game
+- QR Card Scanning currently only load a static hero
+
+### Credits for SAO support:
+
+- Midorica - Limited Network Support
+- Dniel97 - Helping with network base
+- tungnotpunk - Source

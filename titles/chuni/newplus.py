@@ -36,6 +36,6 @@ class ChuniNewPlus(ChuniNew):
     def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
         user_data = super().handle_cm_get_user_preview_api_request(data)
 
-        # hardcode lastDataVersion for CardMaker 1.35
+        # hardcode lastDataVersion for CardMaker 1.35 A028
         user_data["lastDataVersion"] = "2.05.00"
         return user_data
