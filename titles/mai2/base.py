@@ -1,6 +1,8 @@
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from typing import Any, Dict, List
 import logging
+from base64 import b64decode
+from os import path, stat
 
 from core.config import CoreConfig
 from titles.mai2.const import Mai2Constants
@@ -773,4 +775,64 @@ class Mai2Base:
         self.logger.debug(data)
 
     def handle_upload_user_photo_api_request(self, data: Dict) -> Dict:
-        self.logger.debug(data)
+        if not self.game_config.uploads.photos or not self.game_config.uploads.photos_dir:
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        photo = data.get("userPhoto", {})
+
+        if photo is None or not photo:
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        order_id = int(photo.get("orderId", -1))
+        user_id = int(photo.get("userId", -1))
+        div_num = int(photo.get("divNumber", -1))
+        div_len = int(photo.get("divLength", -1))
+        div_data = photo.get("divData", "")
+        playlog_id = int(photo.get("playlogId", -1))
+        track_num = int(photo.get("trackNo", -1))
+        upload_date = photo.get("uploadDate", "")
+
+        if order_id < 0 or user_id <= 0 or div_num < 0 or div_len <= 0 or not div_data or playlog_id < 0 or track_num <= 0 or not upload_date:
+            self.logger.warn(f"Malformed photo upload request")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        if order_id == 0 and div_num > 0:
+            self.logger.warn(f"Failed to set orderId properly (still 0 after first chunk)")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if div_num == 0 and order_id > 0:
+            self.logger.warn(f"First chuck re-send, Ignore")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        if div_num >= div_len:
+            self.logger.warn(f"Sent extra chunks ({div_num} >= {div_len})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if div_len >= 100:
+            self.logger.warn(f"Photo too large ({div_len} * 10240 = {div_len * 10240} bytes)")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        photo_chunk = b64decode(div_data)
+
+        if len(photo_chunk) > 10240 or (len(photo_chunk) < 10240 and div_num + 1 != div_len):
+            self.logger.warn(f"Incorrect data size after decoding (Expected 10240, got {len(photo_chunk)})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+
+        if not path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg") and div_num != 0:
+            self.logger.warn(f"Out of order photo upload (div_num {div_num})")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+    
+        if path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg") and div_num == 0:
+            self.logger.warn(f"Duplicate file upload")
+            return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+        
+        elif path.exists(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg"):
+            fstats = stat(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg")
+            if fstats.st_size != 10240 * div_num:
+                self.logger.warn(f"Out of order photo upload (trying to upload div {div_num}, expected div {fstats.st_size / 10240} for file sized {fstats.st_size} bytes)")
+                return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
+            
+        with open(f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}.jpeg", "ab") as f:
+            f.write(photo_chunk)
+
+        return {'returnCode': order_id + 1, 'apiName': 'UploadUserPhotoApi'}

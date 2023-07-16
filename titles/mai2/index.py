@@ -7,7 +7,7 @@ import string
 import logging, coloredlogs
 import zlib
 from logging.handlers import TimedRotatingFileHandler
-from os import path
+from os import path, mkdir
 from typing import Tuple
 
 from core.config import CoreConfig
@@ -108,6 +108,19 @@ class Mai2Servlet:
             f"http://{core_cfg.title.hostname}/{game_code}/$v/",
             f"{core_cfg.title.hostname}",
         )
+
+    def setup(self):
+        if self.game_cfg.uploads.photos and self.game_cfg.uploads.photos_dir and not path.exists(self.game_cfg.uploads.photos_dir):
+            try:
+                mkdir(self.game_cfg.uploads.photos_dir)
+            except:
+                self.logger.error(f"Failed to make photo upload directory at {self.game_cfg.uploads.photos_dir}")
+
+        if self.game_cfg.uploads.movies and self.game_cfg.uploads.movies_dir and not path.exists(self.game_cfg.uploads.movies_dir):
+            try:
+                mkdir(self.game_cfg.uploads.movies_dir)
+            except:
+                self.logger.error(f"Failed to make movie upload directory at {self.game_cfg.uploads.movies_dir}")
 
     def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
         if url_path.lower() == "ping":
