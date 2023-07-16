@@ -58,7 +58,7 @@ class BaseData:
             self.logger.error(f"UnicodeEncodeError error {e}")
             return None
 
-        except:
+        except Exception:
             try:
                 res = self.conn.execute(sql, opts)
 
@@ -70,7 +70,7 @@ class BaseData:
                 self.logger.error(f"UnicodeEncodeError error {e}")
                 return None
 
-            except:
+            except Exception:
                 self.logger.error(f"Unknown error")
                 raise
 

@@ -93,7 +93,7 @@ class WaccaServlet:
         try:
             req_json = json.loads(request.content.getvalue())
             version_full = Version(req_json["appVersion"])
-        except:
+        except Exception:
             self.logger.error(
                 f"Failed to parse request to {url_path} -> {request.content.getvalue()}"
             )

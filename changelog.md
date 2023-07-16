@@ -1,6 +1,56 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20230716
+### General
++ Docker files added (#19)
++ Added support for threading
+  + This comes with the caviat that enabling it will not allow you to use Ctrl + C to stop the server.
+
+### Webui
++ Small improvements
++ Add card display
+
+### Allnet
++ Billing format validation
++ Fix naomitest.html endpoint
++ Add event logging for auths and billing
++ LoaderStateRecorder endpoint handler added
+
+### Mucha
++ Fixed log level always being "Info"
++ Add stub handler for DownloadState
+
+### Sword Art Online
++ Support added
+
+### Crossbeats
++ Added threading to profile loading
+  + This should cause a noticeable speed-up
+
+### Card Maker
++ DX Passes fixed
++ Various improvements
+
+### Diva
++ Added clear status calculation
++ Various minor fixes and improvements
+
+### Maimai
++ Added support for memorial photo uploads
++ Added support for the following versions
+  + Festival
+  + FiNALE
++ Various bug fixes and improvements
+
+### Wacca
++ Fixed an error that sometimes occoured when trying to unlock songs (#22)
+
+### Pokken
++ Profile saving added (loading TBA)
++ Use external STUN server for matching by default
+  + Matching still not working
+
 ## 2023042300
 ### Wacca
 + Time free now works properly

@@ -424,7 +424,7 @@ class WaccaLily(WaccaS):
                         elif item["type"] == WaccaConstants.ITEM_TYPES["note_sound"]:
                             resp.userItems.noteSounds.append(itm_send)
 
-                except:
+                except Exception:
                     self.logger.error(
                         f"{__name__} Failed to load item {item['item_id']} for user {profile['user']}"
                     )

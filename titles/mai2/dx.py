@@ -117,7 +117,7 @@ class Mai2DX(Mai2Base):
 
         if "userGhost" in upsert:
             for ghost in upsert["userGhost"]:
-                self.data.profile.put_profile_extend(user_id, self.version, ghost)
+                self.data.profile.put_profile_ghost(user_id, self.version, ghost)
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
             self.data.profile.put_profile_option(
@@ -216,9 +216,6 @@ class Mai2DX(Mai2Base):
                 self.data.item.put_friend_season_ranking(user_id, fsr)
 
         return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
-
-    def handle_user_logout_api_request(self, data: Dict) -> Dict:
-        return {"returnCode": 1}
 
     def handle_get_user_data_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_detail(data["userId"], self.version)
@@ -568,3 +565,10 @@ class Mai2DX(Mai2Base):
             "nextIndex": next_index,
             "userMusicList": [{"userMusicDetailList": music_detail_list}],
         }
+
+    def handle_user_login_api_request(self, data: Dict) -> Dict:
+        ret = super().handle_user_login_api_request(data)
+        if ret is None or not ret:
+            return ret
+        ret['loginId'] = ret.get('loginCount', 0)
+        return ret
