@@ -21,8 +21,12 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 + Fixed log level always being "Info"
 + Add stub handler for DownloadState
 
-### Sward Art Online
+### Sword Art Online
 + Support added
+
+### Crossbeats
++ Added threading to profile loading
+  + This should cause a noticeable speed-up
 
 ### Card Maker
 + DX Passes fixed
