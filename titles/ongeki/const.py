@@ -66,13 +66,13 @@ class OngekiConstants:
 
     VERSION_NAMES = (
         "ONGEKI",
-        "ONGEKI+",
-        "ONGEKI Summer",
-        "ONGEKI Summer+",
-        "ONGEKI Red",
-        "ONGEKI Red+",
-        "ONGEKI Bright",
-        "ONGEKI Bright Memory",
+        "ONGEKI +",
+        "ONGEKI SUMMER",
+        "ONGEKI SUMMER +",
+        "ONGEKI R.E.D.",
+        "ONGEKI R.E.D. +",
+        "ONGEKI bright",
+        "ONGEKI bright MEMORY",
     )
 
     @classmethod

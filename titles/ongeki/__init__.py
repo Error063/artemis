@@ -7,4 +7,4 @@ index = OngekiServlet
 database = OngekiData
 reader = OngekiReader
 game_codes = [OngekiConstants.GAME_CODE]
-current_schema_version = 4
+current_schema_version = 5

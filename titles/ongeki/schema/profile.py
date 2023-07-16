@@ -316,7 +316,7 @@ class OngekiProfileData(BaseData):
         return result.fetchone()
 
     def get_profile_rating_log(self, aime_id: int) -> Optional[List[Row]]:
-        sql = select(rating_log).where(recent_rating.c.user == aime_id)
+        sql = select(rating_log).where(rating_log.c.user == aime_id)
 
         result = self.execute(sql)
         if result is None:

@@ -230,12 +230,12 @@ python dbutils.py --game SBZV upgrade
 |------------|----------------------------|
 | 0          | O.N.G.E.K.I.               |
 | 1          | O.N.G.E.K.I. +             |
-| 2          | O.N.G.E.K.I. Summer        |
-| 3          | O.N.G.E.K.I. Summer +      |
-| 4          | O.N.G.E.K.I. Red           |
-| 5          | O.N.G.E.K.I. Red +         |
-| 6          | O.N.G.E.K.I. Bright        |
-| 7          | O.N.G.E.K.I. Bright Memory |
+| 2          | O.N.G.E.K.I. SUMMER        |
+| 3          | O.N.G.E.K.I. SUMMER +      |
+| 4          | O.N.G.E.K.I. R.E.D.        |
+| 5          | O.N.G.E.K.I. R.E.D. +      |
+| 6          | O.N.G.E.K.I. bright        |
+| 7          | O.N.G.E.K.I. bright MEMORY |
 
 
 ### Importer
@@ -285,12 +285,12 @@ python dbutils.py --game SDDT upgrade
 * Card Maker 1.30:
   * CHUNITHM NEW!!: Yes
   * maimai DX UNiVERSE: Yes
-  * O.N.G.E.K.I. Bright: Yes
+  * O.N.G.E.K.I. bright: Yes
 
 * Card Maker 1.35:
   * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
   * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
-  * O.N.G.E.K.I. Bright Memory: Yes
+  * O.N.G.E.K.I. bright MEMORY: Yes
 
 
 ### Importer
@@ -345,7 +345,15 @@ Now update your `config/cardmaker.yaml` with the correct version number, for exa
 version:
   1: # Card Maker 1.35
     ongeki: 1.35.03
-```	 
+```
+
+For now you also need to update your `config/ongeki.yaml` with the correct version number, for example:
+
+```yaml
+version:
+  7: # O.N.G.E.K.I. bright MEMORY
+    card_maker: 1.35.03
+```
 
 ### O.N.G.E.K.I.
 

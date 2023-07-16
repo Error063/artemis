@@ -21,7 +21,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + 1.35
 
 + O.N.G.E.K.I.
-    + All versions up to Bright Memory
+    + All versions up to bright MEMORY
 
 + WACCA
     + Lily R

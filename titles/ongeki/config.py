@@ -1,3 +1,4 @@
+from ast import Dict
 from typing import List
 
 from core.config import CoreConfig
@@ -33,7 +34,23 @@ class OngekiGachaConfig:
         )
 
 
+class OngekiCardMakerVersionConfig:
+    def __init__(self, parent_config: "OngekiConfig") -> None:
+        self.__config = parent_config
+
+    def version(self, version: int) -> Dict:
+        """
+        in the form of:
+        <ongeki version>: {"card_maker": <compatible card maker version>}
+        6: {"card_maker": 1.30.01}
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "ongeki", "version", default={}
+        ).get(version)
+
+
 class OngekiConfig(dict):
     def __init__(self) -> None:
         self.server = OngekiServerConfig(self)
         self.gachas = OngekiGachaConfig(self)
+        self.version = OngekiCardMakerVersionConfig(self)
