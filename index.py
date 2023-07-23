@@ -36,7 +36,7 @@ class HttpDispatcher(resource.Resource):
 
         self.map_post.connect(
             "allnet_downloadorder_report",
-            "/dl/report",
+            "/report-api/Report",
             controller="allnet",
             action="handle_dlorder_report",
             conditions=dict(method=["POST"]),

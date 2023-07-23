@@ -6,6 +6,8 @@ from datetime import datetime
 import pytz
 import base64
 import zlib
+import json
+from enum import Enum
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA
 from Crypto.Signature import PKCS1_v1_5
@@ -18,6 +20,9 @@ from core.utils import Utils
 from core.data import Data
 from core.const import *
 
+class DLIMG_TYPE(Enum):
+    app = 0
+    opt = 1
 
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):
@@ -241,6 +246,7 @@ class AllnetServlet:
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
             self.logger.info(f"Request for DL INI file {req_file} from {Utils.get_ip_addr(request)} successful")
             self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
+            
             return open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
             ).read()
@@ -249,10 +255,31 @@ class AllnetServlet:
         return b""
 
     def handle_dlorder_report(self, request: Request, match: Dict) -> bytes:
-        self.logger.info(
-            f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}"
-        )
-        return b""
+        req_raw = request.content.getvalue()
+        try:
+            req_dict: Dict = json.loads(req_raw)
+        except Exception as e:
+            self.logger.warn(f"Failed to parse DL Report: {e}")
+            return "NG"
+        
+        dl_data_type = DLIMG_TYPE.app
+        dl_data = req_dict.get("appimage", {})
+        
+        if dl_data is None or not dl_data:
+            dl_data_type = DLIMG_TYPE.opt
+            dl_data = req_dict.get("optimage", {})
+        
+        if dl_data is None or not dl_data:
+            self.logger.warn(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
+            return "NG"
+
+        dl_report_data = DLReport(dl_data, dl_data_type)
+
+        if not dl_report_data.validate():
+            self.logger.warn(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
+            return "NG"
+
+        return "OK"
 
     def handle_loaderstaterecorder(self, request: Request, match: Dict) -> bytes:
         req_data = request.content.getvalue()
@@ -529,3 +556,86 @@ class AllnetRequestException(Exception):
     def __init__(self, message="") -> None:
         self.message = message
         super().__init__(self.message)
+
+class DLReport:
+    def __init__(self, data: Dict, report_type: DLIMG_TYPE) -> None:
+        self.serial = data.get("serial")
+        self.dfl = data.get("dfl")
+        self.wfl = data.get("wfl")
+        self.tsc = data.get("tsc")
+        self.tdsc = data.get("tdsc")
+        self.at = data.get("at")
+        self.ot = data.get("ot")
+        self.rt = data.get("rt")
+        self.as_ = data.get("as")
+        self.rf_state = data.get("rf_state")
+        self.gd = data.get("gd")
+        self.dav = data.get("dav")
+        self.wdav = data.get("wdav") # app only
+        self.dov = data.get("dov")
+        self.wdov = data.get("wdov") # app only
+        self.__type = report_type
+        self.err = ""
+    
+    def validate(self) -> bool:
+        if  self.serial is None:
+            self.err = "serial not provided"
+            return False
+        
+        if self.dfl is None: 
+            self.err = "dfl not provided"
+            return False
+        
+        if self.wfl is None:
+            self.err = "wfl not provided"
+            return False
+        
+        if self.tsc is None:
+            self.err = "tsc not provided"
+            return False
+        
+        if self.tdsc is None:
+            self.err = "tdsc not provided"
+            return False
+        
+        if self.at is None:
+            self.err = "at not provided"
+            return False
+        
+        if self.ot is None:
+            self.err = "ot not provided"
+            return False
+        
+        if self.rt is None:
+            self.err = "rt not provided"
+            return False
+        
+        if self.as_ is None:
+            self.err = "as not provided"
+            return False
+        
+        if self.rf_state is None:
+            self.err = "rf_state not provided"
+            return False
+        
+        if self.gd is None:
+            self.err = "gd not provided"
+            return False
+        
+        if self.dav is None:
+            self.err = "dav not provided"
+            return False
+        
+        if self.dov is None:
+            self.err = "dov not provided"
+            return False
+        
+        if (self.wdav is None or self.wdov is None) and self.__type == DLIMG_TYPE.app:
+            self.err = "wdav or wdov not provided in app image"
+            return False
+        
+        if (self.wdav is not None or self.wdov is not None) and self.__type == DLIMG_TYPE.opt:
+            self.err = "wdav or wdov provided in opt image"
+            return False
+        
+        return True
