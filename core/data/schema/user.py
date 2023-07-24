@@ -107,3 +107,17 @@ class UserData(BaseData):
         if result is None:
             return None
         return result.fetchall()
+
+    def find_user_by_email(self, email: str) -> Row:
+        sql = select(aime_user).where(aime_user.c.email == email)
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchone()
+
+    def find_user_by_username(self, username: str) -> List[Row]:
+        sql = aime_user.select(aime_user.c.username.like(f"%{username}%"))
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchall()

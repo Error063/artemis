@@ -1,9 +1,10 @@
-from typing import Optional, Dict
-from sqlalchemy import Table, Column
+from typing import Optional, Dict, List
+from sqlalchemy import Table, Column, and_, or_
 from sqlalchemy.sql.schema import ForeignKey, PrimaryKeyConstraint
-from sqlalchemy.types import Integer, String, Boolean
+from sqlalchemy.types import Integer, String, Boolean, JSON
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.engine import Row
 import re
 
 from core.data.schema.base import BaseData, metadata
@@ -40,6 +41,9 @@ machine = Table(
     Column("timezone", String(255)),
     Column("ota_enable", Boolean),
     Column("is_cab", Boolean),
+    Column("memo", String(255)),
+    Column("is_cab", Boolean),
+    Column("data", JSON),
     mysql_charset="utf8mb4",
 )
 
@@ -65,7 +69,7 @@ arcade_owner = Table(
 
 
 class ArcadeData(BaseData):
-    def get_machine(self, serial: str = None, id: int = None) -> Optional[Dict]:
+    def get_machine(self, serial: str = None, id: int = None) -> Optional[Row]:
         if serial is not None:
             serial = serial.replace("-", "")
             if len(serial) == 11:
@@ -130,12 +134,19 @@ class ArcadeData(BaseData):
                 f"Failed to update board id for machine {machine_id} -> {boardid}"
             )
 
-    def get_arcade(self, id: int) -> Optional[Dict]:
+    def get_arcade(self, id: int) -> Optional[Row]:
         sql = arcade.select(arcade.c.id == id)
         result = self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
+    
+    def get_arcade_machines(self, id: int) -> Optional[List[Row]]:
+        sql = machine.select(machine.c.arcade == id)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def put_arcade(
         self,
@@ -165,7 +176,21 @@ class ArcadeData(BaseData):
             return None
         return result.lastrowid
 
-    def get_arcade_owners(self, arcade_id: int) -> Optional[Dict]:
+    def get_arcades_managed_by_user(self, user_id: int) -> Optional[List[Row]]:
+        sql = select(arcade).join(arcade_owner, arcade_owner.c.arcade == arcade.c.id).where(arcade_owner.c.user == user_id)
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchall()
+    
+    def get_manager_permissions(self, user_id: int, arcade_id: int) -> Optional[int]:
+        sql = select(arcade_owner.c.permissions).where(and_(arcade_owner.c.user == user_id, arcade_owner.c.arcade == arcade_id))
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchone()
+
+    def get_arcade_owners(self, arcade_id: int) -> Optional[Row]:
         sql = select(arcade_owner).where(arcade_owner.c.arcade == arcade_id)
 
         result = self.execute(sql)
@@ -217,3 +242,10 @@ class ArcadeData(BaseData):
             return False
 
         return True
+
+    def find_arcade_by_name(self, name: str) -> List[Row]:
+        sql = arcade.select(or_(arcade.c.name.like(f"%{name}%"), arcade.c.nickname.like(f"%{name}%")))
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchall()

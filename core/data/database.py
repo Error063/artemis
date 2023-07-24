@@ -15,7 +15,7 @@ from core.utils import Utils
 
 
 class Data:
-    current_schema_version = 4
+    current_schema_version = 5
     engine = None
     session = None
     user = None
