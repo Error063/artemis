@@ -2,11 +2,21 @@
 {% block content %}
 <h1>Management for {{ username }}</h1>
 <h2>Cards <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#card_add">Add</button></h2>
-<ul>
+<ul style="font-size: 20px;">
 {% for c in cards %}
-<li>{{ c.access_code }}: {{ c.status }} <button class="btn-danger btn">Delete</button></li>
+<li>{{ c.access_code }}: {{ c.status }}&nbsp;{% if c.status == 'Active'%}<button class="btn-warning btn">Lock</button>{% elif c.status == 'Locked' %}<button class="btn-warning btn">Unlock</button>{% endif %}&nbsp;<button class="btn-danger btn">Delete</button></li>
 {% endfor %}
 </ul>
+
+{% if arcades is defined %}
+<h2>Arcades</h2>
+  <ul style="font-size: 20px;">
+  {% for a in arcades %}
+    <li><a href=/arcade/{{ a.id }}>{{ a.name }}</a></li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
 <div class="modal fade" id="card_add" tabindex="-1" aria-labelledby="card_add_label" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
