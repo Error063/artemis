@@ -3,6 +3,7 @@ from typing import Any, List, Dict
 import logging
 import json
 import urllib
+from threading import Thread
 
 from core.config import CoreConfig
 from titles.diva.config import DivaConfig
@@ -663,50 +664,66 @@ class DivaBase:
 
         return pv_result
 
+    def task_generateScoreData(self, data: Dict, pd_by_pv_id, song):
+        
+        if int(song) > 0:
+            # the request do not send a edition so just perform a query best score and ranking for each edition.
+            # 0=ORIGINAL, 1=EXTRA
+            pd_db_song_0 = self.data.score.get_best_user_score(
+                data["pd_id"], int(song), data["difficulty"], edition=0
+            )
+            pd_db_song_1 = self.data.score.get_best_user_score(
+                data["pd_id"], int(song), data["difficulty"], edition=1
+            )
+
+            pd_db_ranking_0, pd_db_ranking_1 = None, None
+            if pd_db_song_0:
+                pd_db_ranking_0 = self.data.score.get_global_ranking(
+                    data["pd_id"], int(song), data["difficulty"], edition=0
+                )
+
+            if pd_db_song_1:
+                pd_db_ranking_1 = self.data.score.get_global_ranking(
+                    data["pd_id"], int(song), data["difficulty"], edition=1
+                )
+
+            pd_db_customize = self.data.pv_customize.get_pv_customize(
+                data["pd_id"], int(song)
+            )
+
+            # generate the pv_result string with the ORIGINAL edition and the EXTRA edition appended
+            pv_result = self._get_pv_pd_result(
+                int(song), pd_db_song_0, pd_db_ranking_0, pd_db_customize, edition=0
+            )
+            pv_result += "," + self._get_pv_pd_result(
+                int(song), pd_db_song_1, pd_db_ranking_1, pd_db_customize, edition=1
+            )
+
+            self.logger.debug(f"pv_result = {pv_result}")
+            pd_by_pv_id.append(urllib.parse.quote(pv_result))
+        else:
+            pd_by_pv_id.append(urllib.parse.quote(f"{song}***"))
+        pd_by_pv_id.append(",")
+
     def handle_get_pv_pd_request(self, data: Dict) -> Dict:
         song_id = data["pd_pv_id_lst"].split(",")
         pv = ""
 
+        threads = []
+        pd_by_pv_id = []
+
         for song in song_id:
-            if int(song) > 0:
-                # the request do not send a edition so just perform a query best score and ranking for each edition.
-                # 0=ORIGINAL, 1=EXTRA
-                pd_db_song_0 = self.data.score.get_best_user_score(
-                    data["pd_id"], int(song), data["difficulty"], edition=0
-                )
-                pd_db_song_1 = self.data.score.get_best_user_score(
-                    data["pd_id"], int(song), data["difficulty"], edition=1
-                )
+            thread_ScoreData = Thread(target=self.task_generateScoreData(data, pd_by_pv_id, song))
+            threads.append(thread_ScoreData)
 
-                pd_db_ranking_0, pd_db_ranking_1 = None, None
-                if pd_db_song_0:
-                    pd_db_ranking_0 = self.data.score.get_global_ranking(
-                        data["pd_id"], int(song), data["difficulty"], edition=0
-                    )
+        for x in threads:
+            x.start()
 
-                if pd_db_song_1:
-                    pd_db_ranking_1 = self.data.score.get_global_ranking(
-                        data["pd_id"], int(song), data["difficulty"], edition=1
-                    )
+        for x in threads:
+            x.join()
 
-                pd_db_customize = self.data.pv_customize.get_pv_customize(
-                    data["pd_id"], int(song)
-                )
-
-                # generate the pv_result string with the ORIGINAL edition and the EXTRA edition appended
-                pv_result = self._get_pv_pd_result(
-                    int(song), pd_db_song_0, pd_db_ranking_0, pd_db_customize, edition=0
-                )
-                pv_result += "," + self._get_pv_pd_result(
-                    int(song), pd_db_song_1, pd_db_ranking_1, pd_db_customize, edition=1
-                )
-
-                self.logger.debug(f"pv_result = {pv_result}")
-
-                pv += urllib.parse.quote(pv_result)
-            else:
-                pv += urllib.parse.quote(f"{song}***")
-            pv += ","
+        for x in pd_by_pv_id:
+            pv += x
 
         response = ""
         response += f"&pd_by_pv_id={pv[:-1]}"
