@@ -99,6 +99,7 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
 
+        # Maintain compatability
         self.map_post.connect(
             "mucha_boardauth",
             "/mucha/boardauth.do",
@@ -116,6 +117,28 @@ class HttpDispatcher(resource.Resource):
         self.map_post.connect(
             "mucha_dlstate",
             "/mucha/downloadstate.do",
+            controller="mucha",
+            action="handle_dlstate",
+            conditions=dict(method=["POST"]),
+        )
+
+        self.map_post.connect(
+            "mucha_boardauth",
+            "/mucha_front/boardauth.do",
+            controller="mucha",
+            action="handle_boardauth",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
+            "mucha_updatacheck",
+            "/mucha_front/updatacheck.do",
+            controller="mucha",
+            action="handle_updatecheck",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
+            "mucha_dlstate",
+            "/mucha_front/downloadstate.do",
             controller="mucha",
             action="handle_dlstate",
             conditions=dict(method=["POST"]),
