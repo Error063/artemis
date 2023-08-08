@@ -6,6 +6,8 @@ server:
   is_develop: True
   threading: False
   log_dir: "logs"
+  check_arcade_ip: False
+  strict_ip_checking: False
 
 title:
   loglevel: "info"

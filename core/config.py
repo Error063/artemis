@@ -48,6 +48,18 @@ class ServerConfig:
             self.__config, "core", "server", "log_dir", default="logs"
         )
 
+    @property
+    def check_arcade_ip(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "server", "check_arcade_ip", default=False
+        )
+
+    @property
+    def strict_ip_checking(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "server", "strict_ip_checking", default=False
+        )
+
 
 class TitleConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
