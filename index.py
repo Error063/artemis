@@ -216,11 +216,11 @@ class HttpDispatcher(resource.Resource):
             return ret
         
         elif ret is None:
-            self.logger.warn(f"None returned by controller for {request.uri.decode()} endpoint")
+            self.logger.warning(f"None returned by controller for {request.uri.decode()} endpoint")
             return b""
         
         else:
-            self.logger.warn(f"Unknown data type returned by controller for {request.uri.decode()} endpoint")
+            self.logger.warning(f"Unknown data type returned by controller for {request.uri.decode()} endpoint")
             return b""
 
 

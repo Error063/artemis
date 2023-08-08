@@ -22,6 +22,7 @@ arcade = Table(
     Column("city", String(255)),
     Column("region_id", Integer),
     Column("timezone", String(255)),
+    Column("ip", String(39)),
     mysql_charset="utf8mb4",
 )
 

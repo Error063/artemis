@@ -15,7 +15,7 @@ from core.utils import Utils
 
 
 class Data:
-    current_schema_version = 5
+    current_schema_version = 6
     engine = None
     session = None
     user = None
@@ -163,7 +163,7 @@ class Data:
                         version = mod.current_schema_version
 
                     else:
-                        self.logger.warn(
+                        self.logger.warning(
                             f"current_schema_version not found for {folder}"
                         )
 
@@ -171,7 +171,7 @@ class Data:
                 version = self.current_schema_version
 
         if version is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"Could not determine latest version for {game}, please specify --version"
             )
 
@@ -254,7 +254,7 @@ class Data:
             self.logger.error(f"Failed to create card for owner with id {user_id}")
             return
 
-        self.logger.warn(
+        self.logger.warning(
             f"Successfully created owner with email {email}, access code 00000000000000000000, and password {pw} Make sure to change this password and assign a real card ASAP!"
         )
 
@@ -269,7 +269,7 @@ class Data:
             return
 
         if not should_force:
-            self.logger.warn(
+            self.logger.warning(
                 f"Card already exists for access code {new_ac} (id {new_card['id']}). If you wish to continue, rerun with the '--force' flag."
                 f" All exiting data on the target card {new_ac} will be perminently erased and replaced with data from card {old_ac}."
             )
@@ -307,7 +307,7 @@ class Data:
     def autoupgrade(self) -> None:
         all_game_versions = self.base.get_all_schema_vers()
         if all_game_versions is None:
-            self.logger.warn("Failed to get schema versions")
+            self.logger.warning("Failed to get schema versions")
             return
 
         all_games = Utils.get_all_titles()

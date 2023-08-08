@@ -302,14 +302,14 @@ class ChuniStaticData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_event: failed to update event! version: {version}, event_id: {event_id}, enabled: {enabled}"
             )
             return None
 
         event = self.get_event(version, event_id)
         if event is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_event: failed to fetch event {event_id} after updating"
             )
             return None
@@ -506,7 +506,7 @@ class ChuniStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
@@ -541,7 +541,7 @@ class ChuniStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha card! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha card! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
@@ -577,7 +577,7 @@ class ChuniStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert card! card_id {card_id}")
+            self.logger.warning(f"Failed to insert card! card_id {card_id}")
             return None
         return result.lastrowid
 

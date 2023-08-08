@@ -530,7 +530,7 @@ class ChuniItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
+            self.logger.warning(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -572,7 +572,7 @@ class ChuniItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_user_print_state: Failed to insert! aime_id: {aime_id}"
             )
             return None
@@ -589,7 +589,7 @@ class ChuniItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_user_print_detail: Failed to insert! aime_id: {aime_id}"
             )
             return None

@@ -73,7 +73,7 @@ class ChuniBase:
 
                 # skip the current bonus preset if no boni were found
                 if all_login_boni is None or len(all_login_boni) < 1:
-                    self.logger.warn(
+                    self.logger.warning(
                         f"No bonus entries found for bonus preset {preset['presetId']}"
                     )
                     continue
@@ -149,7 +149,7 @@ class ChuniBase:
         game_events = self.data.static.get_enabled_events(self.version)
 
         if game_events is None or len(game_events) == 0:
-            self.logger.warn("No enabled events, did you run the reader?")
+            self.logger.warning("No enabled events, did you run the reader?")
             return {
                 "type": data["type"],
                 "length": 0,

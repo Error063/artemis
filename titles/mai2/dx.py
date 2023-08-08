@@ -552,7 +552,7 @@ class Mai2DX(Mai2Base):
         music_detail_list = []
 
         if user_id <= 0:
-            self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
+            self.logger.warning("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
             return {}
         
         songs = self.data.score.get_best_scores(user_id)

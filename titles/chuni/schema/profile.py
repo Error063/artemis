@@ -410,7 +410,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_profile_data: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_profile_data: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -452,7 +452,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_data_ex: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -479,7 +479,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_option: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -503,7 +503,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_option_ex: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -527,7 +527,7 @@ class ChuniProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_recent_rating: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -552,7 +552,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_activity: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -578,7 +578,7 @@ class ChuniProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_charge: Failed to update! aime_id: {aime_id}"
             )
             return None

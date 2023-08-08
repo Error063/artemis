@@ -64,7 +64,7 @@ class MuchaServlet:
         self.logger.debug(f"Mucha request {vars(req)}")
 
         if req.gameCd not in self.mucha_registry:
-            self.logger.warn(f"Unknown gameCd {req.gameCd}")
+            self.logger.warning(f"Unknown gameCd {req.gameCd}")
             return b"RESULTS=000"
 
         # TODO: Decrypt S/N
@@ -99,7 +99,7 @@ class MuchaServlet:
         self.logger.debug(f"Mucha request {vars(req)}")
 
         if req.gameCd not in self.mucha_registry:
-            self.logger.warn(f"Unknown gameCd {req.gameCd}")
+            self.logger.warning(f"Unknown gameCd {req.gameCd}")
             return b"RESULTS=000"
 
         resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}")

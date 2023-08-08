@@ -114,7 +114,7 @@ class IDZUserDBProtocol(Protocol):
             elif self.version == 230:
                 self.version_internal = IDZConstants.VER_IDZ_230
             else:
-                self.logger.warn(f"Bad version v{self.version}")
+                self.logger.warning(f"Bad version v{self.version}")
                 self.version = None
                 self.version_internal = None
 
@@ -142,7 +142,7 @@ class IDZUserDBProtocol(Protocol):
             self.version_internal
         ].get(cmd, None)
         if handler_cls is None:
-            self.logger.warn(f"No handler for v{self.version} {hex(cmd)} cmd")
+            self.logger.warning(f"No handler for v{self.version} {hex(cmd)} cmd")
             handler_cls = IDZHandlerBase
 
         handler = handler_cls(self.core_config, self.game_config, self.version_internal)

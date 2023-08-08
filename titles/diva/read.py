@@ -34,18 +34,18 @@ class DivaReader(BaseReader):
         pull_opt_rom = True
 
         if not path.exists(f"{self.bin_dir}/ram"):
-            self.logger.warn(f"Couldn't find ram folder in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find ram folder in {self.bin_dir}, skipping")
             pull_bin_ram = False
 
         if not path.exists(f"{self.bin_dir}/rom"):
-            self.logger.warn(f"Couldn't find rom folder in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find rom folder in {self.bin_dir}, skipping")
             pull_bin_rom = False
 
         if self.opt_dir is not None:
             opt_dirs = self.get_data_directories(self.opt_dir)
         else:
             pull_opt_rom = False
-            self.logger.warn("No option directory specified, skipping")
+            self.logger.warning("No option directory specified, skipping")
 
         if pull_bin_ram:
             self.read_ram(f"{self.bin_dir}/ram")
@@ -139,7 +139,7 @@ class DivaReader(BaseReader):
                                 else:
                                     continue
         else:
-            self.logger.warn(f"Databank folder not found in {ram_root_dir}, skipping")
+            self.logger.warning(f"Databank folder not found in {ram_root_dir}, skipping")
 
     def read_rom(self, rom_root_dir: str) -> None:
         self.logger.info(f"Read ROM from {rom_root_dir}")
@@ -150,7 +150,7 @@ class DivaReader(BaseReader):
         elif path.exists(f"{rom_root_dir}/pv_db.txt"):
             file_path = f"{rom_root_dir}/pv_db.txt"
         else:
-            self.logger.warn(
+            self.logger.warning(
                 f"Cannot find pv_db.txt or mdata_pv_db.txt in {rom_root_dir}, skipping"
             )
             return

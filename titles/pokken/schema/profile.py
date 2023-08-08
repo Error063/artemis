@@ -273,7 +273,7 @@ class PokkenProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert pokemon ID {pokemon_id} for user {user_id}")
+            self.logger.warning(f"Failed to insert pokemon ID {pokemon_id} for user {user_id}")
             return None
         return result.lastrowid
 
@@ -289,7 +289,7 @@ class PokkenProfileData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to add {xp} XP to pokemon ID {pokemon_id} for user {user_id}")
+            self.logger.warning(f"Failed to add {xp} XP to pokemon ID {pokemon_id} for user {user_id}")
 
     def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
         pass
@@ -319,7 +319,7 @@ class PokkenProfileData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to record match stats for user {user_id}'s pokemon {pokemon_id} (type {match_type.name} | result {match_result.name})")
+            self.logger.warning(f"Failed to record match stats for user {user_id}'s pokemon {pokemon_id} (type {match_type.name} | result {match_result.name})")
 
     def put_stats(
         self,
@@ -345,7 +345,7 @@ class PokkenProfileData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to update stats for user {user_id}")
+            self.logger.warning(f"Failed to update stats for user {user_id}")
 
     def update_support_team(self, user_id: int, support_id: int, support1: int = None, support2: int = None) -> None:
         if support1 == 4294967295:
@@ -363,4 +363,4 @@ class PokkenProfileData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to update support team {support_id} for user {user_id}")
+            self.logger.warning(f"Failed to update support team {support_id} for user {user_id}")

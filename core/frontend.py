@@ -231,7 +231,7 @@ class FE_Gate(FE_Base):
         
         user = self.data.user.get_user(card['user'])
         if user is None:
-            self.logger.warn(f"Card {ac} exists with no/invalid associated user ID {card['user']}")
+            self.logger.warning(f"Card {ac} exists with no/invalid associated user ID {card['user']}")
             return redirectTo(b"/gate?e=0", request)
 
         if user['password'] is not None:

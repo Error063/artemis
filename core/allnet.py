@@ -109,7 +109,7 @@ class AllnetServlet:
                 self.data.base.log_event(
                     "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
                 )
-                self.logger.warn(msg)
+                self.logger.warning(msg)
 
                 resp.stat = -1
                 resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
@@ -136,7 +136,7 @@ class AllnetServlet:
             self.data.base.log_event(
                 "allnet", "ALLNET_AUTH_UNKNOWN_SERIAL", logging.WARN, msg
             )
-            self.logger.warn(msg)
+            self.logger.warning(msg)
 
             resp.stat = -2
             resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
@@ -259,7 +259,7 @@ class AllnetServlet:
         try:
             req_dict: Dict = json.loads(req_raw)
         except Exception as e:
-            self.logger.warn(f"Failed to parse DL Report: {e}")
+            self.logger.warning(f"Failed to parse DL Report: {e}")
             return "NG"
         
         dl_data_type = DLIMG_TYPE.app
@@ -270,13 +270,13 @@ class AllnetServlet:
             dl_data = req_dict.get("optimage", {})
         
         if dl_data is None or not dl_data:
-            self.logger.warn(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
             return "NG"
 
         dl_report_data = DLReport(dl_data, dl_data_type)
 
         if not dl_report_data.validate():
-            self.logger.warn(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
             return "NG"
 
         return "OK"
@@ -334,7 +334,7 @@ class AllnetServlet:
             self.data.base.log_event(
                 "allnet", "BILLING_CHECKIN_NG_SERIAL", logging.WARN, msg
             )
-            self.logger.warn(msg)
+            self.logger.warning(msg)
 
             resp = BillingResponse("", "", "", "")
             resp.result = "1"

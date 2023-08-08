@@ -67,7 +67,7 @@ class ChuniReader(BaseReader):
                     if result is not None:
                         self.logger.info(f"Inserted login bonus preset {id}")
                     else:
-                        self.logger.warn(f"Failed to insert login bonus preset {id}")
+                        self.logger.warning(f"Failed to insert login bonus preset {id}")
 
                     for bonus in xml_root.find("infos").findall("LoginBonusDataInfo"):
                         for name in bonus.findall("loginBonusName"):
@@ -113,7 +113,7 @@ class ChuniReader(BaseReader):
                                 if result is not None:
                                     self.logger.info(f"Inserted login bonus {bonus_id}")
                                 else:
-                                    self.logger.warn(
+                                    self.logger.warning(
                                         f"Failed to insert login bonus {bonus_id}"
                                     )
 
@@ -138,7 +138,7 @@ class ChuniReader(BaseReader):
                     if result is not None:
                         self.logger.info(f"Inserted event {id}")
                     else:
-                        self.logger.warn(f"Failed to insert event {id}")
+                        self.logger.warning(f"Failed to insert event {id}")
 
     def read_music(self, music_dir: str) -> None:
         for root, dirs, files in walk(music_dir):
@@ -200,7 +200,7 @@ class ChuniReader(BaseReader):
                                         f"Inserted music {song_id} chart {chart_id}"
                                     )
                                 else:
-                                    self.logger.warn(
+                                    self.logger.warning(
                                         f"Failed to insert music {song_id} chart {chart_id}"
                                     )
 
@@ -232,7 +232,7 @@ class ChuniReader(BaseReader):
                     if result is not None:
                         self.logger.info(f"Inserted charge {id}")
                     else:
-                        self.logger.warn(f"Failed to insert charge {id}")
+                        self.logger.warning(f"Failed to insert charge {id}")
 
     def read_avatar(self, avatar_dir: str) -> None:
         for root, dirs, files in walk(avatar_dir):
@@ -259,4 +259,4 @@ class ChuniReader(BaseReader):
                     if result is not None:
                         self.logger.info(f"Inserted avatarAccessory {id}")
                     else:
-                        self.logger.warn(f"Failed to insert avatarAccessory {id}")
+                        self.logger.warning(f"Failed to insert avatarAccessory {id}")

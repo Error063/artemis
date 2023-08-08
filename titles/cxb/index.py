@@ -123,13 +123,13 @@ class CxbServlet(resource.Resource):
                 )
 
             except Exception as f:
-                self.logger.warn(
+                self.logger.warning(
                     f"Error decoding json: {e} / {f} - {req_url} - {req_bytes}"
                 )
                 return b""
 
         if req_json == {}:
-            self.logger.warn(f"Empty json request to {req_url}")
+            self.logger.warning(f"Empty json request to {req_url}")
             return b""
 
         cmd = url_split[len(url_split) - 1]
@@ -140,7 +140,7 @@ class CxbServlet(resource.Resource):
                 not type(req_json["dldate"]) is dict
                 or "filetype" not in req_json["dldate"]
             ):
-                self.logger.warn(f"Malformed dldate request: {req_url} {req_json}")
+                self.logger.warning(f"Malformed dldate request: {req_url} {req_json}")
                 return b""
 
             filetype = req_json["dldate"]["filetype"]

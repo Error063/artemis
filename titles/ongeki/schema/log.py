@@ -63,7 +63,7 @@ class OngekiLogData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_gp_log: Failed to insert GP log! aime_id: {aime_id} kind {kind} pattern {pattern} current_gp {current_gp}"
             )
         return result.lastrowid

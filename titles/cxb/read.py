@@ -33,7 +33,7 @@ class CxbReader(BaseReader):
         pull_bin_ram = True
 
         if not path.exists(f"{self.bin_dir}"):
-            self.logger.warn(f"Couldn't find csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find csv file in {self.bin_dir}, skipping")
             pull_bin_ram = False
 
         if pull_bin_ram:
@@ -124,4 +124,4 @@ class CxbReader(BaseReader):
                             int(row["easy"].replace("Easy ", "").replace("N/A", "0")),
                         )
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")

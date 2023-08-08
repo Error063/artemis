@@ -326,7 +326,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_card: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_card: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -346,7 +346,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_character: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_character: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -366,7 +366,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_deck: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_deck: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -394,7 +394,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_boss: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_boss: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -406,7 +406,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_story: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_story: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -426,7 +426,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_chapter: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_chapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -446,7 +446,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_item: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -479,7 +479,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_music_item: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_music_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -499,7 +499,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_login_bonus: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_login_bonus: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -521,7 +521,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_mission_point: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_mission_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -541,7 +541,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_event_point: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_event_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -561,7 +561,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_scenerio: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_scenerio: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -581,7 +581,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_trade_item: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_trade_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -601,7 +601,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_event_music: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_event_music: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -621,7 +621,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_tech_event: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_tech_event: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -651,7 +651,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -694,7 +694,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
+            self.logger.warning(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -709,7 +709,7 @@ class OngekiItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_user_print_detail: Failed to insert! aime_id: {aime_id}"
             )
             return None

@@ -57,7 +57,7 @@ class Mai2Base:
         events = self.data.static.get_enabled_events(self.version)
         events_lst = []
         if events is None or not events:
-            self.logger.warn("No enabled events, did you run the reader?")
+            self.logger.warning("No enabled events, did you run the reader?")
             return {"type": data["type"], "length": 0, "gameEventList": []}
 
         for event in events:
@@ -741,7 +741,7 @@ class Mai2Base:
         music_detail_list = []
 
         if user_id <= 0:
-            self.logger.warn("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
+            self.logger.warning("handle_get_user_music_api_request: Could not find userid in data, or userId is 0")
             return {}
         
         songs = self.data.score.get_best_scores(user_id, is_dx=False)
@@ -794,46 +794,46 @@ class Mai2Base:
         upload_date = photo.get("uploadDate", "")
 
         if order_id < 0 or user_id <= 0 or div_num < 0 or div_len <= 0 or not div_data or playlog_id < 0 or track_num <= 0 or not upload_date:
-            self.logger.warn(f"Malformed photo upload request")
+            self.logger.warning(f"Malformed photo upload request")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         if order_id == 0 and div_num > 0:
-            self.logger.warn(f"Failed to set orderId properly (still 0 after first chunk)")
+            self.logger.warning(f"Failed to set orderId properly (still 0 after first chunk)")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
 
         if div_num == 0 and order_id > 0:
-            self.logger.warn(f"First chuck re-send, Ignore")
+            self.logger.warning(f"First chuck re-send, Ignore")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         if div_num >= div_len:
-            self.logger.warn(f"Sent extra chunks ({div_num} >= {div_len})")
+            self.logger.warning(f"Sent extra chunks ({div_num} >= {div_len})")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
 
         if div_len >= 100:
-            self.logger.warn(f"Photo too large ({div_len} * 10240 = {div_len * 10240} bytes)")
+            self.logger.warning(f"Photo too large ({div_len} * 10240 = {div_len * 10240} bytes)")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         ret_code = order_id + 1
         photo_chunk = b64decode(div_data)
 
         if len(photo_chunk) > 10240 or (len(photo_chunk) < 10240 and div_num + 1 != div_len):
-            self.logger.warn(f"Incorrect data size after decoding (Expected 10240, got {len(photo_chunk)})")
+            self.logger.warning(f"Incorrect data size after decoding (Expected 10240, got {len(photo_chunk)})")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         out_name = f"{self.game_config.uploads.photos_dir}/{user_id}_{playlog_id}_{track_num}"
 
         if not path.exists(f"{out_name}.bin") and div_num != 0:
-            self.logger.warn(f"Out of order photo upload (div_num {div_num})")
+            self.logger.warning(f"Out of order photo upload (div_num {div_num})")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
     
         if path.exists(f"{out_name}.bin") and div_num == 0:
-            self.logger.warn(f"Duplicate file upload")
+            self.logger.warning(f"Duplicate file upload")
             return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         elif path.exists(f"{out_name}.bin"):
             fstats = stat(f"{out_name}.bin")
             if fstats.st_size != 10240 * div_num:
-                self.logger.warn(f"Out of order photo upload (trying to upload div {div_num}, expected div {fstats.st_size / 10240} for file sized {fstats.st_size} bytes)")
+                self.logger.warning(f"Out of order photo upload (trying to upload div {div_num}, expected div {fstats.st_size / 10240} for file sized {fstats.st_size} bytes)")
                 return {'returnCode': 0, 'apiName': 'UploadUserPhotoApi'}
         
         try:

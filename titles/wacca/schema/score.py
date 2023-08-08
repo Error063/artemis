@@ -294,7 +294,7 @@ class WaccaScoreData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_stageup: failed to update! user_id: {user_id} version: {version} stage_id: {stage_id}"
             )
             return None

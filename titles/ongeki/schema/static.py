@@ -105,7 +105,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert card! card_id {card_id}")
+            self.logger.warning(f"Failed to insert card! card_id {card_id}")
             return None
         return result.lastrowid
 
@@ -180,7 +180,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
@@ -215,7 +215,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha card! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha card! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
@@ -243,7 +243,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert event! event_id {event_id}")
+            self.logger.warning(f"Failed to insert event! event_id {event_id}")
             return None
         return result.lastrowid
 
@@ -304,7 +304,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"Failed to insert chart! song_id: {song_id}, chart_id: {chart_id}"
             )
             return None

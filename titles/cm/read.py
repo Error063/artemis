@@ -68,7 +68,7 @@ class CardMakerReader(BaseReader):
                     read_csv = getattr(CardMakerReader, func)
                     read_csv(self, f"{self.bin_dir}/MU3/{file}")
                 else:
-                    self.logger.warn(
+                    self.logger.warning(
                         f"Couldn't find {file} file in {self.bin_dir}, skipping"
                     )
 
