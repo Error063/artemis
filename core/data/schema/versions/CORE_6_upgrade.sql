@@ -1,0 +1,1 @@
+ALTER TABLE arcade ADD ip varchar(39) NULL;
