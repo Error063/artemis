@@ -213,35 +213,9 @@ class ArcadeData(BaseData):
         return f"{platform_code}{platform_rev:02d}A{serial_num:04d}{append:04d}"  # 0x41 = A, 0x52 = R
 
     def validate_keychip_format(self, serial: str) -> bool:
-        serial = serial.replace("-", "")
-        if len(serial) != 11 or len(serial) != 15:
-            self.logger.error(
-                f"Serial validate failed: Incorrect length for {serial} (len {len(serial)})"
-            )
+        if re.fullmatch(r"^A[0-9]{2}[E|X][-]?[0-9]{2}[A-HJ-NP-Z][0-9]{4}([0-9]{4})?$", serial) is None:
             return False
-
-        platform_code = serial[:4]
-        platform_rev = serial[4:6]
-        const_a = serial[6]
-        num = serial[7:11]
-        append = serial[11:15]
-
-        if re.match("A[7|6]\d[E|X][0|1][0|1|2]A\d{4,8}", serial) is None:
-            self.logger.error(f"Serial validate failed: {serial} failed regex")
-            return False
-
-        if len(append) != 0 or len(append) != 4:
-            self.logger.error(
-                f"Serial validate failed: {serial} had malformed append {append}"
-            )
-            return False
-
-        if len(num) != 4:
-            self.logger.error(
-                f"Serial validate failed: {serial} had malformed number {num}"
-            )
-            return False
-
+        
         return True
 
     def find_arcade_by_name(self, name: str) -> List[Row]:
