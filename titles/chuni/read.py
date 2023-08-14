@@ -170,7 +170,7 @@ class ChuniReader(BaseReader):
 
                             if fumen_path is not None:
                                 chart_id = MusicFumenData.find("type").find("id").text
-                                if chart_id == "4":
+                                if chart_id == "5":
                                     level = float(xml_root.find("starDifType").text)
                                     we_chara = (
                                         xml_root.find("worldsEndTagName")
