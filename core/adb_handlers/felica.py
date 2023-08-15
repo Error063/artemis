@@ -36,7 +36,7 @@ class ADBFelicaLookup2Request(ADBBaseRequest):
         self.card_key_ver, self.write_ct, self.maca, company, fw_ver, self.dfc = struct.unpack_from("<16s16sQccH", data, 0x40)
         self.idm = hex(idm)[2:].upper()
         self.pmm = hex(pmm)[2:].upper()
-        self.company = CompanyCodes(company)
+        self.company = CompanyCodes(int.from_bytes(company, 'little'))
         self.fw_ver = ReaderFwVer.from_byte(fw_ver)
 
 class ADBFelicaLookup2Response(ADBBaseResponse):
@@ -50,8 +50,8 @@ class ADBFelicaLookup2Response(ADBBaseResponse):
     def make(self) -> bytes:        
         resp_struct = Struct(
             "user_id" / Int32sl,
-            "relation1" / Int16sl,
-            "relation2" / Int16sl,
+            "relation1" / Int32sl,
+            "relation2" / Int32sl,
             "access_code" / Int8ub[10],
             "portal_status" / Int8ub,
             "company_code" / Int8ub,
