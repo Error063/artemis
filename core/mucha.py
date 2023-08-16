@@ -279,3 +279,67 @@ class MuchaDownloadStateRequest:
         self.boardId = request.get("boardId", "")
         self.placeId = request.get("placeId", "")
         self.storeRouterIp = request.get("storeRouterIp", "")
+
+class MuchaDownloadErrorRequest:
+    def __init__(self, request: Dict) -> None:        
+        self.gameCd = request.get("gameCd", "")
+        self.updateVer = request.get("updateVer", "")
+        self.serialNum = request.get("serialNum", "")
+        self.downloadUrl = request.get("downloadUrl", "")
+        self.errCd = request.get("errCd", "")
+        self.errMessage = request.get("errMessage", "")
+        self.boardId = request.get("boardId", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")
+
+class MuchaRegiAuthRequest:
+    def __init__(self, request: Dict) -> None:        
+        self.gameCd = request.get("gameCd", "")
+        self.serialNum = request.get("serialNum", "") # Encrypted
+        self.countryCd = request.get("countryCd", "")
+        self.registrationCd = request.get("registrationCd", "")
+        self.sendDate = request.get("sendDate", "")
+        self.useToken = request.get("useToken", "")
+        self.allToken = request.get("allToken", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")
+
+class MuchaRegiAuthResponse:
+    def __init__(self) -> None:
+        self.RESULTS = "001" # 001 = success, 099, 098, 097 = fail, others = fail
+        self.ALL_TOKEN = "0" # Encrypted
+        self.ADD_TOKEN = "0" # Encrypted
+
+class MuchaTokenStateRequest:
+    def __init__(self, request: Dict) -> None:        
+        self.gameCd = request.get("gameCd", "")
+        self.serialNum = request.get("serialNum", "")
+        self.countryCd = request.get("countryCd", "")
+        self.useToken = request.get("useToken", "")
+        self.allToken = request.get("allToken", "")
+        self.placeId = request.get("placeId", "")
+        self.storeRouterIp = request.get("storeRouterIp", "")
+
+class MuchaTokenStateResponse:
+    def __init__(self) -> None:
+        self.RESULTS = "001"
+
+class MuchaTokenMarginStateRequest:
+    def __init__(self, request: Dict) -> None:        
+        self.gameCd = request.get("gameCd", "")
+        self.serialNum = request.get("serialNum", "")
+        self.countryCd = request.get("countryCd", "")
+        self.placeId = request.get("placeId", "")
+        self.limitLowerToken = request.get("limitLowerToken", 0)
+        self.limitUpperToken = request.get("limitUpperToken", 0)
+        self.settlementMonth = request.get("settlementMonth", 0)
+
+class MuchaTokenMarginStateResponse:
+    def __init__(self) -> None:
+        self.RESULTS = "001"
+        self.LIMIT_LOWER_TOKEN = 0
+        self.LIMIT_UPPER_TOKEN = 0
+        self.LAST_SETTLEMENT_MONTH = 0
+        self.LAST_LIMIT_LOWER_TOKEN = 0
+        self.LAST_LIMIT_UPPER_TOKEN = 0
+        self.SETTLEMENT_MONTH = 0
