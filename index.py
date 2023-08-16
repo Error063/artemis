@@ -36,7 +36,7 @@ class HttpDispatcher(resource.Resource):
 
         self.map_post.connect(
             "allnet_downloadorder_report",
-            "/dl/report",
+            "/report-api/Report",
             controller="allnet",
             action="handle_dlorder_report",
             conditions=dict(method=["POST"]),
@@ -99,6 +99,7 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
 
+        # Maintain compatability
         self.map_post.connect(
             "mucha_boardauth",
             "/mucha/boardauth.do",
@@ -116,6 +117,28 @@ class HttpDispatcher(resource.Resource):
         self.map_post.connect(
             "mucha_dlstate",
             "/mucha/downloadstate.do",
+            controller="mucha",
+            action="handle_dlstate",
+            conditions=dict(method=["POST"]),
+        )
+
+        self.map_post.connect(
+            "mucha_boardauth",
+            "/mucha_front/boardauth.do",
+            controller="mucha",
+            action="handle_boardauth",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
+            "mucha_updatacheck",
+            "/mucha_front/updatacheck.do",
+            controller="mucha",
+            action="handle_updatecheck",
+            conditions=dict(method=["POST"]),
+        )
+        self.map_post.connect(
+            "mucha_dlstate",
+            "/mucha_front/downloadstate.do",
             controller="mucha",
             action="handle_dlstate",
             conditions=dict(method=["POST"]),
@@ -193,11 +216,11 @@ class HttpDispatcher(resource.Resource):
             return ret
         
         elif ret is None:
-            self.logger.warn(f"None returned by controller for {request.uri.decode()} endpoint")
+            self.logger.warning(f"None returned by controller for {request.uri.decode()} endpoint")
             return b""
         
         else:
-            self.logger.warn(f"Unknown data type returned by controller for {request.uri.decode()} endpoint")
+            self.logger.warning(f"Unknown data type returned by controller for {request.uri.decode()} endpoint")
             return b""
 
 

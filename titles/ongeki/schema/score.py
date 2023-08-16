@@ -139,7 +139,7 @@ class OngekiScoreData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_tech_count: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_tech_count: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -164,7 +164,7 @@ class OngekiScoreData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_best_score: Failed to add score! aime_id: {aime_id}")
+            self.logger.warning(f"put_best_score: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -175,6 +175,6 @@ class OngekiScoreData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"put_playlog: Failed to add playlog! aime_id: {aime_id}")
+            self.logger.warning(f"put_playlog: Failed to add playlog! aime_id: {aime_id}")
             return None
         return result.lastrowid

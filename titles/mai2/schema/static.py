@@ -161,7 +161,7 @@ class Mai2StaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert song {song_id} chart {chart_id}")
+            self.logger.warning(f"Failed to insert song {song_id} chart {chart_id}")
             return None
         return result.lastrowid
 
@@ -187,7 +187,7 @@ class Mai2StaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert charge {ticket_id} type {ticket_type}")
+            self.logger.warning(f"Failed to insert charge {ticket_id} type {ticket_type}")
             return None
         return result.lastrowid
 
@@ -237,7 +237,7 @@ class Mai2StaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert card {card_id}")
+            self.logger.warning(f"Failed to insert card {card_id}")
             return None
         return result.lastrowid
 

@@ -85,7 +85,7 @@ class Mai2Reader(BaseReader):
     
     def load_table_raw(self, dir: str, file: str, key: Optional[bytes]) -> Optional[List[Dict[str, str]]]:
         if not os.path.exists(f"{dir}/{file}"):
-            self.logger.warn(f"file {file} does not exist in directory {dir}, skipping")
+            self.logger.warning(f"file {file} does not exist in directory {dir}, skipping")
             return
         
         self.logger.info(f"Load table {file} from {dir}")
@@ -100,7 +100,7 @@ class Mai2Reader(BaseReader):
                 f_data = f.read()[0x10:]
         
         if f_data is None or not f_data:
-            self.logger.warn(f"file {dir} could not be read, skipping")
+            self.logger.warning(f"file {dir} could not be read, skipping")
             return
         
         f_data_deflate = zlib.decompress(f_data, wbits = zlib.MAX_WBITS | 16)[0x12:] # lop off the junk at the beginning
@@ -127,13 +127,13 @@ class Mai2Reader(BaseReader):
                     try:
                         struct_def.append(x[x.rindex("  ") + 2: -1])
                     except ValueError:
-                        self.logger.warn(f"rindex failed on line {x}")
+                        self.logger.warning(f"rindex failed on line {x}")
             
             if is_struct:
-                self.logger.warn("Struct not formatted properly")
+                self.logger.warning("Struct not formatted properly")
             
             if not struct_def:
-                self.logger.warn("Struct def not found")
+                self.logger.warning("Struct def not found")
                     
         name = file[:file.index(".")]
         if "_" in name:
@@ -148,7 +148,7 @@ class Mai2Reader(BaseReader):
                 continue
 
             if not line_match.group(1) == name.upper():
-                self.logger.warn(f"Strange regex match for line {x} -> {line_match}")
+                self.logger.warning(f"Strange regex match for line {x} -> {line_match}")
                 continue
             
             vals = line_match.group(2)

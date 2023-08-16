@@ -41,7 +41,7 @@ class WaccaReader(BaseReader):
 
     def read_music(self, base_dir: str, table: str) -> None:
         if not self.check_valid_pair(base_dir, table):
-            self.logger.warn(
+            self.logger.warning(
                 f"Cannot find {table} uasset/uexp pair at {base_dir}, music will not be read"
             )
             return

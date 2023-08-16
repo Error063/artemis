@@ -169,7 +169,7 @@ class WaccaItemData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to delete ticket id {id}")
+            self.logger.warning(f"Failed to delete ticket id {id}")
             return None
 
     def get_trophies(self, user_id: int, season: int = None) -> Optional[List[Row]]:

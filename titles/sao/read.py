@@ -33,7 +33,7 @@ class SaoReader(BaseReader):
         pull_bin_ram = True
 
         if not path.exists(f"{self.bin_dir}"):
-            self.logger.warn(f"Couldn't find csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find csv file in {self.bin_dir}, skipping")
             pull_bin_ram = False
 
         if pull_bin_ram:
@@ -66,7 +66,7 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
         
         self.logger.info("Now reading HeroLog.csv")
         try:
@@ -100,7 +100,7 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
         
         self.logger.info("Now reading Equipment.csv")
         try:
@@ -132,7 +132,7 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
 
         self.logger.info("Now reading Item.csv")
         try:
@@ -162,7 +162,7 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
         
         self.logger.info("Now reading SupportLog.csv")
         try:
@@ -194,7 +194,7 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
             
         self.logger.info("Now reading Title.csv")
         try:
@@ -227,7 +227,7 @@ class SaoReader(BaseReader):
                     elif len(titleId) < 6: # current server code cannot have multiple lengths for the id
                         continue
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")
 
         self.logger.info("Now reading RareDropTable.csv")
         try:
@@ -251,4 +251,4 @@ class SaoReader(BaseReader):
                     except Exception as err:
                         print(err)
         except Exception:
-            self.logger.warn(f"Couldn't read csv file in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't read csv file in {self.bin_dir}, skipping")

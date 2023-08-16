@@ -192,7 +192,7 @@ class WaccaBase:
         else:
             profile = self.data.profile.get_profile(req.userId)
             if profile is None:
-                self.logger.warn(
+                self.logger.warning(
                     f"Unknown user id {req.userId} attempted login from {req.chipId}"
                 )
                 return resp.make()
@@ -282,7 +282,7 @@ class WaccaBase:
 
         profile = self.data.profile.get_profile(req.userId)
         if profile is None:
-            self.logger.warn(f"Unknown profile {req.userId}")
+            self.logger.warning(f"Unknown profile {req.userId}")
             return resp.make()
 
         self.logger.info(f"Get detail for profile {req.userId}")
@@ -709,7 +709,7 @@ class WaccaBase:
         profile = self.data.profile.get_profile(req.profileId)
 
         if profile is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"handle_user_music_update_request: No profile for game_id {req.profileId}"
             )
             return resp.make()
@@ -1003,7 +1003,7 @@ class WaccaBase:
 
         profile = self.data.profile.get_profile(req.profileId)
         if profile is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"handle_user_vip_get_request no profile with ID {req.profileId}"
             )
             return BaseResponse().make()

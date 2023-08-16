@@ -39,8 +39,12 @@ class PokkenItemData(BaseData):
             type=item_type,
         )
 
-        result = self.execute(sql)
+        conflict = sql.on_duplicate_key_update(
+            content=content,
+        )
+
+        result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert reward for user {user_id}: {category}-{content}-{item_type}")
+            self.logger.warning(f"Failed to insert reward for user {user_id}: {category}-{content}-{item_type}")
             return None
         return result.lastrowid

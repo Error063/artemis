@@ -157,7 +157,7 @@ class WaccaLily(WaccaS):
         else:
             profile = self.data.profile.get_profile(req.userId)
             if profile is None:
-                self.logger.warn(
+                self.logger.warning(
                     f"Unknown user id {req.userId} attempted login from {req.chipId}"
                 )
                 return resp.make()
@@ -198,7 +198,7 @@ class WaccaLily(WaccaS):
 
         profile = self.data.profile.get_profile(req.userId)
         if profile is None:
-            self.logger.warn(f"Unknown profile {req.userId}")
+            self.logger.warning(f"Unknown profile {req.userId}")
             return resp.make()
 
         self.logger.info(f"Get detail for profile {req.userId}")

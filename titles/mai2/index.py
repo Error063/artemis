@@ -181,11 +181,14 @@ class Mai2Servlet:
             elif version >= 197:  # Finale
                 internal_ver = Mai2Constants.VER_MAIMAI_FINALE
         
-        if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
-            # If we get a 32 character long hex string, it's a hash and we're
-            # doing encrypted. The likelyhood of false positives is low but
-            # technically not 0
-            self.logger.error("Encryption not supported at this time")
+        if request.getHeader('Mai-Encoding') is not None or request.getHeader('X-Mai-Encoding') is not None:
+            # The has is some flavor of MD5 of the endpoint with a constant bolted onto the end of it.
+            # See cake.dll's Obfuscator function for details. Hopefully most DLL edits will remove
+            # these two(?) headers to not cause issues, but given the general quality of SEGA data...
+            enc_ver = request.getHeader('Mai-Encoding')
+            if enc_ver is None:
+                enc_ver = request.getHeader('X-Mai-Encoding')
+            self.logger.debug(f"Encryption v{enc_ver} - User-Agent: {request.getHeader('User-Agent')}")
 
         try:
             unzip = zlib.decompress(req_raw)

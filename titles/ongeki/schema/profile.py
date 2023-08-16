@@ -364,7 +364,7 @@ class OngekiProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_profile_data: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_profile_data: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -376,7 +376,7 @@ class OngekiProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_options: Failed to update! aime_id: {aime_id}"
             )
             return None
@@ -393,7 +393,7 @@ class OngekiProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_recent_rating: failed to update recent rating! aime_id {aime_id}"
             )
             return None
@@ -415,7 +415,7 @@ class OngekiProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_rating_log: failed to update rating log! aime_id {aime_id} data_version {data_version} highest_rating {highest_rating}"
             )
             return None
@@ -449,7 +449,7 @@ class OngekiProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_activity: failed to put activity! aime_id {aime_id} kind {kind} activity_id {activity_id}"
             )
             return None
@@ -466,7 +466,7 @@ class OngekiProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_region: failed to update! aime_id {aime_id} region {region}"
             )
             return None
@@ -480,7 +480,7 @@ class OngekiProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_best_score: Failed to add score! aime_id: {aime_id}")
+            self.logger.warning(f"put_best_score: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -492,7 +492,7 @@ class OngekiProfileData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_kop: Failed to add score! aime_id: {aime_id}")
+            self.logger.warning(f"put_kop: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
@@ -503,7 +503,7 @@ class OngekiProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_rival: failed to update! aime_id: {aime_id}, rival_id: {rival_id}"
             )
             return None

@@ -56,10 +56,10 @@ if __name__ == "__main__":
 
     elif args.action == "upgrade" or args.action == "rollback":
         if args.version is None:
-            data.logger.warn("No version set, upgrading to latest")
+            data.logger.warning("No version set, upgrading to latest")
 
         if args.game is None:
-            data.logger.warn("No game set, upgrading core schema")
+            data.logger.warning("No game set, upgrading core schema")
             data.migrate_database(
                 "CORE",
                 int(args.version) if args.version is not None else None,

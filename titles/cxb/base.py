@@ -52,7 +52,7 @@ class CxbBase:
             self.logger.info(f"Login user {data['login']['authid']}")
             return {"token": data["login"]["authid"], "uid": data["login"]["authid"]}
 
-        self.logger.warn(f"User {data['login']['authid']} does not have a profile")
+        self.logger.warning(f"User {data['login']['authid']} does not have a profile")
         return {}
 
     def task_generateCoupon(index, data1):

@@ -6,6 +6,8 @@ from datetime import datetime
 import pytz
 import base64
 import zlib
+import json
+from enum import Enum
 from Crypto.PublicKey import RSA
 from Crypto.Hash import SHA
 from Crypto.Signature import PKCS1_v1_5
@@ -18,6 +20,15 @@ from core.utils import Utils
 from core.data import Data
 from core.const import *
 
+class DLIMG_TYPE(Enum):
+    app = 0
+    opt = 1
+
+class ALLNET_STAT(Enum):
+    ok = 0
+    bad_game = -1
+    bad_machine = -2
+    bad_shop = -3
 
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):
@@ -97,33 +108,7 @@ class AllnetServlet:
         else:
             resp = AllnetPowerOnResponse()
 
-        self.logger.debug(f"Allnet request: {vars(req)}")        
-        if req.game_id not in self.uri_registry:
-            if not self.config.server.is_develop:
-                msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
-                self.data.base.log_event(
-                    "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
-                )
-                self.logger.warn(msg)
-
-                resp.stat = -1
-                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
-                return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
-
-            else:
-                self.logger.info(
-                    f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}"
-                )
-                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
-                resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
-                
-                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
-                resp_str = urllib.parse.unquote(urllib.parse.urlencode(resp_dict))
-                
-                self.logger.debug(f"Allnet response: {resp_str}")
-                return (resp_str + "\n").encode("utf-8")
-
-        resp.uri, resp.host = self.uri_registry[req.game_id]
+        self.logger.debug(f"Allnet request: {vars(req)}")
 
         machine = self.data.arcade.get_machine(req.serial)        
         if machine is None and not self.config.server.allow_unregistered_serials:
@@ -131,14 +116,38 @@ class AllnetServlet:
             self.data.base.log_event(
                 "allnet", "ALLNET_AUTH_UNKNOWN_SERIAL", logging.WARN, msg
             )
-            self.logger.warn(msg)
+            self.logger.warning(msg)
 
-            resp.stat = -2
+            resp.stat = ALLNET_STAT.bad_machine.value
             resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
             return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
 
         if machine is not None:
             arcade = self.data.arcade.get_arcade(machine["arcade"])
+            if self.config.server.check_arcade_ip:
+                if arcade["ip"] and arcade["ip"] is not None and arcade["ip"] != req.ip:
+                    msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip} (expected {arcade['ip']})."
+                    self.data.base.log_event(
+                        "allnet", "ALLNET_AUTH_BAD_IP", logging.ERROR, msg
+                    )
+                    self.logger.warning(msg)
+
+                    resp.stat = ALLNET_STAT.bad_shop.value
+                    resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                    return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
+                
+                elif not arcade["ip"] or arcade["ip"] is None and self.config.server.strict_ip_checking:
+                    msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip}, but arcade {arcade['id']} has no IP set! (strict checking enabled)."
+                    self.data.base.log_event(
+                        "allnet", "ALLNET_AUTH_NO_SHOP_IP", logging.ERROR, msg
+                    )
+                    self.logger.warning(msg)
+
+                    resp.stat = ALLNET_STAT.bad_shop.value
+                    resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                    return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
+
+
             country = (
                 arcade["country"] if machine["country"] is None else machine["country"]
             )
@@ -169,6 +178,33 @@ class AllnetServlet:
             resp.client_timezone = (
                 arcade["timezone"] if arcade["timezone"] is not None else "+0900"
             )
+        
+        if req.game_id not in self.uri_registry:
+            if not self.config.server.is_develop:
+                msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
+                self.data.base.log_event(
+                    "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
+                )
+                self.logger.warning(msg)
+
+                resp.stat = ALLNET_STAT.bad_game.value
+                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
+
+            else:
+                self.logger.info(
+                    f"Allowed unknown game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}"
+                )
+                resp.uri = f"http://{self.config.title.hostname}:{self.config.title.port}/{req.game_id}/{req.ver.replace('.', '')}/"
+                resp.host = f"{self.config.title.hostname}:{self.config.title.port}"
+                
+                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                resp_str = urllib.parse.unquote(urllib.parse.urlencode(resp_dict))
+                
+                self.logger.debug(f"Allnet response: {resp_str}")
+                return (resp_str + "\n").encode("utf-8")
+
+        resp.uri, resp.host = self.uri_registry[req.game_id]
 
         int_ver = req.ver.replace(".", "")
         resp.uri = resp.uri.replace("$v", int_ver)
@@ -241,6 +277,7 @@ class AllnetServlet:
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
             self.logger.info(f"Request for DL INI file {req_file} from {Utils.get_ip_addr(request)} successful")
             self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
+            
             return open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "rb"
             ).read()
@@ -249,10 +286,31 @@ class AllnetServlet:
         return b""
 
     def handle_dlorder_report(self, request: Request, match: Dict) -> bytes:
-        self.logger.info(
-            f"DLI Report from {Utils.get_ip_addr(request)}: {request.content.getvalue()}"
-        )
-        return b""
+        req_raw = request.content.getvalue()
+        try:
+            req_dict: Dict = json.loads(req_raw)
+        except Exception as e:
+            self.logger.warning(f"Failed to parse DL Report: {e}")
+            return "NG"
+        
+        dl_data_type = DLIMG_TYPE.app
+        dl_data = req_dict.get("appimage", {})
+        
+        if dl_data is None or not dl_data:
+            dl_data_type = DLIMG_TYPE.opt
+            dl_data = req_dict.get("optimage", {})
+        
+        if dl_data is None or not dl_data:
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
+            return "NG"
+
+        dl_report_data = DLReport(dl_data, dl_data_type)
+
+        if not dl_report_data.validate():
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
+            return "NG"
+
+        return "OK"
 
     def handle_loaderstaterecorder(self, request: Request, match: Dict) -> bytes:
         req_data = request.content.getvalue()
@@ -307,7 +365,7 @@ class AllnetServlet:
             self.data.base.log_event(
                 "allnet", "BILLING_CHECKIN_NG_SERIAL", logging.WARN, msg
             )
-            self.logger.warn(msg)
+            self.logger.warning(msg)
 
             resp = BillingResponse("", "", "", "")
             resp.result = "1"
@@ -529,3 +587,86 @@ class AllnetRequestException(Exception):
     def __init__(self, message="") -> None:
         self.message = message
         super().__init__(self.message)
+
+class DLReport:
+    def __init__(self, data: Dict, report_type: DLIMG_TYPE) -> None:
+        self.serial = data.get("serial")
+        self.dfl = data.get("dfl")
+        self.wfl = data.get("wfl")
+        self.tsc = data.get("tsc")
+        self.tdsc = data.get("tdsc")
+        self.at = data.get("at")
+        self.ot = data.get("ot")
+        self.rt = data.get("rt")
+        self.as_ = data.get("as")
+        self.rf_state = data.get("rf_state")
+        self.gd = data.get("gd")
+        self.dav = data.get("dav")
+        self.wdav = data.get("wdav") # app only
+        self.dov = data.get("dov")
+        self.wdov = data.get("wdov") # app only
+        self.__type = report_type
+        self.err = ""
+    
+    def validate(self) -> bool:
+        if  self.serial is None:
+            self.err = "serial not provided"
+            return False
+        
+        if self.dfl is None: 
+            self.err = "dfl not provided"
+            return False
+        
+        if self.wfl is None:
+            self.err = "wfl not provided"
+            return False
+        
+        if self.tsc is None:
+            self.err = "tsc not provided"
+            return False
+        
+        if self.tdsc is None:
+            self.err = "tdsc not provided"
+            return False
+        
+        if self.at is None:
+            self.err = "at not provided"
+            return False
+        
+        if self.ot is None:
+            self.err = "ot not provided"
+            return False
+        
+        if self.rt is None:
+            self.err = "rt not provided"
+            return False
+        
+        if self.as_ is None:
+            self.err = "as not provided"
+            return False
+        
+        if self.rf_state is None:
+            self.err = "rf_state not provided"
+            return False
+        
+        if self.gd is None:
+            self.err = "gd not provided"
+            return False
+        
+        if self.dav is None:
+            self.err = "dav not provided"
+            return False
+        
+        if self.dov is None:
+            self.err = "dov not provided"
+            return False
+        
+        if (self.wdav is None or self.wdov is None) and self.__type == DLIMG_TYPE.app:
+            self.err = "wdav or wdov not provided in app image"
+            return False
+        
+        if (self.wdav is not None or self.wdov is not None) and self.__type == DLIMG_TYPE.opt:
+            self.err = "wdav or wdov provided in opt image"
+            return False
+        
+        return True

@@ -63,7 +63,7 @@ class WaccaStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert music {song_id} chart {chart_id}")
+            self.logger.warning(f"Failed to insert music {song_id} chart {chart_id}")
             return None
         return result.lastrowid
 

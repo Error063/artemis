@@ -488,7 +488,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile: Failed to create profile! user_id {user_id} is_dx {is_dx}"
             )
             return None
@@ -525,7 +525,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_ghost: failed to update! {user_id}")
+            self.logger.warning(f"put_profile_ghost: failed to update! {user_id}")
             return None
         return result.lastrowid
 
@@ -552,7 +552,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_extend: failed to update! {user_id}")
+            self.logger.warning(f"put_profile_extend: failed to update! {user_id}")
             return None
         return result.lastrowid
 
@@ -582,7 +582,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_option: failed to update! {user_id} is_dx {is_dx}")
+            self.logger.warning(f"put_profile_option: failed to update! {user_id} is_dx {is_dx}")
             return None
         return result.lastrowid
 
@@ -616,7 +616,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_profile_rating: failed to update! {user_id}")
+            self.logger.warning(f"put_profile_rating: failed to update! {user_id}")
             return None
         return result.lastrowid
 
@@ -643,7 +643,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(f"put_region: failed to update! {user_id}")
+            self.logger.warning(f"put_region: failed to update! {user_id}")
             return None
         return result.lastrowid
 
@@ -668,7 +668,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_profile_activity: failed to update! user_id: {user_id}"
             )
             return None
@@ -698,7 +698,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_web_option: failed to update! user_id: {user_id}"
             )
             return None
@@ -720,7 +720,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_grade_status: failed to update! user_id: {user_id}"
             )
             return None
@@ -742,7 +742,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_boss_list: failed to update! user_id: {user_id}"
             )
             return None
@@ -763,7 +763,7 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_recent_rating: failed to update! user_id: {user_id}"
             )
             return None

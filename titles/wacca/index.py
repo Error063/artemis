@@ -146,7 +146,7 @@ class WaccaServlet:
         self.logger.debug(req_json)
 
         if not hasattr(self.versions[internal_ver], func_to_find):
-            self.logger.warn(
+            self.logger.warning(
                 f"{req_json['appVersion']} has no handler for {func_to_find}"
             )
             resp = BaseResponse().make()

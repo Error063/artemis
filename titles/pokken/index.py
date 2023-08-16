@@ -112,7 +112,7 @@ class PokkenServlet(resource.Resource):
         try:
             pokken_request.ParseFromString(content)
         except DecodeError as e:
-            self.logger.warn(f"{e} {content}")
+            self.logger.warning(f"{e} {content}")
             return b""
 
         endpoint = jackal_pb2.MessageType.DESCRIPTOR.values_by_number[
@@ -123,7 +123,7 @@ class PokkenServlet(resource.Resource):
 
         handler = getattr(self.base, f"handle_{endpoint}", None)
         if handler is None:
-            self.logger.warn(f"No handler found for message type {endpoint}")
+            self.logger.warning(f"No handler found for message type {endpoint}")
             return self.base.handle_noop(pokken_request)
 
         self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
@@ -157,7 +157,7 @@ class PokkenServlet(resource.Resource):
             None,
         )
         if handler is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"No handler found for message type {json_content['call']}"
             )
             return json.dumps(self.base.handle_matching_noop()).encode()

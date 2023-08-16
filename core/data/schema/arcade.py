@@ -1,9 +1,10 @@
-from typing import Optional, Dict
-from sqlalchemy import Table, Column
+from typing import Optional, Dict, List
+from sqlalchemy import Table, Column, and_, or_
 from sqlalchemy.sql.schema import ForeignKey, PrimaryKeyConstraint
-from sqlalchemy.types import Integer, String, Boolean
+from sqlalchemy.types import Integer, String, Boolean, JSON
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.engine import Row
 import re
 
 from core.data.schema.base import BaseData, metadata
@@ -21,6 +22,7 @@ arcade = Table(
     Column("city", String(255)),
     Column("region_id", Integer),
     Column("timezone", String(255)),
+    Column("ip", String(39)),
     mysql_charset="utf8mb4",
 )
 
@@ -40,6 +42,9 @@ machine = Table(
     Column("timezone", String(255)),
     Column("ota_enable", Boolean),
     Column("is_cab", Boolean),
+    Column("memo", String(255)),
+    Column("is_cab", Boolean),
+    Column("data", JSON),
     mysql_charset="utf8mb4",
 )
 
@@ -65,7 +70,7 @@ arcade_owner = Table(
 
 
 class ArcadeData(BaseData):
-    def get_machine(self, serial: str = None, id: int = None) -> Optional[Dict]:
+    def get_machine(self, serial: str = None, id: int = None) -> Optional[Row]:
         if serial is not None:
             serial = serial.replace("-", "")
             if len(serial) == 11:
@@ -130,12 +135,19 @@ class ArcadeData(BaseData):
                 f"Failed to update board id for machine {machine_id} -> {boardid}"
             )
 
-    def get_arcade(self, id: int) -> Optional[Dict]:
+    def get_arcade(self, id: int) -> Optional[Row]:
         sql = arcade.select(arcade.c.id == id)
         result = self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
+    
+    def get_arcade_machines(self, id: int) -> Optional[List[Row]]:
+        sql = machine.select(machine.c.arcade == id)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def put_arcade(
         self,
@@ -165,7 +177,21 @@ class ArcadeData(BaseData):
             return None
         return result.lastrowid
 
-    def get_arcade_owners(self, arcade_id: int) -> Optional[Dict]:
+    def get_arcades_managed_by_user(self, user_id: int) -> Optional[List[Row]]:
+        sql = select(arcade).join(arcade_owner, arcade_owner.c.arcade == arcade.c.id).where(arcade_owner.c.user == user_id)
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchall()
+    
+    def get_manager_permissions(self, user_id: int, arcade_id: int) -> Optional[int]:
+        sql = select(arcade_owner.c.permissions).where(and_(arcade_owner.c.user == user_id, arcade_owner.c.arcade == arcade_id))
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchone()
+
+    def get_arcade_owners(self, arcade_id: int) -> Optional[Row]:
         sql = select(arcade_owner).where(arcade_owner.c.arcade == arcade_id)
 
         result = self.execute(sql)
@@ -187,33 +213,14 @@ class ArcadeData(BaseData):
         return f"{platform_code}{platform_rev:02d}A{serial_num:04d}{append:04d}"  # 0x41 = A, 0x52 = R
 
     def validate_keychip_format(self, serial: str) -> bool:
-        serial = serial.replace("-", "")
-        if len(serial) != 11 or len(serial) != 15:
-            self.logger.error(
-                f"Serial validate failed: Incorrect length for {serial} (len {len(serial)})"
-            )
+        if re.fullmatch(r"^A[0-9]{2}[E|X][-]?[0-9]{2}[A-HJ-NP-Z][0-9]{4}([0-9]{4})?$", serial) is None:
             return False
-
-        platform_code = serial[:4]
-        platform_rev = serial[4:6]
-        const_a = serial[6]
-        num = serial[7:11]
-        append = serial[11:15]
-
-        if re.match("A[7|6]\d[E|X][0|1][0|1|2]A\d{4,8}", serial) is None:
-            self.logger.error(f"Serial validate failed: {serial} failed regex")
-            return False
-
-        if len(append) != 0 or len(append) != 4:
-            self.logger.error(
-                f"Serial validate failed: {serial} had malformed append {append}"
-            )
-            return False
-
-        if len(num) != 4:
-            self.logger.error(
-                f"Serial validate failed: {serial} had malformed number {num}"
-            )
-            return False
-
+        
         return True
+
+    def find_arcade_by_name(self, name: str) -> List[Row]:
+        sql = arcade.select(or_(arcade.c.name.like(f"%{name}%"), arcade.c.nickname.like(f"%{name}%")))
+        result = self.execute(sql)
+        if result is None:
+            return False
+        return result.fetchall()

@@ -204,7 +204,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_item: failed to insert item! user_id: {user_id}, item_kind: {item_kind}, item_id: {item_id}"
             )
             return None
@@ -261,7 +261,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_login_bonus: failed to insert item! user_id: {user_id}, bonus_id: {bonus_id}, point: {point}"
             )
             return None
@@ -312,7 +312,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_map: failed to insert item! user_id: {user_id}, map_id: {map_id}, distance: {distance}"
             )
             return None
@@ -341,7 +341,7 @@ class Mai2ItemData(BaseData):
         conflict = sql.on_duplicate_key_update(**char_data)
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_character_: failed to insert item! user_id: {user_id}"
             )
             return None
@@ -371,7 +371,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_character: failed to insert item! user_id: {user_id}, character_id: {character_id}, level: {level}"
             )
             return None
@@ -414,7 +414,7 @@ class Mai2ItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_friend_season_ranking: failed to insert",
                 f"friend_season_ranking! aime_id: {aime_id}",
             )
@@ -432,7 +432,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_favorite: failed to insert item! user_id: {user_id}, kind: {kind}"
             )
             return None
@@ -477,7 +477,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_card: failed to insert card! user_id: {user_id}, kind: {card_kind}"
             )
             return None
@@ -516,7 +516,7 @@ class Mai2ItemData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_card: failed to insert charge! user_id: {user_id}, chargeId: {charge_id}"
             )
             return None
@@ -541,7 +541,7 @@ class Mai2ItemData(BaseData):
         result = self.execute(conflict)
 
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"put_user_print_detail: Failed to insert! aime_id: {aime_id}"
             )
             return None

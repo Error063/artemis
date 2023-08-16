@@ -218,7 +218,7 @@ class WaccaProfileData(BaseData):
 
         result = self.execute(sql)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_profile_dan: Failed to update! profile {profile_id}"
             )
             return None

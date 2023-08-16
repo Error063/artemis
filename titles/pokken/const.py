@@ -15,6 +15,7 @@ class PokkenConstants:
         AI = 2
         LAN = 3
         WAN = 4
+        TUTORIAL_3 = 7
 
     class BATTLE_RESULT(Enum):
         WIN = 1

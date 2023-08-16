@@ -62,7 +62,7 @@ class TitleServlet:
                             self.title_registry[code] = handler_cls
 
                 else:
-                    self.logger.warn(f"Game {folder} has no get_allnet_info")
+                    self.logger.warning(f"Game {folder} has no get_allnet_info")
 
             else:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py")
@@ -74,13 +74,13 @@ class TitleServlet:
     def render_GET(self, request: Request, endpoints: dict) -> bytes:
         code = endpoints["game"]
         if code not in self.title_registry:
-            self.logger.warn(f"Unknown game code {code}")
+            self.logger.warning(f"Unknown game code {code}")
             request.setResponseCode(404)
             return b""
 
         index = self.title_registry[code]
         if not hasattr(index, "render_GET"):
-            self.logger.warn(f"{code} does not dispatch GET")
+            self.logger.warning(f"{code} does not dispatch GET")
             request.setResponseCode(405)
             return b""
 
@@ -89,13 +89,13 @@ class TitleServlet:
     def render_POST(self, request: Request, endpoints: dict) -> bytes:
         code = endpoints["game"]
         if code not in self.title_registry:
-            self.logger.warn(f"Unknown game code {code}")
+            self.logger.warning(f"Unknown game code {code}")
             request.setResponseCode(404)
             return b""
 
         index = self.title_registry[code]
         if not hasattr(index, "render_POST"):
-            self.logger.warn(f"{code} does not dispatch POST")
+            self.logger.warning(f"{code} does not dispatch POST")
             request.setResponseCode(405)
             return b""
 
