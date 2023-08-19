@@ -119,7 +119,7 @@ class AimedbProtocol(Protocol):
         
     def handle_default(self, data: bytes, resp_code: int, length: int = 0x20) -> ADBBaseResponse:
         req = ADBHeader.from_data(data)
-        return ADBBaseResponse(resp_code, length, 1, req.game_id, req.store_id, req.keychip_id)
+        return ADBBaseResponse(resp_code, length, 1, req.game_id, req.store_id, req.keychip_id, req.protocol_ver)
 
     def handle_hello(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         return self.handle_default(data, resp_code)
@@ -128,13 +128,13 @@ class AimedbProtocol(Protocol):
         h = ADBHeader.from_data(data)
         if h.protocol_ver >= 0x3030:
             req = h
-            resp = ADBCampaignResponse(req.game_id, req.store_id, req.keychip_id)
+            resp = ADBCampaignResponse.from_req(req)
 
         else:
             req = ADBOldCampaignRequest(data)
             
             self.logger.info(f"Legacy campaign request for campaign {req.campaign_id} (protocol version {hex(h.protocol_ver)})")
-            resp = ADBOldCampaignResponse(req.head.game_id, req.head.store_id, req.head.keychip_id)
+            resp = ADBOldCampaignResponse.from_req(req.head)
         
         # We don't currently support campaigns
         return resp
@@ -143,7 +143,7 @@ class AimedbProtocol(Protocol):
         req = ADBLookupRequest(data)
         user_id = self.data.card.get_user_id_from_card(req.access_code)
 
-        ret = ADBLookupResponse(user_id, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        ret = ADBLookupResponse.from_req(req.head, user_id)
         
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
@@ -154,7 +154,7 @@ class AimedbProtocol(Protocol):
         req = ADBLookupRequest(data)
         user_id = self.data.card.get_user_id_from_card(req.access_code)
 
-        ret = ADBLookupExResponse(user_id, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        ret = ADBLookupExResponse.from_req(req.head, user_id)
         
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
@@ -175,7 +175,7 @@ class AimedbProtocol(Protocol):
         self.logger.info(
             f"idm {req.idm} ipm {req.pmm} -> access_code {ac}"
         )
-        return ADBFelicaLookupResponse(ac, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBFelicaLookupResponse.from_req(req.head, ac)
 
     def handle_felica_register(self, data: bytes, resp_code: int) -> bytes:
         """
@@ -207,7 +207,7 @@ class AimedbProtocol(Protocol):
                 f"Registration blocked!: access code {ac} (IDm: {req.idm} PMm: {req.pmm})"
             )
 
-        return ADBFelicaLookupResponse(ac, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBFelicaLookupResponse.from_req(req.head, ac)
 
     def handle_felica_lookup_ex(self, data: bytes, resp_code: int) -> bytes:
         req = ADBFelicaLookup2Request(data)
@@ -221,12 +221,12 @@ class AimedbProtocol(Protocol):
             f"idm {req.idm} ipm {req.pmm} -> access_code {access_code} user_id {user_id}"
         )
 
-        return ADBFelicaLookup2Response(user_id, access_code, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBFelicaLookup2Response.from_req(req.head, user_id, access_code)
 
     def handle_campaign_clear(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         req = ADBCampaignClearRequest(data)
 
-        resp = ADBCampaignClearResponse(req.head.game_id, req.head.store_id, req.head.keychip_id)
+        resp = ADBCampaignClearResponse.from_req(req.head)
 
         # We don't support campaign stuff
         return resp
@@ -258,7 +258,7 @@ class AimedbProtocol(Protocol):
                 f"Registration blocked!: access code {req.access_code}"
             )
 
-        resp = ADBLookupResponse(user_id, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        resp = ADBLookupResponse.from_req(req.head, user_id)
         if resp.user_id <= 0:
             resp.head.status = ADBStatus.BAN_SYS # Closest we can get to a "You cannot register"
 
@@ -268,17 +268,17 @@ class AimedbProtocol(Protocol):
     def handle_status_log(self, data: bytes, resp_code: int) -> bytes:
         req = ADBStatusLogRequest(data)
         self.logger.info(f"User {req.aime_id} logged {req.status.name} event")
-        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
 
     def handle_log(self, data: bytes, resp_code: int) -> bytes:
         req = ADBLogRequest(data)
         self.logger.info(f"User {req.aime_id} logged {req.status.name} event, credit_ct: {req.credit_ct} bet_ct: {req.bet_ct} won_ct: {req.won_ct}")
-        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
 
     def handle_log_ex(self, data: bytes, resp_code: int) -> bytes:
         req = ADBLogExRequest(data)
         self.logger.info(f"User {req.aime_id} logged {req.status.name} event, credit_ct: {req.credit_ct} bet_ct: {req.bet_ct} won_ct: {req.won_ct}")
-        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id)
+        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
 
     def handle_goodbye(self, data: bytes, resp_code: int) -> None:
         self.logger.info(f"goodbye from {self.transport.getPeer().host}")

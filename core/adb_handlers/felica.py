@@ -13,7 +13,13 @@ class ADBFelicaLookupResponse(ADBBaseResponse):
     def __init__(self, access_code: str = None, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", code: int = 0x03, length: int = 0x30, status: int = 1) -> None:
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.access_code = access_code if access_code is not None else "00000000000000000000"
-
+    
+    @classmethod
+    def from_req(cls, req: ADBHeader, access_code: str = None) -> "ADBFelicaLookupResponse":
+        c = cls(access_code, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
+    
     def make(self) -> bytes:        
         resp_struct = Struct(
             "felica_idx" / Int32ul,
@@ -46,6 +52,12 @@ class ADBFelicaLookup2Response(ADBBaseResponse):
         self.access_code = access_code if access_code is not None else "00000000000000000000"
         self.company = CompanyCodes.SEGA
         self.portal_status = PortalRegStatus.NO_REG
+
+    @classmethod
+    def from_req(cls, req: ADBHeader, user_id: Union[int, None] = None, access_code: Union[str, None] = None) -> "ADBFelicaLookup2Response":
+        c = cls(user_id, access_code, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
 
     def make(self) -> bytes:        
         resp_struct = Struct(
