@@ -55,6 +55,12 @@ class ADBCampaignResponse(ADBBaseResponse):
     def __init__(self, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", code: int = 0x0C, length: int = 0x200, status: int = 1) -> None:
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.campaigns = [Campaign(), Campaign(), Campaign()]
+    
+    @classmethod
+    def from_req(cls, req: ADBHeader) -> "ADBCampaignResponse":
+        c = cls(req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
 
     def make(self) -> bytes:
         body = b""
@@ -77,6 +83,12 @@ class ADBOldCampaignResponse(ADBBaseResponse):
         self.info1 = 0
         self.info2 = 0
         self.info3 = 0
+    
+    @classmethod
+    def from_req(cls, req: ADBHeader) -> "ADBCampaignResponse":
+        c = cls(req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
     
     def make(self) -> bytes:
         resp_struct = Struct(
@@ -103,7 +115,13 @@ class ADBCampaignClearResponse(ADBBaseResponse):
     def __init__(self, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", code: int = 0x0E, length: int = 0x50, status: int = 1) -> None:
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.campaign_clear_status = [CampaignClear(), CampaignClear(), CampaignClear()]
-
+    
+    @classmethod
+    def from_req(cls, req: ADBHeader) -> "ADBCampaignResponse":
+        c = cls(req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
+    
     def make(self) -> bytes:
         body = b""
         

@@ -31,7 +31,18 @@ class CardMakerVersionConfig:
         1: {"ongeki": 1.30.01, "chuni": 2.00.00, "maimai": 1.20.00}
         """
         return CoreConfig.get_config_field(
-            self.__config, "cardmaker", "version", default={}
+            self.__config, "cardmaker", "version", default={
+                0: {    
+                    "ongeki": "1.30.01",
+                    "chuni": "2.00.00",
+                    "maimai": "1.20.00"
+                },
+                1: {
+                    "ongeki": "1.35.03",
+                    "chuni": "2.10.00",
+                    "maimai": "1.30.00"
+                }
+            }
         )[version]
 
 
