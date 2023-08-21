@@ -607,7 +607,7 @@ class float5:
     
     @classmethod
     def to_str(cls, f: float):
-        return f"%.{4 - int(math.log10(f))+1}f" % f
+        return f"%.{2 - int(math.log10(f))+1}f" % f
 
 class BillingInfo:
     def __init__(self, data: Dict) -> None:
