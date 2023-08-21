@@ -201,6 +201,12 @@ class AllnetConfig:
         )
 
     @property
+    def ip_check(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "ip_check", default=False
+        )
+
+    @property
     def allow_online_updates(self) -> int:
         return CoreConfig.get_config_field(
             self.__config, "core", "allnet", "allow_online_updates", default=False

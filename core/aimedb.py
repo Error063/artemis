@@ -277,8 +277,12 @@ class AimedbProtocol(Protocol):
 
     def handle_log_ex(self, data: bytes, resp_code: int) -> bytes:
         req = ADBLogExRequest(data)
-        self.logger.info(f"User {req.aime_id} logged {req.status.name} event, credit_ct: {req.credit_ct} bet_ct: {req.bet_ct} won_ct: {req.won_ct}")
-        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
+        strs = []
+        self.logger.info(f"Recieved {req.num_logs} or {len(req.logs)} logs")
+        
+        for x in range(req.num_logs):
+            self.logger.debug(f"User {req.logs[x].aime_id} logged {req.logs[x].status.name} event, credit_ct: {req.logs[x].credit_ct} bet_ct: {req.logs[x].bet_ct} won_ct: {req.logs[x].won_ct}")
+        return ADBLogExResponse.from_req(req.head)
 
     def handle_goodbye(self, data: bytes, resp_code: int) -> None:
         self.logger.info(f"goodbye from {self.transport.getPeer().host}")
