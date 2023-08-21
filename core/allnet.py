@@ -83,8 +83,16 @@ class AllnetServlet:
 
     def handle_poweron(self, request: Request, _: Dict):
         request_ip = Utils.get_ip_addr(request)
+        pragma_header = request.getHeader('Pragma')
+        is_dfi = pragma_header is not None and pragma_header == "DFI"
+        
         try:
-            req_dict = self.allnet_req_to_dict(request.content.getvalue())
+            if is_dfi:
+                req_urlencode = self.from_dfi(request.content.getvalue())
+            else:
+                req_urlencode = request.content.getvalue().decode()
+
+            req_dict = self.allnet_req_to_dict(req_urlencode)
             if req_dict is None:
                 raise AllnetRequestException()
 
@@ -219,12 +227,24 @@ class AllnetServlet:
         self.logger.debug(f"Allnet response: {resp_dict}")        
         resp_str += "\n"
 
+        """if is_dfi:
+            request.responseHeaders.addRawHeader('Pragma', 'DFI')
+            return self.to_dfi(resp_str)"""
+
         return resp_str.encode("utf-8")
 
     def handle_dlorder(self, request: Request, _: Dict):
         request_ip = Utils.get_ip_addr(request)
+        pragma_header = request.getHeader('Pragma')
+        is_dfi = pragma_header is not None and pragma_header == "DFI"
+        
         try:
-            req_dict = self.allnet_req_to_dict(request.content.getvalue())
+            if is_dfi:
+                req_urlencode = self.from_dfi(request.content.getvalue())
+            else:
+                req_urlencode = request.content.getvalue().decode()
+
+            req_dict = self.allnet_req_to_dict(req_urlencode)
             if req_dict is None:
                 raise AllnetRequestException()
 
@@ -266,7 +286,13 @@ class AllnetServlet:
             self.logger.debug(f"Sending download uri {resp.uri}")
             self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
 
-            return urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\n"
+            res_str = urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\n"
+            """if is_dfi:
+                request.responseHeaders.addRawHeader('Pragma', 'DFI')
+                return self.to_dfi(res_str)"""
+
+            return res_str
+            
 
     def handle_dlorder_ini(self, request: Request, match: Dict) -> bytes:
         if "file" not in match:
@@ -334,8 +360,16 @@ class AllnetServlet:
         return "OK".encode()
 
     def handle_billing_request(self, request: Request, _: Dict):
-        req_dict = self.billing_req_to_dict(request.content.getvalue())
+        req_raw = request.content.getvalue()
+        
+        if request.getHeader('Content-Type') == "application/octet-stream":
+            req_unzip = zlib.decompressobj(-zlib.MAX_WBITS).decompress(req_raw)
+        else:
+            req_unzip = req_raw
+        
+        req_dict = self.billing_req_to_dict(req_unzip)
         request_ip = Utils.get_ip_addr(request)
+        
         if req_dict is None:
             self.logger.error(f"Failed to parse request {request.content.getvalue()}")
             return b""
@@ -369,7 +403,7 @@ class AllnetServlet:
 
             resp = BillingResponse("", "", "", "")
             resp.result = "1"
-            return self.dict_to_http_form_string([vars(resp)])
+            return urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\r\n"
 
         msg = (
             f"Billing checkin from {request_ip}: game {kc_game} keychip {kc_serial} playcount "
@@ -396,9 +430,7 @@ class AllnetServlet:
 
         resp = BillingResponse(playlimit, playlimit_sig, nearfull, nearfull_sig)
 
-        resp_str = self.dict_to_http_form_string([vars(resp)])
-        if resp_str is None:
-            self.logger.error(f"Failed to parse response {vars(resp)}")
+        resp_str = urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\r\n"
 
         self.logger.debug(f"response {vars(resp)}")
         return resp_str.encode("utf-8")
@@ -412,9 +444,7 @@ class AllnetServlet:
         Parses an billing request string into a python dictionary
         """
         try:
-            decomp = zlib.decompressobj(-zlib.MAX_WBITS)
-            unzipped = decomp.decompress(data)
-            sections = unzipped.decode("ascii").split("\r\n")
+            sections = data.decode("ascii").split("\r\n")
 
             ret = []
             for x in sections:
@@ -430,9 +460,7 @@ class AllnetServlet:
         Parses an allnet request string into a python dictionary
         """
         try:
-            zipped = base64.b64decode(data)
-            unzipped = zlib.decompress(zipped)
-            sections = unzipped.decode("utf-8").split("\r\n")
+            sections = data.split("\r\n")
 
             ret = []
             for x in sections:
@@ -443,35 +471,15 @@ class AllnetServlet:
             self.logger.error(f"allnet_req_to_dict: {e} while parsing {data}")
             return None
 
-    def dict_to_http_form_string(
-        self,
-        data: List[Dict[str, Any]],
-        crlf: bool = True,
-        trailing_newline: bool = True,
-    ) -> Optional[str]:
-        """
-        Takes a python dictionary and parses it into an allnet response string
-        """
-        try:
-            urlencode = ""
-            for item in data:
-                for k, v in item.items():
-                    if k is None or v is None:
-                        continue
-                    urlencode += f"{k}={v}&"
-                if crlf:
-                    urlencode = urlencode[:-1] + "\r\n"
-                else:
-                    urlencode = urlencode[:-1] + "\n"
-            if not trailing_newline:
-                if crlf:
-                    urlencode = urlencode[:-2]
-                else:
-                    urlencode = urlencode[:-1]
-            return urlencode
-        except Exception as e:
-            self.logger.error(f"dict_to_http_form_string: {e} while parsing {data}")
-            return None
+    def from_dfi(self, data: bytes) -> str:
+        zipped = base64.b64decode(data)
+        unzipped = zlib.decompress(zipped)
+        return unzipped.decode("utf-8")
+
+    def to_dfi(self, data: str) -> bytes:
+        unzipped = data.encode('utf-8')
+        zipped = zlib.compress(unzipped)
+        return base64.b64encode(zipped)
 
 
 class AllnetPowerOnRequest:
