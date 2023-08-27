@@ -10,7 +10,6 @@ from core.config import CoreConfig
 from titles.ongeki.config import OngekiConfig
 from titles.ongeki.const import OngekiConstants
 from titles.ongeki.database import OngekiData
-# from titles.ongeki.read import OngekiReader
 
 
 class OngekiFrontend(FE_Base):
@@ -25,7 +24,8 @@ class OngekiFrontend(FE_Base):
                 yaml.safe_load(open(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"))
             )
         self.nav_name = "O.N.G.E.K.I."
-
+        self.geki_version = OngekiConstants.VERSION_NAMES[-1]+"?"
+        print(OngekiConstants.VERSION_NAMES[-1])
     def render_GET(self, request: Request) -> bytes:
         template = self.environment.get_template(
             "titles/ongeki/frontend/ongeki_index.jinja"
@@ -36,5 +36,7 @@ class OngekiFrontend(FE_Base):
         return template.render(
             title=f"{self.core_config.server.name} | {self.nav_name}",
             game_list=self.environment.globals["game_list"],
+            gachas=self.game_cfg.gachas.enabled_gachas,
+            version= self.geki_version,
             sesh=vars(usr_sesh)
         ).encode("utf-16")
