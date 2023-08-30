@@ -43,11 +43,11 @@ class BaseReader:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import Game Information")
     parser.add_argument(
-        "--series",
+        "--game",
         action="store",
         type=str,
         required=True,
-        help="The game series we are importing.",
+        help="The game we are importing.",
     )
     parser.add_argument(
         "--version",
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     logger.setLevel(log_lv)
     coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
 
-    if args.series is None or args.version is None:
+    if args.game is None or args.version is None:
         logger.error("Game or version not specified")
         parser.print_help()
         exit(1)
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     titles = Utils.get_all_titles()
 
     for dir, mod in titles.items():
-        if args.series in mod.game_codes:
+        if args.game in mod.game_codes:
             handler = mod.reader(config, args.version, bin_arg, opt_arg, args.extra)
             handler.read()
 
