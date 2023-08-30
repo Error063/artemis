@@ -19,12 +19,17 @@ class ADBLookupRequest(ADBBaseRequest):
         
         self.fw_version = ReaderFwVer.from_byte(fw_version)
 
-
 class ADBLookupResponse(ADBBaseResponse):
     def __init__(self, user_id: Union[int, None], game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", code: int = 0x06, length: int = 0x30, status: int = 1) -> None:
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.user_id = user_id if user_id is not None else -1
         self.portal_reg = PortalRegStatus.NO_REG
+
+    @classmethod
+    def from_req(cls, req: ADBHeader, user_id: Union[int, None]) -> "ADBLookupResponse":
+        c = cls(user_id, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
 
     def make(self):
         resp_struct = Struct(
@@ -47,6 +52,12 @@ class ADBLookupExResponse(ADBBaseResponse):
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.user_id = user_id if user_id is not None else -1
         self.portal_reg = PortalRegStatus.NO_REG
+
+    @classmethod
+    def from_req(cls, req: ADBHeader, user_id: Union[int, None]) -> "ADBLookupExResponse":
+        c = cls(user_id, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
 
     def make(self):
         resp_struct = Struct(

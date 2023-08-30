@@ -150,8 +150,12 @@ class ADBBaseRequest:
         self.head = ADBHeader.from_data(data)
 
 class ADBBaseResponse:
-    def __init__(self, code: int = 0, length: int = 0x20, status: int = 1, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888") -> None:
-        self.head = ADBHeader(0xa13e, 0x3087, code, length, status, game_id, store_id, keychip_id)
+    def __init__(self, code: int = 0, length: int = 0x20, status: int = 1, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", protocol_ver: int = 0x3087) -> None:
+        self.head = ADBHeader(0xa13e, protocol_ver, code, length, status, game_id, store_id, keychip_id)
+
+    @classmethod
+    def from_req(cls, req: ADBHeader, cmd: int, length: int = 0x20, status: int = 1) -> "ADBBaseResponse":
+        return cls(cmd, length, status, req.game_id, req.store_id, req.keychip_id, req.protocol_ver)
 
     def append_padding(self, data: bytes):
         """Appends 0s to the end of the data until it's at the correct size"""

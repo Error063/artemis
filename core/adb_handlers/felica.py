@@ -13,7 +13,13 @@ class ADBFelicaLookupResponse(ADBBaseResponse):
     def __init__(self, access_code: str = None, game_id: str = "SXXX", store_id: int = 1, keychip_id: str = "A69E01A8888", code: int = 0x03, length: int = 0x30, status: int = 1) -> None:
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.access_code = access_code if access_code is not None else "00000000000000000000"
-
+    
+    @classmethod
+    def from_req(cls, req: ADBHeader, access_code: str = None) -> "ADBFelicaLookupResponse":
+        c = cls(access_code, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
+    
     def make(self) -> bytes:        
         resp_struct = Struct(
             "felica_idx" / Int32ul,
@@ -36,7 +42,7 @@ class ADBFelicaLookup2Request(ADBBaseRequest):
         self.card_key_ver, self.write_ct, self.maca, company, fw_ver, self.dfc = struct.unpack_from("<16s16sQccH", data, 0x40)
         self.idm = hex(idm)[2:].upper()
         self.pmm = hex(pmm)[2:].upper()
-        self.company = CompanyCodes(company)
+        self.company = CompanyCodes(int.from_bytes(company, 'little'))
         self.fw_ver = ReaderFwVer.from_byte(fw_ver)
 
 class ADBFelicaLookup2Response(ADBBaseResponse):
@@ -47,11 +53,17 @@ class ADBFelicaLookup2Response(ADBBaseResponse):
         self.company = CompanyCodes.SEGA
         self.portal_status = PortalRegStatus.NO_REG
 
+    @classmethod
+    def from_req(cls, req: ADBHeader, user_id: Union[int, None] = None, access_code: Union[str, None] = None) -> "ADBFelicaLookup2Response":
+        c = cls(user_id, access_code, req.game_id, req.store_id, req.keychip_id)
+        c.head.protocol_ver = req.protocol_ver
+        return c
+
     def make(self) -> bytes:        
         resp_struct = Struct(
             "user_id" / Int32sl,
-            "relation1" / Int16sl,
-            "relation2" / Int16sl,
+            "relation1" / Int32sl,
+            "relation2" / Int32sl,
             "access_code" / Int8ub[10],
             "portal_status" / Int8ub,
             "company_code" / Int8ub,

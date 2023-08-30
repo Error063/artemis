@@ -34,6 +34,7 @@ frontend:
 allnet:
   loglevel: "info"
   port: 80
+  ip_check: False
   allow_online_updates: False
   update_cfg_folder: ""
 

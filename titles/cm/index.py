@@ -85,8 +85,6 @@ class CardMakerServlet:
         endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
-        print(f"version: {version}")
-
         if version >= 130 and version < 135:  # Card Maker
             internal_ver = CardMakerConstants.VER_CARD_MAKER
         elif version >= 135 and version < 140:  # Card Maker 1.35
@@ -124,6 +122,7 @@ class CardMakerServlet:
 
         except Exception as e:
             self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
+            raise
             return zlib.compress(b'{"stat": "0"}')
 
         if resp is None:
