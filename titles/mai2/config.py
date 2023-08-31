@@ -38,7 +38,7 @@ class Mai2DeliverConfig:
     @property
     def content_folder(self) -> int:
         return CoreConfig.get_config_field(
-            self.__config, "mai2", "server", "content_folder", default=""
+            self.__config, "mai2", "deliver", "content_folder", default=""
         )
 
 class Mai2UploadsConfig:

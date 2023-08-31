@@ -228,7 +228,7 @@ class Mai2Servlet:
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
     def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
-        self.logger.info(f"v{version} GET {url_path}")
+        self.logger.debug(f"v{version} GET {url_path}")
         url_split = url_path.split("/")
 
         if (url_split[0] == "api" and url_split[1] == "movie") or url_split[0] == "movie":
@@ -272,9 +272,10 @@ class Mai2Servlet:
         elif url_split[0] == "deliver":
             file = url_split[len(url_split) - 1]
             self.logger.info(f"v{version} {file} deliver inquire")
+            self.logger.debug(f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}")
             
-            if self.game_cfg.deliver.enable and path.exists(f"{self.game_cfg.deliver.content_folder}/{file}"):
-                with open(f"{self.game_cfg.deliver.content_folder}/deliver/{url_split[-1]}", 'rb') as f:
+            if self.game_cfg.deliver.enable and path.exists(f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}"):
+                with open(f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}", 'rb') as f:
                     return f.read()
             
             else:
