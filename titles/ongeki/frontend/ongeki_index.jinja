@@ -1,8 +1,73 @@
 {% extends "core/frontend/index.jinja" %}
 {% block content %}
+
+{% if sesh is defined and sesh["userId"] > 0 %}
 <br>
 <br>
 <br>
-<h1>{{ title }}</h1>
-Version: {{version}}
+
+<div class="container">
+    <div class="row">
+        <h2> Profile </h2>
+    </div>
+    <div class="row">
+     <div class="col">
+        <h2> {{ profile_data.userName }}</h2>
+     </div>
+        <div class="col">
+            <h4> ID: {{ profile_data.user}}</h4>
+        </div>
+    </div>
+    <div class="row">
+        <h2> Rivals <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rival_add">Add</button></h2>
+    </div>
+    <div class="row">
+    <table class="table table-dark table-hover">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rival in rival_info%}
+            <tr>
+                <td>{{rival.rivalUserId}}</td>
+                <td>{{rival.rivalUserName}}</td>
+                <td><button class="btn-danger btn btn-sm">Delete</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <div class="modal fade" id="rival_add" tabindex="-1" aria-labelledby="card_add_label"  data-bs-theme="dark" aria-hidden="true">
+        <form id="rival" action="/game/ongeki/rival.add" method="post">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Modal title</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Note:<br>
+                        Please use the ID show next to your name in the profile page.
+                        <br>
+                        <label for="rivalUserId">ID:&nbsp;</label><input form="rival" id="rivalUserId" name="rivalUserId" maxlength="5" type="number" required> 
+                    </div>
+                    <div class="modal-footer">
+                        <input type=submit class="btn btn-primary" type="button" form="rival" value="Add">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# <script>
+</script> #}
+{% else %}
+<h2>Not Currently Logged In</h2>
+{% endif %}
 {% endblock content %}

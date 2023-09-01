@@ -269,7 +269,7 @@ class OngekiProfileData(BaseData):
             return None
 
         return row["userName"]
-
+    
     def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
         sql = (
             select([profile, option])
@@ -295,6 +295,17 @@ class OngekiProfileData(BaseData):
             return None
         return result.fetchone()
 
+    def get_profile_data_ignore_version(self, aime_id: int) -> Optional[Row]:
+        sql = select(profile).where(
+            and_(
+                profile.c.user == aime_id,
+            )
+        )
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
     def get_profile_options(self, aime_id: int) -> Optional[Row]:
         sql = select(option).where(
             and_(
@@ -499,7 +510,7 @@ class OngekiProfileData(BaseData):
     def put_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
         sql = insert(rival).values(user=aime_id, rivalUserId=rival_id)
 
-        conflict = sql.on_duplicate_key_update(rival=rival_id)
+        conflict = sql.on_duplicate_key_update(rivalUserId=rival_id)
 
         result = self.execute(conflict)
         if result is None:
