@@ -1030,7 +1030,6 @@ class OngekiBase:
         for song in music["userMusicList"]:
             song["userRivalMusicDetailList"] = song["userMusicDetailList"]
             song.pop("userMusicDetailList")
-        print(music["userMusicList"])
         return {
             "userId": data["userId"],
             "rivalUserId": rival_id,
