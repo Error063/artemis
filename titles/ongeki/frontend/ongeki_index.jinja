@@ -32,10 +32,10 @@
         </thead>
         <tbody>
             {% for rival in rival_info%}
-            <tr>
+            <tr id="{{rival.rivalUserId}}">
                 <td>{{rival.rivalUserId}}</td>
                 <td>{{rival.rivalUserName}}</td>
-                <td><button class="btn-danger btn btn-sm">Delete</button></td>
+                <td><button class="btn-danger btn btn-sm" onclick="deleteRival({{rival.rivalUserId}})">Delete</button></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -65,8 +65,9 @@
     </div>
 </div>
 
-{# <script>
-</script> #}
+<script>
+{% include 'titles/ongeki/frontend/js/rival_scripts.js' %}
+</script>
 {% else %}
 <h2>Not Currently Logged In</h2>
 {% endif %}

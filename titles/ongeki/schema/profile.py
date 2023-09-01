@@ -3,7 +3,7 @@ from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, an
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON, BigInteger
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.schema import ForeignKey
-from sqlalchemy.sql import func, select
+from sqlalchemy.sql import func, select, delete
 from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
@@ -519,3 +519,10 @@ class OngekiProfileData(BaseData):
             )
             return None
         return result.lastrowid
+    def delete_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
+        sql = delete(rival).where(rival.c.user==aime_id, rival.c.rivalUserId==rival_id)
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(f"delete_rival: failed to delete! aime_id: {aime_id}, rival_id: {rival_id}")
+        else:
+            return result.rowcount

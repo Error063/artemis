@@ -65,12 +65,15 @@ class OngekiFrontend(FE_Base):
             if uri == "/game/ongeki/rival.add":
                 rival_id = request.args[b"rivalUserId"][0].decode()
                 self.data.profile.put_rival(usr_sesh.userId, rival_id)
-                self.logger.info(f"{usr_sesh.userId} added a rival")
+                # self.logger.info(f"{usr_sesh.userId} added a rival")
                 return redirectTo(b"/game/ongeki/", request)
             elif uri == "/game/ongeki/rival.delete":
-                return b""
+                rival_id = request.args[b"rivalUserId"][0].decode()
+                self.data.profile.delete_rival(usr_sesh.userId, rival_id)
+                # self.logger.info(f"{response}")
+                return redirectTo(b"/game/ongeki/", request)
 
             else:
-                return b""
+                return b"Something went wrong"
         else:
             return b"User is not logged in"
