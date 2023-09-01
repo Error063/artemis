@@ -1003,16 +1003,13 @@ class OngekiBase:
         Added in Bright
         """
         rivals = []
-        print(data)
         for rival in data["userRivalList"]:
             name = self.data.profile.get_profile_name(
                 rival["rivalUserId"], self.version
             )
             if name is None:
                 continue
-            print(name)
             rivals.append({"rivalUserId": rival["rivalUserId"], "rivalUserName": name})
-        print(rivals)
         return {
             "userId": data["userId"],
             "length": len(rivals),
