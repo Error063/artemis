@@ -54,7 +54,7 @@ Games listed below have been tested and confirmed working.
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --series SDBT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --game SDBT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
 The importer for Chunithm will import: Events, Music, Charge Items and Avatar Accesories.
@@ -105,7 +105,7 @@ After a failed Online Battle the room will be deleted. The host is used for the 
 In order to use the importer you need to use the provided `Export.csv` file:
 
 ```shell
-python read.py --series SDCA --version <version ID> --binfolder titles/cxb/data
+python read.py --game SDCA --version <version ID> --binfolder titles/cxb/data
 ```
 
 The importer for crossbeats REV. will import Music.
@@ -160,11 +160,11 @@ For versions pre-dx
 In order to use the importer locate your game installation folder and execute:
 DX:
 ```shell
-python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/StreamingAssets --optfolder /path/to/game/option/folder
+python read.py --game <Game Code> --version <Version ID> --binfolder /path/to/StreamingAssets --optfolder /path/to/game/option/folder
 ```
 Pre-DX:
 ```shell
-python read.py --series <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
+python read.py --game <Game Code> --version <Version ID> --binfolder /path/to/data --optfolder /path/to/patch/data
 ```
 The importer for maimai DX will import Events, Music and Tickets.
 
@@ -196,7 +196,7 @@ Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --series SBZV --version <version ID> --binfolder /path/to/game/data/diva --optfolder /path/to/game/data/diva/mdata
+python read.py --game SBZV --version <version ID> --binfolder /path/to/game/data/diva --optfolder /path/to/game/data/diva/mdata
 ```
 
 The importer for Project Diva Arcade will all required data in order to use
@@ -243,7 +243,7 @@ python dbutils.py --game SBZV upgrade
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --series SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --game SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
 The importer for O.N.G.E.K.I. will all all Cards, Music and Events.
@@ -299,19 +299,19 @@ In order to use the importer you need to use the provided `.csv` files (which ar
 option folders:
 
 ```shell
-python read.py --series SDED --version <version ID> --binfolder titles/cm/cm_data --optfolder /path/to/cardmaker/option/folder
+python read.py --game SDED --version <version ID> --binfolder titles/cm/cm_data --optfolder /path/to/cardmaker/option/folder
 ```
 
 **If you haven't already executed the O.N.G.E.K.I. importer, make sure you import all cards!**
 
 ```shell
-python read.py --series SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
+python read.py --game SDDT --version <version ID> --binfolder /path/to/game/folder --optfolder /path/to/game/option/folder
 ```
 
 Also make sure to import all maimai DX and CHUNITHM data as well:
 
 ```shell
-python read.py --series SDED --version <version ID> --binfolder /path/to/cardmaker/CardMaker_Data
+python read.py --game SDED --version <version ID> --binfolder /path/to/cardmaker/CardMaker_Data
 ```
 
 The importer for Card Maker will import all required Gachas (Banners) and cards (for maimai DX/CHUNITHM) and the hardcoded
@@ -404,7 +404,7 @@ Gacha IDs up to 1140 will be loaded for CM 1.34 and all gachas will be loaded fo
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --series SDFE --version <version ID> --binfolder /path/to/game/WindowsNoEditor/Mercury/Content
+python read.py --game SDFE --version <version ID> --binfolder /path/to/game/WindowsNoEditor/Mercury/Content
 ```
 
 The importer for WACCA will import all Music data.
@@ -478,7 +478,7 @@ Below is a list of VIP rewards. Currently, VIP is not implemented, and thus thes
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --series SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+python read.py --game SDEW --version <version ID> --binfolder /path/to/game/extractedassets
 ```
 
 The importer for SAO will import all items, heroes, support skills and titles data.

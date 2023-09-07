@@ -140,9 +140,7 @@ class MuchaServlet:
 
     def mucha_postprocess(self, data: dict) -> Optional[bytes]:
         try:
-            urlencode = ""
-            for k, v in data.items():
-                urlencode += f"{k}={v}&"
+            urlencode = "&".join(f"{k}={v}" for k, v in data.items())
 
             return urlencode.encode()
 

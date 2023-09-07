@@ -85,6 +85,9 @@ class AimedbProtocol(Protocol):
             
             return
 
+        if head.keychip_id == "ABCD1234567" or head.store_id == 0xfff0:
+            self.logger.warning(f"Request from uninitialized AMLib: {vars(head)}")
+
         handler, resp_code, name = self.request_list.get(head.cmd, (self.handle_default, None, 'default'))
 
         if resp_code is None:

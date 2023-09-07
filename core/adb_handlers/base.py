@@ -78,7 +78,10 @@ class ADBHeader:
         self.protocol_ver = protocol_ver # u16
         self.cmd = cmd # u16
         self.length = length # u16
-        self.status = ADBStatus(status) # u16
+        try:
+            self.status = ADBStatus(status) # u16
+        except ValueError as e:
+            raise ADBHeaderException(f"Status is incorrect! {e}")
         self.game_id = game_id # 4 char + \x00
         self.store_id = store_id # u32
         self.keychip_id = keychip_id# 11 char + \x00
