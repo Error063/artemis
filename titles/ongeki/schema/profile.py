@@ -295,17 +295,6 @@ class OngekiProfileData(BaseData):
             return None
         return result.fetchone()
 
-    def get_profile_data_ignore_version(self, aime_id: int) -> Optional[Row]:
-        sql = select(profile).where(
-            and_(
-                profile.c.user == aime_id,
-            )
-        )
-
-        result = self.execute(sql)
-        if result is None:
-            return None
-        return result.fetchone()
     def get_profile_options(self, aime_id: int) -> Optional[Row]:
         sql = select(option).where(
             and_(

@@ -9,15 +9,24 @@
 <div class="container">
     <div class="row">
         <h2> Profile </h2>
+        <h3>Version: 
+            <select name="version" id="version" onChange="changeVersion(this)">
+            {% for ver in version_list %}
+                <option value={{loop.index0}} {{ "selected" if loop.index0==version else "" }} >{{ver}}</option>
+            {% endfor %}
+            </select>
+        </h3>
+    <hr>
     </div>
     <div class="row">
      <div class="col">
-        <h2> {{ profile_data.userName }}</h2>
+        <h2> Name: {{ profile_data.userName if profile_data.userName is defined else "Profile not found" }}</h2>
      </div>
         <div class="col">
-            <h4> ID: {{ profile_data.user}}</h4>
+            <h4> ID: {{ profile_data.user if profile_data.user is defined else 'Profile not found' }}</h4>
         </div>
     </div>
+    <hr>
     <div class="row">
         <h2> Rivals <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#rival_add">Add</button></h2>
     </div>
@@ -66,7 +75,7 @@
 </div>
 
 <script>
-{% include 'titles/ongeki/frontend/js/rival_scripts.js' %}
+{% include 'titles/ongeki/frontend/js/ongeki_scripts.js' %}
 </script>
 {% else %}
 <h2>Not Currently Logged In</h2>
