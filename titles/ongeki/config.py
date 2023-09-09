@@ -48,9 +48,30 @@ class OngekiCardMakerVersionConfig:
             self.__config, "ongeki", "version", default={}
         ).get(version)
 
+class OngekiCryptoConfig:
+    def __init__(self, parent_config: "OngekiConfig") -> None:
+        self.__config = parent_config
+
+    @property
+    def keys(self) -> Dict:
+        """
+        in the form of:
+        internal_version: [key, iv]
+        all values are hex strings
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "ongeki", "crypto", "keys", default={}
+        )
+
+    @property
+    def encrypted_only(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "ongeki", "crypto", "encrypted_only", default=False
+        )
 
 class OngekiConfig(dict):
     def __init__(self) -> None:
         self.server = OngekiServerConfig(self)
         self.gachas = OngekiGachaConfig(self)
         self.version = OngekiCardMakerVersionConfig(self)
+        self.crypto = OngekiCryptoConfig(self)

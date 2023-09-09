@@ -35,3 +35,6 @@ version:
     card_maker: 1.30.01
   7:
     card_maker: 1.35.03
+
+crypto:
+  encrypted_only: False
