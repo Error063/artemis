@@ -169,8 +169,10 @@ class ChuniReader(BaseReader):
                             fumen_path = MusicFumenData.find("file").find("path")
 
                             if fumen_path is not None:
-                                chart_id = MusicFumenData.find("type").find("id").text
-                                if chart_id == "5":
+                                chart_type = MusicFumenData.find("type")
+                                chart_id = chart_type.find("id").text
+                                chart_diff = chart_type.find("str").text
+                                if chart_diff == "WorldsEnd" and (chart_id == "4" or chart_id == "5"): # 4 in SDBT, 5 in SDHD
                                     level = float(xml_root.find("starDifType").text)
                                     we_chara = (
                                         xml_root.find("worldsEndTagName")
