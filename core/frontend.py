@@ -343,9 +343,8 @@ class FE_System(FE_Base):
 
             if ac_id_search is not None:
                 u = self.data.arcade.get_arcade(ac_id_search[0])
-                if ul is not None:
-                    if u is not None:
-                        aclist.append(u._asdict())
+                if u is not None:
+                    aclist.append(u._asdict())
 
             elif ac_name_search is not None:
                 ul = self.data.arcade.get_arcade_by_name(ac_name_search[0])
