@@ -218,9 +218,16 @@ class ArcadeData(BaseData):
         
         return True
 
-    def find_arcade_by_name(self, name: str) -> List[Row]:
+    def get_arcade_by_name(self, name: str) -> Optional[List[Row]]:
         sql = arcade.select(or_(arcade.c.name.like(f"%{name}%"), arcade.c.nickname.like(f"%{name}%")))
         result = self.execute(sql)
         if result is None:
-            return False
+            return None
+        return result.fetchall()
+
+    def get_arcades_by_ip(self, ip: str) -> Optional[List[Row]]:
+        sql = arcade.select().where(arcade.c.ip == ip)
+        result = self.execute(sql)
+        if result is None:
+            return None
         return result.fetchall()

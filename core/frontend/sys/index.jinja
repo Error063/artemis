@@ -44,6 +44,11 @@
                 <label for="arcadeUser">Owner User ID</label>
                 <input type="number" class="form-control" id="arcadeUser" name="arcadeUser">
             </div>
+            OR
+            <div class="form-group">
+                <label for="arcadeIp">Assigned IP Address</label>
+                <input type="text" class="form-control" id="arcadeIp" name="arcadeIp">
+            </div>
             <br />
             <button type="submit" class="btn btn-primary">Search</button>
         </form>
@@ -75,19 +80,19 @@
     {% if sesh.permissions >= 2 %}
     <div id="userSearchResult" class="col-sm-6" style="max-width: 25%;">
         {% for usr in usrlist %}
-        <pre><a href=/user/{{ usr.id }}>{{ usr.id }} | {{ usr.username }}</a></pre>
+        <a href=/user/{{ usr.id }}><pre>{{ usr.id }} | {{ usr.username if usr.username is defined else "<i>No Name Set</i>"}}</pre></a>
         {% endfor %}
     </div>
     {% endif %}
     {% if sesh.permissions >= 4 %}
     <div id="arcadeSearchResult" class="col-sm-6" style="max-width: 25%;">
         {% for ac in aclist %}
-        <pre><a href=/arcade/{{ ac.id }}>{{ ac.id }} | {{ ac.name }}</a></pre>
+        <pre><a href=/arcade/{{ ac.id }}>{{ ac.id }} | {{ ac.name if ac.name is defined else "<i>No Name Set</i>" }} | {{ ac.ip if ac.ip is defined else "<i>No IP Assigned</i>"}}</pre></a>
         {% endfor %}
     </div
     ><div id="cabSearchResult" class="col-sm-6" style="max-width: 25%;">
         {% for cab in cablist %}
-        <a href=/cab/{{ cab.id }}><pre>{{ cab.id }} | {{ cab.game if cab.game is defined else "ANY "  }} | {{ cab.serial }}</pre></a>
+        <a href=/cab/{{ cab.id }}><pre>{{ cab.id }} | {{ cab.game if cab.game is defined else "<i>No Game Assigned</i>" }} | {{ cab.serial }}</pre></a>
         {% endfor %}
     </div>
     {% endif %}

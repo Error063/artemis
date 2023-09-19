@@ -304,9 +304,9 @@ class FE_System(FE_Base):
     def render_GET(self, request: Request):
         uri = request.uri.decode()
         template = self.environment.get_template("core/frontend/sys/index.jinja")
-        usrlist = []
-        aclist = []
-        cablist = []
+        usrlist: List[Dict] = []
+        aclist: List[Dict] = []
+        cablist: List[Dict] = []
 
         sesh: Session = request.getSession()
         usr_sesh = IUserSession(sesh)
@@ -339,21 +339,31 @@ class FE_System(FE_Base):
             ac_id_search = uri_parse.get("arcadeId")
             ac_name_search = uri_parse.get("arcadeName")
             ac_user_search = uri_parse.get("arcadeUser")
+            ac_ip_search = uri_parse.get("arcadeIp")
 
             if ac_id_search is not None:
                 u = self.data.arcade.get_arcade(ac_id_search[0])
-                if u is not None:
-                    aclist.append(u._asdict())
+                if ul is not None:
+                    if u is not None:
+                        aclist.append(u._asdict())
 
             elif ac_name_search is not None:
-                ul = self.data.arcade.find_arcade_by_name(ac_name_search[0])
-                for u in ul:
-                    aclist.append(u._asdict())
+                ul = self.data.arcade.get_arcade_by_name(ac_name_search[0])
+                if ul is not None:
+                    for u in ul:
+                        aclist.append(u._asdict())
 
             elif ac_user_search is not None:
                 ul = self.data.arcade.get_arcades_managed_by_user(ac_user_search[0])
-                for u in ul:
-                    aclist.append(u._asdict())
+                if ul is not None:
+                    for u in ul:
+                        aclist.append(u._asdict())
+
+            elif ac_ip_search is not None:
+                ul = self.data.arcade.get_arcades_by_ip(ac_ip_search[0])
+                if ul is not None:
+                    for u in ul:
+                        aclist.append(u._asdict())
         
         elif uri.startswith("/sys/lookup.cab?"):
             uri_parse = parse.parse_qs(uri.replace("/sys/lookup.cab?", "")) # lop off the first bit
