@@ -21,6 +21,7 @@ class IUserSession(Interface):
     userId = Attribute("User's ID")
     current_ip = Attribute("User's current ip address")
     permissions = Attribute("User's permission level")
+    ongeki_version = Attribute("User's selected Ongeki Version")
 
 class PermissionOffset(Enum):
     USER = 0 # Regular user
@@ -36,6 +37,7 @@ class UserSession(object):
         self.userId = 0
         self.current_ip = "0.0.0.0"
         self.permissions = 0
+        self.ongeki_version = 7
 
 
 class FrontendServlet(resource.Resource):

@@ -978,35 +978,38 @@ class OngekiBase:
         """
         Added in Bright
         """
-        rival_list = self.data.profile.get_rivals(data["userId"])
-        if rival_list is None or len(rival_list) < 1:
+
+        rival_list = []
+        user_rivals = self.data.profile.get_rivals(data["userId"])
+        for rival in user_rivals:
+            tmp = {}
+            tmp["rivalUserId"] = rival[0]
+            rival_list.append(tmp)
+
+        if user_rivals is None or len(rival_list) < 1:
             return {
                 "userId": data["userId"],
                 "length": 0,
                 "userRivalList": [],
             }
-
         return {
             "userId": data["userId"],
             "length": len(rival_list),
-            "userRivalList": rival_list._asdict(),
+            "userRivalList": rival_list,
         }
 
-    def handle_get_user_rival_data_api_reqiest(self, data: Dict) -> Dict:
+    def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
         """
         Added in Bright
         """
         rivals = []
-
         for rival in data["userRivalList"]:
             name = self.data.profile.get_profile_name(
                 rival["rivalUserId"], self.version
             )
             if name is None:
                 continue
-
-            rivals.append({"rivalUserId": rival["rival"], "rivalUserName": name})
-
+            rivals.append({"rivalUserId": rival["rivalUserId"], "rivalUserName": name})
         return {
             "userId": data["userId"],
             "length": len(rivals),
@@ -1027,7 +1030,6 @@ class OngekiBase:
         for song in music["userMusicList"]:
             song["userRivalMusicDetailList"] = song["userMusicDetailList"]
             song.pop("userMusicDetailList")
-
         return {
             "userId": data["userId"],
             "rivalUserId": rival_id,
