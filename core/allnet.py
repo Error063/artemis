@@ -176,18 +176,18 @@ class AllnetServlet:
                 else AllnetJapanRegionId.AICHI.value
             )
             resp.region_name0 = (
-                arcade["country"]
-                if arcade["country"] is not None
-                else AllnetCountryCode.JAPAN.value
-            )
-            resp.region_name1 = (
                 arcade["state"]
                 if arcade["state"] is not None
                 else AllnetJapanRegionId.AICHI.name
             )
+            resp.region_name1 = (
+                arcade["country"]
+                if arcade["country"] is not None
+                else AllnetCountryCode.JAPAN.value
+            )
             resp.region_name2 = arcade["city"] if arcade["city"] is not None else ""
-            resp.client_timezone = (
-                arcade["timezone"] if arcade["timezone"] is not None else "+0900"
+            resp.client_timezone = ( # lmao
+                arcade["timezone"] if arcade["timezone"] is not None else "+0900" if req.format_ver == 3 else "+09:00"
             )
         
         if req.game_id not in self.uri_registry:
@@ -295,7 +295,6 @@ class AllnetServlet:
                 return self.to_dfi(res_str)"""
 
             return res_str
-            
 
     def handle_dlorder_ini(self, request: Request, match: Dict) -> bytes:
         if "file" not in match:

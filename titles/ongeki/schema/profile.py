@@ -3,7 +3,7 @@ from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, an
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON, BigInteger
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.schema import ForeignKey
-from sqlalchemy.sql import func, select
+from sqlalchemy.sql import func, select, delete
 from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
@@ -269,7 +269,7 @@ class OngekiProfileData(BaseData):
             return None
 
         return row["userName"]
-
+    
     def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
         sql = (
             select([profile, option])
@@ -499,7 +499,7 @@ class OngekiProfileData(BaseData):
     def put_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
         sql = insert(rival).values(user=aime_id, rivalUserId=rival_id)
 
-        conflict = sql.on_duplicate_key_update(rival=rival_id)
+        conflict = sql.on_duplicate_key_update(rivalUserId=rival_id)
 
         result = self.execute(conflict)
         if result is None:
@@ -508,3 +508,10 @@ class OngekiProfileData(BaseData):
             )
             return None
         return result.lastrowid
+    def delete_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
+        sql = delete(rival).where(rival.c.user==aime_id, rival.c.rivalUserId==rival_id)
+        result = self.execute(sql)
+        if result is None:
+            self.logger.error(f"delete_rival: failed to delete! aime_id: {aime_id}, rival_id: {rival_id}")
+        else:
+            return result.rowcount
