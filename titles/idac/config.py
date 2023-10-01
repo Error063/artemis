@@ -109,7 +109,7 @@ class IDACTimetrialConfig:
             self.__config,
             "idac",
             "timetrial",
-            "enabled_stamps",
+            "enabled_timetrial",
             default="touhou_remilia_scarlet",
         )
 

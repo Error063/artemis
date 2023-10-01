@@ -1,10 +1,10 @@
 {
-    "timetrial_event_id": 4,
-    "name": "レミリア・スカーレット",
-    "url": "https://info-initialdac.sega.jp/2345/",
+    "timetrial_event_id": 6,
+    "name": "十六夜咲夜",
+    "url": "https://info-initialdac.sega.jp/2402/",
     "start_dt": "2023-10-01",
     "end_dt": "2029-01-01",
-    "course_id": 22,
+    "course_id": 14,
     "point": [
         50,
         80,
@@ -40,21 +40,21 @@
         {
             "point": 500,
             "reward_category_a": 21,
-            "reward_type_a": 492,
+            "reward_type_a": 488,
             "reward_category_b": 0,
             "reward_type_b": 0
         },
         {
             "point": 1000,
             "reward_category_a": 21,
-            "reward_type_a": 493,
+            "reward_type_a": 489,
             "reward_category_b": 0,
             "reward_type_b": 0
         },
         {
             "point": 1500,
             "reward_category_a": 18,
-            "reward_type_a": 116,
+            "reward_type_a": 115,
             "reward_category_b": 0,
             "reward_type_b": 0
         }
