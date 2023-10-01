@@ -6,6 +6,12 @@ the corresponding importer and database upgrades.
 **Important: The described database upgrades are only required if you are using an old database schema, f.e. still
 using the megaime database. Clean installations always create the latest database structure!**
 
+To upgrade the core database and the database for every game, execute:
+
+```shell
+python dbutils.py autoupgrade
+```
+
 # Table of content
 
 - [Supported Games](#supported-games)
@@ -62,9 +68,7 @@ The importer for Chunithm will import: Events, Music, Charge Items and Avatar Ac
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDBT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDBT upgrade
@@ -175,11 +179,12 @@ The importer for maimai Pre-DX will import Events and Music. Not all games will 
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEZ_2_upgrade.sql`. In order to upgrade to version 2 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDEZ upgrade
 ```
+
 Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 
 ## Hatsune Miku Project Diva
@@ -215,9 +220,7 @@ Config file is located in `config/diva.yaml`.
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SBZV_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SBZV upgrade
@@ -263,9 +266,7 @@ Note: 1149 and higher are only for Card Maker 1.35 and higher and will be ignore
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDDT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDDT upgrade
@@ -424,7 +425,7 @@ Config file is located in `config/wacca.yaml`.
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDFE_3_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDFE upgrade
@@ -497,7 +498,7 @@ Config file is located in `config/sao.yaml`.
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEW_1_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDEW upgrade
@@ -558,7 +559,7 @@ Config file is located in `config/idac.yaml`.
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDGT upgrade
