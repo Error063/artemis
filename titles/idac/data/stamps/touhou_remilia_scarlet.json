@@ -2,7 +2,7 @@
     "m_stamp_event_id": 24,
     "stamp_event_nm": "*レミリア・スカーレットスタンプ",
     "url": "https://info-initialdac.sega.jp/2096/",
-    "start_dt": 1667797169,
+    "start_dt": "2023-10-01",
     "end_dt": "2029-01-01",
     "play_bonus": 1,
     "daily_bonus": 2,
@@ -15,7 +15,7 @@
             "bonus_daily_flag": 0
         }
     ],
-    "sheet_design": 7,
+    "sheet_design": 6,
     "sheet_stamp": 0,
     "sheet_set": [
         {
@@ -263,7 +263,7 @@
                     "reward_category_b": 0,
                     "reward_type_b": 0,
                     "reward_is_pickup": 1,
-                    "reward_pickup_display_name": ""
+                    "reward_pickup_display_name": "「紅色の幻想郷」"
                 }
             ]
         },

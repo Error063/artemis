@@ -597,6 +597,48 @@ python dbutils.py --game SDGT upgrade
 34. Full Tune Ticket Fragment
 35. Underneon Lights
 
+### TimeRelease Chapter:
+
+1. Story: 1, 2, 3, 4, 5, 6, 7, 8, 9, 19 (Chapter 10), (29 Chapter 11?)
+2. MF Ghost: 10, 11, 12, 13, 14, 15
+3. Bunta: 15, 16, 17, 18, 19, 20, (21, 21, 22?)
+4. Special Event: 23, 24, 25, 26, 27, 28 (Touhou Project)
+
+### TimeRelease Courses:
+
+
+| Course ID | Course Name               | Direction                |
+| --------- | ------------------------- | ------------------------ |
+| 0         | Akina Lake(秋名湖)        | CounterClockwise(左周り) |
+| 2         | Akina Lake(秋名湖)        | Clockwise(右周り)        |
+| 52        | Hakone(箱根)              | Downhill(下り)           |
+| 54        | Hakone(箱根)              | Hillclimb(上り)          |
+| 36        | Usui(碓氷)                | CounterClockwise(左周り) |
+| 38        | Usui(碓氷)                | Clockwise(右周り)        |
+| 4         | Myogi(妙義)               | Downhill(下り)           |
+| 6         | Myogi(妙義)               | Hillclimb(上り)          |
+| 8         | Akagi(赤城)               | Downhill(下り)           |
+| 10        | Akagi(赤城)               | Hillclimb(上り)          |
+| 12        | Akina(秋名)               | Downhill(下り)           |
+| 14        | Akina(秋名)               | Hillclimb(上り)          |
+| 16        | Irohazaka(いろは坂)       | Downhill(下り)           |
+| 18        | Irohazaka(いろは坂)       | Reverse(逆走)            |
+| 56        | Momiji Line(もみじライン) | Downhill(下り)           |
+| 58        | Momiji Line(もみじライン) | Hillclimb(上り)          |
+| 20        | Tsukuba(筑波)             | Outbound(往路)           |
+| 22        | Tsukuba(筑波)             | Inbound(復路)            |
+| 24        | Happogahara(八方ヶ原)     | Outbound(往路)           |
+| 26        | Happogahara(八方ヶ原)     | Inbound(復路)            |
+| 40        | Sadamine(定峰)            | Downhill(下り)           |
+| 42        | Sadamine(定峰)            | Hillclimb(上り)          |
+| 44        | Tsuchisaka(土坂)          | Outbound(往路)           |
+| 46        | Tsuchisaka(土坂)          | Inbound(復路)            |
+| 48        | Akina Snow(秋名雪)        | Downhill(下り)           |
+| 50        | Akina Snow(秋名雪)        | Hillclimb(上り)          |
+| 68        | Odawara(小田原)           | Forward(順走)            |
+| 70        | Odawara(小田原)           | Reverse(逆走)            |
+
 ### Credits
+- Kinako: For helping with the timeRelease unlocking of courses and special mode
 
 A huge thanks to all people who helped shaping this project to what it is now and don't want to be mentioned here.

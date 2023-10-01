@@ -253,7 +253,7 @@ class IDACSeason2(IDACBase):
 
     def handle_boot_gettimereleasedata_request(self, data: Dict, headers: Dict):
         """
-        timerelease_story:
+        timerelease chapter:
         1 = Story: 1, 2, 3, 4, 5, 6, 7, 8, 9, 19 (Chapter 10), (29 Chapter 11 lol?)
         2 = MF Ghost: 10, 11, 12, 13, 14, 15
         3 = Bunta: 15, 16, 17, 18, 19, 20, (21, 21, 22?)
@@ -1291,6 +1291,10 @@ class IDACSeason2(IDACBase):
             "location_course_store_rank": course_rank,
             "car_use_count": [],
             "maker_use_count": [],
+            "timetrial_event_data": {
+                "timetrial_event_id": self.timetrial_event_id,
+                "point": event_point,
+            }
         }
 
     def handle_user_updatestoryresult_request(self, data: Dict, headers: Dict):

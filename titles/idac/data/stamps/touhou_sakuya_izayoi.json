@@ -2,7 +2,7 @@
     "m_stamp_event_id": 26,
     "stamp_event_nm": "*十六夜咲夜スタンプ",
     "url": "https://info-initialdac.sega.jp/2306/",
-    "start_dt": 1667797169,
+    "start_dt": "2023-10-01",
     "end_dt": "2029-01-01",
     "play_bonus": 1,
     "daily_bonus": 2,
@@ -278,7 +278,7 @@
                     "reward_category_b": 0,
                     "reward_type_b": 0,
                     "reward_is_pickup": 0,
-                    "reward_pickup_display_name": ""
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
                 },
                 {
                     "reward_setting_masu": 20,
@@ -287,7 +287,7 @@
                     "reward_category_b": 0,
                     "reward_type_b": 0,
                     "reward_is_pickup": 0,
-                    "reward_pickup_display_name": ""
+                    "reward_pickup_display_name": "アバタートークン×1"
                 }
             ]
         }
