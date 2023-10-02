@@ -157,7 +157,6 @@ class PokkenBase:
         support_set_3
         aid_skill_list
         achievement_flag
-        pokemon_data
         event_achievement_flag
         event_achievement_param
         """
@@ -200,7 +199,7 @@ class PokkenBase:
         load_usr.home_loc_name = profile_dict.get("home_loc_name", "")
         load_usr.pref_code = profile_dict.get("pref_code", 0)
         load_usr.trainer_name = profile_dict.get(
-            "trainer_name", "Newb" + str(random.randint(1111, 999999))
+            "trainer_name", f"Newb{str(user_id).zfill(4)}"
         )
         load_usr.trainer_rank_point = profile_dict.get("trainer_rank_point", 0)
         load_usr.wallet = profile_dict.get("wallet", 0)
@@ -261,6 +260,29 @@ class PokkenBase:
         load_usr.sp_bonus_category_id_2 = profile_dict.get("sp_bonus_category_id_2", 0)
         load_usr.sp_bonus_key_value_2 = profile_dict.get("sp_bonus_key_value_2", 0)
         load_usr.last_play_event_id = profile_dict.get("last_play_event_id", 0)
+
+        if pokemon_data is not None:
+            for pkmn in pokemon_data:
+                pkmn_d = pkmn._asdict()
+                pkm = jackal_pb2.LoadUserResponseData.PokemonData()
+
+                pkm.char_id = pkmn_d.get('char_id', 0)
+                pkm.illustration_book_no = pkmn_d.get('illustration_book_no', 0)
+                pkm.pokemon_exp = pkmn_d.get('pokemon_exp', 0)
+                pkm.battle_num_vs_wan = pkmn_d.get('battle_num_vs_wan', 0)
+                pkm.win_vs_wan = pkmn_d.get('win_vs_wan', 0)
+                pkm.battle_num_vs_lan = pkmn_d.get('battle_num_vs_lan', 0)
+                pkm.win_vs_lan = pkmn_d.get('win_vs_lan', 0)
+                pkm.battle_num_vs_cpu = pkmn_d.get('battle_num_vs_cpu', 0)
+                pkm.win_cpu = pkmn_d.get('win_cpu', 0)
+                pkm.battle_all_num_tutorial = pkmn_d.get('battle_all_num_tutorial', 0)
+                pkm.battle_num_tutorial = pkmn_d.get('battle_num_tutorial', 0)
+                pkm.bp_point_atk = pkmn_d.get('bp_point_atk', 0)
+                pkm.bp_point_res = pkmn_d.get('bp_point_res', 0)
+                pkm.bp_point_def = pkmn_d.get('bp_point_def', 0)
+                pkm.bp_point_sp = pkmn_d.get('bp_point_sp', 0)
+
+                load_usr.pokemon_data.append(pkm)
 
         res.load_user.CopyFrom(load_usr)
         return res.SerializeToString()

@@ -257,18 +257,27 @@ class PokkenProfileData(BaseData):
             user=user_id,
             char_id=pokemon_id,
             illustration_book_no=illust_no,
-            bp_point_atk=atk,
-            bp_point_res=res,
-            bp_point_def=defe,
-            bp_point_sp=sp,
+            pokemon_exp=0,
+            battle_num_vs_wan=0,
+            win_vs_wan=0,
+            battle_num_vs_lan=0,
+            win_vs_lan=0,
+            battle_num_vs_cpu=0,
+            win_cpu=0,
+            battle_all_num_tutorial=0,
+            battle_num_tutorial=0,
+            bp_point_atk=1+atk,
+            bp_point_res=1+res,
+            bp_point_def=1+defe,
+            bp_point_sp=1+sp,
         )
 
         conflict = sql.on_duplicate_key_update(
             illustration_book_no=illust_no,
-            bp_point_atk=atk,
-            bp_point_res=res,
-            bp_point_def=defe,
-            bp_point_sp=sp,
+            bp_point_atk=pokemon_data.c.bp_point_atk + atk,
+            bp_point_res=pokemon_data.c.bp_point_res + res,
+            bp_point_def=pokemon_data.c.bp_point_def + defe,
+            bp_point_sp=pokemon_data.c.bp_point_sp + sp,
         )
 
         result = self.execute(conflict)
@@ -295,7 +304,11 @@ class PokkenProfileData(BaseData):
         pass
 
     def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
-        pass
+        sql = pokemon_data.select(pokemon_data.c.user == user_id)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def put_pokemon_battle_result(
         self, user_id: int, pokemon_id: int, match_type: PokkenConstants.BATTLE_TYPE, match_result: PokkenConstants.BATTLE_RESULT
