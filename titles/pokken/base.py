@@ -347,7 +347,7 @@ class PokkenBase:
         for evt_param in req.event_achievement_param:
             evt_params.append(evt_param)
 
-        self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, )
+        self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, req.last_play_event_id)
         
         for reward in req.reward_data:
             self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
