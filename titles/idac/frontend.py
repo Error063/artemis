@@ -94,14 +94,16 @@ class IDACFrontend(FE_Base):
         )
         sesh: Session = request.getSession()
         usr_sesh = IUserSession(sesh)
+        user_id = usr_sesh.userId
+        # user_id = usr_sesh.user_id
 
         # profile export
         if uri.startswith("/game/idac/export"):
-            if usr_sesh.user_id == 0:
+            if user_id == 0:
                 return redirectTo(b"/game/idac", request)
 
             # set the file name, content type and size to download the json
-            content = self.generate_all_tables_json(usr_sesh.user_id).encode("utf-8")
+            content = self.generate_all_tables_json(user_id).encode("utf-8")
             request.responseHeaders.addRawHeader(
                 b"content-type", b"application/octet-stream"
             )
@@ -112,14 +114,14 @@ class IDACFrontend(FE_Base):
                 b"content-length", str(len(content)).encode("utf-8")
             )
 
-            self.logger.info(f"User {usr_sesh.user_id} exported their IDAC data")
+            self.logger.info(f"User {user_id} exported their IDAC data")
             return content
 
         profile_data, tickets, rank = None, None, None
-        if usr_sesh.user_id > 0:
-            profile_data = self.data.profile.get_profile(usr_sesh.user_id, self.version)
-            ticket_data = self.data.item.get_tickets(usr_sesh.user_id)
-            rank = self.data.profile.get_profile_rank(usr_sesh.user_id, self.version)
+        if user_id > 0:
+            profile_data = self.data.profile.get_profile(user_id, self.version)
+            ticket_data = self.data.item.get_tickets(user_id)
+            rank = self.data.profile.get_profile_rank(user_id, self.version)
 
             tickets = {
                 self.ticket_names[ticket["ticket_id"]]: ticket["ticket_cnt"]
