@@ -75,32 +75,32 @@ class IDACSeason2(IDACBase):
     def handle_boot_getconfigdata_request(self, data: Dict, headers: Dict):
         """
         category:
-        1   = D Coin
-        3   = Car Dressup Token
-        5   = Avatar Dressup Token
-        6   = Tachometer
-        7   = Aura
-        8   = Aura Color
-        9   = Avatar Face
-        10  = Avatar Eye
-        11  = Avatar Mouth
-        12  = Avatar Hair
-        13  = Avatar Glasses
-        14  = Avatar Face accessories
-        15  = Avatar Body
-        18  = Avatar Background
-        21  = Chat Stamp
-        22  = Keychain
-        24  = Title
-        25  = Full Tune Ticket
-        26  = Paper Cup
-        27  = BGM
-        28  = Drifting Text
-        31  = Start Menu BG
-        32  = Car Color/Paint
-        33  = Aura Level?
-        34  = Full Tune Ticket Fragment
-        35  = Underneon Lights
+        1  = D Coin
+        3  = Car Dressup Token
+        5  = Avatar Dressup Token
+        6  = Tachometer
+        7  = Aura
+        8  = Aura Color
+        9  = Avatar Face
+        10 = Avatar Eye
+        11 = Avatar Mouth
+        12 = Avatar Hair
+        13 = Avatar Glasses
+        14 = Avatar Face accessories
+        15 = Avatar Body
+        18 = Avatar Background
+        21 = Chat Stamp
+        22 = Keychain
+        24 = Title
+        25 = FullTune Ticket
+        26 = Paper Cup
+        27 = BGM
+        28 = Drifting Text
+        31 = Start Menu BG
+        32 = Car Color/Paint
+        33 = Aura Level
+        34 = FullTune Ticket Fragment
+        35 = Underneon Lights
         """
         version = headers["device_version"]
         ver_str = version.replace(".", "")[:3]
@@ -146,9 +146,9 @@ class IDACSeason2(IDACBase):
             "round_event_exp": [],
             "stamp_info": self.stamp_info,
             # 0 = use default data, 1+ = server version of timereleasedata response
-            "timerelease_no": 5,
+            "timerelease_no": 1,
             # 0 = use default data, 1+ = server version of gachadata response
-            "timerelease_avatar_gacha_no": 5,
+            "timerelease_avatar_gacha_no": 1,
             "takeover_reward": [],
             "subcard_judge": [
                 {
@@ -316,7 +316,7 @@ class IDACSeason2(IDACBase):
                         # get the country id from the profile, 9 is JPN
                         "country": 9,
                         "style_car_id": rank["style_car_id"],
-                        # convert the dateimt to a timestamp
+                        # convert the datetime to a timestamp
                         "play_dt": int(rank["play_dt"].timestamp()),
                         "section_time_1": rank["section_time_1"],
                         "section_time_2": rank["section_time_2"],
@@ -341,7 +341,6 @@ class IDACSeason2(IDACBase):
         }
 
     def handle_login_checklock_request(self, data: Dict, headers: Dict):
-        access_code = data["accesscode"]
         user_id = data["id"]
 
         # check if an IDAC profile already exists
@@ -1574,6 +1573,71 @@ class IDACSeason2(IDACBase):
             "challenge_mode_data": self._generate_challenge_data(user_id),
             "car_use_count": [],
             "maker_use_count": [],
+        }
+
+    def _generate_time_trial_data(self, season_id: int, user_id: int) -> List[Dict]:
+        # get the season time trial data from database
+        timetrial_data = []
+
+        courses = self.data.item.get_courses(user_id)
+        if courses is None or len(courses) == 0:
+            return {"status_code": "0", "timetrial_data": timetrial_data}
+
+        for course in courses:
+            # grab the course id and course proeficiency
+            course_id = course["course_id"]
+            skill_level_exp = course["skill_level_exp"]
+
+            # get the best time for the current course for the current user
+            best_trial = self.data.item.get_time_trial_best_ranking_by_course(season_id, user_id, course_id)
+            if not best_trial:
+                continue
+
+            goal_time = best_trial["goal_time"]
+            # get the rank for the current course
+            course_rank = self.data.item.get_time_trial_ranking_by_course(
+                season_id, course_id, limit=None
+            )
+            course_rank = len([r for r in course_rank if r["goal_time"] < goal_time]) + 1
+
+            timetrial_data.append(
+                {
+                    "style_car_id": best_trial["style_car_id"],
+                    "course_id": course_id,
+                    "skill_level_exp": skill_level_exp,
+                    "goal_time": goal_time,
+                    "rank": course_rank,
+                    "rank_dt": int(best_trial["play_dt"].timestamp()),
+                })
+
+        return timetrial_data
+
+    def handle_user_getpastseasontadata_request(self, data: Dict, headers: Dict):
+        user_id = headers["session"]
+        season_id = data.get("season_id")
+
+        # so to get the season 1 data just subtract 1 from the season id
+        past_timetrial_data = self._generate_time_trial_data(season_id - 1, user_id)
+
+        # TODO: get the current season timetrial data somehow, because after requesting
+        # GetPastSeasonTAData the game will NOT request GetTAData?!
+        return {
+            "status_code": "0",
+            "season_id": season_id,
+            "past_season_timetrial_data": past_timetrial_data,
+        }
+
+    def handle_user_gettadata_request(self, data: Dict, headers: Dict):
+        user_id = headers["session"]
+
+        timetrial_data = self._generate_time_trial_data(self.version, user_id)
+
+        # TODO: get the past season timetrial data somehow, because after requesting
+        # GetTAData the game will NOT request GetPastSeasonTAData?!
+        return {
+            "status_code": "0",
+            "timetrial_data": timetrial_data,
+            # "past_season_timetrial_data": timetrial_data,
         }
 
     def handle_user_updatecartune_request(self, data: Dict, headers: Dict):

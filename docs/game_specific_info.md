@@ -571,32 +571,34 @@ python dbutils.py --game SDGT upgrade
 
 ### Item categories
 
-1. D Coin
-3. Car Dressup Token
-5. Avatar Dressup Token
-6. Tachometer
-7. Aura
-8. Aura Color
-9. Avatar Face
-10. Avatar Eye
-11. Avatar Mouth
-12. Avatar Hair
-13. Avatar Glasses
-14. Avatar Face accessories
-15. Avatar Body
-18. Avatar Background
-21. Chat Stamp
-22. Keychain
-24. Title
-25. Full Tune Ticket
-26. Paper Cup
-27. BGM
-28. Drifting Text
-31. Start Menu BG
-32. Car Color/Paint
-33. Aura Level?
-34. Full Tune Ticket Fragment
-35. Underneon Lights
+| Category ID | Category Name            |
+| ----------- | ------------------------ |
+| 1           | D Coin                   |
+| 3           | Car Dressup Token        |
+| 5           | Avatar Dressup Token     |
+| 6           | Tachometer               |
+| 7           | Aura                     |
+| 8           | Aura Color               |
+| 9           | Avatar Face              |
+| 10          | Avatar Eye               |
+| 11          | Avatar Mouth             |
+| 12          | Avatar Hair              |
+| 13          | Avatar Glasses           |
+| 14          | Avatar Face accessories  |
+| 15          | Avatar Body              |
+| 18          | Avatar Background        |
+| 21          | Chat Stamp               |
+| 22          | Keychain                 |
+| 24          | Title                    |
+| 25          | FullTune Ticket          |
+| 26          | Paper Cup                |
+| 27          | BGM                      |
+| 28          | Drifting Text            |
+| 31          | Start Menu BG            |
+| 32          | Car Color/Paint          |
+| 33          | Aura Level               |
+| 34          | FullTune Ticket Fragment |
+| 35          | Underneon Lights         |
 
 ### TimeRelease Chapter:
 

@@ -1,6 +1,6 @@
 server:
   enabled: True
-  loglevel: "debug"
+  loglevel: "info"
   ssl: False
   ssl_key: "cert/idac.key"
   ssl_cert: "cert/idac.crt"
