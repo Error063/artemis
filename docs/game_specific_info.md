@@ -88,6 +88,36 @@ After a failed Online Battle the room will be deleted. The host is used for the 
 - Timer countdown should be handled globally and not by one user
 - Game can freeze or can crash if someone (especially the host) leaves the matchmaking
 
+### Rivals
+
+You can configure up to 4 rivals in Chunithm on a per-user basis. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user1>, <version>, <user2>, 2);
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user2>, <version>, <user1>, 2);
+```
+Note that the version **must match**, otherwise song lookup may not work.
+
+### Teams
+
+You can also configure teams for users to be on. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_profile_team (teamName) VALUES (<teamName>);
+```
+Team names can be regular ASCII, and they will be displayed ingame.
+
+On smaller installations, you may also wish to enable scaled team rankings. By default, Chunithm determines team ranking within the first 100 teams. This can be configured in the YAML:
+```yaml
+team:
+  rank_scale: True # Scales the in-game ranking based on the number of teams within the database, rather than the default scale of ~100 that the game normally uses.
+```
+
+### Favorite songs
+You can set the songs that will be in a user's Favorite Songs category using the following SQL entries:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user>, <version>, <songId>, 1);
+```
+The songId is based on the actual ID within your version of Chunithm.
+
 
 ## crossbeats REV.
 
