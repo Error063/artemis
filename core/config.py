@@ -151,6 +151,12 @@ class DatabaseConfig:
         )
 
     @property
+    def enable_memcached(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "database", "enable_memcached", default=True
+        )
+
+    @property
     def memcached_host(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "core", "database", "memcached_host", default="localhost"

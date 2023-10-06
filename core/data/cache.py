@@ -17,7 +17,7 @@ except ModuleNotFoundError:
 
 def cached(lifetime: int = 10, extra_key: Any = None) -> Callable:
     def _cached(func: Callable) -> Callable:
-        if has_mc:
+        if has_mc and (cfg and cfg.database.enable_memcached):
             hostname = "127.0.0.1"
             if cfg:
                 hostname = cfg.database.memcached_host
