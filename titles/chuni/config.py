@@ -30,6 +30,11 @@ class ChuniTeamConfig:
         return CoreConfig.get_config_field(
             self.__config, "chuni", "team", "name", default=""
         )
+    @property
+    def rank_scale(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "team", "rank_scale", default="False"
+        )
 
 
 class ChuniModsConfig:
