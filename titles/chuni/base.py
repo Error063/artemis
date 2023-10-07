@@ -588,7 +588,7 @@ class ChuniBase:
             if len(song_list) >= max_ct:
                 break
 
-        if len(song_list) >= next_idx + max_ct:
+        if len(music_detail) >= next_idx + max_ct:
             next_idx += max_ct
         else:
             next_idx = -1
