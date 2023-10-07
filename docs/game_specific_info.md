@@ -73,7 +73,7 @@ Config file is located in `config/chuni.yaml`.
 
 **If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
 
-```shell
+```yaml
 crypto:
   encrypted_only: False
   keys:
@@ -318,7 +318,7 @@ Note: 1149 and higher are only for Card Maker 1.35 and higher and will be ignore
 
 **If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
 
-```shell
+```yaml
 crypto:
   encrypted_only: False
   keys:
