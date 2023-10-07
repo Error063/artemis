@@ -65,6 +65,7 @@ Config file is located in `config/chuni.yaml`.
 
 | Option           | Info                                                                                                           |
 |------------------|----------------------------------------------------------------------------------------------------------------|
+| `news_msg`       | If this is set, the news at the top of the main screen will be displayed (up to Chunithm Paradise Lost)        |
 | `name`           | If this is set, all players that are not on a team will use this one by default.                               |
 | `rank_scale`     | Scales the in-game ranking based on the number of teams within the database                                    |
 | `use_login_bonus`| This is used to enable the login bonuses                                                                       |

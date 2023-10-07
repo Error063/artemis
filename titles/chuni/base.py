@@ -181,7 +181,17 @@ class ChuniBase:
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
     def handle_get_game_message_api_request(self, data: Dict) -> Dict:
-        return {"type": data["type"], "length": "0", "gameMessageList": []}
+        return {
+            "type": data["type"], 
+            "length": 1, 
+            "gameMessageList": [{ 
+                "id": 1, 
+                "type": 1,
+                "message": f"Welcome to {self.core_cfg.server.name} network!" if not self.game_config.server.news_msg else self.game_config.server.news_msg,
+                "startDate": "2017-12-05 07:00:00.0",
+                "endDate": "2099-12-31 00:00:00.0"
+            }]
+        }
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
         return {"type": data["type"], "gameRankingList": []}
