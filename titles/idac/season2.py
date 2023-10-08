@@ -146,9 +146,9 @@ class IDACSeason2(IDACBase):
             "round_event_exp": [],
             "stamp_info": self.stamp_info,
             # 0 = use default data, 1+ = server version of timereleasedata response
-            "timerelease_no": 1,
+            "timerelease_no": 2,
             # 0 = use default data, 1+ = server version of gachadata response
-            "timerelease_avatar_gacha_no": 1,
+            "timerelease_avatar_gacha_no": 2,
             "takeover_reward": [],
             "subcard_judge": [
                 {

@@ -39,6 +39,12 @@
 			"new_status": 0
 		},
 		{
+			"style_car_id": 12,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 0
+		},
+		{
 			"style_car_id": 259,
 			"release_status": 1,
 			"recommend": 0,
@@ -46,6 +52,12 @@
 		},
 		{
 			"style_car_id": 261,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 0
+		},
+		{
+			"style_car_id": 264,
 			"release_status": 1,
 			"recommend": 0,
 			"new_status": 0
@@ -117,18 +129,6 @@
 			"new_status": 0
 		},
 		{
-			"style_car_id": 1285,
-			"release_status": 1,
-			"recommend": 0,
-			"new_status": 1
-		},
-		{
-			"style_car_id": 1286,
-			"release_status": 1,
-			"recommend": 0,
-			"new_status": 1
-		},
-		{
 			"style_car_id": 1536,
 			"release_status": 1,
 			"recommend": 0,
@@ -148,6 +148,12 @@
 		},
 		{
 			"style_car_id": 65537,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 0
+		},
+		{
+			"style_car_id": 65538,
 			"release_status": 1,
 			"recommend": 0,
 			"new_status": 0
@@ -225,6 +231,12 @@
 			"new_status": 0
 		},
 		{
+			"style_car_id": 66051,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
+		},
+		{
 			"style_car_id": 66304,
 			"release_status": 1,
 			"recommend": 0,
@@ -265,6 +277,24 @@
 			"release_status": 1,
 			"recommend": 0,
 			"new_status": 0
+		},
+		{
+			"style_car_id": 66821,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
+		},
+		{
+			"style_car_id": 66822,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
+		},
+		{
+			"style_car_id": 67073,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
 		},
 		{
 			"style_car_id": 67328,
@@ -421,6 +451,18 @@
 			"release_status": 1,
 			"recommend": 0,
 			"new_status": 0
+		},
+		{
+			"style_car_id": 132358,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
+		},
+		{
+			"style_car_id": 132608,
+			"release_status": 1,
+			"recommend": 0,
+			"new_status": 1
 		},
 		{
 			"style_car_id": 132864,
@@ -779,8 +821,7 @@
 			"timerelease_chapter": 28
 		}
 	],
-	"annaunce_image": [
-	],
+	"annaunce_image": [],
 	"vs_balance_car": [
 		{
 			"style_car_id": 0,

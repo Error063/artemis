@@ -619,19 +619,36 @@ class IDACItemData(BaseData):
     def get_best_challenges_by_vs_type(
         self, aime_id: int, story_type: int = 4
     ) -> Optional[List[Row]]:
-        sql = (
+        subquery = (
             select(
                 challenge.c.story_type,
+                challenge.c.user,
                 challenge.c.vs_type,
-                func.max(challenge.c.cleared_difficulty).label("max_clear_lv"),
                 func.max(challenge.c.play_difficulty).label("last_play_lv"),
-                challenge.c.course_id,
-                challenge.c.play_count,
             )
             .where(
                 and_(challenge.c.user == aime_id, challenge.c.story_type == story_type)
             )
-            .group_by(challenge.c.vs_type, challenge.c.course_id, challenge.c.play_count)
+            .group_by(challenge.c.vs_type)
+        )
+
+        sql = (
+            select(
+                challenge.c.story_type,
+                challenge.c.vs_type,
+                challenge.c.cleared_difficulty.label("max_clear_lv"),
+                challenge.c.play_difficulty.label("last_play_lv"),
+                challenge.c.course_id,
+                challenge.c.play_count,
+            )
+            .where(
+                and_(
+                    challenge.c.user == subquery.c.user,
+                    challenge.c.vs_type == subquery.c.vs_type,
+                    challenge.c.play_difficulty == subquery.c.last_play_lv,
+                ),
+            )
+            .order_by(challenge.c.vs_type)
         )
 
         result = self.execute(sql)

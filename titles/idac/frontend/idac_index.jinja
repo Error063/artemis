@@ -2,7 +2,7 @@
 {% block content %}
 <h1 class="mb-3">頭文字D THE ARCADE</h1>
 
-{% if sesh is defined and sesh["user_id"] > 0 %}
+{% if sesh is defined and sesh["userId"] > 0 %}
 <div class="card mb-3">
     <div class="card-body">
         <div class="card-title">
@@ -27,6 +27,8 @@
                         <hr class="mt-0 mb-4">
                         <h6>Username</h6>
                         <p class="text-muted">{{ profile.username }}</p>
+                        <h6>Cash</h6>
+                        <p class="text-muted">{{ profile.cash }} D</p>
                         <h6>Grade</h6>
                         <h4>
                             {% set grade = rank.grade %}
@@ -37,7 +39,7 @@
                             {% else %}
                                 Unknown
                             {% endif %}
-                        </h6>
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -58,7 +60,7 @@
                             </div>
                             <div class="col-lg-4 col-md-6 mb-3">
                                 <h6>Mileage</h6>
-                                <p class="text-muted">{{ profile.mileage }} m</p>
+                                <p class="text-muted">{{ profile.mileage / 1000}} km</p>
                             </div>
                         </div>
                         {% if tickets is defined and tickets|length > 0 %}
