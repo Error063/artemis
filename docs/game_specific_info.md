@@ -574,6 +574,8 @@ python dbutils.py --game SDEW upgrade
 - Player title is currently static and cannot be changed in-game
 - QR Card Scanning currently only load a static hero
 
+**Network hashing in GssSite.dll must be disabled**
+
 ### Credits for SAO support:
 
 - Midorica - Limited Network Support
