@@ -1,2 +1,2 @@
 ALTER TABLE diva_profile
-    DROP skn_eqp,
+    DROP skn_eqp;

@@ -1,2 +1,2 @@
 ALTER TABLE diva_profile
-    ADD skn_eqp INT NOT NULL DEFAULT 0,
+    ADD skn_eqp INT NOT NULL DEFAULT 0;
