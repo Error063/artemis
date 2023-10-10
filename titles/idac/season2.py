@@ -342,16 +342,25 @@ class IDACSeason2(IDACBase):
 
     def handle_login_checklock_request(self, data: Dict, headers: Dict):
         user_id = data["id"]
+        access_code = data["accesscode"]
+        is_new_player = 0
 
-        # check if an IDAC profile already exists
-        p = self.data.profile.get_profile(user_id, self.version)
-        is_new_player = 1 if p is None else 0
+        # check that the user_id from access_code matches the user_id
+        if user_id == self.data.card.get_user_id_from_card(access_code):
+            lock_result = 1
+
+            # check if an IDAC profile already exists
+            p = self.data.profile.get_profile(user_id, self.version)
+            is_new_player = 1 if p is None else 0
+        else:
+            lock_result = 0
+            user_id = ""
 
         # other: in use
         return {
             "status_code": "0",
             # 0 = already in use, 1 = good, 2 = too new
-            "lock_result": 1,
+            "lock_result": lock_result,
             "lock_date": int(datetime.now().timestamp()),
             "daily_play": 1,
             "session": f"{user_id}",
