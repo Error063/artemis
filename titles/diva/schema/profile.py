@@ -51,6 +51,7 @@ profile = Table(
     Column("rgo_sts", Integer, nullable=False, server_default="1"),
     Column("lv_efct_id", Integer, nullable=False, server_default="0"),
     Column("lv_plt_id", Integer, nullable=False, server_default="1"),
+    Column("skn_eqp", Integer, nullable=False, server_default="0"),
     Column("passwd_stat", Integer, nullable=False, server_default="0"),
     Column("passwd", String(12), nullable=False, server_default="**********"),
     Column(
