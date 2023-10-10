@@ -22,7 +22,7 @@ class ChuniServerConfig:
         
     @property
     def news_msg(self) -> str:
-        CoreConfig.get_config_field(
+        return CoreConfig.get_config_field(
             self.__config, "chuni", "server", "news_msg", default=""
         )
 

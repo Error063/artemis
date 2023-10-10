@@ -187,7 +187,7 @@ class ChuniBase:
             "gameMessageList": [{ 
                 "id": 1, 
                 "type": 1,
-                "message": f"Welcome to {self.core_cfg.server.name} network!" if not self.game_config.server.news_msg else self.game_config.server.news_msg,
+                "message": f"Welcome to {self.core_cfg.server.name} network!" if not self.game_cfg.server.news_msg else self.game_cfg.server.news_msg,
                 "startDate": "2017-12-05 07:00:00.0",
                 "endDate": "2099-12-31 00:00:00.0"
             }]
