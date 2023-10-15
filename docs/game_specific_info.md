@@ -194,18 +194,19 @@ For versions pre-dx
 | SDBM      | 5          | maimai ORANGE PLUS      |
 | SDCQ      | 6          | maimai PiNK             |
 | SDCQ      | 7          | maimai PiNK PLUS        |
-| SDDK      | 8          | maimai MURASAKI         |
-| SDDK      | 9          | maimai MURASAKI PLUS    |
-| SDDZ      | 10         | maimai MILK             |
-| SDDZ      | 11         | maimai MILK PLUS        |
+| SDDK      | 8          | maimai MURASAKi         |
+| SDDK      | 9          | maimai MURASAKi PLUS    |
+| SDDZ      | 10         | maimai MiLK             |
+| SDDZ      | 11         | maimai MiLK PLUS        |
 | SDEY      | 12         | maimai FiNALE           |
 | SDEZ      | 13         | maimai DX               |
 | SDEZ      | 14         | maimai DX PLUS          |
 | SDEZ      | 15         | maimai DX Splash        |
 | SDEZ      | 16         | maimai DX Splash PLUS   |
-| SDEZ      | 17         | maimai DX Universe      |
-| SDEZ      | 18         | maimai DX Universe PLUS |
-| SDEZ      | 19         | maimai DX Festival      |
+| SDEZ      | 17         | maimai DX UNiVERSE      |
+| SDEZ      | 18         | maimai DX UNiVERSE PLUS |
+| SDEZ      | 19         | maimai DX FESTiVAL      |
+| SDEZ      | 20         | maimai DX FESTiVAL PLUS |
 
 ### Importer
 
@@ -347,15 +348,21 @@ python dbutils.py --game SDDT upgrade
 
 ### Support status
 
-* Card Maker 1.30:
-  * CHUNITHM NEW!!: Yes
-  * maimai DX UNiVERSE: Yes
-  * O.N.G.E.K.I. bright: Yes
+#### Card Maker 1.30:
+* CHUNITHM NEW!!: Yes
+* maimai DX UNiVERSE: Yes
+* O.N.G.E.K.I. bright: Yes
 
-* Card Maker 1.35:
-  * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
-  * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
-  * O.N.G.E.K.I. bright MEMORY: Yes
+#### Card Maker 1.35:
+* CHUNITHM: 
+  * NEW!!: Yes
+  * NEW PLUS!!: Yes (added in A028)
+  * SUN: Yes (added in A032)
+* maimai DX:
+  * UNiVERSE PLUS: Yes
+  * FESTiVAL: Yes (added in A031)
+  * FESTiVAL PLUS: Yes (added in A035)
+* O.N.G.E.K.I. bright MEMORY: Yes
 
 
 ### Importer

@@ -23,10 +23,11 @@ class Mai2Universe(Mai2SplashPlus):
         return {
             "userName": p["userName"],
             "rating": p["playerRating"],
-            # hardcode lastDataVersion for CardMaker 1.34
+            # hardcode lastDataVersion for CardMaker
             "lastDataVersion": "1.20.00",
+            # checks if the user is still logged in
             "isLogin": False,
-            "isExistSellingCard": False,
+            "isExistSellingCard": True,
         }
 
     def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
@@ -70,8 +71,12 @@ class Mai2Universe(Mai2SplashPlus):
             tmp.pop("cardName")
             tmp.pop("enabled")
 
-            tmp["startDate"] = datetime.strftime(tmp["startDate"], Mai2Constants.DATE_TIME_FORMAT)
-            tmp["endDate"] = datetime.strftime(tmp["endDate"], Mai2Constants.DATE_TIME_FORMAT)
+            tmp["startDate"] = datetime.strftime(
+                tmp["startDate"], Mai2Constants.DATE_TIME_FORMAT
+            )
+            tmp["endDate"] = datetime.strftime(
+                tmp["endDate"], Mai2Constants.DATE_TIME_FORMAT
+            )
             tmp["noticeStartDate"] = datetime.strftime(
                 tmp["noticeStartDate"], Mai2Constants.DATE_TIME_FORMAT
             )

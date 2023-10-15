@@ -14,7 +14,7 @@ class Mai2Festival(Mai2UniversePlus):
     def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
         user_data = super().handle_cm_get_user_preview_api_request(data)
 
-        # hardcode lastDataVersion for CardMaker 1.35
+        # hardcode lastDataVersion for CardMaker
         user_data["lastDataVersion"] = "1.30.00"
         return user_data
 
@@ -25,7 +25,13 @@ class Mai2Festival(Mai2UniversePlus):
         return user_login
 
     def handle_get_user_recommend_rate_music_api_request(self, data: Dict) -> Dict:
+        """
+        userRecommendRateMusicIdList: list[int]
+        """
         return {"userId": data["userId"], "userRecommendRateMusicIdList": []}
 
     def handle_get_user_recommend_select_music_api_request(self, data: Dict) -> Dict:
+        """
+        userRecommendSelectionMusicIdList: list[int]
+        """
         return {"userId": data["userId"], "userRecommendSelectionMusicIdList": []}
