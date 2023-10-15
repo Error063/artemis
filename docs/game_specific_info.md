@@ -59,6 +59,28 @@ python read.py --game SDBT --version <version ID> --binfolder /path/to/game/fold
 
 The importer for Chunithm will import: Events, Music, Charge Items and Avatar Accesories.
 
+### Config
+
+Config file is located in `config/chuni.yaml`.
+
+| Option           | Info                                                                                                           |
+|------------------|----------------------------------------------------------------------------------------------------------------|
+| `news_msg`       | If this is set, the news at the top of the main screen will be displayed (up to Chunithm Paradise Lost)        |
+| `name`           | If this is set, all players that are not on a team will use this one by default.                               |
+| `rank_scale`     | Scales the in-game ranking based on the number of teams within the database                                    |
+| `use_login_bonus`| This is used to enable the login bonuses                                                                       |
+| `crypto`         | This option is used to enable the TLS Encryption                                                               |
+
+
+**If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
+
+```yaml
+crypto:
+  encrypted_only: False
+  keys:
+    13: ["0000000000000000000000000000000000000000000000000000000000000000", "00000000000000000000000000000000", "0000000000000000"]
+```
+
 ### Database upgrade
 
 Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
@@ -87,6 +109,36 @@ After a failed Online Battle the room will be deleted. The host is used for the 
 - `reflectorUri` seems related to that?
 - Timer countdown should be handled globally and not by one user
 - Game can freeze or can crash if someone (especially the host) leaves the matchmaking
+
+### Rivals
+
+You can configure up to 4 rivals in Chunithm on a per-user basis. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user1>, <version>, <user2>, 2);
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user2>, <version>, <user1>, 2);
+```
+Note that the version **must match**, otherwise song lookup may not work.
+
+### Teams
+
+You can also configure teams for users to be on. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_profile_team (teamName) VALUES (<teamName>);
+```
+Team names can be regular ASCII, and they will be displayed ingame.
+
+On smaller installations, you may also wish to enable scaled team rankings. By default, Chunithm determines team ranking within the first 100 teams. This can be configured in the YAML:
+```yaml
+team:
+  rank_scale: True # Scales the in-game ranking based on the number of teams within the database, rather than the default scale of ~100 that the game normally uses.
+```
+
+### Favorite songs
+You can set the songs that will be in a user's Favorite Songs category using the following SQL entries:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user>, <version>, <songId>, 1);
+```
+The songId is based on the actual ID within your version of Chunithm.
 
 
 ## crossbeats REV.
@@ -211,6 +263,9 @@ Config file is located in `config/diva.yaml`.
 | `unlock_all_modules` | Unlocks all modules (costumes) by default, if set to `False` all modules need to be purchased   |
 | `unlock_all_items`   | Unlocks all items (customizations) by default, if set to `False` all items need to be purchased |
 
+### Custom PV Lists (databanks)
+
+In order to use custom PV Lists, simply drop in your .dat files inside of /titles/diva/data/ and make sure they are called PvList0.dat, PvList1.dat, PvList2.dat, PvList3.dat and PvList4.dat exactly.
 
 ### Database upgrade
 
@@ -257,8 +312,18 @@ Config file is located in `config/ongeki.yaml`.
 | Option           | Info                                                                                                           |
 |------------------|----------------------------------------------------------------------------------------------------------------|
 | `enabled_gachas` | Enter all gacha IDs for Card Maker to work, other than default may not work due to missing cards added to them |
+| `crypto`         | This option is used to enable the TLS Encryption                                                               |
 
 Note: 1149 and higher are only for Card Maker 1.35 and higher and will be ignored on lower versions.
+
+**If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
+
+```yaml
+crypto:
+  encrypted_only: False
+  keys:
+    7: ["0000000000000000000000000000000000000000000000000000000000000000", "00000000000000000000000000000000", "0000000000000000"]
+```
 
 ### Database upgrade
 
@@ -508,6 +573,8 @@ python dbutils.py --game SDEW upgrade
 - Shop is not functionnal
 - Player title is currently static and cannot be changed in-game
 - QR Card Scanning currently only load a static hero
+
+**Network hashing in GssSite.dll must be disabled**
 
 ### Credits for SAO support:
 

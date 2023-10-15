@@ -453,6 +453,15 @@ class ChuniStaticData(BaseData):
             return None
         return result.fetchone()
 
+    def get_song(self, music_id: int) -> Optional[Row]:
+        sql = music.select(music.c.id == music_id)
+
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+
     def put_avatar(
         self,
         version: int,

@@ -19,6 +19,12 @@ class ChuniServerConfig:
                 self.__config, "chuni", "server", "loglevel", default="info"
             )
         )
+        
+    @property
+    def news_msg(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "server", "news_msg", default=""
+        )
 
 
 class ChuniTeamConfig:
@@ -29,6 +35,11 @@ class ChuniTeamConfig:
     def team_name(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "chuni", "team", "name", default=""
+        )
+    @property
+    def rank_scale(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "team", "rank_scale", default="False"
         )
 
 

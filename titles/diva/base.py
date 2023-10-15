@@ -402,7 +402,7 @@ class DivaBase:
             response += f"&lv_num={profile['lv_num']}"
             response += f"&lv_pnt={profile['lv_pnt']}"
             response += f"&vcld_pts={profile['vcld_pts']}"
-            response += f"&skn_eqp={profile['use_pv_skn_eqp']}"
+            response += f"&skn_eqp={profile['skn_eqp']}"
             response += f"&btn_se_eqp={profile['btn_se_eqp']}"
             response += f"&sld_se_eqp={profile['sld_se_eqp']}"
             response += f"&chn_sld_se_eqp={profile['chn_sld_se_eqp']}"

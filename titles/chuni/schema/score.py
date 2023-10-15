@@ -200,3 +200,10 @@ class ChuniScoreData(BaseData):
         if result is None:
             return None
         return result.lastrowid
+
+    def get_rival_music(self, rival_id: int, index: int, max_count: int) -> Optional[List[Dict]]:
+        sql = select(playlog).where(playlog.c.user == rival_id).limit(max_count).offset(index)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()

@@ -3,6 +3,7 @@ from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, an
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func, select, update, delete
+from sqlalchemy.sql.functions import coalesce
 from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
@@ -257,18 +258,27 @@ class PokkenProfileData(BaseData):
             user=user_id,
             char_id=pokemon_id,
             illustration_book_no=illust_no,
-            bp_point_atk=atk,
-            bp_point_res=res,
-            bp_point_def=defe,
-            bp_point_sp=sp,
+            pokemon_exp=0,
+            battle_num_vs_wan=0,
+            win_vs_wan=0,
+            battle_num_vs_lan=0,
+            win_vs_lan=0,
+            battle_num_vs_cpu=0,
+            win_cpu=0,
+            battle_all_num_tutorial=0,
+            battle_num_tutorial=0,
+            bp_point_atk=1+atk,
+            bp_point_res=1+res,
+            bp_point_def=1+defe,
+            bp_point_sp=1+sp,
         )
 
         conflict = sql.on_duplicate_key_update(
             illustration_book_no=illust_no,
-            bp_point_atk=atk,
-            bp_point_res=res,
-            bp_point_def=defe,
-            bp_point_sp=sp,
+            bp_point_atk=pokemon_data.c.bp_point_atk + atk,
+            bp_point_res=pokemon_data.c.bp_point_res + res,
+            bp_point_def=pokemon_data.c.bp_point_def + defe,
+            bp_point_sp=pokemon_data.c.bp_point_sp + sp,
         )
 
         result = self.execute(conflict)
@@ -284,7 +294,7 @@ class PokkenProfileData(BaseData):
         xp: int
     ) -> None:
         sql = update(pokemon_data).where(and_(pokemon_data.c.user==user_id, pokemon_data.c.char_id==pokemon_id)).values(
-            pokemon_exp=pokemon_data.c.pokemon_exp + xp
+            pokemon_exp=coalesce(pokemon_data.c.pokemon_exp, 0) + xp
         )
 
         result = self.execute(sql)
@@ -292,29 +302,38 @@ class PokkenProfileData(BaseData):
             self.logger.warning(f"Failed to add {xp} XP to pokemon ID {pokemon_id} for user {user_id}")
 
     def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
-        pass
+        sql = pokemon_data.select(and_(pokemon_data.c.user == user_id, pokemon_data.c.char_id == pokemon_id))
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
 
     def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
-        pass
+        sql = pokemon_data.select(pokemon_data.c.user == user_id)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
 
     def put_pokemon_battle_result(
         self, user_id: int, pokemon_id: int, match_type: PokkenConstants.BATTLE_TYPE, match_result: PokkenConstants.BATTLE_RESULT
     ) -> None:
         """
         Records the match stats (type and win/loss) for the pokemon and profile
+        coalesce(pokemon_data.c.win_vs_wan, 0)
         """
         sql = update(pokemon_data).where(and_(pokemon_data.c.user==user_id, pokemon_data.c.char_id==pokemon_id)).values(
-            battle_num_tutorial=pokemon_data.c.battle_num_tutorial + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else pokemon_data.c.battle_num_tutorial,
-            battle_all_num_tutorial=pokemon_data.c.battle_all_num_tutorial + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else pokemon_data.c.battle_all_num_tutorial,
+            battle_num_tutorial=coalesce(pokemon_data.c.battle_num_tutorial, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else coalesce(pokemon_data.c.battle_num_tutorial, 0),
+            battle_all_num_tutorial=coalesce(pokemon_data.c.battle_all_num_tutorial, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.TUTORIAL else coalesce(pokemon_data.c.battle_all_num_tutorial, 0),
 
-            battle_num_vs_cpu=pokemon_data.c.battle_num_vs_cpu + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI else pokemon_data.c.battle_num_vs_cpu,
-            win_cpu=pokemon_data.c.win_cpu + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_cpu,
+            battle_num_vs_cpu=coalesce(pokemon_data.c.battle_num_vs_cpu, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI else coalesce(pokemon_data.c.battle_num_vs_cpu, 0),
+            win_cpu=coalesce(pokemon_data.c.win_cpu, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.AI and match_result==PokkenConstants.BATTLE_RESULT.WIN else coalesce(pokemon_data.c.win_cpu, 0),
 
-            battle_num_vs_lan=pokemon_data.c.battle_num_vs_lan + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN else pokemon_data.c.battle_num_vs_lan,
-            win_vs_lan=pokemon_data.c.win_vs_lan + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_vs_lan,
+            battle_num_vs_lan=coalesce(pokemon_data.c.battle_num_vs_lan, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN else coalesce(pokemon_data.c.battle_num_vs_lan, 0),
+            win_vs_lan=coalesce(pokemon_data.c.win_vs_lan, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.LAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else coalesce(pokemon_data.c.win_vs_lan, 0),
 
-            battle_num_vs_wan=pokemon_data.c.battle_num_vs_wan + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN else pokemon_data.c.battle_num_vs_wan,
-            win_vs_wan=pokemon_data.c.win_vs_wan + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else pokemon_data.c.win_vs_wan,
+            battle_num_vs_wan=coalesce(pokemon_data.c.battle_num_vs_wan, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN else coalesce(pokemon_data.c.battle_num_vs_wan, 0),
+            win_vs_wan=coalesce(pokemon_data.c.win_vs_wan, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else coalesce(pokemon_data.c.win_vs_wan, 0),
         )
 
         result = self.execute(sql)
@@ -335,11 +354,11 @@ class PokkenProfileData(BaseData):
         Records profile stats
         """
         sql = update(profile).where(profile.c.user==user_id).values(
-            ex_ko_num=profile.c.ex_ko_num + exkos,
-            wko_num=profile.c.wko_num + wkos,
-            timeup_win_num=profile.c.timeup_win_num + timeout_wins,
-            cool_ko_num=profile.c.cool_ko_num + cool_kos,
-            perfect_ko_num=profile.c.perfect_ko_num + perfects,
+            ex_ko_num=coalesce(profile.c.ex_ko_num, 0) + exkos,
+            wko_num=coalesce(profile.c.wko_num, 0) + wkos,
+            timeup_win_num=coalesce(profile.c.timeup_win_num, 0) + timeout_wins,
+            cool_ko_num=coalesce(profile.c.cool_ko_num, 0) + cool_kos,
+            perfect_ko_num=coalesce(profile.c.perfect_ko_num, 0) + perfects,
             continue_num=continues,
         )
 
@@ -348,10 +367,6 @@ class PokkenProfileData(BaseData):
             self.logger.warning(f"Failed to update stats for user {user_id}")
 
     def update_support_team(self, user_id: int, support_id: int, support1: int = None, support2: int = None) -> None:
-        if support1 == 4294967295:
-            support1 = None
-        if support2 == 4294967295:
-            support2 = None
         sql = update(profile).where(profile.c.user==user_id).values(
             support_set_1_1=support1 if support_id == 1 else profile.c.support_set_1_1,
             support_set_1_2=support2 if support_id == 1 else profile.c.support_set_1_2,

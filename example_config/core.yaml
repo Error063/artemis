@@ -24,6 +24,7 @@ database:
   sha2_password: False
   loglevel: "warn"
   user_table_autoincrement_start: 10000
+  enable_memcached: True
   memcached_host: "localhost"
 
 frontend:
