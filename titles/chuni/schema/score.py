@@ -207,27 +207,3 @@ class ChuniScoreData(BaseData):
         if result is None:
             return None
         return result.fetchall()
-    def get_rival_music_highest_scores(self, rival_id: int) -> Optional[List[Dict]]:
-        # Define the subquery to retrieve the highest scoreMax for each level and musicId
-        subquery = (
-            select([
-                self.playlog.c.musicId,
-                self.playlog.c.level,
-                func.max(self.playlog.c.score)
-            ])
-            .where(self.playlog.c.user == rival_id)
-            .group_by(self.playlog.c.musicId, self.playlog.c.level)
-        )
-
-        # Join the subquery with the playlog table to get the full records
-        query = select([
-            self.playlog,
-            subquery.scalar()
-        ]).where(self.playlog.c.user == rival_id)
-
-        result = self.execute(query)
-
-        if result is None:
-            return None
-
-        return result.fetchall()
