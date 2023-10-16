@@ -40,6 +40,7 @@ detail = Table(
     Column("charaLockSlot", JSON),
     Column("contentBit", BigInteger),
     Column("playCount", Integer),
+    Column("mapStock", Integer),  # new with fes+
     Column("eventWatchedDate", String(25)),
     Column("lastGameId", String(25)),
     Column("lastRomVersion", String(25)),
@@ -100,7 +101,7 @@ detail = Table(
 )
 
 detail_old = Table(
-   "maimai_profile_detail",
+    "maimai_profile_detail",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column(
@@ -216,6 +217,7 @@ extend = Table(
     Column("isPhotoAgree", Boolean),
     Column("isGotoCodeRead", Boolean),
     Column("selectResultDetails", Boolean),
+    Column("selectResultScoreViewType", Integer),  # new with fes+	
     Column("sortCategorySetting", Integer),
     Column("sortMusicSetting", Integer),
     Column("selectedCardList", JSON),
@@ -251,6 +253,7 @@ option = Table(
     Column("touchSize", Integer),
     Column("starRotate", Integer),
     Column("dispCenter", Integer),
+    Column("outFrameType", Integer),  # new with fes+
     Column("dispChain", Integer),
     Column("dispRate", Integer),
     Column("dispBar", Integer),
@@ -276,6 +279,8 @@ option = Table(
     Column("exVolume", Integer),
     Column("slideSe", Integer),
     Column("slideVolume", Integer),
+    Column("breakSlideVolume", Integer),  # new with fes+
+    Column("touchVolume", Integer),  # new with fes+
     Column("touchHoldVolume", Integer),
     Column("damageSeVolume", Integer),
     Column("headPhoneVolume", Integer),
@@ -438,7 +443,11 @@ boss = Table(
     "maimai_profile_boss",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("pandoraFlagList0", Integer),
     Column("pandoraFlagList1", Integer),
     Column("pandoraFlagList2", Integer),
@@ -455,22 +464,31 @@ recent_rating = Table(
     "maimai_profile_recent_rating",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("userRecentRatingList", JSON),
     UniqueConstraint("user", name="mai2_profile_recent_rating_uk"),
     mysql_charset="utf8mb4",
 )
 
 consec_logins = Table(
-        "mai2_profile_consec_logins",
+    "mai2_profile_consec_logins",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
-    Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
     Column("version", Integer, nullable=False),
     Column("logins", Integer),
     UniqueConstraint("user", "version", name="mai2_profile_consec_logins_uk"),
     mysql_charset="utf8mb4",
 )
+
 
 class Mai2ProfileData(BaseData):
     def put_profile_detail(
@@ -494,18 +512,22 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_detail(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+    def get_profile_detail(
+        self, user_id: int, version: int, is_dx: bool = True
+    ) -> Optional[Row]:
         if is_dx:
             sql = (
                 select(detail)
                 .where(and_(detail.c.user == user_id, detail.c.version <= version))
                 .order_by(detail.c.version.desc())
             )
-        
+
         else:
             sql = (
                 select(detail_old)
-                .where(and_(detail_old.c.user == user_id, detail_old.c.version <= version))
+                .where(
+                    and_(detail_old.c.user == user_id, detail_old.c.version <= version)
+                )
                 .order_by(detail_old.c.version.desc())
             )
 
@@ -582,11 +604,15 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warning(f"put_profile_option: failed to update! {user_id} is_dx {is_dx}")
+            self.logger.warning(
+                f"put_profile_option: failed to update! {user_id} is_dx {is_dx}"
+            )
             return None
         return result.lastrowid
 
-    def get_profile_option(self, user_id: int, version: int, is_dx: bool = True) -> Optional[Row]:
+    def get_profile_option(
+        self, user_id: int, version: int, is_dx: bool = True
+    ) -> Optional[Row]:
         if is_dx:
             sql = (
                 select(option)
@@ -596,7 +622,9 @@ class Mai2ProfileData(BaseData):
         else:
             sql = (
                 select(option_old)
-                .where(and_(option_old.c.user == user_id, option_old.c.version <= version))
+                .where(
+                    and_(option_old.c.user == user_id, option_old.c.version <= version)
+                )
                 .order_by(option_old.c.version.desc())
             )
 
@@ -689,7 +717,9 @@ class Mai2ProfileData(BaseData):
             return None
         return result.fetchall()
 
-    def put_web_option(self, user_id: int, version: int, web_opts: Dict) -> Optional[int]:
+    def put_web_option(
+        self, user_id: int, version: int, web_opts: Dict
+    ) -> Optional[int]:
         web_opts["user"] = user_id
         web_opts["version"] = version
         sql = insert(web_opt).values(**web_opts)
@@ -698,14 +728,14 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warning(
-                f"put_web_option: failed to update! user_id: {user_id}"
-            )
+            self.logger.warning(f"put_web_option: failed to update! user_id: {user_id}")
             return None
         return result.lastrowid
-    
+
     def get_web_option(self, user_id: int, version: int) -> Optional[Row]:
-        sql = web_opt.select(and_(web_opt.c.user == user_id, web_opt.c.version == version))
+        sql = web_opt.select(
+            and_(web_opt.c.user == user_id, web_opt.c.version == version)
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -725,7 +755,7 @@ class Mai2ProfileData(BaseData):
             )
             return None
         return result.lastrowid
-    
+
     def get_grade_status(self, user_id: int) -> Optional[Row]:
         sql = grade_status.select(grade_status.c.user == user_id)
 
@@ -742,12 +772,10 @@ class Mai2ProfileData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warning(
-                f"put_boss_list: failed to update! user_id: {user_id}"
-            )
+            self.logger.warning(f"put_boss_list: failed to update! user_id: {user_id}")
             return None
         return result.lastrowid
-    
+
     def get_boss_list(self, user_id: int) -> Optional[Row]:
         sql = boss.select(boss.c.user == user_id)
 
@@ -759,7 +787,7 @@ class Mai2ProfileData(BaseData):
     def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
         sql = insert(recent_rating).values(user=user_id, userRecentRatingList=rr)
 
-        conflict = sql.on_duplicate_key_update({'userRecentRatingList': rr})
+        conflict = sql.on_duplicate_key_update({"userRecentRatingList": rr})
 
         result = self.execute(conflict)
         if result is None:
@@ -768,7 +796,7 @@ class Mai2ProfileData(BaseData):
             )
             return None
         return result.lastrowid
-    
+
     def get_recent_rating(self, user_id: int) -> Optional[Row]:
         sql = recent_rating.select(recent_rating.c.user == user_id)
 
@@ -776,27 +804,25 @@ class Mai2ProfileData(BaseData):
         if result is None:
             return None
         return result.fetchone()
-    
-    def add_consec_login(self, user_id: int, version: int) -> None:
-        sql = insert(consec_logins).values(
-            user=user_id,
-            version=version,
-            logins=1
-        )
 
-        conflict = sql.on_duplicate_key_update(
-            logins=consec_logins.c.logins + 1
-        )
+    def add_consec_login(self, user_id: int, version: int) -> None:
+        sql = insert(consec_logins).values(user=user_id, version=version, logins=1)
+
+        conflict = sql.on_duplicate_key_update(logins=consec_logins.c.logins + 1)
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.error(f"Failed to update consecutive login count for user {user_id} version {version}")
+            self.logger.error(
+                f"Failed to update consecutive login count for user {user_id} version {version}"
+            )
 
     def get_consec_login(self, user_id: int, version: int) -> Optional[Row]:
-        sql = select(consec_logins).where(and_(
-            consec_logins.c.user==user_id,
-            consec_logins.c.version==version,
-        ))
+        sql = select(consec_logins).where(
+            and_(
+                consec_logins.c.user == user_id,
+                consec_logins.c.version == version,
+            )
+        )
 
         result = self.execute(sql)
         if result is None:
@@ -804,12 +830,12 @@ class Mai2ProfileData(BaseData):
         return result.fetchone()
 
     def reset_consec_login(self, user_id: int, version: int) -> Optional[Row]:
-        sql = consec_logins.update(and_(
-            consec_logins.c.user==user_id,
-            consec_logins.c.version==version,
-        )).values(
-            logins=1
-        )
+        sql = consec_logins.update(
+            and_(
+                consec_logins.c.user == user_id,
+                consec_logins.c.version == version,
+            )
+        ).values(logins=1)
 
         result = self.execute(sql)
         if result is None:

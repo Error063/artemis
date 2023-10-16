@@ -542,7 +542,42 @@ class Mai2DX(Mai2Base):
         }
 
     def handle_get_user_region_api_request(self, data: Dict) -> Dict:
+        """
+        class UserRegionList:
+            regionId: int
+            playCount: int
+            created: str
+        """
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
+
+    def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
+        user_id = data["userId"]
+        rival_id = data["rivalId"]
+
+        """
+        class UserRivalData:
+            rivalId: int
+            rivalName: str
+        """
+        return {"userId": user_id, "userRivalData": {}}
+
+    def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
+        user_id = data["userId"]
+        rival_id = data["rivalId"]
+        next_idx = data["nextIndex"]
+        rival_music_levels = data["userRivalMusicLevelList"]
+
+        """
+        class UserRivalMusicList:
+            class UserRivalMusicDetailList:
+                level: int
+                achievement: int
+                deluxscoreMax: int
+
+            musicId: int
+            userRivalMusicDetailList: list[UserRivalMusicDetailList]
+        """
+        return {"userId": user_id, "nextIndex": 0, "userRivalMusicList": []}
 
     def handle_get_user_music_api_request(self, data: Dict) -> Dict:
         user_id = data.get("userId", 0)        
