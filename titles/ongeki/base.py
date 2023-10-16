@@ -4,6 +4,7 @@ import json
 import logging
 from enum import Enum
 
+import pytz
 from core.config import CoreConfig
 from core.data.cache import cached
 from titles.ongeki.const import OngekiConstants
@@ -103,12 +104,30 @@ class OngekiBase:
         self.version = OngekiConstants.VER_ONGEKI
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        reboot_start = date.strftime(
-            datetime.now() + timedelta(hours=3), self.date_time_format
-        )
-        reboot_end = date.strftime(
-            datetime.now() + timedelta(hours=4), self.date_time_format
-        )
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
+
         return {
             "gameSetting": {
                 "dataVersion": "1.00.00",
