@@ -646,7 +646,7 @@ class ChuniProfileData(BaseData):
             return None
         return result.fetchone()
 
-    def get_team_rank_actual(self, team_id: int) -> int:
+    def get_team_rank(self, team_id: int) -> int:
         # Normal ranking system, likely the one used in the real servers
         # Query all teams sorted by 'teamPoint'
         result = self.execute(
@@ -663,42 +663,8 @@ class ChuniProfileData(BaseData):
         # Return the rank if found, or a default rank otherwise
         return rank if rank is not None else 0
 
-    def get_team_rank(self, team_id: int) -> int:
-        # Scaled ranking system, designed for smaller instances.
-        # Query all teams sorted by 'teamPoint'
-        result = self.execute(
-            select(team.c.id).order_by(team.c.teamPoint.desc())
-        )
-
-        # Count total number of teams
-        total_teams = self.execute(select(func.count()).select_from(team)).scalar()
-
-        # Get the rank of the team with the given team_id
-        rank = None
-        for i, row in enumerate(result, start=1):
-            if row.id == team_id:
-                rank = i
-                break
-
-        # If the team is not found, return default rank
-        if rank is None:
-            return 0
-
-        # Define rank tiers
-        tiers = {
-            1: range(1, int(total_teams * 0.1) + 1),  # Rainbow
-            2: range(int(total_teams * 0.1) + 1, int(total_teams * 0.4) + 1),  # Gold
-            3: range(int(total_teams * 0.4) + 1, int(total_teams * 0.7) + 1),  # Silver
-            4: range(int(total_teams * 0.7) + 1, total_teams + 1),  # Grey
-        }
-
-        # Assign rank based on tier
-        for tier_rank, tier_range in tiers.items():
-            if rank in tier_range:
-                return tier_rank
-
-        # Return default rank if not found in any tier
-        return 0
+    # RIP scaled team ranking. Gone, but forgotten
+    # def get_team_rank_scaled(self, team_id: int) -> int:
 
     def update_team(self, team_id: int, team_data: Dict) -> bool:
         team_data["id"] = team_id
