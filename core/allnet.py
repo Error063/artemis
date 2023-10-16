@@ -147,7 +147,7 @@ class AllnetServlet:
                     resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
                     return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
                 
-                elif not arcade["ip"] or arcade["ip"] is None and self.config.server.strict_ip_checking:
+                elif (not arcade["ip"] or arcade["ip"] is None) and self.config.server.strict_ip_checking:
                     msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip}, but arcade {arcade['id']} has no IP set! (strict checking enabled)."
                     self.data.base.log_event(
                         "allnet", "ALLNET_AUTH_NO_SHOP_IP", logging.ERROR, msg
