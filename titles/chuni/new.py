@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from random import randint
 from typing import Dict
 
+import pytz
 from core.config import CoreConfig
 from titles.chuni.const import ChuniConstants
 from titles.chuni.database import ChuniData
@@ -31,12 +32,29 @@ class ChuniNew(ChuniBase):
         match_end = datetime.strftime(
             datetime.utcnow() + timedelta(hours=16), self.date_time_format
         )
-        reboot_start = datetime.strftime(
-            datetime.utcnow() + timedelta(hours=6), self.date_time_format
-        )
-        reboot_end = datetime.strftime(
-            datetime.utcnow() + timedelta(hours=7), self.date_time_format
-        )
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
         return {
             "gameSetting": {
                 "isMaintenance": False,

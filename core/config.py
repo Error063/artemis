@@ -85,6 +85,18 @@ class TitleConfig:
             self.__config, "core", "title", "port", default=8080
         )
 
+    @property
+    def reboot_start_time(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "reboot_start_time", default=""
+        )
+
+    @property
+    def reboot_end_time(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "reboot_end_time", default=""
+        )
+
 
 class DatabaseConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:

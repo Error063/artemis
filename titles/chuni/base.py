@@ -200,12 +200,30 @@ class ChuniBase:
         return {"type": data["type"], "length": 0, "gameSaleList": []}
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        reboot_start = datetime.strftime(
-            datetime.now() - timedelta(hours=4), self.date_time_format
-        )
-        reboot_end = datetime.strftime(
-            datetime.now() - timedelta(hours=3), self.date_time_format
-        )
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
+
         return {
             "gameSetting": {
                 "dataVersion": "1.00.00",
@@ -385,26 +403,24 @@ class ChuniBase:
         }
 
     def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
-        m = self.data.score.get_rival_music(data["rivalId"], data["nextIndex"], data["maxCount"])
-        if m is None:
-            return {}
-
+        rival_id = data["rivalId"]
+        next_index = int(data["nextIndex"])
+        max_count = int(data["maxCount"])
         user_rival_music_list = []
-        for music in m:
-            actual_music_id = self.data.static.get_song(music["musicId"])
-            if actual_music_id is None:
-                music_id = music["musicId"]
-            else:
-                music_id = actual_music_id["songId"]
+
+        # Fetch all the rival music entries for the user
+        all_entries = self.data.score.get_rival_music(rival_id)
+
+        # Process the entries based on max_count and nextIndex
+        for music in all_entries[next_index:]:
+            music_id = music["musicId"]
             level = music["level"]
             score = music["score"]
             rank = music["rank"]
 
-            # Find the existing entry for the current musicId in the user_rival_music_list
+            # Create a music entry for the current music_id if it's unique
             music_entry = next((entry for entry in user_rival_music_list if entry["musicId"] == music_id), None)
-
             if music_entry is None:
-                # If the entry doesn't exist, create a new entry
                 music_entry = {
                     "musicId": music_id,
                     "length": 0,
@@ -412,52 +428,32 @@ class ChuniBase:
                 }
                 user_rival_music_list.append(music_entry)
 
-            # Check if the current score is higher than the previous highest score for the level
-            level_entry = next(
-                (
-                    entry
-                    for entry in music_entry["userRivalMusicDetailList"]
-                    if entry["level"] == level
-                ),
-                None,
-            )
-            if level_entry is None or score > level_entry["scoreMax"]:
-                # If the level entry doesn't exist or the score is higher, update or add the entry
+            # Create a level entry for the current level if it's unique or has a higher score
+            level_entry = next((entry for entry in music_entry["userRivalMusicDetailList"] if entry["level"] == level), None)
+            if level_entry is None:
                 level_entry = {
                     "level": level,
                     "scoreMax": score,
                     "scoreRank": rank
                 }
+                music_entry["userRivalMusicDetailList"].append(level_entry)
+            elif score > level_entry["scoreMax"]:
+                level_entry["scoreMax"] = score
+                level_entry["scoreRank"] = rank
 
-                if level_entry not in music_entry["userRivalMusicDetailList"]:
-                    music_entry["userRivalMusicDetailList"].append(level_entry)
-
+        # Calculate the length for each "musicId" by counting the unique levels
+        for music_entry in user_rival_music_list:
             music_entry["length"] = len(music_entry["userRivalMusicDetailList"])
 
+        # Prepare the result dictionary with user rival music data
         result = {
             "userId": data["userId"],
             "rivalId": data["rivalId"],
-            "nextIndex": -1,
-            "userRivalMusicList": user_rival_music_list
+            "nextIndex": str(next_index + len(all_entries) if len(all_entries) <= len(user_rival_music_list) else -1),
+            "userRivalMusicList": user_rival_music_list[:max_count]
         }
 
         return result
-    def handle_get_user_rival_music_api_requestded(self, data: Dict) -> Dict:
-        m = self.data.score.get_rival_music(data["rivalId"], data["nextIndex"], data["maxCount"])
-        if m is None:
-            return {}
-
-        userRivalMusicList = []
-        for music in m:
-            self.logger.debug(music["point"])
-
-        return {
-            "userId": data["userId"],
-            "rivalId": data["rivalId"],
-            "nextIndex": -1
-
-        }
-
     def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
         user_fav_item_list = []
 
@@ -711,11 +707,7 @@ class ChuniBase:
             if team:
                 team_id = team["id"]
                 team_name = team["teamName"]
-                # Determine whether to use scaled ranks, or original system
-                if self.game_cfg.team.rank_scale:
-                    team_rank = self.data.profile.get_team_rank(team["id"])
-                else:
-                    team_rank = self.data.profile.get_team_rank_actual(team["id"])
+                team_rank = self.data.profile.get_team_rank(team["id"])
 
         # Don't return anything if no team name has been defined for defaults and there is no team set for the player
         if not profile["teamId"] and team_name == "":

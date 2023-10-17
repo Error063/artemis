@@ -13,6 +13,9 @@ title:
   loglevel: "info"
   hostname: "localhost"
   port: 8080
+  reboot_start_time: "04:00"
+  reboot_end_time: "05:00"
+
 
 database:
   host: "localhost"
