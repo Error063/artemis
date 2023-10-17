@@ -13,6 +13,9 @@
 - `loglevel`: Logging level for the title server. Default `info`
 - `hostname`: Hostname that gets sent to clients to tell them where to connect. Games must be able to connect to your server via the hostname or IP you spcify here. Note that most games will reject `localhost` or `127.0.0.1`. Default `localhost`
 - `port`: Port that the title server will listen for connections on. Set to 0 to use the Allnet handler to reduce the port footprint. Default `8080`
+- `port_ssl`: Port that the secure title server will listen for connections on. Set to 0 to use the Allnet handler to reduce the port footprint. Default `0`
+- `ssl_key`: Location of the ssl server key for the secure title server. Ignored if `port_ssl` is set to `0` or `is_develop` set to `False`. Default `cert/title.key`
+- `ssl_cert`: Location of the ssl server certificate for the secure title server. Must not be a self-signed SSL. Ignored if `port_ssl` is set to `0` or `is_develop` is set to `False`. Default `cert/title.pem`
 - `reboot_start_time`: 24 hour JST time that clients will see as the start of maintenance period. Leave blank for no maintenance time. Default: ""
 - `reboot_end_time`: 24 hour JST time that clients will see as the end of maintenance period. Leave blank for no maintenance time. Default: ""
 ## Database

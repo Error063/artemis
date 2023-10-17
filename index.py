@@ -279,6 +279,7 @@ if __name__ == "__main__":
 
     allnet_server_str = f"tcp:{cfg.allnet.port}:interface={cfg.server.listen_address}"
     title_server_str = f"tcp:{cfg.title.port}:interface={cfg.server.listen_address}"
+    title_https_server_str = f"ssl:{cfg.title.port_ssl}:interface={cfg.server.listen_address}:privateKey={cfg.title.ssl_key}:certKey={cfg.title.ssl_cert}"
     adb_server_str = f"tcp:{cfg.aimedb.port}:interface={cfg.server.listen_address}"
     frontend_server_str = (
         f"tcp:{cfg.frontend.port}:interface={cfg.server.listen_address}"
@@ -310,6 +311,11 @@ if __name__ == "__main__":
 
     if cfg.title.port > 0:
         endpoints.serverFromString(reactor, title_server_str).listen(
+            server.Site(dispatcher)
+        )
+    
+    if cfg.title.port_ssl > 0:
+        endpoints.serverFromString(reactor, title_https_server_str).listen(
             server.Site(dispatcher)
         )
 

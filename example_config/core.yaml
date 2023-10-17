@@ -13,6 +13,9 @@ title:
   loglevel: "info"
   hostname: "localhost"
   port: 8080
+  port_ssl: 0
+  ssl_cert: "cert/title.crt"
+  ssl_key: "cert/title.key"
   reboot_start_time: "04:00"
   reboot_end_time: "05:00"
 

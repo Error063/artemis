@@ -84,6 +84,24 @@ class TitleConfig:
         return CoreConfig.get_config_field(
             self.__config, "core", "title", "port", default=8080
         )
+        
+    @property
+    def port_ssl(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "port_ssl", default=0
+        )
+
+    @property
+    def ssl_key(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "ssl_key", default="cert/title.key"
+        )
+
+    @property
+    def ssl_cert(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "ssl_cert", default="cert/title.pem"
+        )
 
     @property
     def reboot_start_time(self) -> str:
