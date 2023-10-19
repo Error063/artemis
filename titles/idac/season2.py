@@ -24,11 +24,11 @@ class IDACSeason2(IDACBase):
                     self.logger.warning(f"Stamp {stamp} is enabled but does not exist!")
                     continue
 
-                with open(f"./titles/idac/data/stamps/{stamp}.json", "rb") as f:
+                with open(
+                    f"./titles/idac/data/stamps/{stamp}.json", encoding="UTF-8"
+                ) as f:
                     self.logger.debug(f"Loading stamp {stamp}")
-                    self.stamp_info.append(
-                        self._fix_dates(json.loads(f.read().decode("utf-8")))
-                    )
+                    self.stamp_info.append(self._fix_dates(json.load(f)))
 
         self.timetrial_event = {}
         self.timetrial_event_id = None
@@ -41,13 +41,16 @@ class IDACSeason2(IDACBase):
                     )
                 else:
                     self.logger.debug(f"Loading timetrial {timetrial}")
-                    with open(f"./titles/idac/data/timetrial/{timetrial}.json", "rb") as f:
-                        self.timetrial_event = self._fix_dates(
-                            json.loads(f.read().decode("utf-8"))
-                        )
+                    with open(
+                        f"./titles/idac/data/timetrial/{timetrial}.json",
+                        encoding="UTF-8",
+                    ) as f:
+                        self.timetrial_event = self._fix_dates(json.load(f))
 
                     # required for saving
-                    self.timetrial_event_id = self.timetrial_event.get("timetrial_event_id")
+                    self.timetrial_event_id = self.timetrial_event.get(
+                        "timetrial_event_id"
+                    )
 
     def handle_alive_get_request(self, data: Dict, headers: Dict):
         return {
@@ -108,9 +111,7 @@ class IDACSeason2(IDACBase):
         if self.core_cfg.server.is_develop:
             domain_api_game = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDGT/{ver_str}/"
         else:
-            domain_api_game = (
-                f"http://{self.core_cfg.title.hostname}/SDGT/{ver_str}/"
-            )
+            domain_api_game = f"http://{self.core_cfg.title.hostname}/SDGT/{ver_str}/"
 
         return {
             "status_code": "0",
@@ -146,9 +147,9 @@ class IDACSeason2(IDACBase):
             "round_event_exp": [],
             "stamp_info": self.stamp_info,
             # 0 = use default data, 1+ = server version of timereleasedata response
-            "timerelease_no": 2,
+            "timerelease_no": 3,
             # 0 = use default data, 1+ = server version of gachadata response
-            "timerelease_avatar_gacha_no": 2,
+            "timerelease_avatar_gacha_no": 3,
             "takeover_reward": [],
             "subcard_judge": [
                 {
@@ -214,7 +215,7 @@ class IDACSeason2(IDACBase):
         18: Background
         """
 
-        with open("./titles/idac/data/avatarGacha.json") as f:
+        with open("./titles/idac/data/avatarGacha.json", encoding="UTF-8") as f:
             avatar_gacha_data = json.load(f)
 
         # avatar_gacha_data = {
@@ -1290,7 +1291,9 @@ class IDACSeason2(IDACBase):
                 self.data.item.put_time_trial(self.version, user_id, data)
 
         # update the timetrial event points
-        self.data.item.put_timetrial_event(user_id, self.timetrial_event_id, event_point)
+        self.data.item.put_timetrial_event(
+            user_id, self.timetrial_event_id, event_point
+        )
 
         return {
             "status_code": "0",
@@ -1302,7 +1305,7 @@ class IDACSeason2(IDACBase):
             "timetrial_event_data": {
                 "timetrial_event_id": self.timetrial_event_id,
                 "point": event_point,
-            }
+            },
         }
 
     def handle_user_updatestoryresult_request(self, data: Dict, headers: Dict):
@@ -1598,7 +1601,9 @@ class IDACSeason2(IDACBase):
             skill_level_exp = course["skill_level_exp"]
 
             # get the best time for the current course for the current user
-            best_trial = self.data.item.get_time_trial_best_ranking_by_course(season_id, user_id, course_id)
+            best_trial = self.data.item.get_time_trial_best_ranking_by_course(
+                season_id, user_id, course_id
+            )
             if not best_trial:
                 continue
 
@@ -1607,7 +1612,9 @@ class IDACSeason2(IDACBase):
             course_rank = self.data.item.get_time_trial_ranking_by_course(
                 season_id, course_id, limit=None
             )
-            course_rank = len([r for r in course_rank if r["goal_time"] < goal_time]) + 1
+            course_rank = (
+                len([r for r in course_rank if r["goal_time"] < goal_time]) + 1
+            )
 
             timetrial_data.append(
                 {
@@ -1617,7 +1624,8 @@ class IDACSeason2(IDACBase):
                     "goal_time": goal_time,
                     "rank": course_rank,
                     "rank_dt": int(best_trial["play_dt"].timestamp()),
-                })
+                }
+            )
 
         return timetrial_data
 
