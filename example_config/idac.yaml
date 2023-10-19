@@ -1,5 +1,5 @@
 server:
-  enabled: True
+  enable: True
   loglevel: "info"
   ssl: False
   ssl_key: "cert/idac.key"
@@ -11,12 +11,12 @@ server:
   port_matching_p2p: 20003
 
 stamp:
-  enabled: True
+  enable: True
   enabled_stamps: # max 3 play stamps
     - "touhou_remilia_scarlet"
     - "touhou_flandre_scarlet"
     - "touhou_sakuya_izayoi"
 
 timetrial:
-  enabled: True
+  enable: True
   enabled_timetrial: "touhou_remilia_scarlet"

@@ -1,6 +1,6 @@
 FROM python:3.9.15-slim-bullseye
 
-RUN apt update && apt install default-libmysqlclient-dev build-essential libtk nodejs npm -y
+RUN apt update && apt install default-libmysqlclient-dev build-essential libtk nodejs npm pkg-config -y
 
 WORKDIR /app
 COPY requirements.txt requirements.txt
@@ -15,7 +15,7 @@ COPY dbutils.py dbutils.py
 ADD core core
 ADD titles titles
 ADD config config
-ADD log log
+ADD logs logs
 ADD cert cert
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]

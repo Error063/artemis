@@ -551,9 +551,9 @@ Config file is located in `config/idac.yaml`.
 | `port_matching`               | Port number for the Online Battle Matching                                                                  |
 | `port_echo1/2`                | Port numbers for Echos                                                                                      |
 | `port_matching_p2p`           | Port number for Online Battle (currently unsupported)                                                       |
-| `stamp.enabled`               | Enables/Disabled the play stamp events                                                                      |
+| `stamp.enable`               | Enables/Disabled the play stamp events                                                                      |
 | `stamp.enabled_stamps`        | Define up to 3 play stamp events (without `.json` extension, which are placed in `titles/idac/data/stamps`) |
-| `timetrial.enabled`           | Enables/Disables the time trial event                                                                       |
+| `timetrial.enable`           | Enables/Disables the time trial event                                                                       |
 | `timetrial.enabled_timetrial` | Define one! trial event (without `.json` extension, which are placed in `titles/idac/data/timetrial`)       |
 
 
@@ -642,6 +642,7 @@ python dbutils.py --game SDGT upgrade
 | 70        | Odawara(小田原)           | Reverse(逆走)            |
 
 ### Credits
+- Bottersnike: For the HUGE Reverse Engineering help
 - Kinako: For helping with the timeRelease unlocking of courses and special mode
 
 A huge thanks to all people who helped shaping this project to what it is now and don't want to be mentioned here.
