@@ -724,6 +724,14 @@ class ChuniBase:
     def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
+            "length": 0,
+            "nextIndex": -1,
+            "teamCourseSettingList": [],
+        }
+
+    def handle_get_team_course_setting_api_request_proto(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
             "length": 1,
             "nextIndex": -1,
             "teamCourseSettingList": [
@@ -746,6 +754,14 @@ class ChuniBase:
         }
 
     def handle_get_team_course_rule_api_request(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 0,
+            "nextIndex": -1,
+            "teamCourseRuleList": []
+        }
+
+    def handle_get_team_course_rule_api_request_proto(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 1,
