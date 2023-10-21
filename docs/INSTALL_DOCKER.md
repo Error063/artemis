@@ -200,4 +200,5 @@ This will fix errors loading data from server.
 ## read.py "Can't connect to local server through socket '/run/mysqld/mysqld.sock'"
 sqlalchemy by default reads any ip based connection as socket, thus trying to connect locally, please use a hostname (such as ma.db as in guide, and do not localhost) to force it to use a network interface.
 
-
+### TODO:
+- Production environment

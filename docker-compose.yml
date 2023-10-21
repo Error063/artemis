@@ -35,8 +35,8 @@ services:
       MYSQL_USER: aime
       MYSQL_PASSWORD: aime
       MYSQL_ROOT_PASSWORD: AimeRootPassword
-      MYSQL_CHARSET: utf8
-      MYSQL_COLLATION: utf8_general_ci
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_general_ci
     ##Note: expose port 3306 to allow read.py importer into database, comment out when not needed
     #ports:
     #  - "3306:3306"
