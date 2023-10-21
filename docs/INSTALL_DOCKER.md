@@ -52,19 +52,25 @@ set aimedb.key: to "<actual AIMEDB key>"
 ```
 
 ## Running Docker Compose
+
 After configuring, go to ARTEMiS root folder, and execute:
+
 ```
 docker compose up -d
-("-d" argument means detached or daemon, meaning you will regain control of your terminal and Containers will run in background)
 ```
+
+("-d" argument means detached or daemon, meaning you will regain control of your terminal and Containers will run in background)
+
 This will start pulling and building required images from network, after it's done, a development server should be running, with server accessible under machine's IP, frontend with port 8090, and PHPMyAdmin under port 9090.
 
-To turn off the server, from ARTEMiS root folder, execute:
+- To turn off the server, from ARTEMiS root folder, execute:
+
 ```
 docker compose down
 ```
 
-If you changed some files around, and don't see your changes applied, execute:
+- If you changed some files around, and don't see your changes applied, execute:
+
 ```
 (turn off the server)
 docker compose down
@@ -74,11 +80,13 @@ docker compose build
 docker compose up -d
 ```
 
-If you need to see logs from containers running, execute:
+- If you need to see logs from containers running, execute:
+
 ```
 docker compose logs
 ```
-add '-f' to the end if you want to follow logs.
+
+- add '-f' to the end if you want to follow logs.
 
 ## Running commands
 
