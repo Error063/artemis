@@ -5,7 +5,7 @@ services:
     build: .
     volumes:
       - ./aime:/app/aime
-      - ./config:/app/config
+      - ./configs/config:/app/config
 
     environment:
       CFG_DEV: 1
