@@ -55,7 +55,7 @@ class IDACMatching(resource.Resource):
                 "host": self.game_config.server.matching_host,
                 "port": self.game_config.server.matching_p2p,
                 "room_name": "INDTA",
-                "state": self.get_matching_state(),
+                "state": 1,
             }
 
         self.logger.debug(f"Response {resp}")
