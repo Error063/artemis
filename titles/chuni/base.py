@@ -562,7 +562,7 @@ class ChuniBase:
             "userMapList": map_list,
         }
 
-def handle_get_user_music_api_request(self, data: Dict) -> Dict:
+    def handle_get_user_music_api_request(self, data: Dict) -> Dict:
         music_detail = self.data.score.get_scores(data["userId"])
         if music_detail is None:
             return {
