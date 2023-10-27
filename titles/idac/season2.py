@@ -301,6 +301,11 @@ class IDACSeason2(IDACBase):
 
                 # get the username, country and store from the profile
                 profile = self.data.profile.get_profile(user_id, self.version)
+                arcade = self.data.arcade.get_arcade(profile["store"])
+
+                if arcade is None:
+                    arcade = {}
+                    arcade["name"] = self.core_cfg.server.name
 
                 # should never happen
                 if profile is None:
@@ -313,9 +318,9 @@ class IDACSeason2(IDACBase):
                         "username": profile["username"],
                         "value": rank["goal_time"],
                         # gat the store name from the profile
-                        "store": self.core_cfg.server.name,
+                        "store": arcade["name"],
                         # get the country id from the profile, 9 is JPN
-                        "country": 9,
+                        "country": profile["country"],
                         "style_car_id": rank["style_car_id"],
                         # convert the datetime to a timestamp
                         "play_dt": int(rank["play_dt"].timestamp()),
@@ -492,11 +497,13 @@ class IDACSeason2(IDACBase):
         # get the user's profile, can never be None
         p = self.data.profile.get_profile(user_id, self.version)
         user_data = p._asdict()
+        arcade = self.data.arcade.get_arcade(user_data["store"])
+        
         del user_data["id"]
         del user_data["user"]
         del user_data["version"]
         user_data["id"] = user_id
-        user_data["store_name"] = self.core_cfg.server.name
+        user_data["store_name"] = self.core_cfg.server.name if arcade is None else arcade["name"]
         user_data["last_play_date"] = int(user_data["last_play_date"].timestamp())
         user_data["create_date"] = int(user_data["create_date"].timestamp())
 
@@ -1735,6 +1742,8 @@ class IDACSeason2(IDACBase):
                 # set the name to CPU
                 profile["username"] = f"ＣＰＵ"
                 # also reset stamps to default
+                profile["country"] = 9
+                profile["store"] = 0
                 profile["stamp_key_assign_0"] = 0
                 profile["stamp_key_assign_1"] = 1
                 profile["stamp_key_assign_2"] = 2
@@ -1850,6 +1859,11 @@ class IDACSeason2(IDACBase):
             if time_trial:
                 eval_id = time_trial["eval_id"]
 
+            arcade = self.data.arcade.get_arcade(profile["store"])
+            if arcade is None:
+                arcade = {}
+                arcade["name"] = self.core_cfg.server.name
+
             rival_data.append(
                 {
                     "id": profile["user"],
@@ -1858,13 +1872,13 @@ class IDACSeason2(IDACBase):
                     # only needed for power match
                     "powerhouseLv": powerhose_lv,
                     "mytitleId": profile["mytitle_id"],
-                    "country": 9,
+                    "country": profile["country"],
                     "auraId": profile["aura_id"],
                     "auraColor": profile["aura_color_id"],
                     "auraLine": profile["aura_line_id"],
                     # not sure?
                     "roundRanking": 0,
-                    "storeName": self.core_cfg.server.name,
+                    "storeName": arcade["name"],
                     "sex": avatar["sex"],
                     "face": avatar["face"],
                     "eye": avatar["eye"],
