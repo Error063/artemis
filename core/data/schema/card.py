@@ -64,6 +64,27 @@ class CardData(BaseData):
 
         return int(card["user"])
 
+    def get_card_banned(self, access_code: str) -> Optional[bool]:
+        """
+        Given a 20 digit access code as a string, check if the card is banned
+        """
+        card = self.get_card_by_access_code(access_code)
+        if card is None:
+            return None
+        if card["is_banned"]:
+            return True
+        return False
+    def get_card_locked(self, access_code: str) -> Optional[bool]:
+        """
+        Given a 20 digit access code as a string, check if the card is locked
+        """
+        card = self.get_card_by_access_code(access_code)
+        if card is None:
+            return None
+        if card["is_locked"]:
+            return True
+        return False
+
     def delete_card(self, card_id: int) -> None:
         sql = aime_card.delete(aime_card.c.id == card_id)
 

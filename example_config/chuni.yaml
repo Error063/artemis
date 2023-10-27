@@ -5,7 +5,6 @@ server:
 
 team:
   name: ARTEMiS # If this is set, all players that are not on a team will use this one by default.
-  rank_scale: True # Scales the in-game ranking based on the number of teams within the database, rather than the default scale of ~100 that the game normally uses.
 
 mods:
   use_login_bonus: True

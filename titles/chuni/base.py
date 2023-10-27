@@ -194,7 +194,8 @@ class ChuniBase:
         }
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"type": data["type"], "gameRankingList": []}
+        rankings = self.data.score.get_rankings(self.version)
+        return {"type": data["type"], "gameRankingList": rankings}
 
     def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
         return {"type": data["type"], "length": 0, "gameSaleList": []}
@@ -401,7 +402,6 @@ class ChuniBase:
             "userId": data["userId"],
             "userRivalData": userRivalData
         }
-
     def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
         rival_id = data["rivalId"]
         next_index = int(data["nextIndex"])
@@ -415,10 +415,10 @@ class ChuniBase:
         for music in all_entries[next_index:]:
             music_id = music["musicId"]
             level = music["level"]
-            score = music["score"]
-            rank = music["rank"]
+            score = music["scoreMax"]
+            rank = music["scoreRank"]
 
-            # Create a music entry for the current music_id if it's unique
+            # Create a music entry for the current music_id
             music_entry = next((entry for entry in user_rival_music_list if entry["musicId"] == music_id), None)
             if music_entry is None:
                 music_entry = {
@@ -428,20 +428,15 @@ class ChuniBase:
                 }
                 user_rival_music_list.append(music_entry)
 
-            # Create a level entry for the current level if it's unique or has a higher score
-            level_entry = next((entry for entry in music_entry["userRivalMusicDetailList"] if entry["level"] == level), None)
-            if level_entry is None:
-                level_entry = {
-                    "level": level,
-                    "scoreMax": score,
-                    "scoreRank": rank
-                }
-                music_entry["userRivalMusicDetailList"].append(level_entry)
-            elif score > level_entry["scoreMax"]:
-                level_entry["scoreMax"] = score
-                level_entry["scoreRank"] = rank
+            # Create a level entry for the current level
+            level_entry = {
+                "level": level,
+                "scoreMax": score,
+                "scoreRank": rank
+            }
+            music_entry["userRivalMusicDetailList"].append(level_entry)
 
-        # Calculate the length for each "musicId" by counting the unique levels
+        # Calculate the length for each "musicId" by counting the levels
         for music_entry in user_rival_music_list:
             music_entry["length"] = len(music_entry["userRivalMusicDetailList"])
 
@@ -747,16 +742,57 @@ class ChuniBase:
         return {
             "userId": data["userId"],
             "length": 0,
-            "nextIndex": 0,
+            "nextIndex": -1,
             "teamCourseSettingList": [],
+        }
+
+    def handle_get_team_course_setting_api_request_proto(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 1,
+            "nextIndex": -1,
+            "teamCourseSettingList": [
+                {
+                    "orderId": 1,
+                    "courseId": 1,
+                    "classId": 1,
+                    "ruleId": 1,
+                    "courseName": "Test",
+                    "teamCourseMusicList": [
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1},
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1},
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1}
+                    ],
+                    "teamCourseRankingInfoList": [],
+                    "recodeDate": "2099-12-31 11:59:99.0",
+                    "isPlayed": False
+                }
+            ],
         }
 
     def handle_get_team_course_rule_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
-            "nextIndex": 0,
-            "teamCourseRuleList": [],
+            "nextIndex": -1,
+            "teamCourseRuleList": []
+        }
+
+    def handle_get_team_course_rule_api_request_proto(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 1,
+            "nextIndex": -1,
+            "teamCourseRuleList": [
+                {
+                    "recoveryLife": 0,
+                    "clearLife": 100,
+                    "damageMiss": 1,
+                    "damageAttack": 1,
+                    "damageJustice": 1,
+                    "damageJusticeC": 1
+                }
+            ],
         }
 
     def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
@@ -830,7 +866,7 @@ class ChuniBase:
                 playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
                 playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
                 playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
-                self.data.score.put_playlog(user_id, playlog)
+                self.data.score.put_playlog(user_id, playlog, self.version)
 
         if "userTeamPoint" in upsert:
             team_points = upsert["userTeamPoint"]
