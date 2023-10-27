@@ -10,7 +10,7 @@ from core.config import CoreConfig
 from titles.chuni.const import ChuniConstants
 from titles.chuni.database import ChuniData
 from titles.chuni.config import ChuniConfig
-
+SCORE_BUFFER = {}
 
 class ChuniBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: ChuniConfig) -> None:
@@ -583,22 +583,39 @@ class ChuniBase:
             tmp.pop("id")
 
             for song in song_list:
+                score_buf = SCORE_BUFFER.get(str(data["userId"])) or []
                 if song["userMusicDetailList"][0]["musicId"] == tmp["musicId"]:
                     found = True
                     song["userMusicDetailList"].append(tmp)
                     song["length"] = len(song["userMusicDetailList"])
+                    score_buf.append(tmp["musicId"])
+                    SCORE_BUFFER[str(data["userId"])] = score_buf
 
-            if not found:
+            score_buf = SCORE_BUFFER.get(str(data["userId"])) or []
+            if not found and tmp["musicId"] not in score_buf:
                 song_list.append({"length": 1, "userMusicDetailList": [tmp]})
+                score_buf.append(tmp["musicId"])
+                SCORE_BUFFER[str(data["userId"])] = score_buf
 
             if len(song_list) >= max_ct:
                 break
-
-        if len(music_detail) >= next_idx + max_ct:
-            next_idx += max_ct
+    
+        try:        
+            while song_list[-1]["userMusicDetailList"][0]["musicId"] == music_detail[x + 1]["musicId"]:
+                music = music_detail[x + 1]._asdict()
+                music.pop("user")
+                music.pop("id")
+                song_list[-1]["userMusicDetailList"].append(music)
+                song_list[-1]["length"] += 1
+                x += 1
+        except IndexError:
+            pass
+    
+        if len(song_list) >= max_ct:
+            next_idx += len(song_list)
         else:
             next_idx = -1
-
+            SCORE_BUFFER[str(data["userId"])] = []
         return {
             "userId": data["userId"],
             "length": len(song_list),
