@@ -315,6 +315,7 @@ class AllnetServlet:
 
     def handle_dlorder_report(self, request: Request, match: Dict) -> bytes:
         req_raw = request.content.getvalue()
+        client_ip = Utils.get_ip_addr(request)
         try:
             req_dict: Dict = json.loads(req_raw)
         except Exception as e:
@@ -332,11 +333,18 @@ class AllnetServlet:
             self.logger.warning(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
             return "NG"
 
-        dl_report_data = DLReport(dl_data, dl_data_type)
+        rep = DLReport(dl_data, dl_data_type)
 
-        if not dl_report_data.validate():
-            self.logger.warning(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
+        if not rep.validate():
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - {rep.err}")
             return "NG"
+        
+        msg = f"{rep.serial} @ {client_ip} reported download state {rep.rf_state} for {rep.gd} v{rep.dav}"\
+              f" ordered at {datetime.utcfromtimestamp(rep.ot).isoformat()} UTC:"\
+              f" {rep.tdsc}/{rep.tsc} segemnts downloaded for working files {rep.wfl} with {rep.dfl} complete."
+        
+        self.data.base.log_event("allnet", "DL_ORDER", logging.INFO, msg, dl_data)
+        self.logger.info(msg)
 
         return "OK"
 
@@ -753,32 +761,12 @@ class DLReport:
             self.err = "serial not provided"
             return False
         
-        if self.dfl is None: 
-            self.err = "dfl not provided"
-            return False
-        
-        if self.wfl is None:
-            self.err = "wfl not provided"
-            return False
-        
         if self.tsc is None:
             self.err = "tsc not provided"
             return False
         
         if self.tdsc is None:
             self.err = "tdsc not provided"
-            return False
-        
-        if self.at is None:
-            self.err = "at not provided"
-            return False
-        
-        if self.ot is None:
-            self.err = "ot not provided"
-            return False
-        
-        if self.rt is None:
-            self.err = "rt not provided"
             return False
         
         if self.as_ is None:
