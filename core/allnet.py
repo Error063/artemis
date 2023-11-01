@@ -339,9 +339,8 @@ class AllnetServlet:
             self.logger.warning(f"Failed to parse DL Report: Invalid format - {rep.err}")
             return "NG"
         
-        msg = f"{rep.serial} @ {client_ip} reported download state {rep.rf_state} for {rep.gd} v{rep.dav}"\
-              f" ordered at {datetime.utcfromtimestamp(rep.ot).isoformat()} UTC:"\
-              f" {rep.tdsc}/{rep.tsc} segemnts downloaded for working files {rep.wfl} with {rep.dfl} complete."
+        msg = f"{rep.serial} @ {client_ip} reported download state {rep.rf_state} for {rep.gd} v{rep.dav}:"\
+              f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
         
         self.data.base.log_event("allnet", "DL_ORDER", logging.INFO, msg, dl_data)
         self.logger.info(msg)
