@@ -33,6 +33,61 @@ class ALLNET_STAT(Enum):
     bad_machine = -2
     bad_shop = -3
 
+class DLI_STATUS(Enum):
+    START = 0
+    GET_DOWNLOAD_CONFIGURATION = 1
+    WAIT_DOWNLOAD = 2
+    DOWNLOADING = 3
+
+    NOT_SPECIFY_DLI = 100
+    ONLY_POST_REPORT = 101
+    STOPPED_BY_APP_RELEASE = 102
+    STOPPED_BY_OPT_RELEASE = 103
+
+    DOWNLOAD_COMPLETE_RECENTLY = 110
+
+    DOWNLOAD_COMPLETE_WAIT_RELEASE_TIME = 120
+    DOWNLOAD_COMPLETE_BUT_NOT_SYNC_SERVER = 121
+    DOWNLOAD_COMPLETE_BUT_NOT_FIRST_RESUME = 122
+    DOWNLOAD_COMPLETE_BUT_NOT_FIRST_LAUNCH = 123
+    DOWNLOAD_COMPLETE_WAIT_UPDATE = 124
+
+    DOWNLOAD_COMPLETE_AND_ALREADY_UPDATE = 130
+
+    ERROR_AUTH_FAILURE = 200
+
+    ERROR_GET_DLI_HTTP = 300
+    ERROR_GET_DLI = 301
+    ERROR_PARSE_DLI = 302
+    ERROR_INVALID_GAME_ID = 303
+    ERROR_INVALID_IMAGE_LIST = 304
+    ERROR_GET_DLI_APP = 305
+
+    ERROR_GET_BOOT_ID = 400
+    ERROR_ACCESS_SERVER = 401
+    ERROR_NO_IMAGE = 402
+    ERROR_ACCESS_IMAGE = 403
+
+    ERROR_DOWNLOAD_APP = 500
+    ERROR_DOWNLOAD_OPT = 501
+
+    ERROR_DISK_FULL = 600
+    ERROR_UNINSTALL = 601
+    ERROR_INSTALL_APP = 602
+    ERROR_INSTALL_OPT = 603
+
+    ERROR_GET_DLI_INTERNAL = 900
+    ERROR_ICF = 901
+    ERROR_CHECK_RELEASE_INTERNAL = 902
+    UNKNOWN = 999 # Not the actual enum val but it needs to be here as a catch-all
+
+    @classmethod
+    def from_int(cls, num: int) -> "DLI_STATUS":
+        try:
+            return cls(num)
+        except ValueError:
+            return cls.UNKNOWN
+
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):
         super().__init__()
@@ -339,7 +394,7 @@ class AllnetServlet:
             self.logger.warning(f"Failed to parse DL Report: Invalid format - {rep.err}")
             return "NG"
         
-        msg = f"{rep.serial} @ {client_ip} reported {rep.__type.name} download state {rep.rf_state} for {rep.gd} v{rep.dav}:"\
+        msg = f"{rep.serial} @ {client_ip} reported {rep.__type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
               f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
         
         self.data.base.log_event("allnet", "DL_ORDER", logging.INFO, msg, dl_data)
@@ -746,7 +801,7 @@ class DLReport:
         self.ot = data.get("ot")
         self.rt = data.get("rt")
         self.as_ = data.get("as")
-        self.rf_state = data.get("rf_state")
+        self.rf_state = DLI_STATUS.from_int(data.get("rf_state"))
         self.gd = data.get("gd")
         self.dav = data.get("dav")
         self.wdav = data.get("wdav") # app only
