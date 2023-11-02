@@ -397,7 +397,7 @@ class AllnetServlet:
         msg = f"{rep.serial} @ {client_ip} reported {rep.__type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
               f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
         
-        self.data.base.log_event("allnet", "DL_ORDER", logging.INFO, msg, dl_data)
+        self.data.base.log_event("allnet", "DL_REPORT", logging.INFO, msg, dl_data)
         self.logger.info(msg)
 
         return "OK"
