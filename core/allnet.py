@@ -394,7 +394,7 @@ class AllnetServlet:
             self.logger.warning(f"Failed to parse DL Report: Invalid format - {rep.err}")
             return "NG"
         
-        msg = f"{rep.serial} @ {client_ip} reported {rep.__type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
+        msg = f"{rep.serial} @ {client_ip} reported {rep.rep_type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
               f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
         
         self.data.base.log_event("allnet", "DL_REPORT", logging.INFO, msg, dl_data)
@@ -807,7 +807,7 @@ class DLReport:
         self.wdav = data.get("wdav") # app only
         self.dov = data.get("dov")
         self.wdov = data.get("wdov") # app only
-        self.__type = report_type
+        self.rep_type = report_type
         self.err = ""
     
     def validate(self) -> bool:
@@ -843,11 +843,11 @@ class DLReport:
             self.err = "dov not provided"
             return False
         
-        if (self.wdav is None or self.wdov is None) and self.__type == DLIMG_TYPE.app:
+        if (self.wdav is None or self.wdov is None) and self.rep_type == DLIMG_TYPE.app:
             self.err = "wdav or wdov not provided in app image"
             return False
         
-        if (self.wdav is not None or self.wdov is not None) and self.__type == DLIMG_TYPE.opt:
+        if (self.wdav is not None or self.wdov is not None) and self.rep_type == DLIMG_TYPE.opt:
             self.err = "wdav or wdov provided in opt image"
             return False
         
