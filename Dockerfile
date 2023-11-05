@@ -1,6 +1,6 @@
 FROM python:3.9.15-slim-bullseye
 
-RUN apt update && apt install default-libmysqlclient-dev build-essential libtk nodejs npm -y
+RUN apt update && apt install default-libmysqlclient-dev build-essential libtk nodejs npm pkg-config -y
 
 WORKDIR /app
 COPY requirements.txt requirements.txt
