@@ -336,6 +336,42 @@ perform all previous updates as well:
 python dbutils.py --game SDDT upgrade
 ```
 
+### Controlling Events (Ranking Event, Technical Challenge Event, Mission Event)
+
+Events are controlled by 2 types of enabled events:
+- RankingEvent (type 6), TechChallengeEvent (type 17)
+- AcceptRankingEvent (type 7), AcceptTechChallengeEvent (type 18)
+
+Both Ranking and Accept must be enabled for event to function properly
+Event will run for the time specified in startDate and endDate
+AcceptRankingEvent and AcceptTechChallengeEvent are reward period for events, which specify from what startDate until endDate you can collect the rewards for attending the event, so the reward period must start in the future, e.g. :
+
+- RankingEvent startDate 2023-12-01 - endDate 2023-12-30 - period in which whole event is running
+- AcceptRankingEvent startDate 2023-12-23 - endDate 2023-12-30 - period in which you can collect rewards for the event
+
+If player misses the AcceptRankingEvent period - ranking will be invalidated and receive lowest reward from the event (typically 500x money)
+
+Technical Challenge Song List:
+Songs that are used for Technical Challenge are not stored anywhere in data files, so you need to fill the database table by yourself, you can gather all songs that should be in Technical Challenges from ONGEKI japanese wikis, or, you can create your own sets:
+
+Database table : `ongeki_tech_music_list`
+```
+id: Id in table, just increment for each entry
+eventId: Id of the event in ongeki_static_events, insert the Id of the TechChallengeEvent (type 17) you want the song be assigned to
+musicId: Id of the song you want to add, use songId from ongeki_static_music table
+level: Difficulty of the song you want to track during the event, from 0(basic) to 3(master)
+
+```
+
+Current implementation of Ranking and Technical Challenge Events are updated on every profile save to the Network, and Ranked on each player login, in official specification, calculation for current rank on the network should be done in the maintenance window
+
+Mission Event (type 13) is a monthly type of event, which is used when another event doesn't have it's own Ranking or Technical Challenge Event running, only one Mission Event should be running at a time, so enable only the specific Mission you want to run currently on the Network
+
+If you're often trying fresh cards, registering new profiles etc., you can also consider disabling all Announcement Events (type 1), as it will disable all the banners that pop up on login (they show up only once though, so if you click through them once they won't show again)
+
+
+
+
 ## Card Maker
 
 ### SDED

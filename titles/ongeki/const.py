@@ -19,7 +19,6 @@ class OngekiConstants:
     EVT_TYPES: Enum = Enum(
         "EVT_TYPES",
         [
-            "None",
             "Announcement",
             "Movie",
             "AddMyList",
@@ -39,6 +38,8 @@ class OngekiConstants:
             "TechChallengeEvent",
             "AcceptTechChallengeEvent",
             "SilverJewelEvent",
+            "Max",
+            "None",
         ],
     )
 
