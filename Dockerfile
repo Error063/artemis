@@ -15,7 +15,7 @@ COPY dbutils.py dbutils.py
 COPY read.py read.py
 ADD core core
 ADD titles titles
-ADD log log
+ADD logs logs
 ADD cert cert
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
