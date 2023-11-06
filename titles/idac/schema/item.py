@@ -497,7 +497,7 @@ class IDACItemData(BaseData):
         return result.fetchall()
 
     def get_time_trial_best_cars_by_course(
-        self, version: int, aime_id: int, course_id: int
+        self, version: int, course_id: int, aime_id: Optional[int] = None
     ) -> Optional[List[Row]]:
         subquery = (
             select(
@@ -508,13 +508,15 @@ class IDACItemData(BaseData):
             .where(
                 and_(
                     trial.c.version == version,
-                    trial.c.user == aime_id,
                     trial.c.course_id == course_id,
                 )
             )
-            .group_by(trial.c.style_car_id)
-            .subquery()
         )
+
+        if aime_id is not None:
+            subquery = subquery.where(trial.c.user == aime_id)
+        
+        subquery = subquery.group_by(trial.c.style_car_id).subquery()
 
         sql = select(trial).where(
             and_(
