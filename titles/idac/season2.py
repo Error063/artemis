@@ -141,7 +141,249 @@ class IDACSeason2(IDACBase):
             "domain_echo2": f"{self.core_cfg.title.hostname}:{self.game_config.server.echo2}",
             "domain_ping": f"{self.core_cfg.title.hostname}",
             "battle_gift_event_master": [],
-            "round_event": [],
+            "round_event":[
+                {
+                    "round_event_id":30,
+                    "round_event_nm":"ARTEMiS Event",
+                    "start_dt":int(
+                datetime.strptime("2023-01-01", "%Y-%m-%d").timestamp()
+            ),
+                    "end_dt":int(
+                datetime.strptime("2029-01-01", "%Y-%m-%d").timestamp()
+            ),
+                    "round_start_rank":0,
+                    "save_filename":"Round_Event_djg_Or_dpg",
+                    "vscount":[
+                        {
+                            "reward_upper_limit":10,
+                            "reward_lower_limit":10,
+                            "reward":[
+                                {
+                                    "reward_category":1,
+                                    "reward_type":1
+                                }
+                            ]
+                        }
+                    ],
+                    "rank":[
+
+                    ],
+                    "point":[
+
+                    ],
+                    "playable_course_list":[
+                        {
+                            "course_id":4,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":4,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":6,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":6,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":8,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":8,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":10,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":10,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":12,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":12,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":14,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":14,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":16,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":16,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":18,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":18,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":20,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":20,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":22,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":22,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":24,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":24,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":26,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":26,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":36,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":36,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":38,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":38,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":40,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":40,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":42,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":42,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":44,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":44,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":46,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":46,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":48,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":48,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":50,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":50,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":52,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":52,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":54,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":54,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":56,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":56,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":58,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":58,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":68,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":68,
+                            "course_day":1
+                        },
+                        {
+                            "course_id":70,
+                            "course_day":0
+                        },
+                        {
+                            "course_id":70,
+                            "course_day":1
+                        }
+                    ]
+                }
+            ],
+
             "last_round_event": [],
             "last_round_event_ranking": [],
             "round_event_exp": [],
@@ -1460,7 +1702,7 @@ class IDACSeason2(IDACBase):
         # get the vs use count from database and update it
         style_car_id = data.pop("style_car_id")
         car_data = self.data.item.get_car(user_id, self.version, style_car_id)
-        vs_use_count = car_data["vs_use_count"] + 1
+        story_use_count = car_data["story_use_count"] + 1
 
         # save car data in database
         self.data.item.put_car(
@@ -1469,7 +1711,7 @@ class IDACSeason2(IDACBase):
             {
                 "style_car_id": style_car_id,
                 "car_mileage": data.pop("car_mileage"),
-                "vs_use_count": vs_use_count,
+                "story_use_count": story_use_count,
             },
         )
 
@@ -1528,7 +1770,7 @@ class IDACSeason2(IDACBase):
         # get the vs use count from database and update it
         style_car_id = data.get("style_car_id")
         car_data = self.data.item.get_car(user_id, self.version, style_car_id)
-        vs_use_count = car_data["vs_use_count"] + 1
+        story_use_count = car_data["story_use_count"] + 1
 
         # save car data in database
         self.data.item.put_car(
@@ -1537,7 +1779,7 @@ class IDACSeason2(IDACBase):
             {
                 "style_car_id": style_car_id,
                 "car_mileage": data.pop("car_mileage"),
-                "vs_use_count": vs_use_count,
+                "story_use_count": story_use_count,
             },
         )
 
@@ -2115,6 +2357,151 @@ class IDACSeason2(IDACBase):
             "win_count_multi": win_count_multi,
         }
 
+    def handle_timetrial_getbestrecordprebattle_request(self, data: Dict, headers: Dict):
+        user_id = headers["session"]
+
+        course_pickup_car_best_data = []
+        courses = self.data.item.get_time_trial_courses(self.version)
+        for course in courses:
+            car_list = []
+            best_cars = self.data.item.get_time_trial_best_cars_by_course(
+                self.version, user_id, course["course_id"]
+            )
+
+            for car in best_cars:
+                car_list.append(
+                    {
+                        "rank": 1,
+                        # no clue
+                        "member": user_id,
+                        "value": car["goal_time"],
+                        "store": self.core_cfg.server.name,
+                        # use car_id from request?
+                        "car_id": 0,
+                        "style_car_id": car["style_car_id"],
+                        "play_dt": car["play_dt"].timestamp(),
+                        "section_time_1": car["section_time_1"],
+                        "section_time_2": car["section_time_2"],
+                        "section_time_3": car["section_time_3"],
+                        "section_time_4": car["section_time_4"],
+                        "mission": car["mission"],
+                    }
+                )
+
+            course_pickup_car_best_data.append(
+                {
+                    "course_id": course["course_id"],
+                    "car_list": car_list,
+                }
+            )
+
+        return {
+            "status_code": "0",
+            # "course_car_best_data": course_car_best_data,
+            # "course_best_data": course_best_data,
+            "course_pickup_car_best_data": course_pickup_car_best_data,
+        }
+
+
+    def handle_user_updateonlinebattle_request(self, data: Dict, headers: Dict):      
+        return {
+            "status_code": "0",
+            "bothwin_penalty": 1,
+        }
+
+    def handle_user_updateonlinebattleresult_request(self, data: Dict, headers: Dict):
+        user_id = headers["session"]
+
+        stock_data: Dict = data.pop("stock_obj")
+        # save stock data in database
+        self._save_stock_data(user_id, stock_data)
+        
+        ticket_data: List = data.pop("ticket_data")
+        for ticket in ticket_data:
+            self.data.item.put_ticket(user_id, ticket)
+            
+        reward_dist_data: Dict = data.pop("reward_dist_obj")
+        rank_data: Dict = data.pop("mode_rank_obj")
+
+        # save rank dist data in database
+        rank_data.update(reward_dist_data)
+        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        
+        driver_debut_data = data.pop("driver_debut_obj")
+        
+        # get the use_count and net_vs_use_count of the used car
+        style_car_id = data.get("style_car_id")
+        car_mileage = data.pop("car_mileage")
+        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+
+        # increase the use_count and net_vs_use_count of the used car
+        used_car["use_count"] += 1
+        used_car["net_vs_use_count"] += 1
+        used_car["car_mileage"] = car_mileage
+
+        # save the used car in database
+        self.data.item.put_car(user_id, self.version, used_car)
+        
+        # get the profile data, update total_play and daily_play, and save it
+        profile = self.data.profile.get_profile(user_id, self.version)
+        total_play = profile["total_play"] + 1
+
+        # save the profile in database
+        self.data.profile.put_profile(
+            user_id,
+            self.version,
+            {
+                "total_play": total_play,
+                "last_play_date": datetime.now(),
+                "mileage": data.pop("mileage"),
+                "aura_id": data.pop("aura_id"),
+                "aura_color_id": data.pop("aura_color_id"),
+                "aura_line_id": data.pop("aura_line_id"),
+                "cash": data.pop("cash"),
+                "total_cash": data.pop("total_cash"),
+                "dressup_point": data.pop("dressup_point"),
+                "avatar_point": data.pop("avatar_point"),
+            },
+        )
+        
+        self.data.item.put_vs_info(user_id, data)
+
+        vs_info = {
+            "battle_mode": 0,
+            "vs_cnt": 1,
+            "vs_win": data.get("win_flg"),
+            "invalid": 0,
+            "str": 0,
+            "str_now": 0,
+            "lose_now": 0,
+            "vs_history": data.get("vs_history"),
+            "course_select_priority": data.get("course_select_priority"),
+            "vsinfo_course_data": [
+                {
+                    "course_id": data.get("course_id"),
+                    "vs_cnt": 1,
+                    "vs_win": data.get("win_flg"),
+                }
+            ],
+        }
+        
+        return {
+            "status_code": "0",
+            "vsinfo_data": vs_info,
+            "round_event": [
+                {
+                    "count": 1,
+                    "win": 1,
+                    "rank": 1,
+                    "point": 1,
+                    "total_round_point": 1,
+                }
+            ],
+            "car_use_count": [],
+            "maker_use_count": [],
+        }
+
+
     def handle_user_updatestorebattleresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
@@ -2147,7 +2534,7 @@ class IDACSeason2(IDACBase):
 
         # increase the use_count and net_vs_use_count of the used car
         used_car["use_count"] += 1
-        used_car["net_vs_use_count"] += 1
+        used_car["vs_use_count"] += 1
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
