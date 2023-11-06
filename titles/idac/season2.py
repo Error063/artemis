@@ -152,12 +152,33 @@ class IDACSeason2(IDACBase):
                         datetime.strptime("2029-01-01", "%Y-%m-%d").timestamp()
                     ),
                     "round_start_rank": 0,
-                    "save_filename": "Round_Event_djg_Or_dpg",
+                    "save_filename": "0",
+                    # https://info-initialdac.sega.jp/1898/
                     "vscount": [
                         {
                             "reward_upper_limit": 10,
                             "reward_lower_limit": 10,
-                            "reward": [{"reward_category": 1, "reward_type": 1}],
+                            "reward": [{"reward_category": 21, "reward_type": 483}],
+                        },
+                        {
+                            "reward_upper_limit": 40,
+                            "reward_lower_limit": 40,
+                            "reward": [{"reward_category": 21, "reward_type": 484}],
+                        },
+                        {
+                            "reward_upper_limit": 80,
+                            "reward_lower_limit": 80,
+                            "reward": [{"reward_category": 22, "reward_type": 516}],
+                        },
+                        {
+                            "reward_upper_limit": 120,
+                            "reward_lower_limit": 120,
+                            "reward": [{"reward_category": 21, "reward_type": 461}],
+                        },
+                        {
+                            "reward_upper_limit": 180,
+                            "reward_lower_limit": 180,
+                            "reward": [{"reward_category": 21, "reward_type": 462}],
                         }
                     ],
                     "rank": [],
