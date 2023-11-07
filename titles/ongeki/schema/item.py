@@ -171,10 +171,11 @@ event_point = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade")),
-    Column("eventId", Integer),
-    Column("point", Integer),
+    Column("version", Integer, nullable=False),
+    Column("eventId", Integer, nullable=False),
+    Column("point", Integer, nullable=False),
     Column("rank", Integer),
-    Column("type", Integer),
+    Column("type", Integer, nullable=False),
     Column("date", String(25)),
     Column("isRankingRewarded", Boolean),
     UniqueConstraint("user", "eventId", name="ongeki_user_event_point_uk"),
@@ -241,24 +242,14 @@ tech_event = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade")),
-    Column("eventId", Integer),
-    Column("totalTechScore", Integer),
-    Column("totalPlatinumScore", Integer),
+    Column("version", Integer, nullable=False),
+    Column("eventId", Integer, nullable=False),
+    Column("totalTechScore", Integer, nullable=False),
+    Column("totalPlatinumScore", Integer, nullable=False),
     Column("techRecordDate", String(25)),
     Column("isRankingRewarded", Boolean),
     Column("isTotalTechNewRecord", Boolean),
     UniqueConstraint("user", "eventId", name="ongeki_user_tech_event_uk"),
-    mysql_charset="utf8mb4",
-)
-
-tech_music = Table(
-    "ongeki_tech_music_list",
-    metadata,
-    Column("id", Integer, primary_key=True, nullable=False),
-    Column("eventId", Integer),
-    Column("musicId", Integer),
-    Column("level", Integer),
-    UniqueConstraint("musicId", name="ongeki_tech_music_list_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -267,11 +258,12 @@ tech_ranking = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"), nullable=False),
+    Column("version", Integer, nullable=False),
     Column("date", String(25)),
-    Column("eventId", Integer),
+    Column("eventId", Integer, nullable=False),
     Column("rank", Integer),
-    Column("totalPlatinumScore", Integer),
-    Column("totalTechScore", Integer),
+    Column("totalPlatinumScore", Integer, nullable=False),
+    Column("totalTechScore", Integer, nullable=False),
     UniqueConstraint("user", "eventId", name="ongeki_tech_event_ranking_uk"),
     mysql_charset="utf8mb4",
 )
@@ -562,10 +554,11 @@ class OngekiItemData(BaseData):
             return None
         return result.fetchall()
 
-    def put_event_point(self, aime_id: int, event_point_data: Dict) -> Optional[int]:
+    def put_event_point(self, aime_id: int, version: int, event_point_data: Dict) -> Optional[int]:
         # We update only the newest (type: 1) entry, in official spec game watches for both latest(type:1) and previous (type:2) entries to give an additional info how many ranks has player moved up or down
         # This fully featured is on TODO list, at the moment we just update the tables as data comes and give out rank as request comes
         event_point_data["user"] = aime_id
+        event_point_data["version"] = version
         event_point_data["type"] = 1
         event_point_time = datetime.now()
         event_point_data["date"] = datetime.strftime(event_point_time, "%Y-%m-%d %H:%M")
@@ -647,14 +640,6 @@ class OngekiItemData(BaseData):
             return None
         return result.fetchall()
 
-    def get_tech_music(self) -> Optional[List[Dict]]:
-        sql = select(tech_music)
-        result = self.execute(sql)
-
-        if result is None:
-            return None
-        return result.fetchall()
-
     def put_tech_event(self, aime_id: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
 
@@ -667,8 +652,9 @@ class OngekiItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_tech_event_ranking(self, aime_id: int, tech_event_data: Dict) -> Optional[int]:
+    def put_tech_event_ranking(self, version: int, aime_id: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
+        tech_event_data["version"] = version
         tech_event_data.pop("isRankingRewarded")
         tech_event_data.pop("isTotalTechNewRecord")
         tech_event_data["date"] = tech_event_data.pop("techRecordDate")
@@ -683,8 +669,8 @@ class OngekiItemData(BaseData):
             return None
         return result.lastrowid
 
-    def get_tech_event(self, aime_id: int) -> Optional[List[Dict]]:
-        sql = select(tech_event).where(tech_event.c.user == aime_id)
+    def get_tech_event(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+        sql = select(tech_event).where(and_(tech_event.c.user == aime_id, tech_event.c.version == version))
         result = self.execute(sql)
 
         if result is None:
@@ -774,17 +760,17 @@ class OngekiItemData(BaseData):
         return result.lastrowid
 
 
-    def get_ranking_event_ranks(self, aime_id: int) -> Optional[List[Dict]]:
+    def get_ranking_event_ranks(self, version: int, aime_id: int) -> Optional[List[Dict]]:
         # Calculates player rank on GameRequest from server, and sends it back, official spec would rank players in maintenance period, on TODO list
-        sql = select(event_point.c.id, event_point.c.user, event_point.c.eventId, event_point.c.type, func.row_number().over(partition_by=event_point.c.eventId, order_by=event_point.c.point.desc()).label('rank'), event_point.c.date, event_point.c.point)
+        sql = select(event_point.c.id, event_point.c.user, event_point.c.eventId, event_point.c.type, func.row_number().over(partition_by=event_point.c.eventId, order_by=event_point.c.point.desc()).label('rank'), event_point.c.date, event_point.c.point).where(event_point.c.version == version)
         result = self.execute(sql)
         if result is None:
             self.logger.error(f"failed to rank aime_id: {aime_id} ranking event positions")
             return None
         return result.fetchall()
 
-    def get_tech_event_ranking(self, aime_id: int) -> Optional[List[Dict]]:
-        sql = select(tech_ranking.c.id, tech_ranking.c.user, tech_ranking.c.date, tech_ranking.c.eventId, func.row_number().over(partition_by=tech_ranking.c.eventId, order_by=[tech_ranking.c.totalTechScore.desc(),tech_ranking.c.totalPlatinumScore.desc()]).label('rank'), tech_ranking.c.totalTechScore, tech_ranking.c.totalPlatinumScore)
+    def get_tech_event_ranking(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+        sql = select(tech_ranking.c.id, tech_ranking.c.user, tech_ranking.c.date, tech_ranking.c.eventId, func.row_number().over(partition_by=tech_ranking.c.eventId, order_by=[tech_ranking.c.totalTechScore.desc(),tech_ranking.c.totalPlatinumScore.desc()]).label('rank'), tech_ranking.c.totalTechScore, tech_ranking.c.totalPlatinumScore).where(tech_ranking.c.version == version)
         result = self.execute(sql)
         if result is None:
             self.logger.warning(f"aime_id: {aime_id} has no tech ranking ranks")

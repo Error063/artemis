@@ -100,6 +100,7 @@ music_ranking = Table(
     "ongeki_static_music_ranking_list",
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
     Column("musicId", Integer, nullable=False),
     Column("point", Integer, nullable=False),
     Column("userName", String(255)),
@@ -133,6 +134,18 @@ present = Table(
     Column("startDate", String(25), nullable=False),
     Column("endDate", String(25), nullable=False),
     UniqueConstraint("version","presentId", name="ongeki_static_present_list_uk"),
+    mysql_charset="utf8mb4",
+)
+
+tech_music = Table(
+    "ongeki_static_tech_music",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("eventId", Integer, nullable=False),
+    Column("musicId", Integer, nullable=False),
+    Column("level", Integer, nullable=False),
+    UniqueConstraint("version", "musicId", name="ongeki_static_tech_music_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -373,8 +386,8 @@ class OngekiStaticData(BaseData):
             return None
         return result.fetchone()
 
-    def get_ranking_list(self) -> Optional[List[Dict]]:
-        sql = select(music_ranking.c.musicId.label('id'), music_ranking.c.point, music_ranking.c.userName)
+    def get_ranking_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(music_ranking.c.musicId.label('id'), music_ranking.c.point, music_ranking.c.userName).where(music_ranking.c.version == version)
         result = self.execute(sql)
         if result is None:
             return None
@@ -412,5 +425,14 @@ class OngekiStaticData(BaseData):
         result = self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to load present list")
+            return None
+        return result.fetchall()
+
+    def get_tech_music(self, version: int) -> Optional[List[Dict]]:
+        sql = select(tech_music).where(tech_music.c.version == version)
+
+        result = self.execute(sql)
+
+        if result is None:
             return None
         return result.fetchall()
