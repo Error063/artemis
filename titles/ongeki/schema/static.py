@@ -96,6 +96,45 @@ cards = Table(
     mysql_charset="utf8mb4",
 )
 
+music_ranking = Table(
+    "ongeki_static_music_ranking_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("musicId", Integer, nullable=False),
+    Column("point", Integer, nullable=False),
+    Column("userName", String(255)),
+    UniqueConstraint("musicId", name="ongeki_static_music_ranking_uk"),
+    mysql_charset="utf8mb4",
+)
+
+rewards = Table(
+    "ongeki_static_rewards",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("rewardId", Integer, nullable=False),
+    Column("rewardname", String(255), nullable=False),
+    Column("itemKind", Integer, nullable=False),
+    Column("itemId", Integer, nullable=False),
+    UniqueConstraint("version","itemKind","rewardId", name="ongeki_static_rewards_uk"),
+    mysql_charset="utf8mb4",
+)
+
+present = Table(
+    "ongeki_static_present_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("presentId", Integer, nullable=False),
+    Column("presentName", String(255), nullable=False),
+    Column("rewardId", Integer, nullable=False),
+    Column("stock", Integer, nullable=False),
+    Column("message", String(255)),
+    Column("startDate", String(25), nullable=False),
+    Column("endDate", String(25), nullable=False),
+    UniqueConstraint("version","presentId", name="ongeki_static_present_list_uk"),
+    mysql_charset="utf8mb4",
+)
 
 class OngekiStaticData(BaseData):
     def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
@@ -333,3 +372,45 @@ class OngekiStaticData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+
+    def get_ranking_list(self) -> Optional[List[Dict]]:
+        sql = select(music_ranking.c.musicId.label('id'), music_ranking.c.point, music_ranking.c.userName)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def put_reward(self, version: int, rewardId: int, rewardname: str, itemKind: int, itemId: int) -> Optional[int]:
+        sql = insert(rewards).values(
+                version=version,
+                rewardId=rewardId,
+                rewardname=rewardname,
+                itemKind=itemKind,
+                itemId=itemId,
+                )
+        conflict = sql.on_duplicate_key_update(
+                rewardname=rewardname,
+                )
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"Failed to insert reward! reward_id: {rewardId}")
+            return None
+        return result.lastrowid
+
+    def get_reward_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(rewards).where(rewards.c.version == version)
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to load reward list")
+            return None
+        return result.fetchall()
+
+    def get_present_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(present).where(present.c.version == version)
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to load present list")
+            return None
+        return result.fetchall()

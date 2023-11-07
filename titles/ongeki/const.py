@@ -43,6 +43,34 @@ class OngekiConstants:
         ],
     )
 
+    REWARD_TYPES: Enum = Enum(
+        "REWARD_TYPES",
+        [
+            "Card",
+            "NamePlate",
+            "Trophy",
+            "LimitBreakItem",
+            "AlmightyJewel",
+            "Money",
+            "Music",
+            "ProfileVoice",
+            "Present",
+            "ChapterJewel",
+            "GachaTicket",
+            "KaikaItem",
+            "ExpUpItem",
+            "IntimateUpItem",
+            "BookItem",
+            "SystemVoice",
+            "Costume",
+            "Medal",
+            "Attachment",
+            "UnlockItem",
+            "Max",
+            "None",
+        ],
+    )
+
     class CM_GACHA_KINDS(Enum):
         Normal = 0
         Pickup = 1

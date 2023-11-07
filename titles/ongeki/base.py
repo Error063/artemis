@@ -157,7 +157,21 @@ class OngekiBase:
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameRankingList": []}
+        game_ranking_list = self.data.static.get_ranking_list()
+        
+        ranking_list = []
+        for music in game_ranking_list:
+            tmp = music._asdict()
+            ranking_list.append(tmp)
+
+        if ranking_list is None:
+            return {"length": 0, "gameRankingList": []}
+        return {
+            "type": data["type"],
+            #"length": len(ranking_list),
+            "gameRankingList": ranking_list,
+        }
+
 
     def handle_get_game_point_api_request(self, data: Dict) -> Dict:
         """
@@ -215,11 +229,39 @@ class OngekiBase:
         return {"returnCode": 1, "apiName": "ExtendLockTimeApi"}
 
     def handle_get_game_reward_api_request(self, data: Dict) -> Dict:
-        # TODO: reward list
-        return {"length": 0, "gameRewardList": []}
+        get_game_rewards = self.data.static.get_reward_list(self.version)
+
+        reward_list = []
+        for reward in get_game_rewards:
+            tmp = reward._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            tmp.pop("rewardname")
+            reward_list.append(tmp)
+
+        if reward_list is None:
+            return {"length": 0, "gameRewardList": []}
+        return {
+            "length": len(reward_list),
+            "gameRewardList": reward_list,
+        }
 
     def handle_get_game_present_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gamePresentList": []}
+        get_present = self.data.static.get_present_list(self.version)
+
+        present_list = []
+        for present in get_present:
+            tmp = present._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            present_list.append(tmp)
+
+        if present_list is None:
+            return {"length": 0, "gamePresentList": []}
+        return {
+            "length": len(present_list),
+            "gamePresentList": present_list,
+        }
 
     def handle_get_game_message_api_request(self, data: Dict) -> Dict:
         return {"length": 0, "gameMessageList": []}
