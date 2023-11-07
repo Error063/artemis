@@ -103,7 +103,7 @@ class CxbServlet(resource.Resource):
             else:
                 self.logger.info(f"Ready on port {self.game_cfg.server.port}")
 
-    def render_POST(self, request: Request, version: int, endpoint: str):
+    def render_POST(self, request: Request):
         version = 0
         internal_ver = 0
         func_to_find = ""
