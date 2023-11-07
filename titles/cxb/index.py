@@ -111,7 +111,10 @@ class CxbServlet(resource.Resource):
         subcmd = ""
         req_url = request.uri.decode()
         url_split = req_url.split("/")
-        req_bytes = request.content.getvalue()
+        try:
+            req_bytes = request.content.getvalue()
+        except:
+            req_bytes = request.content.read().decode("utf-8")
 
         try:
             req_json: Dict = json.loads(req_bytes)
