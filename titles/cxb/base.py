@@ -530,7 +530,6 @@ class CxbBase:
         profile = self.data.profile.get_profile_index(0, uid, self.version)
         data1 = profile["data"]
         p = self.data.item.get_energy(uid)
-        energy = p["energy"]
 
         if not p:
             self.data.item.put_energy(uid, 5)
@@ -543,6 +542,7 @@ class CxbBase:
             }
 
         array = []
+        energy = p["energy"]
 
         newenergy = int(energy) + 5
         self.data.item.put_energy(uid, newenergy)
