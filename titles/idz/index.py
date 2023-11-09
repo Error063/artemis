@@ -85,7 +85,8 @@ class IDZServlet(BaseServlet):
     
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return[
-            [("render_GET", "/{game}/{version}/{endpoint:.*?}", {'game': R'S...'})], # TODO: Slim this down to only the news stuff
+            [("render_GET", "/idz/news/{endpoint:.*?}", {}),
+             ("render_GET", "/idz/error", {})],
             []
         ]
     
