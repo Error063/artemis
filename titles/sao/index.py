@@ -87,17 +87,30 @@ class SaoServlet(BaseServlet):
         endpoint = matchers.get('endpoint', '')
         request.responseHeaders.addRawHeader(b"content-type", b"text/html; charset=utf-8")
 
-        sao_request = request.content.getvalue().hex()
+        req_raw = request.content.read()
+        sao_request = req_raw.hex()
+        req_header = SaoRequestHeader(req_raw)
+        
+        cmd_str = f"{req_header.cmd:04x}"
+        
+        if self.game_cfg.crypt.enable:
+            iv = req_raw[30:38]
+            cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
+            crypt_data = req_raw[38:]
+            req_data = cipher.decrypt(crypt_data)
+            
+        else:
+            req_data = req_raw[30:]
 
-        handler = getattr(self.base, f"handle_{sao_request[:4]}", None)
+        handler = getattr(self.base, f"handle_{cmd_str}", None)
         if handler is None:
-            self.logger.info(f"Generic Handler for {endpoint} - {sao_request[:4]}")
+            self.logger.info(f"Generic Handler for {endpoint} - {cmd_str}")
             self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-            resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(sao_request[:4]), "big")+1)
+            resp = SaoNoopResponse(req_header.cmd + 1)
             self.logger.debug(f"Response: {resp.make().hex()}")
             return resp.make()
 
-        self.logger.info(f"Handler {endpoint} - {sao_request[:4]} request")
+        self.logger.info(f"Handler {endpoint} - {cmd_str} request")
         self.logger.debug(f"Request: {request.content.getvalue().hex()}")
         resp = handler(sao_request)
         self.logger.debug(f"Response: {resp.hex()}")

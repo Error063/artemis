@@ -5,10 +5,18 @@ import sys
 import csv
 from csv import *
 
-class SaoBaseRequest:
+class SaoRequestHeader:
     def __init__(self, data: bytes) -> None:
-        self.cmd = struct.unpack_from("!H", bytes)[0]
-        # TODO: The rest of the request header
+        collection = struct.unpack_from("!HIIIs16", data)
+        self.cmd: int = collection[0]
+        self.vendor_id: int = collection[1]
+        self.game_id: int = collection[2]
+        self.version_id: int = collection[3]
+        self.checksum: str = collection[4]
+
+class SaoBaseRequest:
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        self.header = header
 
 class SaoBaseResponse:
     def __init__(self, cmd_id: int) -> None:
@@ -33,8 +41,8 @@ class SaoNoopResponse(SaoBaseResponse):
         return super().make() + struct.pack("!bI", self.result, 0)
         
 class SaoGetMaintRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
         # TODO: The rest of the mait info request
 
 class SaoGetMaintResponse(SaoBaseResponse):
@@ -68,8 +76,8 @@ class SaoGetMaintResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonAcCabinetBootNotificationRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonAcCabinetBootNotificationResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -90,8 +98,8 @@ class SaoCommonAcCabinetBootNotificationResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoMasterDataVersionCheckRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -118,8 +126,8 @@ class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonGetAppVersionsRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -154,8 +162,8 @@ class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonPayingPlayStartRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonPayingPlayStartRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -181,8 +189,8 @@ class SaoCommonPayingPlayStartRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetAuthCardDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetAuthCardDataResponse(SaoBaseResponse): #GssSite.dll / GssSiteSystem / GameConnectProt / public class get_auth_card_data_R : GameConnect.GssProtocolBase
     def __init__(self, cmd, profile_data) -> None:
@@ -225,8 +233,8 @@ class SaoGetAuthCardDataResponse(SaoBaseResponse): #GssSite.dll / GssSiteSystem 
         return super().make() + resp_data
 
 class SaoHomeCheckAcLoginBonusRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoHomeCheckAcLoginBonusResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -262,8 +270,8 @@ class SaoHomeCheckAcLoginBonusResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetQuestSceneMultiPlayPhotonServerRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetQuestSceneMultiPlayPhotonServerResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -289,8 +297,8 @@ class SaoGetQuestSceneMultiPlayPhotonServerResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoTicketRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoTicketResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -318,8 +326,8 @@ class SaoTicketResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonLoginRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonLoginResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -362,8 +370,8 @@ class SaoCommonLoginResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckComebackEventRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckComebackEventRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -392,8 +400,8 @@ class SaoCheckComebackEventRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetUserBasicDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetUserBasicDataResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -476,8 +484,8 @@ class SaoGetUserBasicDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetHeroLogUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
@@ -654,8 +662,8 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetEquipmentUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, equipment_data) -> None:
@@ -810,8 +818,8 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetItemUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetItemUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, item_data) -> None:
@@ -874,8 +882,8 @@ class SaoGetItemUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetSupportLogUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetSupportLogUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, supportIdsData) -> None:
@@ -945,8 +953,8 @@ class SaoGetSupportLogUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetTitleUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetTitleUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, titleIdsData) -> None:
@@ -993,8 +1001,8 @@ class SaoGetTitleUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetEpisodeAppendDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1051,8 +1059,8 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetPartyDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party 
     def __init__(self, cmd, hero1_data, hero2_data, hero3_data) -> None:
@@ -1215,8 +1223,8 @@ class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party
         return super().make() + resp_data
     
 class SaoGetQuestScenePrevScanProfileCardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetQuestScenePrevScanProfileCardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1352,8 +1360,8 @@ class SaoGetQuestScenePrevScanProfileCardResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetResourcePathInfoRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetResourcePathInfoResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1394,8 +1402,8 @@ class SaoGetResourcePathInfoResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayStartRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoEpisodePlayStartResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1441,8 +1449,8 @@ class SaoEpisodePlayStartResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayEndRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoEpisodePlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1529,8 +1537,8 @@ class SaoEpisodePlayEndResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoTrialTowerPlayEndRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1655,8 +1663,8 @@ class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
     def __init__(self, cmd, end_session_data) -> None:
@@ -1735,8 +1743,8 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetQuestSceneUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, quest_data) -> None:
@@ -1844,8 +1852,8 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckYuiMedalGetConditionRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckYuiMedalGetConditionResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1875,8 +1883,8 @@ class SaoCheckYuiMedalGetConditionResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetYuiMedalBonusUserDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1920,8 +1928,8 @@ class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckProfileCardUsedRewardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1952,8 +1960,8 @@ class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
@@ -2107,8 +2115,8 @@ class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoSynthesizeEnhancementEquipment(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
     def __init__(self, cmd, synthesize_equipment_data) -> None:
@@ -2244,8 +2252,8 @@ class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchBasicDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchBasicDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2291,8 +2299,8 @@ class SaoGetDefragMatchBasicDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchRankingUserDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchRankingUserDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2351,8 +2359,8 @@ class SaoGetDefragMatchRankingUserDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchLeaguePointRankingListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchLeaguePointRankingListResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2423,8 +2431,8 @@ class SaoGetDefragMatchLeaguePointRankingListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchLeagueScoreRankingListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2495,8 +2503,8 @@ class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoBnidSerialCodeCheckRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoBnidSerialCodeCheckResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2526,8 +2534,8 @@ class SaoBnidSerialCodeCheckResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoScanQrQuestProfileCardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
