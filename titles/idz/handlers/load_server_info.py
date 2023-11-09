@@ -1,5 +1,6 @@
 import struct
 
+from core.utils import Utils
 from .base import IDZHandlerBase
 from core.config import CoreConfig
 from ..config import IDZConfig
@@ -20,9 +21,11 @@ class IDZHandlerLoadServerInfo(IDZHandlerBase):
         offset = 0
         if self.version >= IDZConstants.VER_IDZ_210:
             offset = 2
+        
+        t_port = Utils.get_title_port(self.core_config)
 
-        news_str = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDDF/230/news/news80**.txt"
-        err_str = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDDF/230/error"
+        news_str = f"http://{self.core_config.title.hostname}:{t_port}/idz/news/news80**.txt"
+        err_str = f"http://{self.core_config.title.hostname}:{t_port}/idz/error"
 
         len_hostname = len(self.core_config.title.hostname)
         len_news = len(news_str)
