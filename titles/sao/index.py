@@ -1,25 +1,21 @@
-from typing import Tuple
+from typing import Tuple, Dict, List
 from twisted.web.http import Request
-from twisted.web import resource
-import json, ast
-from datetime import datetime
 import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-import inflection
 from os import path
 
 from core import CoreConfig, Utils
+from core.title import BaseServlet
 from titles.sao.config import SaoConfig
 from titles.sao.const import SaoConstants
 from titles.sao.base import SaoBase
 from titles.sao.handlers.base import *
 
 
-class SaoServlet(resource.Resource):
+class SaoServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.isLeaf = True
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.config_dir = cfg_dir
         self.game_cfg = SaoConfig()
         if path.exists(f"{cfg_dir}/sao.yaml"):
@@ -51,66 +47,55 @@ class SaoServlet(resource.Resource):
             self.logger.inited = True
 
         self.base = SaoBase(core_cfg, self.game_cfg)
-
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [("render_POST", "/SaoServlet/{datecode}/proto/if/{endpoint}", {})]
+        )
+    
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = SaoConfig()
 
         if path.exists(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"):
             game_cfg.update(
                 yaml.safe_load(open(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"))
             )
-
+    
         if not game_cfg.server.enable:
-            return (False, "", "")
-
+            return False
+        
+        return True
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         return (
-            True,
-            f"http://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
-            f"{game_cfg.server.hostname}/SDEW/$v/",
+            f"http://{self.game_cfg.server.hostname}:{self.game_cfg.server.port}/SaoServlet/",
+            f"{self.game_cfg.server.hostname}/SaoServlet/",
         )
 
-    @classmethod
-    def get_mucha_info(
-        cls, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
-        game_cfg = SaoConfig()
-
-        if path.exists(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"):
-            game_cfg.update(
-                yaml.safe_load(open(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"))
-            )
-
-        if not game_cfg.server.enable:
+    def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
+        if not self.game_cfg.server.enable:
             return (False, "")
 
         return (True, "SAO1")
 
-    def setup(self) -> None:
-        pass
 
-    def render_POST(
-        self, request: Request, version: int = 0, endpoints: str = ""
-    ) -> bytes:
-        req_url = request.uri.decode()
-        if req_url == "/matching":
-            self.logger.info("Matching request")
-        
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers.get('endpoint', '')
         request.responseHeaders.addRawHeader(b"content-type", b"text/html; charset=utf-8")
 
         sao_request = request.content.getvalue().hex()
 
         handler = getattr(self.base, f"handle_{sao_request[:4]}", None)
         if handler is None:
-            self.logger.info(f"Generic Handler for {req_url} - {sao_request[:4]}")
+            self.logger.info(f"Generic Handler for {endpoint} - {sao_request[:4]}")
             self.logger.debug(f"Request: {request.content.getvalue().hex()}")
             resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(sao_request[:4]), "big")+1)
             self.logger.debug(f"Response: {resp.make().hex()}")
             return resp.make()
 
-        self.logger.info(f"Handler {req_url} - {sao_request[:4]} request")
+        self.logger.info(f"Handler {endpoint} - {sao_request[:4]} request")
         self.logger.debug(f"Request: {request.content.getvalue().hex()}")
         resp = handler(sao_request)
         self.logger.debug(f"Response: {resp.hex()}")

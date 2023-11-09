@@ -7,17 +7,19 @@ import json
 import urllib.parse
 import base64
 from os import path
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 from core.config import CoreConfig
-from titles.diva.config import DivaConfig
-from titles.diva.const import DivaConstants
-from titles.diva.base import DivaBase
+from core.title import BaseServlet
+from core.utils import Utils
+from .config import DivaConfig
+from .const import DivaConstants
+from .base import DivaBase
 
 
-class DivaServlet:
+class DivaServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = DivaConfig()
         if path.exists(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}"):
             self.game_cfg.update(
@@ -49,10 +51,22 @@ class DivaServlet:
             level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
         )
 
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [("render_POST", "/DivaServlet/", {})]
+        )
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
+            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/DivaServlet/", "")
+
+        return (f"http://{self.core_cfg.title.hostname}/DivaServlet/", "")
+
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = DivaConfig()
         if path.exists(f"{cfg_dir}/{DivaConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -60,20 +74,13 @@ class DivaServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                "",
-            )
+        return True
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
-
-    def render_POST(self, req: Request, version: int, url_path: str) -> bytes:
-        req_raw = req.content.getvalue()
-        url_header = req.getAllHeaders()
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        req_raw = request.content.getvalue()
+        url_header = request.getAllHeaders()
 
         # Ping Dispatch
         if "THIS_STRING_SEPARATES" in str(url_header):
@@ -148,7 +155,7 @@ class DivaServlet:
                 "utf-8"
             )
 
-        req.responseHeaders.addRawHeader(b"content-type", b"text/plain")
+        request.responseHeaders.addRawHeader(b"content-type", b"text/plain")
         self.logger.debug(
             f"Response cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok{resp}"
         )

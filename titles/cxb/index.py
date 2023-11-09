@@ -1,4 +1,5 @@
 from twisted.web.http import Request
+import traceback
 from twisted.web import resource, server
 from twisted.internet import reactor, endpoints
 import yaml
@@ -7,18 +8,20 @@ import re
 import inflection
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from os import path
 
 from core.config import CoreConfig
-from titles.cxb.config import CxbConfig
-from titles.cxb.const import CxbConstants
-from titles.cxb.rev import CxbRev
-from titles.cxb.rss1 import CxbRevSunriseS1
-from titles.cxb.rss2 import CxbRevSunriseS2
+from core.title import BaseServlet
+from core.utils import Utils
+from .config import CxbConfig
+from .const import CxbConstants
+from .rev import CxbRev
+from .rss1 import CxbRevSunriseS1
+from .rss2 import CxbRevSunriseS2
 
 
-class CxbServlet(resource.Resource):
+class CxbServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.isLeaf = True
         self.cfg_dir = cfg_dir
@@ -61,9 +64,7 @@ class CxbServlet(resource.Resource):
         ]
 
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = CxbConfig()
         if path.exists(f"{cfg_dir}/{CxbConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -71,51 +72,36 @@ class CxbServlet(resource.Resource):
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
-
-        if core_cfg.server.is_develop:
+            return False
+        
+        return True
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg) != 443:
             return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
+                f"https://{self.core_cfg.title.hostname}:{self.core_cfg.title.port_ssl}",
                 "",
             )
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
+        return (f"https://{self.core_cfg.title.hostname}", "")
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [
+                ("handle_data", "/data", {}),
+                ("handle_action", "/action", {}),
+                ("handle_action", "/v2/action", {}),
+                ("handle_auth", "/auth", {}),
+            ]
+        )
 
-    def setup(self):
-        if self.game_cfg.server.enable:
-            endpoints.serverFromString(
-                reactor,
-                f"tcp:{self.game_cfg.server.port}:interface={self.core_cfg.server.listen_address}",
-            ).listen(server.Site(CxbServlet(self.core_cfg, self.cfg_dir)))
-
-            if self.core_cfg.server.is_develop and self.game_cfg.server.ssl_enable:
-                endpoints.serverFromString(
-                    reactor,
-                    f"ssl:{self.game_cfg.server.port_secure}"
-                    f":interface={self.core_cfg.server.listen_address}:privateKey={self.game_cfg.server.ssl_key}:"
-                    f"certKey={self.game_cfg.server.ssl_cert}",
-                ).listen(server.Site(CxbServlet(self.core_cfg, self.cfg_dir)))
-
-                self.logger.info(
-                    f"Ready on ports {self.game_cfg.server.port} & {self.game_cfg.server.port_secure}"
-                )
-            else:
-                self.logger.info(f"Ready on port {self.game_cfg.server.port}")
-
-    def render_POST(self, request: Request):
-        version = 0
-        internal_ver = 0
-        func_to_find = ""
-        cmd = ""
-        subcmd = ""
-        req_url = request.uri.decode()
-        url_split = req_url.split("/")
+    def preprocess(self, req: Request) -> Dict:
         try:
-            req_bytes = request.content.getvalue()
+            req_bytes = req.content.getvalue()
         except:
-            req_bytes = request.content.read().decode("utf-8")
-
+            req_bytes = req.content.read() # Can we just use this one?
+        
         try:
             req_json: Dict = json.loads(req_bytes)
 
@@ -127,42 +113,49 @@ class CxbServlet(resource.Resource):
 
             except Exception as f:
                 self.logger.warning(
-                    f"Error decoding json: {e} / {f} - {req_url} - {req_bytes}"
+                    f"Error decoding json to /data endpoint: {e} / {f} - {req_bytes}"
                 )
                 return b""
+        
+        return req_json
 
+    def handle_data(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        req_json = self.preprocess(request)
+        func_to_find = "handle_data_"
+        version_string = "Base"
+        internal_ver = 0
+        
         if req_json == {}:
-            self.logger.warning(f"Empty json request to {req_url}")
+            self.logger.warning(f"Empty json request to /data")
+            return b""
+        
+        if (
+            not type(req_json["dldate"]) is dict
+            or "filetype" not in req_json["dldate"]
+        ):
+            self.logger.warning(f"Malformed dldate request: {req_json}")
             return b""
 
-        cmd = url_split[len(url_split) - 1]
-        subcmd = list(req_json.keys())[0]
+        filetype = req_json["dldate"]["filetype"]
+        filetype_split = filetype.split("/")
 
-        if subcmd == "dldate":
-            if (
-                not type(req_json["dldate"]) is dict
-                or "filetype" not in req_json["dldate"]
-            ):
-                self.logger.warning(f"Malformed dldate request: {req_url} {req_json}")
-                return b""
+        if len(filetype_split) < 2 or not filetype_split[0].isnumeric():
+            self.logger.warning(f"Malformed dldate request: {req_json}")
+            return b""
 
-            filetype = req_json["dldate"]["filetype"]
-            filetype_split = filetype.split("/")
-            version = int(filetype_split[0])
-            filetype_inflect_split = inflection.underscore(filetype).split("/")
+        version = int(filetype_split[0])
+        filename = filetype_split[len(filetype_split) - 1]
 
-            match = re.match(
-                "^([A-Za-z]*)(\d\d\d\d)$", filetype_split[len(filetype_split) - 1]
-            )
-            if match:
-                subcmd = f"{inflection.underscore(match.group(1))}xxxx"
-            else:
-                subcmd = f"{filetype_inflect_split[len(filetype_inflect_split) - 1]}"
+        match = re.match(
+            "^([A-Za-z]*)(\d\d\d\d)$", filetype_split[len(filetype_split) - 1]
+        )
+        if match:
+            func_to_find += f"{inflection.underscore(match.group(1))}xxxx"
         else:
-            filetype = subcmd
-
-        func_to_find = f"handle_{cmd}_{subcmd}_request"
-
+            func_to_find += f"{inflection.underscore(filename)}"
+        
+        func_to_find += "_request"
+        
         if version <= 10102:
             version_string = "Rev"
             internal_ver = CxbConstants.VER_CROSSBEATS_REV
@@ -175,23 +168,81 @@ class CxbServlet(resource.Resource):
             version_string = "Rev SunriseS2"
             internal_ver = CxbConstants.VER_CROSSBEATS_REV_SUNRISE_S2
 
-        else:
-            version_string = "Base"
-
-        self.logger.info(f"{version_string} Request {req_url} -> {filetype}")
+        if not hasattr(self.versions[internal_ver], func_to_find):
+            self.logger.warn(f"{version_string} has no handler for filetype {filetype}")
+            return ""
+        
+        self.logger.info(f"{version_string} request for filetype {filetype}")
         self.logger.debug(req_json)
 
+        handler = getattr(self.versions[internal_ver], func_to_find)
+        
         try:
-            handler = getattr(self.versions[internal_ver], func_to_find)
             resp = handler(req_json)
 
-        except AttributeError as e:
-            self.logger.warning(f"Unhandled {version_string} request {req_url} - {e}")
-            resp = {}
+        except Exception as e:
+            self.logger.error(f"Error handling request for file {filetype} - {e}")
+            if self.logger.level == logging.DEBUG:
+                traceback.print_exception(e, limit=1)
+                with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
+                    traceback.print_exception(e, limit=1, file=f)
+            return ""
+        
+        self.logger.debug(f"{version_string} Response {resp}")
+        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+
+    def handle_action(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        req_json = self.preprocess(request)
+        subcmd = list(req_json.keys())[0]
+        func_to_find = f"handle_action_{subcmd}_request"
+        
+        if not hasattr(self.versions[0], func_to_find):
+            self.logger.warn(f"No handler for action {subcmd} request")
+            return ""
+        
+        self.logger.info(f"Action {subcmd} Request")
+        self.logger.debug(req_json)
+
+        handler = getattr(self.versions[0], func_to_find)
+        
+        try:
+            resp = handler(req_json)
 
         except Exception as e:
-            self.logger.error(f"Error handling {version_string} method {req_url} - {e}")
-            raise
+            self.logger.error(f"Error handling action {subcmd} request - {e}")
+            if self.logger.level == logging.DEBUG:
+                traceback.print_exception(e, limit=1)
+                with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
+                    traceback.print_exception(e, limit=1, file=f)
+            return ""
+        
+        self.logger.debug(f"Response {resp}")
+        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
 
-        self.logger.debug(f"{version_string} Response {resp}")
+    def handle_auth(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        req_json = self.preprocess(request)
+        subcmd = list(req_json.keys())[0]
+        func_to_find = f"handle_auth_{subcmd}_request"
+        
+        if not hasattr(self.versions[0], func_to_find):
+            self.logger.warn(f"No handler for auth {subcmd} request")
+            return ""
+        
+        self.logger.info(f"Action {subcmd} Request")
+        self.logger.debug(req_json)
+
+        handler = getattr(self.versions[0], func_to_find)
+        
+        try:
+            resp = handler(req_json)
+
+        except Exception as e:
+            self.logger.error(f"Error handling auth {subcmd} request - {e}")
+            if self.logger.level == logging.DEBUG:
+                traceback.print_exception(e, limit=1)
+                with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
+                    traceback.print_exception(e, limit=1, file=f)
+            return ""
+        
+        self.logger.debug(f"Response {resp}")
         return json.dumps(resp, ensure_ascii=False).encode("utf-8")

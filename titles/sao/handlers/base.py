@@ -525,9 +525,6 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
             self.last_set_skill_slot4_skill_id.append(hero_data[i][10])
             self.last_set_skill_slot5_skill_id.append(hero_data[i][11])
 
-        #print(self.user_hero_log_id)
-        #print(list(map(str,self.user_hero_log_id)))
-
         # hero_log_user_data_list
         self.user_hero_log_id = list(map(str,self.user_hero_log_id)) #str
         self.hero_log_id = list(map(int,self.user_hero_log_id)) #int

@@ -12,25 +12,26 @@ from Crypto.Util.Padding import pad
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA1
 from os import path
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 from core.config import CoreConfig
 from core.utils import Utils
-from titles.ongeki.config import OngekiConfig
-from titles.ongeki.const import OngekiConstants
-from titles.ongeki.base import OngekiBase
-from titles.ongeki.plus import OngekiPlus
-from titles.ongeki.summer import OngekiSummer
-from titles.ongeki.summerplus import OngekiSummerPlus
-from titles.ongeki.red import OngekiRed
-from titles.ongeki.redplus import OngekiRedPlus
-from titles.ongeki.bright import OngekiBright
-from titles.ongeki.brightmemory import OngekiBrightMemory
+from core.title import BaseServlet
+from .config import OngekiConfig
+from .const import OngekiConstants
+from .base import OngekiBase
+from .plus import OngekiPlus
+from .summer import OngekiSummer
+from .summerplus import OngekiSummerPlus
+from .red import OngekiRed
+from .redplus import OngekiRedPlus
+from .bright import OngekiBright
+from .brightmemory import OngekiBrightMemory
 
 
-class OngekiServlet:
+class OngekiServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = OngekiConfig()
         self.hash_table: Dict[Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
@@ -106,9 +107,7 @@ class OngekiServlet:
                 )
 
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = OngekiConfig()
 
         if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
@@ -117,30 +116,37 @@ class OngekiServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
-
-        if core_cfg.server.is_develop:
+            return False
+        
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [("render_POST", "/SDDT/{version}/{endpoint}", {})]
+        )
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                f"{core_cfg.title.hostname}:{core_cfg.title.port}/",
+                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/",
+                f"{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/",
             )
 
         return (
-            True,
-            f"http://{core_cfg.title.hostname}/{game_code}/$v/",
-            f"{core_cfg.title.hostname}/",
+            f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/",
+            f"{self.core_cfg.title.hostname}/",
         )
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "ping":
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = int(matchers['version'])
+        if endpoint.lower() == "ping":
             return zlib.compress(b'{"returnCode": 1}')
 
         req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
         encrtped = False
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0

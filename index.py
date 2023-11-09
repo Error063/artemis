@@ -22,8 +22,8 @@ class HttpDispatcher(resource.Resource):
         self.map_post = Mapper()
         self.logger = logging.getLogger("core")
 
-        self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
+        self.allnet = AllnetServlet(cfg, config_dir)
         self.mucha = MuchaServlet(cfg, config_dir)
 
         self.map_get.connect(
@@ -144,22 +144,32 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
 
-        self.map_get.connect(
-            "title_get",
-            "/{game}/{version}/{endpoint:.*?}",
-            controller="title",
-            action="render_GET",
-            conditions=dict(method=["GET"]),
-            requirements=dict(game=R"S..."),
-        )
-        self.map_post.connect(
-            "title_post",
-            "/{game}/{version}/{endpoint:.*?}",
-            controller="title",
-            action="render_POST",
-            conditions=dict(method=["POST"]),
-            requirements=dict(game=R"S..."),
-        )
+        for code, game in self.title.title_registry.items():
+            get_matchers, post_matchers = game.get_endpoint_matchers()
+            
+            for m in get_matchers:
+                self.map_get.connect(
+                    "title_get",
+                    m[1],
+                    controller="title",
+                    action="render_GET",
+                    title=code,
+                    subaction=m[0],
+                    conditions=dict(method=["GET"]),
+                    requirements=m[2],
+                )
+                
+            for m in post_matchers:
+                self.map_post.connect(
+                    "title_post",
+                    m[1],
+                    controller="title",
+                    action="render_POST",
+                    title=code,
+                    subaction=m[0],
+                    conditions=dict(method=["POST"]),
+                    requirements=m[2],
+                )
 
     def render_GET(self, request: Request) -> bytes:
         test = self.map_get.match(request.uri.decode())

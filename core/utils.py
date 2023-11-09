@@ -5,8 +5,11 @@ import logging
 import importlib
 from os import walk
 
+from .config import CoreConfig
 
 class Utils:
+    real_title_port = None
+    real_title_port_ssl = None
     @classmethod
     def get_all_titles(cls) -> Dict[str, ModuleType]:
         ret: Dict[str, Any] = {}
@@ -33,3 +36,27 @@ class Utils:
             if b"x-forwarded-for" in req.getAllHeaders()
             else req.getClientAddress().host
         )
+    
+    @classmethod
+    def get_title_port(cls, cfg: CoreConfig):
+        if cls.real_title_port is not None: return cls.real_title_port
+
+        if cfg.title.port == 0:
+            cls.real_title_port = cfg.allnet.port
+        
+        else:
+            cls.real_title_port = cfg.title.port
+        
+        return cls.real_title_port
+
+    @classmethod
+    def get_title_port_ssl(cls, cfg: CoreConfig):
+        if cls.real_title_port_ssl is not None: return cls.real_title_port_ssl
+
+        if cfg.title.port_ssl == 0:
+            cls.real_title_port_ssl = 443
+        
+        else:
+            cls.real_title_port_ssl = cfg.title.port_ssl
+        
+        return cls.real_title_port_ssl

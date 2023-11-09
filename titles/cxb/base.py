@@ -3,13 +3,12 @@ import json
 from decimal import Decimal
 from base64 import b64encode
 from typing import Any, Dict, List
-from hashlib import md5
-from datetime import datetime
+from os import path
 
 from core.config import CoreConfig
-from titles.cxb.config import CxbConfig
-from titles.cxb.const import CxbConstants
-from titles.cxb.database import CxbData
+from .config import CxbConfig
+from .const import CxbConstants
+from .database import CxbData
 
 from threading import Thread
 
@@ -21,6 +20,13 @@ class CxbBase:
         self.game = CxbConstants.GAME_CODE
         self.logger = logging.getLogger("cxb")
         self.version = CxbConstants.VER_CROSSBEATS_REV
+
+    def _get_data_contents(self, folder: str, filetype: str, encoding: str = None, subfolder: str = "") -> List[str]:
+        if path.exists(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv"):
+            with open(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv", encoding=encoding) as f:
+                return f.readlines()
+        
+        return []
 
     def handle_action_rpreq_request(self, data: Dict) -> Dict:
         return {}
@@ -192,7 +198,7 @@ class CxbBase:
             ).decode("utf-8")
         )
 
-    def task_generateIndexData(versionindex):
+    def task_generateIndexData(self, versionindex: List[str], uid: int):
         try:
             v_profile = self.data.profile.get_profile_index(0, uid, self.version)
             v_profile_data = v_profile["data"]
@@ -274,7 +280,7 @@ class CxbBase:
             thread_ScoreData.start()
 
         for v in index:
-            thread_IndexData = Thread(target=CxbBase.task_generateIndexData(versionindex))
+            thread_IndexData = Thread(target=CxbBase.task_generateIndexData(self, versionindex, uid))
             thread_IndexData.start()
 
         return {"index": index, "data": data1, "version": versionindex}

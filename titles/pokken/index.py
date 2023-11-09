@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List, Dict
 from twisted.web.http import Request
 from twisted.web import resource
 from twisted.internet import reactor
@@ -12,6 +12,7 @@ from os import path
 from google.protobuf.message import DecodeError
 
 from core import CoreConfig, Utils
+from core.title import BaseServlet
 from .config import PokkenConfig
 from .base import PokkenBase
 from .const import PokkenConstants
@@ -19,10 +20,9 @@ from .proto import jackal_pb2
 from .services import PokkenAdmissionFactory
 
 
-class PokkenServlet(resource.Resource):
+class PokkenServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.isLeaf = True
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.config_dir = cfg_dir
         self.game_cfg = PokkenConfig()
         if path.exists(f"{cfg_dir}/pokken.yaml"):
@@ -56,9 +56,7 @@ class PokkenServlet(resource.Resource):
         self.base = PokkenBase(core_cfg, self.game_cfg)
 
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = PokkenConfig()
 
         if path.exists(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"):
@@ -67,18 +65,31 @@ class PokkenServlet(resource.Resource):
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
-
+            return False
+        
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
-            True,
-            f"https://{game_cfg.server.hostname}:{game_cfg.ports.game}/{game_code}/$v/",
-            f"{game_cfg.server.hostname}/SDAK/$v/",
+            [], 
+            [
+                ("render_POST", "/pokken/", {}),
+                ("handle_matching", "/pokken/matching", {}),
+            ]
+        )
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if self.game_cfg.ports.game != 443:
+            return (
+                f"https://{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
+                f"{self.game_cfg.server.hostname}/pokken/",
+            )
+        return (
+            f"https://{self.game_cfg.server.hostname}/pokken/",
+            f"{self.game_cfg.server.hostname}/pokken/",
         )
 
-    @classmethod
-    def get_mucha_info(
-        cls, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
         game_cfg = PokkenConfig()
 
         if path.exists(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"):
@@ -97,12 +108,7 @@ class PokkenServlet(resource.Resource):
                 self.game_cfg.ports.admission, PokkenAdmissionFactory(self.core_cfg, self.game_cfg)
             )
 
-    def render_POST(
-        self, request: Request, version: int = 0, endpoints: str = ""
-    ) -> bytes:
-        if endpoints == "matching":
-            return self.handle_matching(request)
-
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         content = request.content.getvalue()
         if content == b"":
             self.logger.info("Empty request")
@@ -131,7 +137,7 @@ class PokkenServlet(resource.Resource):
         ret = handler(pokken_request)
         return ret
 
-    def handle_matching(self, request: Request) -> bytes:
+    def handle_matching(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         if not self.game_cfg.server.enable_matching:
             return b""
         

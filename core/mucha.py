@@ -7,15 +7,15 @@ from datetime import datetime
 from Crypto.Cipher import Blowfish
 import pytz
 
-from core import CoreConfig
-from core.utils import Utils
-
+from .config import CoreConfig
+from .utils import Utils
+from .title import TitleServlet
 
 class MuchaServlet:
+    mucha_registry: List[str] = []
     def __init__(self, cfg: CoreConfig, cfg_dir: str) -> None:
         self.config = cfg
         self.config_dir = cfg_dir
-        self.mucha_registry: List[str] = []
 
         self.logger = logging.getLogger("mucha")
         log_fmt_str = "[%(asctime)s] Mucha | %(levelname)s | %(message)s"
@@ -37,11 +37,9 @@ class MuchaServlet:
         self.logger.setLevel(cfg.mucha.loglevel)
         coloredlogs.install(level=cfg.mucha.loglevel, logger=self.logger, fmt=log_fmt_str)
 
-        all_titles = Utils.get_all_titles()
-
-        for _, mod in all_titles.items():
-            if hasattr(mod, "index") and hasattr(mod.index, "get_mucha_info"):
-                enabled, game_cd = mod.index.get_mucha_info(
+        for _, mod in TitleServlet.title_registry.items():
+            if hasattr(mod, "get_mucha_info"):
+                enabled, game_cd = mod.get_mucha_info(
                     self.config, self.config_dir
                 )
                 if enabled:

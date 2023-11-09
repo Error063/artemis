@@ -4,6 +4,7 @@ server:
   allow_unregistered_serials: True
   name: "ARTEMiS"
   is_develop: True
+  is_using_proxy: False
   threading: False
   log_dir: "logs"
   check_arcade_ip: False

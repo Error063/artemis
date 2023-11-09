@@ -8,27 +8,28 @@ import logging, coloredlogs
 import zlib
 from logging.handlers import TimedRotatingFileHandler
 from os import path, mkdir
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 from core.config import CoreConfig
 from core.utils import Utils
-from titles.mai2.config import Mai2Config
-from titles.mai2.const import Mai2Constants
-from titles.mai2.base import Mai2Base
-from titles.mai2.finale import Mai2Finale
-from titles.mai2.dx import Mai2DX
-from titles.mai2.dxplus import Mai2DXPlus
-from titles.mai2.splash import Mai2Splash
-from titles.mai2.splashplus import Mai2SplashPlus
-from titles.mai2.universe import Mai2Universe
-from titles.mai2.universeplus import Mai2UniversePlus
-from titles.mai2.festival import Mai2Festival
-from titles.mai2.festivalplus import Mai2FestivalPlus
+from core.title import BaseServlet
+from .config import Mai2Config
+from .const import Mai2Constants
+from .base import Mai2Base
+from .finale import Mai2Finale
+from .dx import Mai2DX
+from .dxplus import Mai2DXPlus
+from .splash import Mai2Splash
+from .splashplus import Mai2SplashPlus
+from .universe import Mai2Universe
+from .universeplus import Mai2UniversePlus
+from .festival import Mai2Festival
+from .festivalplus import Mai2FestivalPlus
 
 
-class Mai2Servlet:
+class Mai2Servlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = Mai2Config()
         if path.exists(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"):
             self.game_cfg.update(
@@ -85,9 +86,9 @@ class Mai2Servlet:
             self.logger.initted = True
 
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = Mai2Config()
 
         if path.exists(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"):
@@ -96,19 +97,37 @@ class Mai2Servlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
-
-        if core_cfg.server.is_develop:
+            return False
+        
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [
+                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint:..?}", {}),
+                ("handle_old_srv", "/{version}/MaimaiServlet/old/{endpoint:..?}", {}),
+                ("handle_usbdl", "/{version}/MaimaiServlet/usbdl/{endpoint:..?}", {}),
+                ("handle_deliver", "/{version}/MaimaiServlet/deliver/{endpoint:..?}", {}),
+            ], 
+            [
+                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint:..?}", {}),
+                ("handle_mai", "/{version}/MaimaiServlet/{endpoint}", {}),
+                ("handle_mai2", "/{version}/Maimai2Servlet/{endpoint}", {}),
+            ]
+        )
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        servlet_name = "" if game_code == Mai2Constants.GAME_CODE_DX else "MaimaiServlet/"
+        
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                f"{core_cfg.title.hostname}",
+                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/{servlet_name}",
+                f"{self.core_cfg.title.hostname}",
             )
 
         return (
-            True,
-            f"http://{core_cfg.title.hostname}/{game_code}/$v/",
-            f"{core_cfg.title.hostname}",
+            f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/{servlet_name}",
+            f"{self.core_cfg.title.hostname}",
         )
 
     def setup(self):
@@ -136,22 +155,17 @@ class Mai2Servlet:
                     f"Failed to make movie upload directory at {self.game_cfg.uploads.movies_dir}"
                 )
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "ping":
+    def handle_mai2(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = int(matchers['version'])
+        if endpoint.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
 
-        elif url_path.startswith("api/movie/"):
-            self.logger.info(f"Movie data: {url_path} - {request.content.getvalue()}")
-            return b""
-
         req_raw = request.content.getvalue()
-        url = request.uri.decode()
-        url_split = url_path.split("/")
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
-        if request.uri.startswith(b"/SDEZ"):
+        if game_code == "SDEZ":
             if version < 105:  # 1.0
                 internal_ver = Mai2Constants.VER_MAIMAI_DX
             elif version >= 105 and version < 110:  # PLUS

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List
 import logging
 from base64 import b64decode
@@ -7,9 +7,10 @@ from PIL import ImageFile
 
 import pytz
 from core.config import CoreConfig
-from titles.mai2.const import Mai2Constants
-from titles.mai2.config import Mai2Config
-from titles.mai2.database import Mai2Data
+from core.utils import Utils
+from .const import Mai2Constants
+from .config import Mai2Config
+from .database import Mai2Data
 
 
 class Mai2Base:
@@ -22,16 +23,17 @@ class Mai2Base:
         self.can_deliver = False
         self.can_usbdl = False
         self.old_server = ""
+        self.date_time_format = "%Y-%m-%d %H:%M:%S"
 
-        if self.core_config.server.is_develop and self.core_config.title.port > 0:
-            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEY/197/"
+        if not self.core_config.server.is_using_proxy and Utils.get_title_port(self.core_config) != 80:
+            self.old_server = f"http://{self.core_config.title.hostname}:{Utils.get_title_port(cfg)}/197/MaimaiServlet/"
 
         else:
-            self.old_server = f"http://{self.core_config.title.hostname}/SDEY/197/"
+            self.old_server = f"http://{self.core_config.title.hostname}/197/MaimaiServlet/"
 
     def handle_get_game_setting_api_request(self, data: Dict):
         # if reboot start/end time is not defined use the default behavior of being a few hours ago
-        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+        if self.core_config.title.reboot_start_time == "" or self.core_config.title.reboot_end_time == "":
             reboot_start = datetime.strftime(
                 datetime.utcnow() + timedelta(hours=6), self.date_time_format
             )
@@ -43,8 +45,8 @@ class Mai2Base:
             current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
 
             # parse config start/end times into datetime
-            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
-            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+            reboot_start_time = datetime.strptime(self.core_config.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_config.title.reboot_end_time, "%H:%M")
 
             # offset datetimes with current date/time
             reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))

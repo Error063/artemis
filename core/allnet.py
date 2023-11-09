@@ -16,10 +16,11 @@ from os import path
 import urllib.parse
 import math
 
-from core.config import CoreConfig
-from core.utils import Utils
-from core.data import Data
-from core.const import *
+from .config import CoreConfig
+from .utils import Utils
+from .data import Data
+from .const import *
+from .title import TitleServlet
 
 BILLING_DT_FORMAT: Final[str] = "%Y%m%d%H%M%S"
 
@@ -94,7 +95,6 @@ class AllnetServlet:
         self.config = core_cfg
         self.config_folder = cfg_folder
         self.data = Data(core_cfg)
-        self.uri_registry: Dict[str, Tuple[str, str]] = {}
 
         self.logger = logging.getLogger("allnet")
         if not hasattr(self.logger, "initialized"):
@@ -125,18 +125,8 @@ class AllnetServlet:
         if len(plugins) == 0:
             self.logger.error("No games detected!")
 
-        for _, mod in plugins.items():
-            if hasattr(mod, "index") and hasattr(mod.index, "get_allnet_info"):
-                for code in mod.game_codes:
-                    enabled, uri, host = mod.index.get_allnet_info(
-                        code, self.config, self.config_folder
-                    )
-
-                    if enabled:
-                        self.uri_registry[code] = (uri, host)
-
         self.logger.info(
-            f"Serving {len(self.uri_registry)} game codes port {core_cfg.allnet.port}"
+            f"Serving {len(TitleServlet.title_registry)} game codes port {core_cfg.allnet.port}"
         )
 
     def handle_poweron(self, request: Request, _: Dict):
@@ -245,7 +235,7 @@ class AllnetServlet:
                 arcade["timezone"] if arcade["timezone"] is not None else "+0900" if req.format_ver == 3 else "+09:00"
             )
         
-        if req.game_id not in self.uri_registry:
+        if req.game_id not in TitleServlet.title_registry:
             if not self.config.server.is_develop:
                 msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
                 self.data.base.log_event(
@@ -270,11 +260,9 @@ class AllnetServlet:
                 self.logger.debug(f"Allnet response: {resp_str}")
                 return (resp_str + "\n").encode("utf-8")
 
-        resp.uri, resp.host = self.uri_registry[req.game_id]
-
+        
         int_ver = req.ver.replace(".", "")
-        resp.uri = resp.uri.replace("$v", int_ver)
-        resp.host = resp.host.replace("$v", int_ver)
+        resp.uri, resp.host = TitleServlet.title_registry[req.game_id].get_allnet_info(req.game_id, int(int_ver), req.serial)
 
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
@@ -586,7 +574,7 @@ class AllnetPowerOnResponse:
         self.stat = 1
         self.uri = ""
         self.host = ""
-        self.place_id = "123"
+        self.place_id = "0123"
         self.name = "ARTEMiS"
         self.nickname = "ARTEMiS"
         self.region0 = "1"

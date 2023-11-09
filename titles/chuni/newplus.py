@@ -21,16 +21,16 @@ class ChuniNewPlus(ChuniNew):
         ]
         ret["gameSetting"][
             "matchingUri"
-        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/205/ChuniServlet/"
         ret["gameSetting"][
             "matchingUriX"
-        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/205/ChuniServlet/"
         ret["gameSetting"][
             "udpHolePunchUri"
-        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/205/ChuniServlet/"
         ret["gameSetting"][
             "reflectorUri"
-        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/205/ChuniServlet/"
+        ] = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/205/ChuniServlet/"
         return ret
 
     def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:

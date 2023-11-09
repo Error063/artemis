@@ -69,7 +69,6 @@ class SaoProfileData(BaseData):
             )
             return None
 
-        print(result.lastrowid)
         return result.lastrowid
 
     def get_profile(self, user_id: int) -> Optional[Row]:

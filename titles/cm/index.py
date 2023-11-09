@@ -7,21 +7,22 @@ import coloredlogs
 import zlib
 
 from os import path
-from typing import Tuple
+from typing import Tuple, List, Dict
 from twisted.web.http import Request
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
 from core.utils import Utils
-from titles.cm.config import CardMakerConfig
-from titles.cm.const import CardMakerConstants
-from titles.cm.base import CardMakerBase
-from titles.cm.cm135 import CardMaker135
+from core.title import BaseServlet
+from .config import CardMakerConfig
+from .const import CardMakerConstants
+from .base import CardMakerBase
+from .cm135 import CardMaker135
 
 
-class CardMakerServlet:
+class CardMakerServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = CardMakerConfig()
         if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
             self.game_cfg.update(
@@ -55,11 +56,11 @@ class CardMakerServlet:
         coloredlogs.install(
             level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
         )
-
+    
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = CardMakerConfig()
         if path.exists(f"{cfg_dir}/{CardMakerConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -67,22 +68,21 @@ class CardMakerServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                "",
-            )
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [("render_POST", "/SDED/{version}/{endpoint}", {})]
+        )
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
-
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        version = int(matchers['version'])
+        endpoint = matchers['endpoint']
         req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
         if version >= 130 and version < 135:  # Card Maker

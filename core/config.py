@@ -37,6 +37,12 @@ class ServerConfig:
         )
 
     @property
+    def is_using_proxy(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "server", "is_using_proxy", default=False
+        )
+
+    @property
     def threading(self) -> bool:
         return CoreConfig.get_config_field(
             self.__config, "core", "server", "threading", default=False
