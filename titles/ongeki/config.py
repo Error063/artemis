@@ -21,6 +21,12 @@ class OngekiServerConfig:
                 self.__config, "ongeki", "server", "loglevel", default="info"
             )
         )
+    
+    @property
+    def use_https(self) -> bool:
+        return CoreConfig.get_config_field(
+                self.__config, "ongeki", "server", "use_https", default=False
+            )
 
 
 class OngekiGachaConfig:
