@@ -124,35 +124,42 @@ class CxbServlet(BaseServlet):
         func_to_find = "handle_data_"
         version_string = "Base"
         internal_ver = 0
+        version = 0
         
         if req_json == {}:
             self.logger.warning(f"Empty json request to /data")
             return b""
+
+        subcmd = list(req_json.keys())[0]
+        if subcmd == "dldate":
         
-        if (
-            not type(req_json["dldate"]) is dict
-            or "filetype" not in req_json["dldate"]
-        ):
-            self.logger.warning(f"Malformed dldate request: {req_json}")
-            return b""
+            if (
+                not type(req_json["dldate"]) is dict
+                or "filetype" not in req_json["dldate"]
+            ):
+                self.logger.warning(f"Malformed dldate request: {req_json}")
+                return b""
 
-        filetype = req_json["dldate"]["filetype"]
-        filetype_split = filetype.split("/")
+            filetype = req_json["dldate"]["filetype"]
+            filetype_split = filetype.split("/")
 
-        if len(filetype_split) < 2 or not filetype_split[0].isnumeric():
-            self.logger.warning(f"Malformed dldate request: {req_json}")
-            return b""
+            if len(filetype_split) < 2 or not filetype_split[0].isnumeric():
+                self.logger.warning(f"Malformed dldate request: {req_json}")
+                return b""
 
-        version = int(filetype_split[0])
-        filename = filetype_split[len(filetype_split) - 1]
+            version = int(filetype_split[0])
+            filename = filetype_split[len(filetype_split) - 1]
 
-        match = re.match(
-            "^([A-Za-z]*)(\d\d\d\d)$", filetype_split[len(filetype_split) - 1]
-        )
-        if match:
-            func_to_find += f"{inflection.underscore(match.group(1))}xxxx"
+            match = re.match(
+                "^([A-Za-z]*)(\d\d\d\d)$", filetype_split[len(filetype_split) - 1]
+            )
+            if match:
+                func_to_find += f"{inflection.underscore(match.group(1))}xxxx"
+            else:
+                func_to_find += f"{inflection.underscore(filename)}"
         else:
-            func_to_find += f"{inflection.underscore(filename)}"
+            filetype = subcmd
+            func_to_find += filetype
         
         func_to_find += "_request"
         
