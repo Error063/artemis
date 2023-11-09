@@ -1,6 +1,9 @@
 server:
-  hostname: "localhost"
   enable: True
   loglevel: "info"
-  port: 9000
   auto_register: True
+
+crypt:
+  enable: False
+  key: ""
+  iv: ""

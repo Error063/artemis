@@ -6,12 +6,6 @@ class SaoServerConfig:
         self.__config = parent_config
 
     @property
-    def hostname(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "sao", "server", "hostname", default="localhost"
-        )
-
-    @property
     def enable(self) -> bool:
         return CoreConfig.get_config_field(
             self.__config, "sao", "server", "enable", default=True
@@ -23,12 +17,6 @@ class SaoServerConfig:
             CoreConfig.get_config_field(
                 self.__config, "sao", "server", "loglevel", default="info"
             )
-        )
-
-    @property
-    def port(self) -> int:
-        return CoreConfig.get_config_field(
-            self.__config, "sao", "server", "port", default=9000
         )
 
     @property

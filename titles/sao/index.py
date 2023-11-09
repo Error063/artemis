@@ -52,7 +52,7 @@ class SaoServlet(BaseServlet):
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
             [], 
-            [("render_POST", "/dev/proto/if/{category}/{endpoint}", {})]
+            [("render_POST", "/{datecode}/proto/if/{category}/{endpoint}", {})]
         )
     
     @classmethod
@@ -70,9 +70,10 @@ class SaoServlet(BaseServlet):
         return True
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        tport = Utils.get_title_port(self.core_cfg)
         return (
-            f"http://{self.game_cfg.server.hostname}:{self.game_cfg.server.port}/",
-            f"{self.game_cfg.server.hostname}/",
+            f"http://{self.core_cfg.title.hostname}:{tport}/",
+            f"{self.core_cfg.title.hostname}/",
         )
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
