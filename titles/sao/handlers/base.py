@@ -7,7 +7,7 @@ from csv import *
 
 class SaoRequestHeader:
     def __init__(self, data: bytes) -> None:
-        collection = struct.unpack_from("!HIIIs16", data)
+        collection = struct.unpack_from("!HIII16s", data)
         self.cmd: int = collection[0]
         self.vendor_id: int = collection[1]
         self.game_id: int = collection[2]
