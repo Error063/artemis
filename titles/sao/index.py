@@ -51,7 +51,7 @@ class SaoServlet(BaseServlet):
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
             [], 
-            [("render_POST", "/SaoServlet/{datecode}/proto/if/{endpoint}", {})]
+            [("render_POST", "/dev/proto/if/{category}/{endpoint}", {})]
         )
     
     @classmethod
