@@ -343,7 +343,9 @@ Events are controlled by 2 types of enabled events:
 - AcceptRankingEvent (type 7), AcceptTechChallengeEvent (type 18)
 
 Both Ranking and Accept must be enabled for event to function properly
+
 Event will run for the time specified in startDate and endDate
+
 AcceptRankingEvent and AcceptTechChallengeEvent are reward period for events, which specify from what startDate until endDate you can collect the rewards for attending the event, so the reward period must start in the future, e.g. :
 
 - RankingEvent startDate 2023-12-01 - endDate 2023-12-30 - period in which whole event is running
@@ -352,11 +354,14 @@ AcceptRankingEvent and AcceptTechChallengeEvent are reward period for events, wh
 If player misses the AcceptRankingEvent period - ranking will be invalidated and receive lowest reward from the event (typically 500x money)
 
 Technical Challenge Song List:
+
 Songs that are used for Technical Challenge are not stored anywhere in data files, so you need to fill the database table by yourself, you can gather all songs that should be in Technical Challenges from ONGEKI japanese wikis, or, you can create your own sets:
 
-Database table : `ongeki_tech_music_list`
+Database table : `ongeki_static_tech_music`
+
 ```
 id: Id in table, just increment for each entry
+version: version of the game you want the tech challenge to be in (from RED and up)
 eventId: Id of the event in ongeki_static_events, insert the Id of the TechChallengeEvent (type 17) you want the song be assigned to
 musicId: Id of the song you want to add, use songId from ongeki_static_music table
 level: Difficulty of the song you want to track during the event, from 0(basic) to 3(master)

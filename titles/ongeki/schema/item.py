@@ -187,6 +187,7 @@ mission_point = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("user", ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade")),
+    Column("version", Integer),
     Column("eventId", Integer),
     Column("point", Integer),
     UniqueConstraint("user", "eventId", name="ongeki_user_mission_point_uk"),
@@ -336,7 +337,6 @@ print_detail = Table(
     UniqueConstraint("serialId", name="ongeki_user_print_detail_uk"),
     mysql_charset="utf8mb4",
 )
-
 
 class OngekiItemData(BaseData):
     def put_card(self, aime_id: int, card_data: Dict) -> Optional[int]:
@@ -532,10 +532,9 @@ class OngekiItemData(BaseData):
             return None
         return result.fetchall()
 
-    def put_mission_point(
-        self, aime_id: int, mission_point_data: Dict
-    ) -> Optional[int]:
+    def put_mission_point(self, version: int, aime_id: int, mission_point_data: Dict) -> Optional[int]:
         mission_point_data["user"] = aime_id
+        mission_point_data["version"] = version
 
         sql = insert(mission_point).values(**mission_point_data)
         conflict = sql.on_duplicate_key_update(**mission_point_data)
@@ -546,8 +545,8 @@ class OngekiItemData(BaseData):
             return None
         return result.lastrowid
 
-    def get_mission_points(self, aime_id: int) -> Optional[List[Dict]]:
-        sql = select(mission_point).where(mission_point.c.user == aime_id)
+    def get_mission_points(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+        sql = select(mission_point).where(and_(mission_point.c.user == aime_id, mission_point.c.version == version))
         result = self.execute(sql)
 
         if result is None:

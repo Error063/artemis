@@ -17,6 +17,7 @@ events = Table(
     Column("type", Integer),
     Column("name", String(255)),
     Column("startDate", TIMESTAMP, server_default=func.now()),
+    Column("endDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", "type", name="ongeki_static_events_uk"),
     mysql_charset="utf8mb4",
@@ -104,7 +105,7 @@ music_ranking = Table(
     Column("musicId", Integer, nullable=False),
     Column("point", Integer, nullable=False),
     Column("userName", String(255)),
-    UniqueConstraint("musicId", name="ongeki_static_music_ranking_uk"),
+    UniqueConstraint("version", "musicId", name="ongeki_static_music_ranking_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -117,7 +118,7 @@ rewards = Table(
     Column("rewardname", String(255), nullable=False),
     Column("itemKind", Integer, nullable=False),
     Column("itemId", Integer, nullable=False),
-    UniqueConstraint("version","itemKind","rewardId", name="ongeki_static_rewards_uk"),
+    UniqueConstraint("version", "rewardId", name="ongeki_static_rewards_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -133,7 +134,7 @@ present = Table(
     Column("message", String(255)),
     Column("startDate", String(25), nullable=False),
     Column("endDate", String(25), nullable=False),
-    UniqueConstraint("version","presentId", name="ongeki_static_present_list_uk"),
+    UniqueConstraint("version", "presentId", "rewardId", name="ongeki_static_present_list_uk",
     mysql_charset="utf8mb4",
 )
 
@@ -146,6 +147,30 @@ tech_music = Table(
     Column("musicId", Integer, nullable=False),
     Column("level", Integer, nullable=False),
     UniqueConstraint("version", "musicId", name="ongeki_static_tech_music_uk"),
+    mysql_charset="utf8mb4",
+)
+
+client_testmode = Table(
+    "ongeki_static_client_testmode",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("regionId", Integer, nullable=False),
+    Column("placeId", Integer, nullable=False),
+    Column("clientId", String(11), nullable=False),
+    Column("updateDate", TIMESTAMP, nullable=False),
+    Column("isDelivery", Boolean, nullable=False),
+    Column("groupId", Integer, nullable=False),
+    Column("groupRole", Integer, nullable=False),
+    Column("continueMode", Integer, nullable=False),
+    Column("selectMusicTime", Integer, nullable=False),
+    Column("advertiseVolume", Integer, nullable=False),
+    Column("eventMode", Integer, nullable=False),
+    Column("eventMusicNum", Integer, nullable=False),
+    Column("patternGp", Integer, nullable=False),
+    Column("limitGp", Integer, nullable=False),
+    Column("maxLeverMovable", Integer, nullable=False),
+    Column("minLeverMovable", Integer, nullable=False),
+    UniqueConstraint("clientId", name="ongeki_static_client_testmode_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -287,6 +312,7 @@ class OngekiStaticData(BaseData):
             eventId=event_id,
             type=event_type,
             name=event_name,
+            endDate=f"2038-01-01 00:00:00",
         )
 
         conflict = sql.on_duplicate_key_update(
@@ -436,3 +462,23 @@ class OngekiStaticData(BaseData):
         if result is None:
             return None
         return result.fetchall()
+
+    def put_client_testmode_data(self, region_id: int, client_testmode_data: Dict) -> Optional[List[Dict]]:
+        sql = insert(client_testmode).values(regionId=region_id, **client_testmode_data)
+        conflict = sql.on_duplicate_key_update(regionId=region_id, **client_testmode_data)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"clientId: {clientId} Failed to update ClientTestMode data"),
+            return None
+        return result.lastrowid
+
+    def put_client_setting_data(self, client_id: str, client_setting_data: Dict) -> Optional[List[Dict]]:
+        sql = insert(machine).values(data=client_setting_data)
+        conflict = sql.on_duplicate_key_update(serial=client_id)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"clientId: {clientId} Failed to update ClientSetting data"),
+            return None
+        return result.lastrowid

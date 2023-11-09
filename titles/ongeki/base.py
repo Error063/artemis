@@ -287,9 +287,21 @@ class OngekiBase:
         }
 
     def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
+
+        client_id = data["clientId"]
+        client_setting_data = data["clientSetting"]
+        self.data.static.put_client_setting_data(client_id, client_setting_data)
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
     def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
+
+        region_id = data["regionId"]
+        client_testmode_data = data["clientTestmode"]
+        self.data.static.put_client_testmode_data(region_id, client_testmode_data)
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
@@ -333,10 +345,9 @@ class OngekiBase:
                     "id": event["eventId"],
                     # actually use the startDate from the import so it
                     # properly shows all the events when new ones are imported
-                    "startDate": datetime.strftime(
-                        event["startDate"], "%Y-%m-%d %H:%M:%S.0"
-                    ),
-                    "endDate": "2099-12-31 00:00:00.0",
+                    "startDate": datetime.strftime(event["startDate"], "%Y-%m-%d %H:%M:%S.0"),
+                    #"endDate": "2099-12-31 00:00:00.0",
+                    "endDate": datetime.strftime(event["endDate"], "%Y-%m-%d %H:%M:%S.0"),
                 }
             )
         
@@ -849,7 +860,7 @@ class OngekiBase:
         }
 
     def handle_get_user_mission_point_api_request(self, data: Dict) -> Dict:
-        user_mission_point_list = self.data.item.get_mission_points(data["userId"])
+        user_mission_point_list = self.data.item.get_mission_points(self.version, data["userId"])
         if user_mission_point_list is None:
             return {}
 
@@ -858,6 +869,7 @@ class OngekiBase:
             tmp = evt_music._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("version")
             mission_point_list.append(tmp)
 
 
@@ -1032,7 +1044,7 @@ class OngekiBase:
 
         if "userMissionPointList" in upsert:
             for x in upsert["userMissionPointList"]:
-                self.data.item.put_mission_point(user_id, x)
+                self.data.item.put_mission_point(user_id, self.version, x)
 
         if "userRatinglogList" in upsert:
             for x in upsert["userRatinglogList"]:
