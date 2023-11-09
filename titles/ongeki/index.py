@@ -208,6 +208,7 @@ class OngekiServlet(BaseServlet):
         if (
             not encrtped
             and self.game_cfg.crypto.encrypted_only
+            and version >= 120
         ):
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
@@ -251,7 +252,7 @@ class OngekiServlet(BaseServlet):
 
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
-        if not encrtped:
+        if not encrtped and version < 120:
             return zipped
 
         padded = pad(zipped, 16)
