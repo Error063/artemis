@@ -134,7 +134,7 @@ present = Table(
     Column("message", String(255)),
     Column("startDate", String(25), nullable=False),
     Column("endDate", String(25), nullable=False),
-    UniqueConstraint("version", "presentId", "rewardId", name="ongeki_static_present_list_uk",
+    UniqueConstraint("version", "presentId", "rewardId", name="ongeki_static_present_list_uk"),
     mysql_charset="utf8mb4",
 )
 
