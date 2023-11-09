@@ -5,6 +5,7 @@ import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from os import path
 from Crypto.Cipher import Blowfish
+from hashlib import md5
 
 from core import CoreConfig, Utils
 from core.title import BaseServlet
@@ -48,6 +49,10 @@ class SaoServlet(BaseServlet):
             self.logger.inited = True
 
         self.base = SaoBase(core_cfg, self.game_cfg)
+        self.static_hash = None
+        
+        if self.game_cfg.hash.verify_hash:
+            self.static_hash = md5(self.game_cfg.hash.hash_base) # Greate hashing guys, really validates the data
     
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
@@ -93,14 +98,20 @@ class SaoServlet(BaseServlet):
         
         cmd_str = f"{req_header.cmd:04x}"
         
+        if self.game_cfg.hash.verify_hash and self.static_hash != req_header.hash:
+            self.logger.error(f"Hash mismatch! Expecting {self.static_hash} but recieved {req_header.hash}")
+            return b""
+        
         if self.game_cfg.crypt.enable:
-            iv = req_raw[30:38]
+            
+            iv = req_raw[40:48]
             cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
-            crypt_data = req_raw[38:]
+            crypt_data = req_raw[48:]
             req_data = cipher.decrypt(crypt_data)
+            self.logger.debug(f"Decrypted {req_data.hex()} with IV {iv.hex()}")
             
         else:
-            req_data = req_raw[30:]
+            req_data = req_raw[40:]
 
         handler = getattr(self.base, f"handle_{cmd_str}", None)
         if handler is None:

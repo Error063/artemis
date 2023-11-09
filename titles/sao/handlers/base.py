@@ -1,22 +1,26 @@
 import struct
 from datetime import datetime
 from construct import *
-import sys
+from .helpers import *
 import csv
 from csv import *
 
 class SaoRequestHeader:
     def __init__(self, data: bytes) -> None:
-        collection = struct.unpack_from("!H6xIII16s", data)
+        collection = struct.unpack_from("!H6xIII16sI", data)
         self.cmd: int = collection[0]
         self.vendor_id: int = collection[1]
         self.game_id: int = collection[2]
         self.version_id: int = collection[3]
-        self.checksum: str = collection[4]
+        self.hash: str = collection[4]
+        self.data_len: str = collection[5]
 
 class SaoBaseRequest:
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         self.header = header
+        if self.header.data_len != len(data):
+            logging.getLogger('sao').error(f"Expected {self.header.data_len} data bytes byt got {len(data)}!")
+            # TODO: Raise an error here
 
 class SaoBaseResponse:
     def __init__(self, cmd_id: int) -> None:
@@ -2750,3 +2754,25 @@ class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
 
         self.length = len(resp_data)
         return super().make() + resp_data
+    
+class SaoConsumeCreditGuestRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        shop_id = decode_str(data, off)
+        self.shop_id = shop_id[0]
+        off += shop_id[1]
+        
+        serial_num = decode_str(data, off)
+        self.serial_num = serial_num[0]
+        off += serial_num[1]
+        
+        self.cab_type = decode_byte(data, off)
+        off += BYTE_OFF
+        
+        self.act_type = decode_byte(data, off)
+        off += BYTE_OFF
+        
+        self.consume_num = decode_byte(data, off)
+        off += BYTE_OFF
+        

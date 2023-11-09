@@ -7,3 +7,7 @@ crypt:
   enable: False
   key: ""
   iv: ""
+
+hash:
+  verify_hash: False
+  hash_base: ""

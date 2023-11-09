@@ -51,8 +51,25 @@ class SaoCryptConfig:
             self.__config, "sao", "crypt", "iv", default=""
         )
 
+class SaoHashConfig:
+    def __init__(self, parent_config: "SaoConfig"):
+        self.__config = parent_config
+        
+    @property
+    def verify_hash(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "sao", "hash", "verify_hash", default=False
+        )
+    
+    @property
+    def hash_base(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "sao", "hash", "hash_base", default=""
+        )
+
 
 class SaoConfig(dict):
     def __init__(self) -> None:
         self.server = SaoServerConfig(self)
         self.crypt = SaoCryptConfig(self)
+        self.hash = SaoHashConfig(self)
