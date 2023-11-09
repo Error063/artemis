@@ -4,6 +4,7 @@ import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from os import path
+from Crypto.Cipher import Blowfish
 
 from core import CoreConfig, Utils
 from core.title import BaseServlet
@@ -70,8 +71,8 @@ class SaoServlet(BaseServlet):
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         return (
-            f"http://{self.game_cfg.server.hostname}:{self.game_cfg.server.port}/SaoServlet/",
-            f"{self.game_cfg.server.hostname}/SaoServlet/",
+            f"http://{self.game_cfg.server.hostname}:{self.game_cfg.server.port}/",
+            f"{self.game_cfg.server.hostname}/",
         )
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
