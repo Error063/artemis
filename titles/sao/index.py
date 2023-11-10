@@ -128,8 +128,12 @@ class SaoServlet(BaseServlet):
 
         if self.game_cfg.crypt.enable:
             iv = random.randbytes(8)
+            data_to_crypt = resp[24:]
+            while len(data_to_crypt) % 8 != 0:
+                data_to_crypt += b"\x00"
+            
             cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
-            data_crypt = cipher.encrypt(resp[24:])
+            data_crypt = cipher.encrypt(data_to_crypt)
             resp = resp[:24] + iv + data_crypt
             self.logger.debug(f"Encrypted Response: {resp.hex()}")
 
