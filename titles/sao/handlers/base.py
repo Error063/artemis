@@ -22,7 +22,7 @@ class SaoBaseRequest:
             logging.getLogger('sao').error(f"Expected {self.header.data_len} data bytes byt got {len(data)}!")
             # TODO: Raise an error here
 
-class SaoBaseResponse:
+class SaoResponseHeader:
     def __init__(self, cmd_id: int) -> None:
         self.cmd = cmd_id
         self.err_status = 0
@@ -34,6 +34,13 @@ class SaoBaseResponse:
     
     def make(self) -> bytes:
         return struct.pack("!HHIIIII", self.cmd, self.err_status, self.error_type, self.vendor_id, self.game_id, self.version_id, self.length)
+
+class SaoBaseResponse:
+    def __init__(self, cmd_id: int) -> None:
+        self.header = SaoResponseHeader(cmd_id)
+    
+    def make(self) -> bytes:
+        return self.header.make()
 
 class SaoNoopResponse(SaoBaseResponse):
     def __init__(self, cmd: int) -> None:
