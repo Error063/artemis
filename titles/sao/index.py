@@ -135,7 +135,9 @@ class SaoServlet(BaseServlet):
             
             cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
             data_crypt = cipher.encrypt(data_to_crypt)
-            resp = resp[:24] + iv + data_crypt
+            crypt_data_len = len(data_crypt)
+            tmp = struct.pack("!I", crypt_data_len) # does it want the length of the encrypted response??
+            resp = resp[:20] + tmp + iv + data_crypt
             self.logger.debug(f"Encrypted Response: {resp.hex()}")
 
         return resp
