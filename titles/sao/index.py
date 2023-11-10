@@ -131,5 +131,6 @@ class SaoServlet(BaseServlet):
             cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
             data_crypt = cipher.encrypt(resp[24:])
             resp = resp[:24] + iv + data_crypt
+            self.logger.debug(f"Encrypted Response: {resp.hex()}")
 
         return resp
