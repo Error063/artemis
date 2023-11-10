@@ -6,6 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 from os import path
 from Crypto.Cipher import Blowfish
 from hashlib import md5
+import random
 
 from core import CoreConfig, Utils
 from core.title import BaseServlet
@@ -87,10 +88,10 @@ class SaoServlet(BaseServlet):
 
         return (True, "SAO1")
 
-
     def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         endpoint = matchers.get('endpoint', '')
         request.responseHeaders.addRawHeader(b"content-type", b"text/html; charset=utf-8")
+        iv = b""
 
         req_raw = request.content.read()
         sao_request = req_raw.hex()
@@ -103,7 +104,6 @@ class SaoServlet(BaseServlet):
             return b""
         
         if self.game_cfg.crypt.enable:
-            
             iv = req_raw[40:48]
             cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
             crypt_data = req_raw[48:]
@@ -125,4 +125,11 @@ class SaoServlet(BaseServlet):
         self.logger.debug(f"Request: {request.content.getvalue().hex()}")
         resp = handler(sao_request)
         self.logger.debug(f"Response: {resp.hex()}")
+
+        if self.game_cfg.crypt.enable:
+            iv = random.randbytes(8)
+            cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
+            data_crypt = cipher.encrypt(resp[24:])
+            resp = resp[:24] + iv + data_crypt
+
         return resp
