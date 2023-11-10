@@ -2055,7 +2055,6 @@ class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
             off += mat.get_size()
             self.material_common_reward_user_data_list.append(mat)
 
-
 class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
         super().__init__(cmd)
@@ -2207,9 +2206,31 @@ class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
         self.length = len(resp_data)
         return super().make() + resp_data
 
-class SaoSynthesizeEnhancementEquipment(SaoBaseRequest):
+class SaoSynthesizeEnhancementEquipmentRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, 0)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, 0)
+        self.user_id = user_id[0]
+        off += user_id[1]
+        
+        origin_user_equipment_id = decode_str(data, 0)
+        self.origin_user_equipment_id = origin_user_equipment_id[0]
+        off += origin_user_equipment_id[1]
+                
+        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData]
+        
+        self.material_common_reward_user_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        for _ in range(self.material_common_reward_user_data_count):
+            mat = MaterialCommonRewardUserData(data, off)
+            off += mat.get_size()
+            self.material_common_reward_user_data_list.append(mat)
 
 class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
     def __init__(self, cmd, synthesize_equipment_data) -> None:

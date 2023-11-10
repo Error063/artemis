@@ -305,31 +305,10 @@ class SaoBase:
 
     def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_equipment
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "origin_user_equipment_id_size" / Rebuild(Int32ub, len_(this.origin_user_equipment_id) * 2),  # calculates the length of the origin_user_equipment_id
-            "origin_user_equipment_id" / PaddedString(this.origin_user_equipment_id_size, "utf_16_le"),  # origin_user_equipment_id is a (zero) padded string
-            Padding(3),
-            "material_common_reward_user_data_list_length" / Rebuild(Int8ub, len_(this.material_common_reward_user_data_list)),  # material_common_reward_user_data_list is a byte,
-            "material_common_reward_user_data_list" / Array(this.material_common_reward_user_data_list_length, Struct(
-                "common_reward_type" / Int16ub,  # team_no is a byte
-                "user_common_reward_id_size" / Rebuild(Int32ub, len_(this.user_common_reward_id) * 2),  # calculates the length of the user_common_reward_id
-                "user_common_reward_id" / PaddedString(this.user_common_reward_id_size, "utf_16_le"),  # user_common_reward_id is a (zero) padded string
-            )),
-        )
-
-        req_data = req_struct.parse(req)
-
-        user_id = req_data.user_id
+        req_data = SaoSynthesizeEnhancementEquipmentRequest(header, request)
         synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
-        for i in range(0,req_data.material_common_reward_user_data_list_length):
+        for i in range(0,req_data.material_common_reward_user_data_count):
 
             itemList = self.game_data.static.get_item_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
             heroList = self.game_data.static.get_hero_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
