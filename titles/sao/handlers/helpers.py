@@ -40,6 +40,21 @@ def decode_str(data: bytes, offset: int) -> Tuple[str, int]:
         logging.getLogger('sao').error(f"Failed to parse {data[offset:]} as string!")
         return ("", 0)
 
+def encode_byte(data: int) -> bytes:
+    return struct.pack("!B", data)
+
+def encode_short(data: int) -> bytes:
+    return struct.pack("!H", data)
+
+def encode_int(data: int) -> bytes:
+    return struct.pack("!I", data)
+
+def encode_long(data: int) -> bytes:
+    return struct.pack("!L", data)
+
+def encode_bigint(data: int) -> bytes:
+    return struct.pack("!Q", data)
+
 def encode_str(s: str) -> bytes:
     try:
         str_bytes = s.encode("utf-16-le", errors="replace")

@@ -19,9 +19,7 @@ class SaoRequestHeader:
 class SaoBaseRequest:
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         self.header = header
-        if self.header.data_len != len(data):
-            logging.getLogger('sao').error(f"Expected {self.header.data_len} data bytes byt got {len(data)}!")
-            # TODO: Raise an error here
+        # TODO: Length check
 
 class SaoResponseHeader:
     def __init__(self, cmd_id: int) -> None:
@@ -2046,14 +2044,9 @@ class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
         off += origin_user_hero_log_id[1]
 
         self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData]
-
-        if len(data) <= off:
-            self.material_common_reward_user_data_count = 0
-            return
         
         self.material_common_reward_user_data_count = decode_int(data, off)
         off += INT_OFF
-
 
         for _ in range(self.material_common_reward_user_data_count):
             mat = MaterialCommonRewardUserData(data, off)
