@@ -53,7 +53,7 @@ class SaoServlet(BaseServlet):
         self.static_hash = None
         
         if self.game_cfg.hash.verify_hash:
-            self.static_hash = md5(self.game_cfg.hash.hash_base) # Greate hashing guys, really validates the data
+            self.static_hash = md5(self.game_cfg.hash.hash_base.encode()).digest() # Greate hashing guys, really validates the data
     
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
@@ -105,7 +105,7 @@ class SaoServlet(BaseServlet):
         
         if self.game_cfg.crypt.enable:
             iv = req_raw[40:48]
-            cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
+            cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
             crypt_data = req_raw[48:]
             req_data = cipher.decrypt(crypt_data)
             self.logger.debug(f"Decrypted {req_data.hex()} with IV {iv.hex()}")
@@ -128,7 +128,7 @@ class SaoServlet(BaseServlet):
 
         if self.game_cfg.crypt.enable:
             iv = random.randbytes(8)
-            cipher = Blowfish.new(self.game_cfg.crypt.key, Blowfish.MODE_CBC, iv)
+            cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
             data_crypt = cipher.encrypt(resp[24:])
             resp = resp[:24] + iv + data_crypt
             self.logger.debug(f"Encrypted Response: {resp.hex()}")
