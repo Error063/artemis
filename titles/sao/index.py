@@ -116,14 +116,15 @@ class SaoServlet(BaseServlet):
         handler = getattr(self.base, f"handle_{cmd_str}", None)
         if handler is None:
             self.logger.info(f"Generic Handler for {endpoint} - {cmd_str}")
-            self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-            resp = SaoNoopResponse(req_header.cmd + 1)
-            self.logger.debug(f"Response: {resp.make().hex()}")
-            return resp.make()
-
-        self.logger.info(f"Handler {endpoint} - {cmd_str} request")
-        self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-        resp = handler(sao_request)
+            self.logger.debug(f"Request: {req_raw.hex()}")
+            resp_thing = SaoNoopResponse(req_header.cmd + 1)
+            resp = resp_thing.make()
+        
+        else:
+            self.logger.info(f"Handler {endpoint} - {cmd_str} request")
+            self.logger.debug(f"Request: {req_raw.hex()}")
+            resp = handler(sao_request)
+        
         self.logger.debug(f"Response: {resp.hex()}")
 
         if self.game_cfg.crypt.enable:
