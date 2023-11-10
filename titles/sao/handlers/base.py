@@ -8,13 +8,15 @@ from csv import *
 
 class SaoRequestHeader:
     def __init__(self, data: bytes) -> None:
-        collection = struct.unpack_from("!H6xIII16sI", data)
+        collection = struct.unpack_from("!HHIIII16sI", data)
         self.cmd: int = collection[0]
-        self.vendor_id: int = collection[1]
-        self.game_id: int = collection[2]
-        self.version_id: int = collection[3]
-        self.hash: str = collection[4]
-        self.data_len: str = collection[5]
+        self.err_status = collection[1]
+        self.error_type = collection[2]
+        self.vendor_id: int = collection[3]
+        self.game_id: int = collection[4]
+        self.version_id: int = collection[5]
+        self.hash: str = collection[6]
+        self.data_len: str = collection[7]
 
 class SaoBaseRequest:
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
