@@ -1,5 +1,6 @@
 import struct
 from datetime import datetime
+from typing import List
 from construct import *
 from .helpers import *
 import csv
@@ -202,6 +203,28 @@ class SaoCommonPayingPlayStartRequest(SaoBaseResponse):
 class SaoGetAuthCardDataRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        self.cabinet_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.auth_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        store_id = decode_str(data, off)
+        self.store_id = store_id[0]
+        off += store_id[1]
+
+        serial_no = decode_str(data, off)
+        self.serial_no = serial_no[0]
+        off += serial_no[1]
+
+        access_code = decode_str(data, off)
+        self.access_code = access_code[0]
+        off += access_code[1]
+
+        chip_id = decode_str(data, off)
+        self.chip_id = chip_id[0]
+        off += chip_id[1]
 
 class SaoGetAuthCardDataResponse(SaoBaseResponse): #GssSite.dll / GssSiteSystem / GameConnectProt / public class get_auth_card_data_R : GameConnect.GssProtocolBase
     def __init__(self, cmd, profile_data) -> None:
@@ -339,6 +362,35 @@ class SaoTicketResponse(SaoBaseResponse):
 class SaoCommonLoginRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        self.cabinet_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.auth_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        store_id = decode_str(data, off)
+        self.store_id = store_id[0]
+        off += store_id[1]
+
+        store_name = decode_str(data, off)
+        self.store_name = store_name[0]
+        off += store_name[1]
+
+        serial_no = decode_str(data, off)
+        self.serial_no = serial_no[0]
+        off += serial_no[1]
+
+        access_code = decode_str(data, off)
+        self.access_code = access_code[0]
+        off += access_code[1]
+
+        chip_id = decode_str(data, off)
+        self.chip_id = chip_id[0]
+        off += chip_id[1]
+
+        self.free_ticket_distribution_target_flag = decode_byte(data, off)
+        off += BYTE_OFF
 
 class SaoCommonLoginResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -413,6 +465,7 @@ class SaoCheckComebackEventRequest(SaoBaseResponse):
 class SaoGetUserBasicDataRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetUserBasicDataResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -497,6 +550,7 @@ class SaoGetUserBasicDataResponse(SaoBaseResponse):
 class SaoGetHeroLogUserDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
@@ -675,6 +729,7 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
 class SaoGetEquipmentUserDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, equipment_data) -> None:
@@ -831,6 +886,7 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
 class SaoGetItemUserDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetItemUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, item_data) -> None:
@@ -1014,6 +1070,7 @@ class SaoGetTitleUserDataListResponse(SaoBaseResponse):
 class SaoGetEpisodeAppendDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1072,6 +1129,7 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
 class SaoGetPartyDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party 
     def __init__(self, cmd, hero1_data, hero2_data, hero3_data) -> None:
@@ -1756,6 +1814,7 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
 class SaoGetQuestSceneUserDataListRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, quest_data) -> None:
@@ -1973,6 +2032,34 @@ class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
 class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, 0)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, 0)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        origin_user_hero_log_id = decode_str(data, 0)
+        self.origin_user_hero_log_id = origin_user_hero_log_id[0]
+        off += origin_user_hero_log_id[1]
+
+        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData]
+
+        if len(data) <= off:
+            self.material_common_reward_user_data_count = 0
+            return
+        
+        self.material_common_reward_user_data_count = decode_int(data, off)
+        off += INT_OFF
+
+
+        for _ in range(self.material_common_reward_user_data_count):
+            mat = MaterialCommonRewardUserData(data, off)
+            off += mat.get_size()
+            self.material_common_reward_user_data_list.append(mat)
+
 
 class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:

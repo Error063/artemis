@@ -113,17 +113,10 @@ class SaoServlet(BaseServlet):
         else:
             req_data = req_raw[40:]
 
-        handler = getattr(self.base, f"handle_{cmd_str}", None)
-        if handler is None:
-            self.logger.info(f"Generic Handler for {endpoint} - {cmd_str}")
-            self.logger.debug(f"Request: {req_raw.hex()}")
-            resp_thing = SaoNoopResponse(req_header.cmd + 1)
-            resp = resp_thing.make()
-        
-        else:
-            self.logger.info(f"Handler {endpoint} - {cmd_str} request")
-            self.logger.debug(f"Request: {req_raw.hex()}")
-            resp = handler(sao_request)
+        handler = getattr(self.base, f"handle_{cmd_str}", self.base.handle_noop)
+        self.logger.info(f"{endpoint} - {cmd_str} request")
+        self.logger.debug(f"Request: {req_raw.hex()}")
+        resp = handler(req_header, req_data)
         
         self.logger.debug(f"Response: {resp.hex()}")
 

@@ -48,3 +48,20 @@ def encode_str(s: str) -> bytes:
     except:
         logging.getLogger('sao').error(f"Failed to encode {s} as bytes!")
         return b""
+    
+class BaseHelper:
+    def __init__(self, data: bytes, offset: int) -> None:
+        pass
+    
+    def get_size(self) -> int:
+        return 0
+    
+class MaterialCommonRewardUserData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        self.common_reward_type = decode_short(data, offset)
+        offset += SHORT_OFF
+
+        self.user_common_reward_id = decode_short(data, offset)
+    
+    def get_size(self) -> int:
+        return SHORT_OFF + SHORT_OFF
