@@ -520,7 +520,7 @@ class SaoBase:
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
         json_data = {"data": []}
 
-        for r in range(0,req_data.play_end_request_data_list[0].get_rare_drop_data_list):
+        for r in range(0,req_data.play_end_request_data_list[0].get_rare_drop_data_count):
             rewardList = self.game_data.static.get_rare_drop_id(int(req_data.play_end_request_data_list[0].get_rare_drop_data_list[r].quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
 
@@ -537,15 +537,11 @@ class SaoBase:
         
         # Generate random hero(es) based off the response    
         for a in range(0,req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_count):
-            
             with open('titles/sao/data/RewardTable.csv', 'r') as f:
                 keys_unanalyzed = next(f).strip().split(',')
                 data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
 
             randomized_unanalyzed_id = choice(data_unanalyzed)
-            while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_list[a].unanalyzed_log_grade_id:
-                randomized_unanalyzed_id = choice(data_unanalyzed)
-            
             heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
             equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
             itemList = self.game_data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
