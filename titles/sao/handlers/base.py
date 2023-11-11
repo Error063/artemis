@@ -1473,6 +1473,29 @@ class SaoGetResourcePathInfoResponse(SaoBaseResponse):
 class SaoEpisodePlayStartRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.episode_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_mode = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_start_request_data: List[PlayStartRequestData] = []
+        for _ in range(self.play_start_request_data_count):
+            tmp = PlayStartRequestData(data, off)
+            self.play_start_request_data.append(tmp)
+            off += tmp.get_size()
 
 class SaoEpisodePlayStartResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1520,6 +1543,35 @@ class SaoEpisodePlayStartResponse(SaoBaseResponse):
 class SaoEpisodePlayEndRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.episode_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_list: List[PlayEndRequestData] = []
+        for _ in range(self.play_end_request_data_count):
+            tmp = PlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.play_end_request_data_list.append(tmp)
+
+        self.multi_play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_end_request_data_list: List[MultiPlayEndRequestData] = []
+        for _ in range(self.multi_play_end_request_data_count):
+            tmp = MultiPlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_end_request_data_list.append(tmp)
 
 class SaoEpisodePlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2033,15 +2085,15 @@ class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
         off = 0
-        ticket_id = decode_str(data, 0)
+        ticket_id = decode_str(data, off)
         self.ticket_id = ticket_id[0]
         off += ticket_id[1]
 
-        user_id = decode_str(data, 0)
+        user_id = decode_str(data, off)
         self.user_id = user_id[0]
         off += user_id[1]
 
-        origin_user_hero_log_id = decode_str(data, 0)
+        origin_user_hero_log_id = decode_str(data, off)
         self.origin_user_hero_log_id = origin_user_hero_log_id[0]
         off += origin_user_hero_log_id[1]
 
@@ -2210,15 +2262,15 @@ class SaoSynthesizeEnhancementEquipmentRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
         off = 0
-        ticket_id = decode_str(data, 0)
+        ticket_id = decode_str(data, off)
         self.ticket_id = ticket_id[0]
         off += ticket_id[1]
 
-        user_id = decode_str(data, 0)
+        user_id = decode_str(data, off)
         self.user_id = user_id[0]
         off += user_id[1]
         
-        origin_user_equipment_id = decode_str(data, 0)
+        origin_user_equipment_id = decode_str(data, off)
         self.origin_user_equipment_id = origin_user_equipment_id[0]
         off += origin_user_equipment_id[1]
                 
@@ -2885,4 +2937,28 @@ class SaoConsumeCreditGuestRequest(SaoBaseRequest):
         
         self.consume_num = decode_byte(data, off)
         off += BYTE_OFF
-        
+
+class SaoChangePartyRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.act_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.party_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.party_data_list: List[PartyData] = []
+
+        for _ in range(self.party_data_count):
+            tmp = PartyData(data, off)
+            self.party_data_list.append(tmp)
+            off += tmp.get_size()
