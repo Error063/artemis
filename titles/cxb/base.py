@@ -198,14 +198,6 @@ class CxbBase:
             ).decode("utf-8")
         )
 
-    def task_generateIndexData(self, versionindex: List[str], uid: int):
-        try:
-            v_profile = self.data.profile.get_profile_index(0, uid, self.version)
-            v_profile_data = v_profile["data"]
-            versionindex.append(int(v_profile_data["appVersion"]))
-        except Exception:
-            versionindex.append("10400")
-
     def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
         range_end = data["loadrange"]["range"][1]
@@ -279,9 +271,14 @@ class CxbBase:
             thread_ScoreData = Thread(target=CxbBase.task_generateScoreData(song, index, data1))
             thread_ScoreData.start()
 
-        for v in index:
-            thread_IndexData = Thread(target=CxbBase.task_generateIndexData(self, versionindex, uid))
-            thread_IndexData.start()
+        v_profile = self.data.profile.get_profile_index(0, uid, self.version)
+        v_profile_data = v_profile["data"]
+
+        for _, data in enumerate(profile):
+            if v_profile_data:
+                versionindex.append(int(v_profile_data["appVersion"]))
+            else:
+                versionindex.append("10400")
 
         return {"index": index, "data": data1, "version": versionindex}
 
