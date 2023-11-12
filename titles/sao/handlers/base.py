@@ -720,6 +720,8 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
             
             resp_data.hero_log_user_data_list.append(hero_data)
 
+        resp_data["hero_log_user_data_list_size"] = len(resp_data.hero_log_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -877,6 +879,8 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
             
             resp_data.equipment_user_data_list.append(equipment_data)
 
+        resp_data["equipment_user_data_list_size"] = len(resp_data.equipment_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -941,6 +945,8 @@ class SaoGetItemUserDataListResponse(SaoBaseResponse):
             )
             
             resp_data.item_user_data_list.append(item_data)
+
+        resp_data["item_user_data_list_size"] = len(resp_data.item_user_data_list)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
@@ -1014,6 +1020,8 @@ class SaoGetSupportLogUserDataListResponse(SaoBaseResponse):
             
             resp_data.support_log_user_data_list.append(support_data)
 
+        resp_data["support_log_user_data_list_size"] = len(resp_data.support_log_user_data_list)
+
         resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
@@ -1060,6 +1068,8 @@ class SaoGetTitleUserDataListResponse(SaoBaseResponse):
             )
             
             resp_data.title_user_data_list.append(title_data)
+
+        resp_data["title_user_data_list_size"] = len(resp_data.title_user_data_list)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
@@ -1119,6 +1129,8 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
                 episode_append_id=self.episode_append_id_list[i],
                 own_num=self.own_num_list[i],
             ))
+
+        resp_data["episode_append_data_list_size"] = len(resp_data.episode_append_data_list)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
@@ -1857,6 +1869,10 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
             
             resp_data.play_end_unanalyzed_log_reward_data_list.append(reward_resp_data)
 
+        resp_data["play_end_unanalyzed_log_reward_data_list_size"] = len(resp_data.play_end_unanalyzed_log_reward_data_list)
+        for i in range(len(resp_data.play_end_unanalyzed_log_reward_data_list)):
+            resp_data.play_end_unanalyzed_log_reward_data_list[i]["common_reward_data_size"] = len(resp_data.play_end_unanalyzed_log_reward_data_list[i]["common_reward_data"])
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -1871,6 +1887,7 @@ class SaoGetQuestSceneUserDataListRequest(SaoBaseRequest):
 class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, quest_data) -> None:
         super().__init__(cmd)
+        self.length = None
         self.result = 1
 
         # quest_scene_user_data_list_size
@@ -1966,6 +1983,10 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
             ))
             
             resp_data.quest_scene_user_data_list.append(quest_resp_data)
+
+        resp_data["quest_scene_user_data_list_size"] = len(resp_data.quest_scene_user_data_list)
+        for i in range(len(resp_data.quest_scene_user_data_list)):
+            resp_data.quest_scene_user_data_list[i]["quest_scene_best_score_user_data_size"] = len(resp_data.quest_scene_user_data_list[i]["quest_scene_best_score_user_data"])
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
@@ -2252,6 +2273,8 @@ class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
         
         resp_data.hero_log_user_data_list.append(hero_data)
 
+        resp_data["hero_log_user_data_list_size"] = len(resp_data.hero_log_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -2410,6 +2433,8 @@ class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
         )
             
         resp_data.after_equipment_user_data.append(synthesize_equipment_data)
+
+        resp_data["after_equipment_user_data_size"] = len(resp_data.after_equipment_user_data)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
@@ -2910,6 +2935,8 @@ class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
         )
         
         resp_data.read_profile_card_data.append(hero_data)
+
+        resp_data["read_profile_card_data_size"] = len(resp_data.read_profile_card_data)
 
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
