@@ -874,40 +874,18 @@ class SaoBase:
     def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_end_unanalyzed_log_fixed
 
-        req = bytes.fromhex(request)[24:]
+        req = SaoEpisodePlayEndUnanalyzedLogFixedRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
-
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        end_session_data = self.game_data.item.get_end_session(user_id)
+        end_session_data = self.game_data.item.get_end_session(req.user_id)
 
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
     def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
         #quest/trial_tower_play_end_unanalyzed_log_fixed
-        req = bytes.fromhex(request)[24:]
+        req = TrialTowerPlayEndUnanalyzedLogFixed(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
-
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        end_session_data = self.game_data.item.get_end_session(user_id)
+        end_session_data = self.game_data.item.get_end_session(req.user_id)
 
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
