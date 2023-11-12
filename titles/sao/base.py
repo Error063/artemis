@@ -563,30 +563,7 @@ class SaoBase:
 
     def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_start
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "trial_tower_id" / Int32ub,  # trial_tower_id is an int
-            "play_mode" / Int8ub,  # play_mode is a byte
-            Padding(3),
-            "play_start_request_data_length" / Rebuild(Int8ub, len_(this.play_start_request_data)),  # play_start_request_data_length is a byte,
-            "play_start_request_data" / Array(this.play_start_request_data_length, Struct(
-                "user_party_id_size" / Rebuild(Int32ub, len_(this.user_party_id) * 2),  # calculates the length of the user_party_id
-                "user_party_id" / PaddedString(this.user_party_id_size, "utf_16_le"),  # user_party_id is a (zero) padded string
-                "appoint_leader_resource_card_code_size" / Rebuild(Int32ub, len_(this.appoint_leader_resource_card_code) * 2),  # calculates the length of the total_damage
-                "appoint_leader_resource_card_code" / PaddedString(this.appoint_leader_resource_card_code_size, "utf_16_le"),  # total_damage is a (zero) padded string
-                "use_profile_card_code_size" / Rebuild(Int32ub, len_(this.use_profile_card_code) * 2),  # calculates the length of the total_damage
-                "use_profile_card_code" / PaddedString(this.use_profile_card_code_size, "utf_16_le"),  # use_profile_card_code is a (zero) padded string
-                "quest_drop_boost_apply_flag" / Int8ub,  # quest_drop_boost_apply_flag is a byte
-            )),
-        )
-
-        req_data = req_struct.parse(req)
+        req_data = SaoTrialTowerPlayStartRequest(header, request)
 
         user_id = req_data.user_id
         floor_id = req_data.trial_tower_id

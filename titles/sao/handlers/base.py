@@ -1508,6 +1508,15 @@ class SaoEpisodePlayStartRequest(SaoBaseRequest):
             tmp = PlayStartRequestData(data, off)
             self.play_start_request_data.append(tmp)
             off += tmp.get_size()
+        
+        self.multi_play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_start_request_data: List[MultiPlayStartRequestData] = []
+        for _ in range(self.multi_play_start_request_data_count):
+            tmp = MultiPlayStartRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_start_request_data.append(tmp)
 
 class SaoEpisodePlayStartResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1668,6 +1677,42 @@ class SaoEpisodePlayEndResponse(SaoBaseResponse):
 
         self.length = len(resp_data)
         return super().make() + resp_data
+
+class SaoTrialTowerPlayStartRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.trial_tower_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_mode = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_start_request_data: List[PlayStartRequestData] = []
+        for _ in range(self.play_start_request_data_count):
+            tmp = PlayStartRequestData(data, off)
+            self.play_start_request_data.append(tmp)
+            off += tmp.get_size()
+        
+        self.multi_play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_start_request_data: List[MultiPlayStartRequestData] = []
+        for _ in range(self.multi_play_start_request_data_count):
+            tmp = MultiPlayStartRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_start_request_data.append(tmp)
 
 class SaoTrialTowerPlayEndRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:

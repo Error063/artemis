@@ -283,7 +283,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.base_get_data_list: List[BaseGetData] = []
         for _ in range(self.base_get_data_count):
-            tmp = BaseGetData(data, sz)
+            tmp = BaseGetData(data, offset + sz)
             sz += tmp.get_size()
             self.base_get_data_list.append(tmp)
 
@@ -292,7 +292,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.get_player_trace_data: List[GetPlayerTraceData] = []
         for _ in range(self.get_player_trace_data_count):
-            tmp = GetPlayerTraceData(data, sz)
+            tmp = GetPlayerTraceData(data, offset + sz)
             sz += tmp.get_size()
             self.get_player_trace_data.append(tmp)
 
@@ -301,7 +301,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.get_rare_drop_data_list: List[RareDropData] = []
         for _ in range(self.get_rare_drop_data_count):
-            tmp = RareDropData(data, sz)
+            tmp = RareDropData(data, offset + sz)
             sz += tmp.get_size()
             self.get_rare_drop_data_list.append(tmp)
 
@@ -310,7 +310,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.get_special_rare_drop_data_list: List[SpecialRareDropData] = []
         for _ in range(self.get_special_rare_drop_data_count):
-            tmp = SpecialRareDropData(data, sz)
+            tmp = SpecialRareDropData(data, offset + sz)
             sz += tmp.get_size()
             self.get_special_rare_drop_data_list.append(tmp)
 
@@ -319,7 +319,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.get_unanalyzed_log_tmp_reward_data_list: List[UnanalyzedLogTmpRewardData] = []
         for _ in range(self.get_unanalyzed_log_tmp_reward_data_count):
-            tmp = UnanalyzedLogTmpRewardData(data, sz)
+            tmp = UnanalyzedLogTmpRewardData(data, offset + sz)
             sz += tmp.get_size()
             self.get_unanalyzed_log_tmp_reward_data_list.append(tmp)
 
@@ -328,7 +328,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.get_event_item_data_list: List[EventItemData] = []
         for _ in range(self.get_event_item_data_count):
-            tmp = EventItemData(data, sz)
+            tmp = EventItemData(data, offset + sz)
             sz += tmp.get_size()
             self.get_event_item_data_list.append(tmp)
 
@@ -337,7 +337,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.discovery_enemy_data_list: List[DiscoveryEnemyData] = []
         for _ in range(self.discovery_enemy_data_count):
-            tmp = DiscoveryEnemyData(data, sz)
+            tmp = DiscoveryEnemyData(data, offset + sz)
             sz += tmp.get_size()
             self.discovery_enemy_data_list.append(tmp)
 
@@ -346,7 +346,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.destroy_boss_data_list: List[DestroyBossData] = []
         for _ in range(self.destroy_boss_data_count):
-            tmp = DestroyBossData(data, sz)
+            tmp = DestroyBossData(data, offset + sz)
             sz += tmp.get_size()
             self.destroy_boss_data_list.append(tmp)
 
@@ -355,7 +355,7 @@ class PlayEndRequestData(BaseHelper):
 
         self.mission_data_list: List[MissionData] = []
         for _ in range(self.mission_data_count):
-            tmp = MissionData(data, sz)
+            tmp = MissionData(data, offset + sz)
             sz += tmp.get_size()
             self.mission_data_list.append(tmp)
 
@@ -364,11 +364,44 @@ class PlayEndRequestData(BaseHelper):
 
         self.score_data_list: List[ScoreData] = []
         for _ in range(self.score_data_count):
-            tmp = ScoreData(data, sz)
+            tmp = ScoreData(data, offset + sz)
             sz += tmp.get_size()
             self.score_data_list.append(tmp)
 
         self._sz = sz
+
+class EntryUserData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        store_id = decode_str(data, offset + self._sz)
+        self.store_id = store_id[0]
+        self._sz += store_id[1]
+
+        user_id = decode_str(data, offset + self._sz)
+        self.user_id = user_id[0]
+        self._sz += user_id[1]
+
+        self.host_flag = decode_byte(data, offset + self._sz)
+        self._sz += BYTE_OFF
+
+class MultiPlayStartRequestData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        room_id = decode_str(data, offset + self._sz)
+        self.room_id = room_id[0]
+        self._sz += room_id[1]
+
+        self.matching_mode = decode_byte(data, offset + self._sz)
+        self._sz += BYTE_OFF
+
+        self.entry_user_data_count = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+
+        self.entry_user_data_list: List[EntryUserData] = []
+        for _ in range(self.entry_user_data_count):
+            tmp = EntryUserData(data, offset + self._sz)
+            self._sz += tmp.get_size()
+            self.entry_user_data_list.append(tmp)
 
 class MultiPlayEndRequestData(BaseHelper):
     def __init__(self, data: bytes, offset: int) -> None:
