@@ -241,25 +241,28 @@ class SaoBase:
 
         synthesize_hero_log_data = self.game_data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
 
-        for i in range(req.material_common_reward_user_data_count):
-
-            itemList = self.game_data.static.get_item_id(req.material_common_reward_user_data_list[i].user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(req.material_common_reward_user_data_list[i].user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(req.material_common_reward_user_data_list[i].user_common_reward_id)
+        for x in req.material_common_reward_user_data_list:
+            hero_exp = 0
+            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
+            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 hero_exp = 2000 + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_item(req.user_id, req.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_item(req.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req.user_id, req.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_data = self.game_data.item.get_user_equipment(req.user_id, x.user_common_reward_id)
                 hero_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_equipment(req.user_id, req.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_equipment(req.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req.user_id, req.material_common_reward_user_data_list[i].user_common_reward_id)
+                hero_data = self.game_data.item.get_hero_log(req.user_id, x.user_common_reward_id)
                 hero_exp = int(hero_data["log_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_hero_log(req.user_id, req.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_hero_log(req.user_id, x.user_common_reward_id)
+            
+            if hero_exp == 0:
+                self.logger.warn(f"Hero {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
 
             self.game_data.item.put_hero_log(
                 req.user_id, 
