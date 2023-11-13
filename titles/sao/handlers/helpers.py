@@ -1,12 +1,25 @@
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 import struct
 import logging
+from datetime import datetime
 
 BIGINT_OFF = 16
 LONG_OFF = 8
 INT_OFF = 4
 SHORT_OFF = 2
 BYTE_OFF = 1
+
+DT_FMT = "%Y%m%d%H%M%S"
+
+def fmt_dt(d: Optional[datetime] = None) -> str:
+    if d is None:
+        d = datetime.fromtimestamp(0)
+    return d.strftime(DT_FMT)
+
+def prs_dt(s: Optional[str] = None) -> datetime:
+    if not s:
+        s = "19691231190000"
+    return datetime.strptime(s, DT_FMT)
 
 def decode_num(data: bytes, offset: int, size: int) -> int:
     try:
@@ -40,6 +53,31 @@ def decode_str(data: bytes, offset: int) -> Tuple[str, int]:
         logging.getLogger('sao').error(f"Failed to parse {data[offset:]} as string!")
         return ("", 0)
 
+def decode_arr_num(data: bytes, offset:int, element_size: int) -> Tuple[List[int], int]:
+    size = 0
+    num_obj = decode_int(data, offset + size)
+    size += INT_OFF
+    
+    ret: List[int] = []
+    for _ in range(num_obj):
+        ret.append(decode_num(data, offset + size, element_size))
+        size += element_size
+    
+    return (ret, size)
+
+def decode_arr_str(data: bytes, offset: int) -> Tuple[List[str], int]:
+    size = 0
+    num_obj = decode_int(data, offset + size)
+    size += INT_OFF
+    
+    ret: List[str] = []
+    for _ in range(num_obj):
+        tmp = decode_str(data, offset + size)
+        ret.append(tmp[0])
+        size += tmp[1]
+    
+    return (ret, size)
+
 def encode_byte(data: int) -> bytes:
     return struct.pack("!B", data)
 
@@ -63,14 +101,66 @@ def encode_str(s: str) -> bytes:
     except:
         logging.getLogger('sao').error(f"Failed to encode {s} as bytes!")
         return b""
-    
+
+def encode_arr_num(data: List[int], element_size: int) -> bytes:
+    ret = encode_int(len(data))
+        
+    if element_size == BYTE_OFF:
+        for x in data:
+            ret += encode_byte(x)
+    elif element_size == SHORT_OFF:
+        for x in data:
+            ret += encode_short(x)
+    elif element_size == INT_OFF:
+        for x in data:
+            ret += encode_int(x)
+    elif element_size == LONG_OFF:
+        for x in data:
+            ret += encode_long(x)
+    elif element_size == BIGINT_OFF:
+        for x in data:
+            ret += encode_bigint(x)
+    else:
+        logging.getLogger('sao').error(f"Unknown element size {element_size}")
+        return b"\x00" * INT_OFF
+
+    return ret
+
 class BaseHelper:
     def __init__(self, data: bytes, offset: int) -> None:
         self._sz = 0
+        
+    @classmethod
+    def from_args(cls) -> "BaseHelper":
+        return cls(b"", 0)
     
     def get_size(self) -> int:
         return self._sz
     
+    def make(self) -> bytes:
+        return b""
+
+def decode_arr_cls(data: bytes, offset: int, cls: BaseHelper):
+    size = 0
+    num_cls = decode_int(data, offset + size)
+    cls_type = type(cls)
+    
+    ret: List[cls_type] = []
+    for _ in range(num_cls):
+        tmp = cls(data, offset + size)
+        size += tmp.get_size()
+        ret.append(tmp)
+    
+    return (ret, size)
+
+def encode_arr_cls(data: List[BaseHelper]) -> bytes:
+    ret = encode_int(len(data))
+    
+    for x in data:
+        ret += x.make()
+    
+    return ret
+
 class MaterialCommonRewardUserData(BaseHelper):
     def __init__(self, data: bytes, offset: int) -> None:
         super().__init__(data, offset)
@@ -413,3 +503,111 @@ class MultiPlayEndRequestData(BaseHelper):
         self._sz += BYTE_OFF
         self.dummy_3 = decode_byte(data, offset + self._sz)
         self._sz += BYTE_OFF
+
+class SalesResourceData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.common_reward_type = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.common_reward_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property1_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property1_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property1_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property2_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property2_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property2_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property3_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property3_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property3_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property4_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property4_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property4_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+    
+    @classmethod
+    def from_args(cls, reward_type: int = 0, reward_id: int = 0) -> "SalesResourceData":
+        ret = cls(b"\x00" * 54, 0)
+        ret.common_reward_type = reward_type # short
+        ret.common_reward_id = reward_id # int
+        
+        return ret
+
+    def make(self) -> bytes:
+        ret = b""
+        ret += encode_short(self.common_reward_type)
+        ret += encode_int(self.common_reward_id)
+        
+        ret += encode_int(self.property1_property_id)
+        ret += encode_int(self.property1_value1)
+        ret += encode_int(self.property1_value2)
+        
+        ret += encode_int(self.property2_property_id)
+        ret += encode_int(self.property2_value1)
+        ret += encode_int(self.property2_value2)
+        
+        ret += encode_int(self.property3_property_id)
+        ret += encode_int(self.property3_value1)
+        ret += encode_int(self.property3_value2)
+        
+        ret += encode_int(self.property4_property_id)
+        ret += encode_int(self.property4_value1)
+        ret += encode_int(self.property4_value2)
+
+class ShopResourceSalesData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        user_shop_resource_id = decode_str(data, offset + self._sz)
+        self.user_shop_resource_id = user_shop_resource_id[0]
+        self._sz = user_shop_resource_id[1]
+        
+        discharge_user_id = decode_str(data, offset + self._sz)
+        self.discharge_user_id = discharge_user_id[0]
+        self._sz = discharge_user_id[1]
+        
+        self.remaining_num = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.purchase_num = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        
+        sales_start_date = decode_str(data, offset + self._sz)
+        self.sales_start_date = prs_dt(sales_start_date[0])
+        self._sz = sales_start_date[1]
+        
+        sales_resource_data_list = decode_arr_cls(data, offset + self._sz, SalesResourceData)
+        self.sales_resource_data_list: List[SalesResourceData] = sales_resource_data_list[0]
+        self._sz += sales_resource_data_list[1]
+
+    @classmethod
+    def from_args(cls, resource_id: str = "0", discharge_id: int = "0", remaining: int = 0, purchased: int = 0) -> "ShopResourceSalesData":
+        ret = cls(b"\x00" * 20, 0)
+        ret.user_shop_resource_id = resource_id
+        ret.discharge_user_id = discharge_id
+        ret.remaining_num = remaining # short
+        ret.purchase_num = purchased # short
+        ret.sales_start_date = prs_dt()
+    
+    def make(self) -> bytes:
+        ret = encode_str(self.user_shop_resource_id)
+        ret += encode_str(self.discharge_user_id)
+        ret += encode_short(self.remaining_num)
+        ret += encode_short(self.purchase_num)
+        ret += encode_str(fmt_dt(self.sales_start_date))
+        ret += encode_arr_cls(self.sales_resource_data_list)
+        return ret
+        

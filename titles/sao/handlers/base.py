@@ -3095,3 +3095,24 @@ class TrialTowerPlayEndUnanalyzedLogFixed(SaoBaseRequest):
 
         self.rarity_up_exec_flag = decode_byte(data, off)
         off += BYTE_OFF
+
+class GetShopResourceSalesDataListRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+        
+class GetShopResourceSalesDataListResponse(SaoBaseResponse):
+    def __init__(self, cmd_id: int) -> None:
+        super().__init__(cmd_id)
+        self.result = 1 # byte
+        self.shop_resource_sales_data: List[ShopResourceSalesData] = []
+
+    def make(self) -> bytes:
+        ret = encode_byte(self.result)
+        ret += encode_arr_cls(self.shop_resource_sales_data)
+        
+        self.header.length = len(ret)
+        return super().make() + ret

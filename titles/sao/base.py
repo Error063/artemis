@@ -832,3 +832,10 @@ class SaoBase:
         #card/scan_qr_quest_profile_card
         resp = SaoScanQrQuestProfileCardResponse(header.cmd +1)
         return resp.make()
+    
+    def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # shop/get_shop_resource_sales_data_list
+        # TODO: Shop data
+        req = GetShopResourceSalesDataListRequest(header, request)
+        resp = GetShopResourceSalesDataListResponse(header.cmd + 1)
+        return resp.make()
