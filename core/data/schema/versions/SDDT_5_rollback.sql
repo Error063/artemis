@@ -9,7 +9,7 @@ ALTER TABLE ongeki_user_tech_event DROP COLUMN version;
 
 ALTER TABLE ongeki_user_mission_point DROP COLUMN version;
 
-ALTER TABLE ongeki_static_event DROP COLUMN endDate;
+ALTER TABLE ongeki_static_events DROP COLUMN endDate;
 
 DROP TABLE ongeki_tech_event_ranking;
 DROP TABLE ongeki_static_music_ranking_list;
