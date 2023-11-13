@@ -928,8 +928,8 @@ class SaoBase:
     
     def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shops
-        pass
+        return SaoNoopResponse(header.cmd + 1).make()
     
     def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
-        pass
+        return SaoNoopResponse(header.cmd + 1).make()
