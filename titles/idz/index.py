@@ -4,22 +4,22 @@ import logging
 import coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from os import path
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 from twisted.internet import reactor, endpoints
 from twisted.web import server, resource
 import importlib
 
 from core.config import CoreConfig
+from core.title import BaseServlet
 from .config import IDZConfig
 from .const import IDZConstants
-from .userdb import IDZUserDBFactory, IDZUserDBWeb, IDZKey
+from .userdb import IDZUserDBFactory, IDZKey
 from .echo import IDZEcho
-from .handlers import IDZHandlerLoadConfigB
 
 
-class IDZServlet:
+class IDZServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = IDZConfig()
         if path.exists(f"{cfg_dir}/{IDZConstants.CONFIG_NAME}"):
             self.game_cfg.update(
@@ -65,9 +65,9 @@ class IDZServlet:
         return hash_
 
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = IDZConfig()
         if path.exists(f"{cfg_dir}/{IDZConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -75,21 +75,30 @@ class IDZServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
         if len(game_cfg.rsa_keys) <= 0 or not game_cfg.server.aes_key:
             logging.getLogger("idz").error("IDZ: No RSA/AES  keys! IDZ cannot start")
-            return (False, "", "")
+            return False
 
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return[
+            [("render_GET", "/idz/news/{endpoint:.*?}", {}),
+             ("render_GET", "/idz/error", {})],
+            []
+        ]
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         hostname = (
-            core_cfg.title.hostname
-            if not game_cfg.server.hostname
-            else game_cfg.server.hostname
+            self.core_cfg.title.hostname
+            if not self.game_cfg.server.hostname
+            else self.game_cfg.server.hostname
         )
         return (
-            True,
             f"",
-            f"{hostname}:{game_cfg.ports.userdb}",
+            f"{hostname}:{self.game_cfg.ports.userdb}",
         )
 
     def setup(self):
@@ -149,12 +158,8 @@ class IDZServlet:
 
         self.logger.info(f"UserDB Listening on port {self.game_cfg.ports.userdb}")
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        req_raw = request.content.getvalue()
-        self.logger.info(f"IDZ POST request: {url_path} - {req_raw}")
-        return b""
-
-    def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
+    def render_GET(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        url_path = matchers['endpoint']
         self.logger.info(f"IDZ GET request: {url_path}")
         request.responseHeaders.setRawHeaders(
             "Content-Type", [b"text/plain; charset=utf-8"]

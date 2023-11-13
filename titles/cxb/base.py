@@ -3,13 +3,12 @@ import json
 from decimal import Decimal
 from base64 import b64encode
 from typing import Any, Dict, List
-from hashlib import md5
-from datetime import datetime
+from os import path
 
 from core.config import CoreConfig
-from titles.cxb.config import CxbConfig
-from titles.cxb.const import CxbConstants
-from titles.cxb.database import CxbData
+from .config import CxbConfig
+from .const import CxbConstants
+from .database import CxbData
 
 from threading import Thread
 
@@ -21,6 +20,13 @@ class CxbBase:
         self.game = CxbConstants.GAME_CODE
         self.logger = logging.getLogger("cxb")
         self.version = CxbConstants.VER_CROSSBEATS_REV
+
+    def _get_data_contents(self, folder: str, filetype: str, encoding: str = None, subfolder: str = "") -> List[str]:
+        if path.exists(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv"):
+            with open(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv", encoding=encoding) as f:
+                return f.readlines()
+        
+        return []
 
     def handle_action_rpreq_request(self, data: Dict) -> Dict:
         return {}
@@ -192,14 +198,6 @@ class CxbBase:
             ).decode("utf-8")
         )
 
-    def task_generateIndexData(versionindex):
-        try:
-            v_profile = self.data.profile.get_profile_index(0, uid, self.version)
-            v_profile_data = v_profile["data"]
-            versionindex.append(int(v_profile_data["appVersion"]))
-        except Exception:
-            versionindex.append("10400")
-
     def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
         range_end = data["loadrange"]["range"][1]
@@ -273,9 +271,14 @@ class CxbBase:
             thread_ScoreData = Thread(target=CxbBase.task_generateScoreData(song, index, data1))
             thread_ScoreData.start()
 
-        for v in index:
-            thread_IndexData = Thread(target=CxbBase.task_generateIndexData(versionindex))
-            thread_IndexData.start()
+        v_profile = self.data.profile.get_profile_index(0, uid, self.version)
+        v_profile_data = v_profile["data"]
+
+        for _, data in enumerate(profile):
+            if v_profile_data:
+                versionindex.append(int(v_profile_data["appVersion"]))
+            else:
+                versionindex.append("10400")
 
         return {"index": index, "data": data1, "version": versionindex}
 
@@ -530,7 +533,6 @@ class CxbBase:
         profile = self.data.profile.get_profile_index(0, uid, self.version)
         data1 = profile["data"]
         p = self.data.item.get_energy(uid)
-        energy = p["energy"]
 
         if not p:
             self.data.item.put_energy(uid, 5)
@@ -543,6 +545,7 @@ class CxbBase:
             }
 
         array = []
+        energy = p["energy"]
 
         newenergy = int(energy) + 5
         self.data.item.put_energy(uid, newenergy)

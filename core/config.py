@@ -37,6 +37,12 @@ class ServerConfig:
         )
 
     @property
+    def is_using_proxy(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "server", "is_using_proxy", default=False
+        )
+
+    @property
     def threading(self) -> bool:
         return CoreConfig.get_config_field(
             self.__config, "core", "server", "threading", default=False
@@ -83,6 +89,36 @@ class TitleConfig:
     def port(self) -> int:
         return CoreConfig.get_config_field(
             self.__config, "core", "title", "port", default=8080
+        )
+        
+    @property
+    def port_ssl(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "port_ssl", default=0
+        )
+
+    @property
+    def ssl_key(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "ssl_key", default="cert/title.key"
+        )
+
+    @property
+    def ssl_cert(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "ssl_cert", default="cert/title.pem"
+        )
+
+    @property
+    def reboot_start_time(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "reboot_start_time", default=""
+        )
+
+    @property
+    def reboot_end_time(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "reboot_end_time", default=""
         )
 
 
@@ -148,6 +184,12 @@ class DatabaseConfig:
             "database",
             "user_table_autoincrement_start",
             default=10000,
+        )
+
+    @property
+    def enable_memcached(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "database", "enable_memcached", default=True
         )
 
     @property

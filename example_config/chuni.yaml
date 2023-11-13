@@ -1,9 +1,10 @@
 server:
   enable: True
   loglevel: "info"
+  news_msg: ""
 
 team:
-  name: ARTEMiS
+  name: ARTEMiS # If this is set, all players that are not on a team will use this one by default.
 
 mods:
   use_login_bonus: True

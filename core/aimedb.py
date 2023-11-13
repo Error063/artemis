@@ -145,7 +145,15 @@ class AimedbProtocol(Protocol):
     def handle_lookup(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         req = ADBLookupRequest(data)
         user_id = self.data.card.get_user_id_from_card(req.access_code)
+        is_banned = self.data.card.get_card_banned(req.access_code)
+        is_locked = self.data.card.get_card_locked(req.access_code)
 
+        if is_banned and is_locked:
+            ret.head.status = ADBStatus.BAN_SYS_USER
+        elif is_banned:
+            ret.head.status = ADBStatus.BAN_SYS
+        elif is_locked:
+            ret.head.status = ADBStatus.LOCK_USER
         ret = ADBLookupResponse.from_req(req.head, user_id)
         
         self.logger.info(
@@ -157,8 +165,17 @@ class AimedbProtocol(Protocol):
         req = ADBLookupRequest(data)
         user_id = self.data.card.get_user_id_from_card(req.access_code)
 
+        is_banned = self.data.card.get_card_banned(req.access_code)
+        is_locked = self.data.card.get_card_locked(req.access_code)
+
         ret = ADBLookupExResponse.from_req(req.head, user_id)
-        
+        if is_banned and is_locked:
+            ret.head.status = ADBStatus.BAN_SYS_USER
+        elif is_banned:
+            ret.head.status = ADBStatus.BAN_SYS
+        elif is_locked:
+            ret.head.status = ADBStatus.LOCK_USER
+
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
@@ -237,7 +254,7 @@ class AimedbProtocol(Protocol):
     def handle_register(self, data: bytes, resp_code: int) -> bytes:
         req = ADBLookupRequest(data)
         user_id = -1
-        
+
         if self.config.server.allow_user_registration:
             user_id = self.data.user.create_user()
 

@@ -41,7 +41,6 @@ machine = Table(
     Column("country", String(3)),  # overwrites if not null
     Column("timezone", String(255)),
     Column("ota_enable", Boolean),
-    Column("is_cab", Boolean),
     Column("memo", String(255)),
     Column("is_cab", Boolean),
     Column("data", JSON),

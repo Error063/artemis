@@ -333,7 +333,7 @@ class Mai2ItemData(BaseData):
         if result is None:
             return None
         return result.fetchone()
-    
+
     def put_character_(self, user_id: int, char_data: Dict) -> Optional[int]:
         char_data["user"] = user_id
         sql = insert(character).values(**char_data)
@@ -488,6 +488,8 @@ class Mai2ItemData(BaseData):
             sql = card.select(card.c.user == user_id)
         else:
             sql = card.select(and_(card.c.user == user_id, card.c.cardKind == kind))
+
+        sql = sql.order_by(card.c.startDate.desc())
 
         result = self.execute(sql)
         if result is None:

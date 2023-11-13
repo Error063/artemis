@@ -7,9 +7,9 @@ from datetime import datetime
 
 from core.config import CoreConfig
 from core.data import Data, cached
-from titles.cxb.config import CxbConfig
-from titles.cxb.base import CxbBase
-from titles.cxb.const import CxbConstants
+from .config import CxbConfig
+from .base import CxbBase
+from .const import CxbConstants
 
 
 class CxbRevSunriseS1(CxbBase):
@@ -23,7 +23,7 @@ class CxbRevSunriseS1(CxbBase):
     @cached(lifetime=86400)
     def handle_data_music_list_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss1_data/MusicArchiveList.csv") as music:
+        with open(r"titles/cxb/data/rss1/MusicArchiveList.csv") as music:
             lines = music.readlines()
             for line in lines:
                 line_split = line.split(",")
@@ -36,7 +36,7 @@ class CxbRevSunriseS1(CxbBase):
         # ItemListIcon load
         ret_str = "#ItemListIcon\r\n"
         with open(
-            r"titles/cxb/rss1_data/Item/ItemList_Icon.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Item/ItemList_Icon.csv", encoding="shift-jis"
         ) as item:
             lines = item.readlines()
             for line in lines:
@@ -45,7 +45,7 @@ class CxbRevSunriseS1(CxbBase):
         # ItemListTitle load
         ret_str += "\r\n#ItemListTitle\r\n"
         with open(
-            r"titles/cxb/rss1_data/Item/ItemList_Title.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Item/ItemList_Title.csv", encoding="shift-jis"
         ) as item:
             lines = item.readlines()
             for line in lines:
@@ -58,7 +58,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListIcon load
         ret_str = "#ShopListIcon\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_Icon.csv", encoding="utf-8"
+            r"titles/cxb/data/rss1/Shop/ShopList_Icon.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -67,7 +67,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListMusic load
         ret_str += "\r\n#ShopListMusic\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_Music.csv", encoding="utf-8"
+            r"titles/cxb/data/rss1/Shop/ShopList_Music.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -76,7 +76,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListSale load
         ret_str += "\r\n#ShopListSale\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_Sale.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Shop/ShopList_Sale.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -85,7 +85,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListSkinBg load
         ret_str += "\r\n#ShopListSkinBg\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_SkinBg.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Shop/ShopList_SkinBg.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -94,7 +94,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListSkinEffect load
         ret_str += "\r\n#ShopListSkinEffect\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_SkinEffect.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Shop/ShopList_SkinEffect.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -103,7 +103,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListSkinNotes load
         ret_str += "\r\n#ShopListSkinNotes\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_SkinNotes.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss1/Shop/ShopList_SkinNotes.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -112,7 +112,7 @@ class CxbRevSunriseS1(CxbBase):
         # ShopListTitle load
         ret_str += "\r\n#ShopListTitle\r\n"
         with open(
-            r"titles/cxb/rss1_data/Shop/ShopList_Title.csv", encoding="utf-8"
+            r"titles/cxb/data/rss1/Shop/ShopList_Title.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -140,7 +140,7 @@ class CxbRevSunriseS1(CxbBase):
     @cached(lifetime=86400)
     def handle_data_news_list_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss1_data/NewsList.csv", encoding="UTF-8") as news:
+        with open(r"titles/cxb/data/rss1/NewsList.csv", encoding="UTF-8") as news:
             lines = news.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
@@ -155,7 +155,7 @@ class CxbRevSunriseS1(CxbBase):
     @cached(lifetime=86400)
     def handle_data_random_music_list_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss1_data/MusicArchiveList.csv") as music:
+        with open(r"titles/cxb/data/rss1/MusicArchiveList.csv") as music:
             lines = music.readlines()
             count = 0
             for line in lines:
@@ -169,7 +169,7 @@ class CxbRevSunriseS1(CxbBase):
     @cached(lifetime=86400)
     def handle_data_license_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss1_data/License.csv", encoding="UTF-8") as licenses:
+        with open(r"titles/cxb/data/rss1/License.csv", encoding="UTF-8") as licenses:
             lines = licenses.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
@@ -179,7 +179,7 @@ class CxbRevSunriseS1(CxbBase):
     def handle_data_course_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
-            r"titles/cxb/rss1_data/Course/CourseList.csv", encoding="UTF-8"
+            r"titles/cxb/data/rss1/Course/CourseList.csv", encoding="UTF-8"
         ) as course:
             lines = course.readlines()
             for line in lines:
@@ -191,7 +191,7 @@ class CxbRevSunriseS1(CxbBase):
         extra_num = int(data["dldate"]["filetype"][-4:])
         ret_str = ""
         with open(
-            rf"titles/cxb/rss1_data/Course/Cs{extra_num}.csv", encoding="shift-jis"
+            rf"titles/cxb/data/rss1/Course/Cs{extra_num}.csv", encoding="shift-jis"
         ) as course:
             lines = course.readlines()
             for line in lines:
@@ -229,7 +229,7 @@ class CxbRevSunriseS1(CxbBase):
     def handle_data_partnerxxxx_request(self, data: Dict) -> Dict:
         partner_num = int(data["dldate"]["filetype"][-4:])
         ret_str = f"{partner_num},,{partner_num},1,10000,\r\n"
-        with open(r"titles/cxb/rss1_data/Partner0000.csv") as partner:
+        with open(r"titles/cxb/data/rss1/Partner0000.csv") as partner:
             lines = partner.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"

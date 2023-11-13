@@ -66,6 +66,28 @@ python read.py --game SDBT --version <version ID> --binfolder /path/to/game/fold
 
 The importer for Chunithm will import: Events, Music, Charge Items and Avatar Accesories.
 
+### Config
+
+Config file is located in `config/chuni.yaml`.
+
+| Option           | Info                                                                                                           |
+|------------------|----------------------------------------------------------------------------------------------------------------|
+| `news_msg`       | If this is set, the news at the top of the main screen will be displayed (up to Chunithm Paradise Lost)        |
+| `name`           | If this is set, all players that are not on a team will use this one by default.                               |
+| `rank_scale`     | Scales the in-game ranking based on the number of teams within the database                                    |
+| `use_login_bonus`| This is used to enable the login bonuses                                                                       |
+| `crypto`         | This option is used to enable the TLS Encryption                                                               |
+
+
+**If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
+
+```yaml
+crypto:
+  encrypted_only: False
+  keys:
+    13: ["0000000000000000000000000000000000000000000000000000000000000000", "00000000000000000000000000000000", "0000000000000000"]
+```
+
 ### Database upgrade
 
 Always make sure your database (tables) are up-to-date:
@@ -92,6 +114,36 @@ After a failed Online Battle the room will be deleted. The host is used for the 
 - `reflectorUri` seems related to that?
 - Timer countdown should be handled globally and not by one user
 - Game can freeze or can crash if someone (especially the host) leaves the matchmaking
+
+### Rivals
+
+You can configure up to 4 rivals in Chunithm on a per-user basis. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user1>, <version>, <user2>, 2);
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user2>, <version>, <user1>, 2);
+```
+Note that the version **must match**, otherwise song lookup may not work.
+
+### Teams
+
+You can also configure teams for users to be on. There is no UI to do this currently, so in the database, you can do this:
+```sql
+INSERT INTO aime.chuni_profile_team (teamName) VALUES (<teamName>);
+```
+Team names can be regular ASCII, and they will be displayed ingame.
+
+On smaller installations, you may also wish to enable scaled team rankings. By default, Chunithm determines team ranking within the first 100 teams. This can be configured in the YAML:
+```yaml
+team:
+  rank_scale: True # Scales the in-game ranking based on the number of teams within the database, rather than the default scale of ~100 that the game normally uses.
+```
+
+### Favorite songs
+You can set the songs that will be in a user's Favorite Songs category using the following SQL entries:
+```sql
+INSERT INTO aime.chuni_item_favorite (user, version, favId, favKind) VALUES (<user>, <version>, <songId>, 1);
+```
+The songId is based on the actual ID within your version of Chunithm.
 
 
 ## crossbeats REV.
@@ -147,18 +199,19 @@ For versions pre-dx
 | SDBM      | 5          | maimai ORANGE PLUS      |
 | SDCQ      | 6          | maimai PiNK             |
 | SDCQ      | 7          | maimai PiNK PLUS        |
-| SDDK      | 8          | maimai MURASAKI         |
-| SDDK      | 9          | maimai MURASAKI PLUS    |
-| SDDZ      | 10         | maimai MILK             |
-| SDDZ      | 11         | maimai MILK PLUS        |
+| SDDK      | 8          | maimai MURASAKi         |
+| SDDK      | 9          | maimai MURASAKi PLUS    |
+| SDDZ      | 10         | maimai MiLK             |
+| SDDZ      | 11         | maimai MiLK PLUS        |
 | SDEY      | 12         | maimai FiNALE           |
 | SDEZ      | 13         | maimai DX               |
 | SDEZ      | 14         | maimai DX PLUS          |
 | SDEZ      | 15         | maimai DX Splash        |
 | SDEZ      | 16         | maimai DX Splash PLUS   |
-| SDEZ      | 17         | maimai DX Universe      |
-| SDEZ      | 18         | maimai DX Universe PLUS |
-| SDEZ      | 19         | maimai DX Festival      |
+| SDEZ      | 17         | maimai DX UNiVERSE      |
+| SDEZ      | 18         | maimai DX UNiVERSE PLUS |
+| SDEZ      | 19         | maimai DX FESTiVAL      |
+| SDEZ      | 20         | maimai DX FESTiVAL PLUS |
 
 ### Importer
 
@@ -217,6 +270,9 @@ Config file is located in `config/diva.yaml`.
 | `unlock_all_modules` | Unlocks all modules (costumes) by default, if set to `False` all modules need to be purchased   |
 | `unlock_all_items`   | Unlocks all items (customizations) by default, if set to `False` all items need to be purchased |
 
+### Custom PV Lists (databanks)
+
+In order to use custom PV Lists, simply drop in your .dat files inside of /titles/diva/data/ and make sure they are called PvList0.dat, PvList1.dat, PvList2.dat, PvList3.dat and PvList4.dat exactly.
 
 ### Database upgrade
 
@@ -261,8 +317,18 @@ Config file is located in `config/ongeki.yaml`.
 | Option           | Info                                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
 | `enabled_gachas` | Enter all gacha IDs for Card Maker to work, other than default may not work due to missing cards added to them |
+| `crypto`         | This option is used to enable the TLS Encryption                                                               |
 
 Note: 1149 and higher are only for Card Maker 1.35 and higher and will be ignored on lower versions.
+
+**If you would like to use network encryption, the following will be required underneath but key, iv and hash are required:**
+
+```yaml
+crypto:
+  encrypted_only: False
+  keys:
+    7: ["0000000000000000000000000000000000000000000000000000000000000000", "00000000000000000000000000000000", "0000000000000000"]
+```
 
 ### Database upgrade
 
@@ -271,6 +337,68 @@ Always make sure your database (tables) are up-to-date:
 ```shell
 python dbutils.py --game SDDT upgrade
 ```
+
+### Controlling Events (Ranking Event, Technical Challenge Event, Mission Event)
+
+Events are controlled by 2 types of enabled events:
+- RankingEvent (type 6), TechChallengeEvent (type 17)
+- AcceptRankingEvent (type 7), AcceptTechChallengeEvent (type 18)
+
+Both Ranking and Accept must be enabled for event to function properly
+
+Event will run for the time specified in startDate and endDate
+
+AcceptRankingEvent and AcceptTechChallengeEvent are reward period for events, which specify from what startDate until endDate you can collect the rewards for attending the event, so the reward period must start in the future, e.g. :
+
+- RankingEvent startDate 2023-12-01 - endDate 2023-12-30 - period in which whole event is running
+- AcceptRankingEvent startDate 2023-12-23 - endDate 2023-12-30 - period in which you can collect rewards for the event
+
+If player misses the AcceptRankingEvent period - ranking will be invalidated and receive lowest reward from the event (typically 500x money)
+
+Technical Challenge Song List:
+
+Songs that are used for Technical Challenge are not stored anywhere in data files, so you need to fill the database table by yourself, you can gather all songs that should be in Technical Challenges from ONGEKI japanese wikis, or, you can create your own sets:
+
+Database table : `ongeki_static_tech_music`
+
+```
+id: Id in table, just increment for each entry
+version: version of the game you want the tech challenge to be in (from RED and up)
+eventId: Id of the event in ongeki_static_events, insert the Id of the TechChallengeEvent (type 17) you want the song be assigned to
+musicId: Id of the song you want to add, use songId from ongeki_static_music table
+level: Difficulty of the song you want to track during the event, from 0(basic) to 3(master)
+
+```
+
+Current implementation of Ranking and Technical Challenge Events are updated on every profile save to the Network, and Ranked on each player login, in official specification, calculation for current rank on the network should be done in the maintenance window
+
+Mission Event (type 13) is a monthly type of event, which is used when another event doesn't have it's own Ranking or Technical Challenge Event running, only one Mission Event should be running at a time, so enable only the specific Mission you want to run currently on the Network
+
+If you're often trying fresh cards, registering new profiles etc., you can also consider disabling all Announcement Events (type 1), as it will disable all the banners that pop up on login (they show up only once though, so if you click through them once they won't show again)
+
+Event type 2 in Database are Advertisement Movies, enable only 1 you want to currently play, and disable others
+
+
+Present and Reward List - populate reward list using read.py
+
+Create present for players by adding an entry in `ongeki_static_present_list`
+```
+id: unique for each entry
+version: game version you want the present be in
+presentId: id of the present - starts with 1001 and go up from that, must be unique for each reward(don't set multiple rewardIds with same presentId)
+presentName: present name which will be shown on the bottom when received
+rewardId: ID of item from ongeki_static_rewards
+stock: how many you want to give (like 5 copies of same card, or 10000 money, etc.)
+message: no idea, can be left empty
+startDate: date when to start giving out
+endDate: date when ends
+```
+
+After inserting present to the table, add the presentId into players `ongeki_static_item`, where itemKind is 9, itemId is the presentId, and stock set 1 and isValid to 1
+
+After that, on next login the present should be received (or whenever it supposed to happen)
+
+
 
 ## Card Maker
 
@@ -284,15 +412,21 @@ python dbutils.py --game SDDT upgrade
 
 ### Support status
 
-* Card Maker 1.30:
-  * CHUNITHM NEW!!: Yes
-  * maimai DX UNiVERSE: Yes
-  * O.N.G.E.K.I. bright: Yes
+#### Card Maker 1.30:
+* CHUNITHM NEW!!: Yes
+* maimai DX UNiVERSE: Yes
+* O.N.G.E.K.I. bright: Yes
 
-* Card Maker 1.35:
-  * CHUNITHM SUN: Yes (NEW PLUS!! up to A032)
-  * maimai DX FESTiVAL: Yes (up to A035) (UNiVERSE PLUS up to A031)
-  * O.N.G.E.K.I. bright MEMORY: Yes
+#### Card Maker 1.35:
+* CHUNITHM: 
+  * NEW!!: Yes
+  * NEW PLUS!!: Yes (added in A028)
+  * SUN: Yes (added in A032)
+* maimai DX:
+  * UNiVERSE PLUS: Yes
+  * FESTiVAL: Yes (added in A031)
+  * FESTiVAL PLUS: Yes (added in A035)
+* O.N.G.E.K.I. bright MEMORY: Yes
 
 
 ### Importer
@@ -511,6 +645,8 @@ python dbutils.py --game SDEW upgrade
 - Player title is currently static and cannot be changed in-game
 - QR Card Scanning currently only load a static hero
 
+**Network hashing in GssSite.dll must be disabled**
+
 ### Credits for SAO support:
 
 - Midorica - Limited Network Support
@@ -646,3 +782,4 @@ python dbutils.py --game SDGT upgrade
 - Kinako: For helping with the timeRelease unlocking of courses and special mode
 
 A huge thanks to all people who helped shaping this project to what it is now and don't want to be mentioned here.
+

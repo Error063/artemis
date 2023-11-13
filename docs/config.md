@@ -6,11 +6,18 @@
 - `name`: Name for the server, used by some games in their default MOTDs. Default `ARTEMiS`
 - `is_develop`: Flags that the server is a development instance without a proxy standing in front of it. Setting to `False` tells the server not to listen for SSL, because the proxy should be handling all SSL-related things, among other things. Default `True`
 - `threading`: Flags that `reactor.run` should be called via the `Thread` standard library. May provide a speed boost, but removes the ability to kill the server via `Ctrl + C`. Default: `False`
+- `check_arcade_ip`: Checks IPs against the `arcade` table in the database, if one is defined. Default `False`
+- `strict_ip_checking`: Rejects clients if there is no IP in the `arcade` table for the respective arcade
 - `log_dir`: Directory to store logs. Server MUST have read and write permissions to this directory or you will have issues. Default `logs`
 ## Title
 - `loglevel`: Logging level for the title server. Default `info`
 - `hostname`: Hostname that gets sent to clients to tell them where to connect. Games must be able to connect to your server via the hostname or IP you spcify here. Note that most games will reject `localhost` or `127.0.0.1`. Default `localhost`
 - `port`: Port that the title server will listen for connections on. Set to 0 to use the Allnet handler to reduce the port footprint. Default `8080`
+- `port_ssl`: Port that the secure title server will listen for connections on. Set to 0 to use the Allnet handler to reduce the port footprint. Default `0`
+- `ssl_key`: Location of the ssl server key for the secure title server. Ignored if `port_ssl` is set to `0` or `is_develop` set to `False`. Default `cert/title.key`
+- `ssl_cert`: Location of the ssl server certificate for the secure title server. Must not be a self-signed SSL. Ignored if `port_ssl` is set to `0` or `is_develop` is set to `False`. Default `cert/title.pem`
+- `reboot_start_time`: 24 hour JST time that clients will see as the start of maintenance period. Leave blank for no maintenance time. Default: ""
+- `reboot_end_time`: 24 hour JST time that clients will see as the end of maintenance period. Leave blank for no maintenance time. Default: ""
 ## Database
 - `host`: Host of the database. Default `localhost`
 - `username`: Username of the account the server should connect to the database with. Default `aime`

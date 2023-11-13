@@ -12,6 +12,7 @@ RUN chmod +x entrypoint.sh
 
 COPY index.py index.py
 COPY dbutils.py dbutils.py
+COPY read.py read.py
 ADD core core
 ADD titles titles
 ADD config config

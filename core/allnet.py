@@ -16,10 +16,11 @@ from os import path
 import urllib.parse
 import math
 
-from core.config import CoreConfig
-from core.utils import Utils
-from core.data import Data
-from core.const import *
+from .config import CoreConfig
+from .utils import Utils
+from .data import Data
+from .const import *
+from .title import TitleServlet
 
 BILLING_DT_FORMAT: Final[str] = "%Y%m%d%H%M%S"
 
@@ -33,13 +34,67 @@ class ALLNET_STAT(Enum):
     bad_machine = -2
     bad_shop = -3
 
+class DLI_STATUS(Enum):
+    START = 0
+    GET_DOWNLOAD_CONFIGURATION = 1
+    WAIT_DOWNLOAD = 2
+    DOWNLOADING = 3
+
+    NOT_SPECIFY_DLI = 100
+    ONLY_POST_REPORT = 101
+    STOPPED_BY_APP_RELEASE = 102
+    STOPPED_BY_OPT_RELEASE = 103
+
+    DOWNLOAD_COMPLETE_RECENTLY = 110
+
+    DOWNLOAD_COMPLETE_WAIT_RELEASE_TIME = 120
+    DOWNLOAD_COMPLETE_BUT_NOT_SYNC_SERVER = 121
+    DOWNLOAD_COMPLETE_BUT_NOT_FIRST_RESUME = 122
+    DOWNLOAD_COMPLETE_BUT_NOT_FIRST_LAUNCH = 123
+    DOWNLOAD_COMPLETE_WAIT_UPDATE = 124
+
+    DOWNLOAD_COMPLETE_AND_ALREADY_UPDATE = 130
+
+    ERROR_AUTH_FAILURE = 200
+
+    ERROR_GET_DLI_HTTP = 300
+    ERROR_GET_DLI = 301
+    ERROR_PARSE_DLI = 302
+    ERROR_INVALID_GAME_ID = 303
+    ERROR_INVALID_IMAGE_LIST = 304
+    ERROR_GET_DLI_APP = 305
+
+    ERROR_GET_BOOT_ID = 400
+    ERROR_ACCESS_SERVER = 401
+    ERROR_NO_IMAGE = 402
+    ERROR_ACCESS_IMAGE = 403
+
+    ERROR_DOWNLOAD_APP = 500
+    ERROR_DOWNLOAD_OPT = 501
+
+    ERROR_DISK_FULL = 600
+    ERROR_UNINSTALL = 601
+    ERROR_INSTALL_APP = 602
+    ERROR_INSTALL_OPT = 603
+
+    ERROR_GET_DLI_INTERNAL = 900
+    ERROR_ICF = 901
+    ERROR_CHECK_RELEASE_INTERNAL = 902
+    UNKNOWN = 999 # Not the actual enum val but it needs to be here as a catch-all
+
+    @classmethod
+    def from_int(cls, num: int) -> "DLI_STATUS":
+        try:
+            return cls(num)
+        except ValueError:
+            return cls.UNKNOWN
+
 class AllnetServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):
         super().__init__()
         self.config = core_cfg
         self.config_folder = cfg_folder
         self.data = Data(core_cfg)
-        self.uri_registry: Dict[str, Tuple[str, str]] = {}
 
         self.logger = logging.getLogger("allnet")
         if not hasattr(self.logger, "initialized"):
@@ -70,18 +125,8 @@ class AllnetServlet:
         if len(plugins) == 0:
             self.logger.error("No games detected!")
 
-        for _, mod in plugins.items():
-            if hasattr(mod, "index") and hasattr(mod.index, "get_allnet_info"):
-                for code in mod.game_codes:
-                    enabled, uri, host = mod.index.get_allnet_info(
-                        code, self.config, self.config_folder
-                    )
-
-                    if enabled:
-                        self.uri_registry[code] = (uri, host)
-
         self.logger.info(
-            f"Serving {len(self.uri_registry)} game codes port {core_cfg.allnet.port}"
+            f"Serving {len(TitleServlet.title_registry)} game codes port {core_cfg.allnet.port}"
         )
 
     def handle_poweron(self, request: Request, _: Dict):
@@ -147,7 +192,7 @@ class AllnetServlet:
                     resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
                     return (urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n").encode("utf-8")
                 
-                elif not arcade["ip"] or arcade["ip"] is None and self.config.server.strict_ip_checking:
+                elif (not arcade["ip"] or arcade["ip"] is None) and self.config.server.strict_ip_checking:
                     msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip}, but arcade {arcade['id']} has no IP set! (strict checking enabled)."
                     self.data.base.log_event(
                         "allnet", "ALLNET_AUTH_NO_SHOP_IP", logging.ERROR, msg
@@ -190,7 +235,7 @@ class AllnetServlet:
                 arcade["timezone"] if arcade["timezone"] is not None else "+0900" if req.format_ver == 3 else "+09:00"
             )
         
-        if req.game_id not in self.uri_registry:
+        if req.game_id not in TitleServlet.title_registry:
             if not self.config.server.is_develop:
                 msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
                 self.data.base.log_event(
@@ -215,11 +260,9 @@ class AllnetServlet:
                 self.logger.debug(f"Allnet response: {resp_str}")
                 return (resp_str + "\n").encode("utf-8")
 
-        resp.uri, resp.host = self.uri_registry[req.game_id]
-
+        
         int_ver = req.ver.replace(".", "")
-        resp.uri = resp.uri.replace("$v", int_ver)
-        resp.host = resp.host.replace("$v", int_ver)
+        resp.uri, resp.host = TitleServlet.title_registry[req.game_id].get_allnet_info(req.game_id, int(int_ver), req.serial)
 
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
@@ -315,6 +358,7 @@ class AllnetServlet:
 
     def handle_dlorder_report(self, request: Request, match: Dict) -> bytes:
         req_raw = request.content.getvalue()
+        client_ip = Utils.get_ip_addr(request)
         try:
             req_dict: Dict = json.loads(req_raw)
         except Exception as e:
@@ -332,11 +376,17 @@ class AllnetServlet:
             self.logger.warning(f"Failed to parse DL Report: Invalid format - contains neither appimage nor optimage")
             return "NG"
 
-        dl_report_data = DLReport(dl_data, dl_data_type)
+        rep = DLReport(dl_data, dl_data_type)
 
-        if not dl_report_data.validate():
-            self.logger.warning(f"Failed to parse DL Report: Invalid format - {dl_report_data.err}")
+        if not rep.validate():
+            self.logger.warning(f"Failed to parse DL Report: Invalid format - {rep.err}")
             return "NG"
+        
+        msg = f"{rep.serial} @ {client_ip} reported {rep.rep_type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
+              f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
+        
+        self.data.base.log_event("allnet", "DL_REPORT", logging.INFO, msg, dl_data)
+        self.logger.info(msg)
 
         return "OK"
 
@@ -524,7 +574,7 @@ class AllnetPowerOnResponse:
         self.stat = 1
         self.uri = ""
         self.host = ""
-        self.place_id = "123"
+        self.place_id = "0123"
         self.name = "ARTEMiS"
         self.nickname = "ARTEMiS"
         self.region0 = "1"
@@ -739,26 +789,18 @@ class DLReport:
         self.ot = data.get("ot")
         self.rt = data.get("rt")
         self.as_ = data.get("as")
-        self.rf_state = data.get("rf_state")
+        self.rf_state = DLI_STATUS.from_int(data.get("rf_state"))
         self.gd = data.get("gd")
         self.dav = data.get("dav")
         self.wdav = data.get("wdav") # app only
         self.dov = data.get("dov")
         self.wdov = data.get("wdov") # app only
-        self.__type = report_type
+        self.rep_type = report_type
         self.err = ""
     
     def validate(self) -> bool:
         if  self.serial is None:
             self.err = "serial not provided"
-            return False
-        
-        if self.dfl is None: 
-            self.err = "dfl not provided"
-            return False
-        
-        if self.wfl is None:
-            self.err = "wfl not provided"
             return False
         
         if self.tsc is None:
@@ -767,18 +809,6 @@ class DLReport:
         
         if self.tdsc is None:
             self.err = "tdsc not provided"
-            return False
-        
-        if self.at is None:
-            self.err = "at not provided"
-            return False
-        
-        if self.ot is None:
-            self.err = "ot not provided"
-            return False
-        
-        if self.rt is None:
-            self.err = "rt not provided"
             return False
         
         if self.as_ is None:
@@ -801,11 +831,11 @@ class DLReport:
             self.err = "dov not provided"
             return False
         
-        if (self.wdav is None or self.wdov is None) and self.__type == DLIMG_TYPE.app:
+        if (self.wdav is None or self.wdov is None) and self.rep_type == DLIMG_TYPE.app:
             self.err = "wdav or wdov not provided in app image"
             return False
         
-        if (self.wdav is not None or self.wdov is not None) and self.__type == DLIMG_TYPE.opt:
+        if (self.wdav is not None or self.wdov is not None) and self.rep_type == DLIMG_TYPE.opt:
             self.err = "wdav or wdov provided in opt image"
             return False
         

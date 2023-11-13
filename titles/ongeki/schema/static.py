@@ -17,6 +17,7 @@ events = Table(
     Column("type", Integer),
     Column("name", String(255)),
     Column("startDate", TIMESTAMP, server_default=func.now()),
+    Column("endDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", "type", name="ongeki_static_events_uk"),
     mysql_charset="utf8mb4",
@@ -96,6 +97,94 @@ cards = Table(
     mysql_charset="utf8mb4",
 )
 
+music_ranking = Table(
+    "ongeki_static_music_ranking_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("musicId", Integer, nullable=False),
+    Column("point", Integer, nullable=False),
+    Column("userName", String(255)),
+    UniqueConstraint("version", "musicId", name="ongeki_static_music_ranking_uk"),
+    mysql_charset="utf8mb4",
+)
+
+rewards = Table(
+    "ongeki_static_rewards",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("rewardId", Integer, nullable=False),
+    Column("rewardname", String(255), nullable=False),
+    Column("itemKind", Integer, nullable=False),
+    Column("itemId", Integer, nullable=False),
+    UniqueConstraint("version", "rewardId", name="ongeki_static_rewards_uk"),
+    mysql_charset="utf8mb4",
+)
+
+present = Table(
+    "ongeki_static_present_list",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("presentId", Integer, nullable=False),
+    Column("presentName", String(255), nullable=False),
+    Column("rewardId", Integer, nullable=False),
+    Column("stock", Integer, nullable=False),
+    Column("message", String(255)),
+    Column("startDate", String(25), nullable=False),
+    Column("endDate", String(25), nullable=False),
+    UniqueConstraint("version", "presentId", name="ongeki_static_present_list_uk"),
+    mysql_charset="utf8mb4",
+)
+
+tech_music = Table(
+    "ongeki_static_tech_music",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("eventId", Integer, nullable=False),
+    Column("musicId", Integer, nullable=False),
+    Column("level", Integer, nullable=False),
+    UniqueConstraint("version", "musicId", name="ongeki_static_tech_music_uk"),
+    mysql_charset="utf8mb4",
+)
+
+client_testmode = Table(
+    "ongeki_static_client_testmode",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("regionId", Integer, nullable=False),
+    Column("placeId", Integer, nullable=False),
+    Column("clientId", String(11), nullable=False),
+    Column("updateDate", TIMESTAMP, nullable=False),
+    Column("isDelivery", Boolean, nullable=False),
+    Column("groupId", Integer, nullable=False),
+    Column("groupRole", Integer, nullable=False),
+    Column("continueMode", Integer, nullable=False),
+    Column("selectMusicTime", Integer, nullable=False),
+    Column("advertiseVolume", Integer, nullable=False),
+    Column("eventMode", Integer, nullable=False),
+    Column("eventMusicNum", Integer, nullable=False),
+    Column("patternGp", Integer, nullable=False),
+    Column("limitGp", Integer, nullable=False),
+    Column("maxLeverMovable", Integer, nullable=False),
+    Column("minLeverMovable", Integer, nullable=False),
+    UniqueConstraint("clientId", name="ongeki_static_client_testmode_uk"),
+    mysql_charset="utf8mb4",
+)
+
+game_point = Table(
+    "ongeki_static_game_point",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("type", Integer, nullable=False),
+    Column("cost", Integer, nullable=False),
+    Column("startDate", String(25), nullable=False, server_default="2000-01-01 05:00:00.0"),
+    Column("endDate", String(25), nullable=False, server_default="2099-01-01 05:00:00.0"),
+    UniqueConstraint("type", name="ongeki_static_game_point_uk"),
+    mysql_charset="utf8mb4",
+)
 
 class OngekiStaticData(BaseData):
     def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
@@ -235,6 +324,7 @@ class OngekiStaticData(BaseData):
             eventId=event_id,
             type=event_type,
             name=event_name,
+            endDate=f"2038-01-01 00:00:00",
         )
 
         conflict = sql.on_duplicate_key_update(
@@ -333,3 +423,90 @@ class OngekiStaticData(BaseData):
         if result is None:
             return None
         return result.fetchone()
+
+    def get_ranking_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(music_ranking.c.musicId.label('id'), music_ranking.c.point, music_ranking.c.userName).where(music_ranking.c.version == version)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def put_reward(self, version: int, rewardId: int, rewardname: str, itemKind: int, itemId: int) -> Optional[int]:
+        sql = insert(rewards).values(
+                version=version,
+                rewardId=rewardId,
+                rewardname=rewardname,
+                itemKind=itemKind,
+                itemId=itemId,
+                )
+        conflict = sql.on_duplicate_key_update(
+                rewardname=rewardname,
+                )
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"Failed to insert reward! reward_id: {rewardId}")
+            return None
+        return result.lastrowid
+
+    def get_reward_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(rewards).where(rewards.c.version == version)
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to load reward list")
+            return None
+        return result.fetchall()
+
+    def get_present_list(self, version: int) -> Optional[List[Dict]]:
+        sql = select(present).where(present.c.version == version)
+
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to load present list")
+            return None
+        return result.fetchall()
+
+    def get_tech_music(self, version: int) -> Optional[List[Dict]]:
+        sql = select(tech_music).where(tech_music.c.version == version)
+
+        result = self.execute(sql)
+
+        if result is None:
+            return None
+        return result.fetchall()
+
+    def put_client_testmode_data(self, region_id: int, client_testmode_data: Dict) -> Optional[List[Dict]]:
+        sql = insert(client_testmode).values(regionId=region_id, **client_testmode_data)
+        conflict = sql.on_duplicate_key_update(regionId=region_id, **client_testmode_data)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"clientId: {clientId} Failed to update ClientTestMode data"),
+            return None
+        return result.lastrowid
+
+    def put_client_setting_data(self, client_id: str, client_setting_data: Dict) -> Optional[List[Dict]]:
+        sql = insert(machine).values(data=client_setting_data)
+        conflict = sql.on_duplicate_key_update(serial=client_id)
+
+        result = self.execute(conflict)
+        if result is None:
+            self.logger.warning(f"clientId: {clientId} Failed to update ClientSetting data"),
+            return None
+        return result.lastrowid
+
+    def put_static_game_point_defaults(self) -> Optional[List[Dict]]:
+        game_point_defaults = [{"type": 0, "cost": 100},{"type": 1, "cost": 230},{"type": 2, "cost": 370},{"type": 3, "cost": 120},{"type": 4, "cost": 240},{"type": 5, "cost": 360}]
+        sql = insert(game_point).values(game_point_defaults)
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to insert default GP table!")
+            return None
+        return result.lastrowid
+
+    def get_static_game_point(self) -> Optional[List[Dict]]:
+        sql = select(game_point.c.type, game_point.c.cost, game_point.c.startDate, game_point.c.endDate)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()

@@ -1,25 +1,24 @@
-from typing import Tuple
+from typing import Tuple, Dict, List
 from twisted.web.http import Request
-from twisted.web import resource
-import json, ast
-from datetime import datetime
 import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-import inflection
 from os import path
+from Crypto.Cipher import Blowfish
+from hashlib import md5
+import random
 
 from core import CoreConfig, Utils
+from core.title import BaseServlet
 from titles.sao.config import SaoConfig
 from titles.sao.const import SaoConstants
 from titles.sao.base import SaoBase
 from titles.sao.handlers.base import *
 
 
-class SaoServlet(resource.Resource):
+class SaoServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.isLeaf = True
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.config_dir = cfg_dir
         self.game_cfg = SaoConfig()
         if path.exists(f"{cfg_dir}/sao.yaml"):
@@ -51,67 +50,89 @@ class SaoServlet(resource.Resource):
             self.logger.inited = True
 
         self.base = SaoBase(core_cfg, self.game_cfg)
-
-    @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
-        game_cfg = SaoConfig()
-
-        if path.exists(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"):
-            game_cfg.update(
-                yaml.safe_load(open(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"))
-            )
-
-        if not game_cfg.server.enable:
-            return (False, "", "")
-
+        self.static_hash = None
+        
+        if self.game_cfg.hash.verify_hash:
+            self.static_hash = md5(self.game_cfg.hash.hash_base.encode()).digest() # Greate hashing guys, really validates the data
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
-            True,
-            f"http://{game_cfg.server.hostname}:{game_cfg.server.port}/{game_code}/$v/",
-            f"{game_cfg.server.hostname}/SDEW/$v/",
+            [], 
+            [("render_POST", "/{datecode}/proto/if/{category}/{endpoint}", {})]
         )
-
+    
     @classmethod
-    def get_mucha_info(
-        cls, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = SaoConfig()
 
         if path.exists(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"):
             game_cfg.update(
                 yaml.safe_load(open(f"{cfg_dir}/{SaoConstants.CONFIG_NAME}"))
             )
-
+    
         if not game_cfg.server.enable:
+            return False
+        
+        return True
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and self.core_cfg.title.port_ssl:
+            return (
+                f"https://{self.core_cfg.title.hostname}:{self.core_cfg.title.port_ssl}/",
+                f"{self.core_cfg.title.hostname}/",
+            )
+
+        return (f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/", "")
+
+    def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
+        if not self.game_cfg.server.enable:
             return (False, "")
 
         return (True, "SAO1")
 
-    def setup(self) -> None:
-        pass
-
-    def render_POST(
-        self, request: Request, version: int = 0, endpoints: str = ""
-    ) -> bytes:
-        req_url = request.uri.decode()
-        if req_url == "/matching":
-            self.logger.info("Matching request")
-        
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers.get('endpoint', '')
         request.responseHeaders.addRawHeader(b"content-type", b"text/html; charset=utf-8")
+        iv = b""
 
-        sao_request = request.content.getvalue().hex()
+        req_raw = request.content.read()
+        sao_request = req_raw.hex()
+        req_header = SaoRequestHeader(req_raw)
+        
+        cmd_str = f"{req_header.cmd:04x}"
+        
+        if self.game_cfg.hash.verify_hash and self.static_hash != req_header.hash:
+            self.logger.error(f"Hash mismatch! Expecting {self.static_hash} but recieved {req_header.hash}")
+            return b""
+        
+        if self.game_cfg.crypt.enable:
+            iv = req_raw[40:48]
+            cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
+            crypt_data = req_raw[48:]
+            req_data = cipher.decrypt(crypt_data)
+            self.logger.debug(f"Decrypted {req_data.hex()} with IV {iv.hex()}")
+            
+        else:
+            req_data = req_raw[40:]
 
-        handler = getattr(self.base, f"handle_{sao_request[:4]}", None)
-        if handler is None:
-            self.logger.info(f"Generic Handler for {req_url} - {sao_request[:4]}")
-            self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-            resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(sao_request[:4]), "big")+1)
-            self.logger.debug(f"Response: {resp.make().hex()}")
-            return resp.make()
-
-        self.logger.info(f"Handler {req_url} - {sao_request[:4]} request")
-        self.logger.debug(f"Request: {request.content.getvalue().hex()}")
-        resp = handler(sao_request)
+        handler = getattr(self.base, f"handle_{cmd_str}", self.base.handle_noop)
+        self.logger.info(f"{endpoint} - {cmd_str} request")
+        self.logger.debug(f"Request: {req_raw.hex()}")
+        resp = handler(req_header, req_data)
+        
         self.logger.debug(f"Response: {resp.hex()}")
+
+        if self.game_cfg.crypt.enable:
+            iv = random.randbytes(8)
+            data_to_crypt = resp[24:]
+            while len(data_to_crypt) % 8 != 0:
+                data_to_crypt += b"\x00"
+            
+            cipher = Blowfish.new(self.game_cfg.crypt.key.encode(), Blowfish.MODE_CBC, iv)
+            data_crypt = cipher.encrypt(data_to_crypt)
+            crypt_data_len = len(data_crypt) + len(iv)
+            tmp = struct.pack("!I", crypt_data_len) # does it want the length of the encrypted response??
+            resp = resp[:20] + tmp + iv + data_crypt
+            self.logger.debug(f"Encrypted Response: {resp.hex()}")
+
         return resp

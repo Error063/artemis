@@ -22,8 +22,8 @@ class HttpDispatcher(resource.Resource):
         self.map_post = Mapper()
         self.logger = logging.getLogger("core")
 
-        self.allnet = AllnetServlet(cfg, config_dir)
         self.title = TitleServlet(cfg, config_dir)
+        self.allnet = AllnetServlet(cfg, config_dir)
         self.mucha = MuchaServlet(cfg, config_dir)
 
         self.map_get.connect(
@@ -144,22 +144,32 @@ class HttpDispatcher(resource.Resource):
             conditions=dict(method=["POST"]),
         )
 
-        self.map_get.connect(
-            "title_get",
-            "/{game}/{version}/{endpoint:.*?}",
-            controller="title",
-            action="render_GET",
-            conditions=dict(method=["GET"]),
-            requirements=dict(game=R"S..."),
-        )
-        self.map_post.connect(
-            "title_post",
-            "/{game}/{version}/{endpoint:.*?}",
-            controller="title",
-            action="render_POST",
-            conditions=dict(method=["POST"]),
-            requirements=dict(game=R"S..."),
-        )
+        for code, game in self.title.title_registry.items():
+            get_matchers, post_matchers = game.get_endpoint_matchers()
+            
+            for m in get_matchers:
+                self.map_get.connect(
+                    "title_get",
+                    m[1],
+                    controller="title",
+                    action="render_GET",
+                    title=code,
+                    subaction=m[0],
+                    conditions=dict(method=["GET"]),
+                    requirements=m[2],
+                )
+                
+            for m in post_matchers:
+                self.map_post.connect(
+                    "title_post",
+                    m[1],
+                    controller="title",
+                    action="render_POST",
+                    title=code,
+                    subaction=m[0],
+                    conditions=dict(method=["POST"]),
+                    requirements=m[2],
+                )
 
     def render_GET(self, request: Request) -> bytes:
         test = self.map_get.match(request.uri.decode())
@@ -279,6 +289,7 @@ if __name__ == "__main__":
 
     allnet_server_str = f"tcp:{cfg.allnet.port}:interface={cfg.server.listen_address}"
     title_server_str = f"tcp:{cfg.title.port}:interface={cfg.server.listen_address}"
+    title_https_server_str = f"ssl:{cfg.title.port_ssl}:interface={cfg.server.listen_address}:privateKey={cfg.title.ssl_key}:certKey={cfg.title.ssl_cert}"
     adb_server_str = f"tcp:{cfg.aimedb.port}:interface={cfg.server.listen_address}"
     frontend_server_str = (
         f"tcp:{cfg.frontend.port}:interface={cfg.server.listen_address}"
@@ -310,6 +321,11 @@ if __name__ == "__main__":
 
     if cfg.title.port > 0:
         endpoints.serverFromString(reactor, title_server_str).listen(
+            server.Site(dispatcher)
+        )
+    
+    if cfg.title.port_ssl > 0:
+        endpoints.serverFromString(reactor, title_https_server_str).listen(
             server.Site(dispatcher)
         )
 

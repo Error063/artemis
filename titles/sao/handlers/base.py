@@ -1,16 +1,29 @@
 import struct
 from datetime import datetime
+from typing import List
 from construct import *
-import sys
+from .helpers import *
 import csv
 from csv import *
 
-class SaoBaseRequest:
+class SaoRequestHeader:
     def __init__(self, data: bytes) -> None:
-        self.cmd = struct.unpack_from("!H", bytes)[0]
-        # TODO: The rest of the request header
+        collection = struct.unpack_from("!HHIIII16sI", data)
+        self.cmd: int = collection[0]
+        self.err_status = collection[1]
+        self.error_type = collection[2]
+        self.vendor_id: int = collection[3]
+        self.game_id: int = collection[4]
+        self.version_id: int = collection[5]
+        self.hash: str = collection[6]
+        self.data_len: str = collection[7]
 
-class SaoBaseResponse:
+class SaoBaseRequest:
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        self.header = header
+        # TODO: Length check
+
+class SaoResponseHeader:
     def __init__(self, cmd_id: int) -> None:
         self.cmd = cmd_id
         self.err_status = 0
@@ -23,6 +36,13 @@ class SaoBaseResponse:
     def make(self) -> bytes:
         return struct.pack("!HHIIIII", self.cmd, self.err_status, self.error_type, self.vendor_id, self.game_id, self.version_id, self.length)
 
+class SaoBaseResponse:
+    def __init__(self, cmd_id: int) -> None:
+        self.header = SaoResponseHeader(cmd_id)
+    
+    def make(self) -> bytes:
+        return self.header.make()
+
 class SaoNoopResponse(SaoBaseResponse):
     def __init__(self, cmd: int) -> None:
         super().__init__(cmd)      
@@ -33,8 +53,8 @@ class SaoNoopResponse(SaoBaseResponse):
         return super().make() + struct.pack("!bI", self.result, 0)
         
 class SaoGetMaintRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
         # TODO: The rest of the mait info request
 
 class SaoGetMaintResponse(SaoBaseResponse):
@@ -68,8 +88,8 @@ class SaoGetMaintResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonAcCabinetBootNotificationRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonAcCabinetBootNotificationResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -90,8 +110,8 @@ class SaoCommonAcCabinetBootNotificationResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoMasterDataVersionCheckRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -118,8 +138,8 @@ class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonGetAppVersionsRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -154,8 +174,8 @@ class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonPayingPlayStartRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCommonPayingPlayStartRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -181,8 +201,30 @@ class SaoCommonPayingPlayStartRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetAuthCardDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        self.cabinet_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.auth_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        store_id = decode_str(data, off)
+        self.store_id = store_id[0]
+        off += store_id[1]
+
+        serial_no = decode_str(data, off)
+        self.serial_no = serial_no[0]
+        off += serial_no[1]
+
+        access_code = decode_str(data, off)
+        self.access_code = access_code[0]
+        off += access_code[1]
+
+        chip_id = decode_str(data, off)
+        self.chip_id = chip_id[0]
+        off += chip_id[1]
 
 class SaoGetAuthCardDataResponse(SaoBaseResponse): #GssSite.dll / GssSiteSystem / GameConnectProt / public class get_auth_card_data_R : GameConnect.GssProtocolBase
     def __init__(self, cmd, profile_data) -> None:
@@ -225,8 +267,8 @@ class SaoGetAuthCardDataResponse(SaoBaseResponse): #GssSite.dll / GssSiteSystem 
         return super().make() + resp_data
 
 class SaoHomeCheckAcLoginBonusRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoHomeCheckAcLoginBonusResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -262,8 +304,8 @@ class SaoHomeCheckAcLoginBonusResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetQuestSceneMultiPlayPhotonServerRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetQuestSceneMultiPlayPhotonServerResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -289,8 +331,8 @@ class SaoGetQuestSceneMultiPlayPhotonServerResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoTicketRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoTicketResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -318,8 +360,37 @@ class SaoTicketResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCommonLoginRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        self.cabinet_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.auth_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        store_id = decode_str(data, off)
+        self.store_id = store_id[0]
+        off += store_id[1]
+
+        store_name = decode_str(data, off)
+        self.store_name = store_name[0]
+        off += store_name[1]
+
+        serial_no = decode_str(data, off)
+        self.serial_no = serial_no[0]
+        off += serial_no[1]
+
+        access_code = decode_str(data, off)
+        self.access_code = access_code[0]
+        off += access_code[1]
+
+        chip_id = decode_str(data, off)
+        self.chip_id = chip_id[0]
+        off += chip_id[1]
+
+        self.free_ticket_distribution_target_flag = decode_byte(data, off)
+        off += BYTE_OFF
 
 class SaoCommonLoginResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -362,8 +433,8 @@ class SaoCommonLoginResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckComebackEventRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckComebackEventRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -392,8 +463,9 @@ class SaoCheckComebackEventRequest(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetUserBasicDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetUserBasicDataResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -476,8 +548,9 @@ class SaoGetUserBasicDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetHeroLogUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
@@ -524,9 +597,6 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
             self.last_set_skill_slot3_skill_id.append(hero_data[i][9])
             self.last_set_skill_slot4_skill_id.append(hero_data[i][10])
             self.last_set_skill_slot5_skill_id.append(hero_data[i][11])
-
-        #print(self.user_hero_log_id)
-        #print(list(map(str,self.user_hero_log_id)))
 
         # hero_log_user_data_list
         self.user_hero_log_id = list(map(str,self.user_hero_log_id)) #str
@@ -650,6 +720,8 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
             
             resp_data.hero_log_user_data_list.append(hero_data)
 
+        resp_data["hero_log_user_data_list_size"] = len(resp_data.hero_log_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -657,8 +729,9 @@ class SaoGetHeroLogUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetEquipmentUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, equipment_data) -> None:
@@ -806,6 +879,8 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
             
             resp_data.equipment_user_data_list.append(equipment_data)
 
+        resp_data["equipment_user_data_list_size"] = len(resp_data.equipment_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -813,8 +888,9 @@ class SaoGetEquipmentUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetItemUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetItemUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, item_data) -> None:
@@ -870,6 +946,8 @@ class SaoGetItemUserDataListResponse(SaoBaseResponse):
             
             resp_data.item_user_data_list.append(item_data)
 
+        resp_data["item_user_data_list_size"] = len(resp_data.item_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -877,8 +955,8 @@ class SaoGetItemUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
     
 class SaoGetSupportLogUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetSupportLogUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, supportIdsData) -> None:
@@ -942,14 +1020,16 @@ class SaoGetSupportLogUserDataListResponse(SaoBaseResponse):
             
             resp_data.support_log_user_data_list.append(support_data)
 
+        resp_data["support_log_user_data_list_size"] = len(resp_data.support_log_user_data_list)
+
         resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
         return super().make() + resp_data
     
 class SaoGetTitleUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetTitleUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, titleIdsData) -> None:
@@ -989,6 +1069,8 @@ class SaoGetTitleUserDataListResponse(SaoBaseResponse):
             
             resp_data.title_user_data_list.append(title_data)
 
+        resp_data["title_user_data_list_size"] = len(resp_data.title_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -996,8 +1078,9 @@ class SaoGetTitleUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetEpisodeAppendDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1047,6 +1130,8 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
                 own_num=self.own_num_list[i],
             ))
 
+        resp_data["episode_append_data_list_size"] = len(resp_data.episode_append_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -1054,8 +1139,9 @@ class SaoGetEpisodeAppendDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetPartyDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party 
     def __init__(self, cmd, hero1_data, hero2_data, hero3_data) -> None:
@@ -1218,8 +1304,8 @@ class SaoGetPartyDataListResponse(SaoBaseResponse): # Default party
         return super().make() + resp_data
     
 class SaoGetQuestScenePrevScanProfileCardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetQuestScenePrevScanProfileCardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1355,8 +1441,8 @@ class SaoGetQuestScenePrevScanProfileCardResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetResourcePathInfoRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetResourcePathInfoResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1397,8 +1483,40 @@ class SaoGetResourcePathInfoResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayStartRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.episode_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_mode = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_start_request_data: List[PlayStartRequestData] = []
+        for _ in range(self.play_start_request_data_count):
+            tmp = PlayStartRequestData(data, off)
+            self.play_start_request_data.append(tmp)
+            off += tmp.get_size()
+        
+        self.multi_play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_start_request_data: List[MultiPlayStartRequestData] = []
+        for _ in range(self.multi_play_start_request_data_count):
+            tmp = MultiPlayStartRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_start_request_data.append(tmp)
 
 class SaoEpisodePlayStartResponse(SaoBaseResponse):
     def __init__(self, cmd, profile_data) -> None:
@@ -1444,8 +1562,37 @@ class SaoEpisodePlayStartResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayEndRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.episode_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_list: List[PlayEndRequestData] = []
+        for _ in range(self.play_end_request_data_count):
+            tmp = PlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.play_end_request_data_list.append(tmp)
+
+        self.multi_play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_end_request_data_list: List[MultiPlayEndRequestData] = []
+        for _ in range(self.multi_play_end_request_data_count):
+            tmp = MultiPlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_end_request_data_list.append(tmp)
 
 class SaoEpisodePlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1531,9 +1678,74 @@ class SaoEpisodePlayEndResponse(SaoBaseResponse):
         self.length = len(resp_data)
         return super().make() + resp_data
 
+class SaoTrialTowerPlayStartRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.trial_tower_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_mode = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_start_request_data: List[PlayStartRequestData] = []
+        for _ in range(self.play_start_request_data_count):
+            tmp = PlayStartRequestData(data, off)
+            self.play_start_request_data.append(tmp)
+            off += tmp.get_size()
+        
+        self.multi_play_start_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_start_request_data: List[MultiPlayStartRequestData] = []
+        for _ in range(self.multi_play_start_request_data_count):
+            tmp = MultiPlayStartRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_start_request_data.append(tmp)
+
 class SaoTrialTowerPlayEndRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.trial_tower_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_list: List[PlayEndRequestData] = []
+        for _ in range(self.play_end_request_data_count):
+            tmp = PlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.play_end_request_data_list.append(tmp)
+
+        self.multi_play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_end_request_data_list: List[MultiPlayEndRequestData] = []
+        for _ in range(self.multi_play_end_request_data_count):
+            tmp = MultiPlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_end_request_data_list.append(tmp)
 
 class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1658,8 +1870,22 @@ class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoEpisodePlayEndUnanalyzedLogFixedRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.episode_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.rarity_up_exec_flag = decode_byte(data, off)
+        off += BYTE_OFF
 
 class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
     def __init__(self, cmd, end_session_data) -> None:
@@ -1731,6 +1957,10 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
             
             resp_data.play_end_unanalyzed_log_reward_data_list.append(reward_resp_data)
 
+        resp_data["play_end_unanalyzed_log_reward_data_list_size"] = len(resp_data.play_end_unanalyzed_log_reward_data_list)
+        for i in range(len(resp_data.play_end_unanalyzed_log_reward_data_list)):
+            resp_data.play_end_unanalyzed_log_reward_data_list[i]["common_reward_data_size"] = len(resp_data.play_end_unanalyzed_log_reward_data_list[i]["common_reward_data"])
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -1738,12 +1968,14 @@ class SaoEpisodePlayEndUnanalyzedLogFixedResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetQuestSceneUserDataListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.user_id = decode_str(data, 0)[0]
 
 class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd, quest_data) -> None:
         super().__init__(cmd)
+        self.length = None
         self.result = 1
 
         # quest_scene_user_data_list_size
@@ -1840,6 +2072,10 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
             
             resp_data.quest_scene_user_data_list.append(quest_resp_data)
 
+        resp_data["quest_scene_user_data_list_size"] = len(resp_data.quest_scene_user_data_list)
+        for i in range(len(resp_data.quest_scene_user_data_list)):
+            resp_data.quest_scene_user_data_list[i]["quest_scene_best_score_user_data_size"] = len(resp_data.quest_scene_user_data_list[i]["quest_scene_best_score_user_data"])
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -1847,8 +2083,8 @@ class SaoGetQuestSceneUserDataListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckYuiMedalGetConditionRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckYuiMedalGetConditionResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1878,8 +2114,8 @@ class SaoCheckYuiMedalGetConditionResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetYuiMedalBonusUserDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1923,8 +2159,8 @@ class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoCheckProfileCardUsedRewardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -1955,8 +2191,30 @@ class SaoCheckProfileCardUsedRewardResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        origin_user_hero_log_id = decode_str(data, off)
+        self.origin_user_hero_log_id = origin_user_hero_log_id[0]
+        off += origin_user_hero_log_id[1]
+
+        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData] = []
+        
+        self.material_common_reward_user_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        for _ in range(self.material_common_reward_user_data_count):
+            mat = MaterialCommonRewardUserData(data, off)
+            off += mat.get_size()
+            self.material_common_reward_user_data_list.append(mat)
 
 class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
     def __init__(self, cmd, hero_data) -> None:
@@ -2103,15 +2361,39 @@ class SaoSynthesizeEnhancementHeroLogResponse(SaoBaseResponse):
         
         resp_data.hero_log_user_data_list.append(hero_data)
 
+        resp_data["hero_log_user_data_list_size"] = len(resp_data.hero_log_user_data_list)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
         return super().make() + resp_data
 
-class SaoSynthesizeEnhancementEquipment(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+class SaoSynthesizeEnhancementEquipmentRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+        
+        origin_user_equipment_id = decode_str(data, off)
+        self.origin_user_equipment_id = origin_user_equipment_id[0]
+        off += origin_user_equipment_id[1]
+                
+        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData] = []
+        
+        self.material_common_reward_user_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        for _ in range(self.material_common_reward_user_data_count):
+            mat = MaterialCommonRewardUserData(data, off)
+            off += mat.get_size()
+            self.material_common_reward_user_data_list.append(mat)
 
 class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
     def __init__(self, cmd, synthesize_equipment_data) -> None:
@@ -2240,6 +2522,8 @@ class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
             
         resp_data.after_equipment_user_data.append(synthesize_equipment_data)
 
+        resp_data["after_equipment_user_data_size"] = len(resp_data.after_equipment_user_data)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
@@ -2247,8 +2531,8 @@ class SaoSynthesizeEnhancementEquipmentResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchBasicDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchBasicDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2294,8 +2578,8 @@ class SaoGetDefragMatchBasicDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchRankingUserDataRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchRankingUserDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2354,8 +2638,8 @@ class SaoGetDefragMatchRankingUserDataResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchLeaguePointRankingListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchLeaguePointRankingListResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2426,8 +2710,8 @@ class SaoGetDefragMatchLeaguePointRankingListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoGetDefragMatchLeagueScoreRankingListRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2498,8 +2782,8 @@ class SaoGetDefragMatchLeagueScoreRankingListResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoBnidSerialCodeCheckRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoBnidSerialCodeCheckResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2529,8 +2813,8 @@ class SaoBnidSerialCodeCheckResponse(SaoBaseResponse):
         return super().make() + resp_data
 
 class SaoScanQrQuestProfileCardRequest(SaoBaseRequest):
-    def __init__(self, data: bytes) -> None:
-        super().__init__(data)
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
 
 class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
@@ -2740,8 +3024,74 @@ class SaoScanQrQuestProfileCardResponse(SaoBaseResponse):
         
         resp_data.read_profile_card_data.append(hero_data)
 
+        resp_data["read_profile_card_data_size"] = len(resp_data.read_profile_card_data)
+
         # finally, rebuild the resp_data
         resp_data = resp_struct.build(resp_data)
 
         self.length = len(resp_data)
         return super().make() + resp_data
+    
+class SaoConsumeCreditGuestRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        shop_id = decode_str(data, off)
+        self.shop_id = shop_id[0]
+        off += shop_id[1]
+        
+        serial_num = decode_str(data, off)
+        self.serial_num = serial_num[0]
+        off += serial_num[1]
+        
+        self.cab_type = decode_byte(data, off)
+        off += BYTE_OFF
+        
+        self.act_type = decode_byte(data, off)
+        off += BYTE_OFF
+        
+        self.consume_num = decode_byte(data, off)
+        off += BYTE_OFF
+
+class SaoChangePartyRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.act_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+        self.party_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.party_data_list: List[PartyData] = []
+
+        for _ in range(self.party_data_count):
+            tmp = PartyData(data, off)
+            self.party_data_list.append(tmp)
+            off += tmp.get_size()
+
+class TrialTowerPlayEndUnanalyzedLogFixed(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.trial_tower_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.rarity_up_exec_flag = decode_byte(data, off)
+        off += BYTE_OFF

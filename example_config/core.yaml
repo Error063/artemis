@@ -4,6 +4,7 @@ server:
   allow_unregistered_serials: True
   name: "ARTEMiS"
   is_develop: True
+  is_using_proxy: False
   threading: False
   log_dir: "logs"
   check_arcade_ip: False
@@ -13,6 +14,12 @@ title:
   loglevel: "info"
   hostname: "localhost"
   port: 8080
+  port_ssl: 0
+  ssl_cert: "cert/title.crt"
+  ssl_key: "cert/title.key"
+  reboot_start_time: "04:00"
+  reboot_end_time: "05:00"
+
 
 database:
   host: "localhost"
@@ -24,6 +31,7 @@ database:
   sha2_password: False
   loglevel: "warn"
   user_table_autoincrement_start: 10000
+  enable_memcached: True
   memcached_host: "localhost"
 
 frontend:

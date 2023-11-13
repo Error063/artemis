@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-import json, logging
-from typing import Any, Dict
-import random
-import struct
+import logging
 from csv import *
 from random import choice
-import random as rand
 
 from core.data import Data
 from core import CoreConfig
@@ -22,71 +17,51 @@ class SaoBase:
         self.version = 0
         self.logger = logging.getLogger("sao")
 
-    def handle_noop(self, request: Any) -> bytes:
-        sao_request = request
+    def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
+        self.logger.info(f"Using Generic handler")
+        resp_thing = SaoNoopResponse(header.cmd + 1)
+        return resp_thing.make()
 
-        sao_id = int(sao_request[:4],16) + 1
-
-        ret = struct.pack("!HHIIIIIIb", sao_id, 0, 0, 5, 1, 1, 5, 0x01000000, 0).hex()
-        return bytes.fromhex(ret)
-
-    def handle_c122(self, request: Any) -> bytes:
+    def handle_c122(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_maintenance_info
-        resp = SaoGetMaintResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetMaintResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c12e(self, request: Any) -> bytes:
+    def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/ac_cabinet_boot_notification
-        resp = SaoCommonAcCabinetBootNotificationResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCommonAcCabinetBootNotificationResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c100(self, request: Any) -> bytes:
+    def handle_c100(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_app_versions
-        resp = SaoCommonGetAppVersionsRequest(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCommonGetAppVersionsRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c102(self, request: Any) -> bytes:
+    def handle_c102(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/master_data_version_check
-        resp = SaoMasterDataVersionCheckResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoMasterDataVersionCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c10a(self, request: Any) -> bytes:
+    def handle_c10a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/paying_play_start
-        resp = SaoCommonPayingPlayStartRequest(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCommonPayingPlayStartRequest(header.cmd +1)
         return resp.make()
 
-    def handle_ca02(self, request: Any) -> bytes:
+    def handle_ca02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest_multi_play_room/get_quest_scene_multi_play_photon_server
-        resp = SaoGetQuestSceneMultiPlayPhotonServerResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetQuestSceneMultiPlayPhotonServerResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c11e(self, request: Any) -> bytes:
+    def handle_c11e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_auth_card_data
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(16),
-            "cabinet_type" / Int8ub,  # cabinet_type is a byte
-            "auth_type" / Int8ub,  # auth_type is a byte
-            "store_id_size" / Rebuild(Int32ub, len_(this.store_id) * 2),  # calculates the length of the store_id
-            "store_id" / PaddedString(this.store_id_size, "utf_16_le"),  # store_id is a (zero) padded string
-            "serial_no_size" / Rebuild(Int32ub, len_(this.serial_no) * 2),  # calculates the length of the serial_no
-            "serial_no" / PaddedString(this.serial_no_size, "utf_16_le"),  # serial_no is a (zero) padded string
-            "access_code_size" / Rebuild(Int32ub, len_(this.access_code) * 2),  # calculates the length of the access_code
-            "access_code" / PaddedString(this.access_code_size, "utf_16_le"),  # access_code is a (zero) padded string
-            "chip_id_size" / Rebuild(Int32ub, len_(this.chip_id) * 2),  # calculates the length of the chip_id
-            "chip_id" / PaddedString(this.chip_id_size, "utf_16_le"),  # chip_id is a (zero) padded string
-        )
-
-        req_data = req_struct.parse(req)
-        access_code = req_data.access_code
+        req = SaoGetAuthCardDataRequest(header, request)
 
         #Check authentication
-        user_id = self.core_data.card.get_user_id_from_card( access_code )
+        user_id = self.core_data.card.get_user_id_from_card( req.access_code )
 
         if not user_id:
             user_id = self.core_data.user.create_user() #works
-            card_id = self.core_data.card.create_card(user_id, access_code)
+            card_id = self.core_data.card.create_card(user_id, req.access_code)
 
             if card_id is None:
                 user_id = -1
@@ -106,7 +81,7 @@ class SaoBase:
             # Force the tutorial stage to be completed due to potential crash in-game
             
 
-        self.logger.info(f"User Authenticated: { access_code } | { user_id }")
+        self.logger.info(f"User Authenticated: { req.access_code } | { user_id }")
 
         #Grab values from profile
         profile_data = self.game_data.profile.get_profile(user_id)
@@ -127,270 +102,179 @@ class SaoBase:
 
             profile_data = self.game_data.profile.get_profile(user_id)
 
-        resp = SaoGetAuthCardDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoGetAuthCardDataResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c40c(self, request: Any) -> bytes:
+    def handle_c40c(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_ac_login_bonus
-        resp = SaoHomeCheckAcLoginBonusResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoHomeCheckAcLoginBonusResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c104(self, request: Any) -> bytes:
+    def handle_c104(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/login
-        req = bytes.fromhex(request)[24:]
+        req = SaoCommonLoginRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "cabinet_type" / Int8ub,  # cabinet_type is a byte
-            "auth_type" / Int8ub,  # auth_type is a byte
-            "store_id_size" / Rebuild(Int32ub, len_(this.store_id) * 2),  # calculates the length of the store_id
-            "store_id" / PaddedString(this.store_id_size, "utf_16_le"),  # store_id is a (zero) padded string
-            "store_name_size" / Rebuild(Int32ub, len_(this.store_name) * 2),  # calculates the length of the store_name
-            "store_name" / PaddedString(this.store_name_size, "utf_16_le"),  # store_name is a (zero) padded string
-            "serial_no_size" / Rebuild(Int32ub, len_(this.serial_no) * 2),  # calculates the length of the serial_no
-            "serial_no" / PaddedString(this.serial_no_size, "utf_16_le"),  # serial_no is a (zero) padded string
-            "access_code_size" / Rebuild(Int32ub, len_(this.access_code) * 2),  # calculates the length of the access_code
-            "access_code" / PaddedString(this.access_code_size, "utf_16_le"),  # access_code is a (zero) padded string
-            "chip_id_size" / Rebuild(Int32ub, len_(this.chip_id) * 2),  # calculates the length of the chip_id
-            "chip_id" / PaddedString(this.chip_id_size, "utf_16_le"),  # chip_id is a (zero) padded string
-            "free_ticket_distribution_target_flag" / Int8ub,  # free_ticket_distribution_target_flag is a byte
-        )
-
-        req_data = req_struct.parse(req)
-        access_code = req_data.access_code
-
-        user_id = self.core_data.card.get_user_id_from_card( access_code )
+        user_id = self.core_data.card.get_user_id_from_card( req.access_code )
         profile_data = self.game_data.profile.get_profile(user_id)
 
-        resp = SaoCommonLoginResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoCommonLoginResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c404(self, request: Any) -> bytes:
+    def handle_c404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_comeback_event
-        resp = SaoCheckComebackEventRequest(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCheckComebackEventRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c000(self, request: Any) -> bytes:
+    def handle_c000(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #ticket/ticket
-        resp = SaoTicketResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoTicketResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c500(self, request: Any) -> bytes:
+    def handle_c500(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #user_info/get_user_basic_data
-        req = bytes.fromhex(request)[24:]
+        req = SaoGetUserBasicDataRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
+        profile_data = self.game_data.profile.get_profile(req.user_id)
 
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        profile_data = self.game_data.profile.get_profile(user_id)
-
-        resp = SaoGetUserBasicDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoGetUserBasicDataResponse(header.cmd +1, profile_data)
         return resp.make()
         
-    def handle_c600(self, request: Any) -> bytes:
+    def handle_c600(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_hero_log_user_data_list
-        req = bytes.fromhex(request)[24:]
-        
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        req = SaoGetHeroLogUserDataListRequest(header, request)
 
-        )
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        hero_data = self.game_data.item.get_hero_logs(user_id)
+        hero_data = self.game_data.item.get_hero_logs(req.user_id)
         
-        resp = SaoGetHeroLogUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, hero_data)
+        resp = SaoGetHeroLogUserDataListResponse(header.cmd +1, hero_data)
         return resp.make()
     
-    def handle_c602(self, request: Any) -> bytes:
+    def handle_c602(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_equipment_user_data_list
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-
-        )
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
+        req = SaoGetEquipmentUserDataListRequest(header, request)
     
-        equipment_data = self.game_data.item.get_user_equipments(user_id)
+        equipment_data = self.game_data.item.get_user_equipments(req.user_id)
 
-        resp = SaoGetEquipmentUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, equipment_data)
+        resp = SaoGetEquipmentUserDataListResponse(header.cmd +1, equipment_data)
         return resp.make()
         
-    def handle_c604(self, request: Any) -> bytes:
+    def handle_c604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_item_user_data_list
-        req = bytes.fromhex(request)[24:]
+        req = SaoGetItemUserDataListRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        item_data = self.game_data.item.get_user_items(req.user_id)
 
-        )
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        item_data = self.game_data.item.get_user_items(user_id)
-
-        resp = SaoGetItemUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, item_data)
+        resp = SaoGetItemUserDataListResponse(header.cmd +1, item_data)
         return resp.make()
         
-    def handle_c606(self, request: Any) -> bytes:
+    def handle_c606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_support_log_user_data_list
         supportIdsData = self.game_data.static.get_support_log_ids(0, True)
         
-        resp = SaoGetSupportLogUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, supportIdsData)
+        resp = SaoGetSupportLogUserDataListResponse(header.cmd +1, supportIdsData)
         return resp.make()
     
-    def handle_c800(self, request: Any) -> bytes:
+    def handle_c800(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_title_user_data_list
         titleIdsData = self.game_data.static.get_title_ids(0, True)
         
-        resp = SaoGetTitleUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, titleIdsData)
+        resp = SaoGetTitleUserDataListResponse(header.cmd +1, titleIdsData)
         return resp.make()
         
-    def handle_c608(self, request: Any) -> bytes:
+    def handle_c608(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_episode_append_data_list
-        req = bytes.fromhex(request)[24:]
+        req = SaoGetEpisodeAppendDataListRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
+        profile_data = self.game_data.profile.get_profile(req.user_id)
 
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        profile_data = self.game_data.profile.get_profile(user_id)
-
-        resp = SaoGetEpisodeAppendDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoGetEpisodeAppendDataListResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c804(self, request: Any) -> bytes:
+    def handle_c804(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_party_data_list
-        req = bytes.fromhex(request)[24:]
+        req = SaoGetPartyDataListRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        hero_party = self.game_data.item.get_hero_party(req.user_id, 0)
+        hero1_data = self.game_data.item.get_hero_log(req.user_id, hero_party[3])
+        hero2_data = self.game_data.item.get_hero_log(req.user_id, hero_party[4])
+        hero3_data = self.game_data.item.get_hero_log(req.user_id, hero_party[5])
 
-        )
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        hero_party = self.game_data.item.get_hero_party(user_id, 0)
-        hero1_data = self.game_data.item.get_hero_log(user_id, hero_party[3])
-        hero2_data = self.game_data.item.get_hero_log(user_id, hero_party[4])
-        hero3_data = self.game_data.item.get_hero_log(user_id, hero_party[5])
-
-        resp = SaoGetPartyDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, hero1_data, hero2_data, hero3_data)
+        resp = SaoGetPartyDataListResponse(header.cmd +1, hero1_data, hero2_data, hero3_data)
         return resp.make()
 
-    def handle_c902(self, request: Any) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
+    def handle_c902(self, header: SaoRequestHeader, request: bytes) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
         #quest/get_quest_scene_prev_scan_profile_card
-        resp = SaoGetQuestScenePrevScanProfileCardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetQuestScenePrevScanProfileCardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c124(self, request: Any) -> bytes:
+    def handle_c124(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_resource_path_info
-        resp = SaoGetResourcePathInfoResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetResourcePathInfoResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c900(self, request: Any) -> bytes:
+    def handle_c900(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/get_quest_scene_user_data_list // QuestScene.csv
-        req = bytes.fromhex(request)[24:]
+        req = SaoGetQuestSceneUserDataListRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
+        quest_data = self.game_data.item.get_quest_logs(req.user_id)
 
-        )
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        quest_data = self.game_data.item.get_quest_logs(user_id)
-
-        resp = SaoGetQuestSceneUserDataListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, quest_data)
+        resp = SaoGetQuestSceneUserDataListResponse(header.cmd +1, quest_data)
         return resp.make()
 
-    def handle_c400(self, request: Any) -> bytes:
+    def handle_c400(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_yui_medal_get_condition
-        resp = SaoCheckYuiMedalGetConditionResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCheckYuiMedalGetConditionResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c402(self, request: Any) -> bytes:
+    def handle_c402(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/get_yui_medal_bonus_user_data
-        resp = SaoGetYuiMedalBonusUserDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetYuiMedalBonusUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c40a(self, request: Any) -> bytes:
+    def handle_c40a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_profile_card_used_reward
-        resp = SaoCheckProfileCardUsedRewardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoCheckProfileCardUsedRewardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c814(self, request: Any) -> bytes:
+    def handle_c814(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_hero_log
-        req = bytes.fromhex(request)[24:]
+        req = SaoSynthesizeEnhancementHeroLogRequest(header, request)
 
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "origin_user_hero_log_id_size" / Rebuild(Int32ub, len_(this.origin_user_hero_log_id) * 2),  # calculates the length of the origin_user_hero_log_id
-            "origin_user_hero_log_id" / PaddedString(this.origin_user_hero_log_id_size, "utf_16_le"),  # origin_user_hero_log_id is a (zero) padded string
-            Padding(3),
-            "material_common_reward_user_data_list_length" / Rebuild(Int8ub, len_(this.material_common_reward_user_data_list)),  # material_common_reward_user_data_list is a byte,
-            "material_common_reward_user_data_list" / Array(this.material_common_reward_user_data_list_length, Struct(
-                "common_reward_type" / Int16ub,  # team_no is a byte
-                "user_common_reward_id_size" / Rebuild(Int32ub, len_(this.user_common_reward_id) * 2),  # calculates the length of the user_common_reward_id
-                "user_common_reward_id" / PaddedString(this.user_common_reward_id_size, "utf_16_le"),  # user_common_reward_id is a (zero) padded string
-            )),
-        )
+        synthesize_hero_log_data = self.game_data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
 
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-        synthesize_hero_log_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.origin_user_hero_log_id)
-
-        for i in range(0,req_data.material_common_reward_user_data_list_length):
-
-            itemList = self.game_data.static.get_item_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+        for x in req.material_common_reward_user_data_list:
+            hero_exp = 0
+            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
+            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 hero_exp = 2000 + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_item(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_item(req.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_data = self.game_data.item.get_user_equipment(req.user_id, x.user_common_reward_id)
+                if equipment_data is None:
+                    self.logger.error(f"Failed to find equipment {x.user_common_reward_id} for user {req.user_id}!")
+                    continue
+                
                 hero_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_equipment(req.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                hero_data = self.game_data.item.get_hero_log(req.user_id, x.user_common_reward_id)
+                if hero_data is None:
+                    self.logger.error(f"Failed to find hero {x.user_common_reward_id} for user {req.user_id}!")
+                    continue
+                
                 hero_exp = int(hero_data["log_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_hero_log(req.user_id, x.user_common_reward_id)
+            
+            if hero_exp == 0:
+                self.logger.warn(f"Hero {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
 
             self.game_data.item.put_hero_log(
-                user_id, 
-                int(req_data.origin_user_hero_log_id), 
+                req.user_id, 
+                int(req.origin_user_hero_log_id), 
                 synthesize_hero_log_data["log_level"], 
                 hero_exp, 
                 synthesize_hero_log_data["main_weapon"], 
@@ -402,13 +286,13 @@ class SaoBase:
                 synthesize_hero_log_data["skill_slot5_skill_id"]
             )
 
-            profile = self.game_data.profile.get_profile(req_data.user_id)
+            profile = self.game_data.profile.get_profile(req.user_id)
             new_col = int(profile["own_col"]) - 100
 
             # Update profile
             
             self.game_data.profile.put_profile(
-                req_data.user_id,
+                req.user_id,
                 profile["user_type"], 
                 profile["nick_name"], 
                 profile["rank_num"],
@@ -420,57 +304,48 @@ class SaoBase:
             )
 
         # Load the item again to push to the response handler  
-        synthesize_hero_log_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.origin_user_hero_log_id)
+        synthesize_hero_log_data = self.game_data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
 
-        resp = SaoSynthesizeEnhancementHeroLogResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, synthesize_hero_log_data)
+        resp = SaoSynthesizeEnhancementHeroLogResponse(header.cmd +1, synthesize_hero_log_data)
         return resp.make()
 
-    def handle_c816(self, request: Any) -> bytes:
+    def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_equipment
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "origin_user_equipment_id_size" / Rebuild(Int32ub, len_(this.origin_user_equipment_id) * 2),  # calculates the length of the origin_user_equipment_id
-            "origin_user_equipment_id" / PaddedString(this.origin_user_equipment_id_size, "utf_16_le"),  # origin_user_equipment_id is a (zero) padded string
-            Padding(3),
-            "material_common_reward_user_data_list_length" / Rebuild(Int8ub, len_(this.material_common_reward_user_data_list)),  # material_common_reward_user_data_list is a byte,
-            "material_common_reward_user_data_list" / Array(this.material_common_reward_user_data_list_length, Struct(
-                "common_reward_type" / Int16ub,  # team_no is a byte
-                "user_common_reward_id_size" / Rebuild(Int32ub, len_(this.user_common_reward_id) * 2),  # calculates the length of the user_common_reward_id
-                "user_common_reward_id" / PaddedString(this.user_common_reward_id_size, "utf_16_le"),  # user_common_reward_id is a (zero) padded string
-            )),
-        )
-
-        req_data = req_struct.parse(req)
-
-        user_id = req_data.user_id
+        req_data = SaoSynthesizeEnhancementEquipmentRequest(header, request)
         synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
-        for i in range(0,req_data.material_common_reward_user_data_list_length):
-
-            itemList = self.game_data.static.get_item_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+        for x in req_data.material_common_reward_user_data_list:
+            equipment_exp = 0
+            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
+            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 equipment_exp = 2000 + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_item(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_item(req_data.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, x.user_common_reward_id)
+                if equipment_data is None:
+                    self.logger.error(f"Failed to find equipment {x.user_common_reward_id} for user {req_data.user_id}!")
+                    continue
+
                 equipment_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_equipment(req_data.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-                equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                hero_data = self.game_data.item.get_hero_log(req_data.user_id, x.user_common_reward_id)
+                if hero_data is None:
+                    self.logger.error(f"Failed to find hero {x.user_common_reward_id} for user {req_data.user_id}!")
+                    continue
 
+                equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
+                self.game_data.item.remove_hero_log(req_data.user_id, x.user_common_reward_id)
+
+            if equipment_exp == 0:
+                self.logger.warn(f"Common reward {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
+                continue
+            
             self.game_data.item.put_equipment_data(req_data.user_id, int(req_data.origin_user_equipment_id), synthesize_equipment_data["enhancement_value"], equipment_exp, 0, 0, 0)
 
             profile = self.game_data.profile.get_profile(req_data.user_id)
@@ -493,54 +368,16 @@ class SaoBase:
         # Load the item again to push to the response handler  
         synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
-        resp = SaoSynthesizeEnhancementEquipmentResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, synthesize_equipment_data)
+        resp = SaoSynthesizeEnhancementEquipmentResponse(header.cmd +1, synthesize_equipment_data)
         return resp.make()
 
-    def handle_c806(self, request: Any) -> bytes:
+    def handle_c806(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/change_party
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "act_type" / Int8ub,  # play_mode is a byte
-            Padding(3),
-            "party_data_list_length" / Rebuild(Int8ub, len_(this.party_data_list)),  # party_data_list is a byte,
-            "party_data_list" / Array(this.party_data_list_length, Struct(
-                "user_party_id_size" / Rebuild(Int32ub, len_(this.user_party_id) * 2),  # calculates the length of the user_party_id
-                "user_party_id" / PaddedString(this.user_party_id_size, "utf_16_le"),  # user_party_id is a (zero) padded string
-                "team_no" / Int8ub,  # team_no is a byte
-            Padding(3),
-            "party_team_data_list_length" / Rebuild(Int8ub, len_(this.party_team_data_list)),  # party_team_data_list is a byte
-            "party_team_data_list" / Array(this.party_team_data_list_length, Struct(
-                "user_party_team_id_size" / Rebuild(Int32ub, len_(this.user_party_team_id) * 2),  # calculates the length of the user_party_team_id
-                "user_party_team_id" / PaddedString(this.user_party_team_id_size, "utf_16_le"),  # user_party_team_id is a (zero) padded string
-                "arrangement_num" / Int8ub,  # arrangement_num is a byte
-                "user_hero_log_id_size" / Rebuild(Int32ub, len_(this.user_hero_log_id) * 2),  # calculates the length of the user_hero_log_id
-                "user_hero_log_id" / PaddedString(this.user_hero_log_id_size, "utf_16_le"),  # user_hero_log_id is a (zero) padded string
-                "main_weapon_user_equipment_id_size" / Rebuild(Int32ub, len_(this.main_weapon_user_equipment_id) * 2),  # calculates the length of the main_weapon_user_equipment_id
-                "main_weapon_user_equipment_id" / PaddedString(this.main_weapon_user_equipment_id_size, "utf_16_le"),  # main_weapon_user_equipment_id is a (zero) padded string
-                "sub_equipment_user_equipment_id_size" / Rebuild(Int32ub, len_(this.sub_equipment_user_equipment_id) * 2),  # calculates the length of the sub_equipment_user_equipment_id
-                "sub_equipment_user_equipment_id" / PaddedString(this.sub_equipment_user_equipment_id_size, "utf_16_le"),  # sub_equipment_user_equipment_id is a (zero) padded string
-                "skill_slot1_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-                "skill_slot2_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-                "skill_slot3_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-                "skill_slot4_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-                "skill_slot5_skill_id" / Int32ub,  # skill_slot1_skill_id is a int,
-            )),
-            )),
-
-        )
-
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
+        req_data = SaoChangePartyRequest(header, request)
         party_hero_list = []
 
         for party_team in req_data.party_data_list[0].party_team_data_list:
-            hero_data = self.game_data.item.get_hero_log(user_id, party_team["user_hero_log_id"])
+            hero_data = self.game_data.item.get_hero_log(req_data.user_id, party_team.user_hero_log_id)
             hero_level = 1
             hero_exp = 0
 
@@ -549,53 +386,29 @@ class SaoBase:
                 hero_exp = hero_data["log_exp"]
 
             self.game_data.item.put_hero_log(
-                user_id,
-                party_team["user_hero_log_id"],
+                req_data.user_id,
+                party_team.user_hero_log_id,
                 hero_level,
                 hero_exp,
-                party_team["main_weapon_user_equipment_id"],
-                party_team["sub_equipment_user_equipment_id"],
-                party_team["skill_slot1_skill_id"],
-                party_team["skill_slot2_skill_id"],
-                party_team["skill_slot3_skill_id"],
-                party_team["skill_slot4_skill_id"],
-                party_team["skill_slot5_skill_id"]
+                party_team.main_weapon_user_equipment_id,
+                party_team.sub_equipment_user_equipment_id,
+                party_team.skill_slot1_skill_id,
+                party_team.skill_slot2_skill_id,
+                party_team.skill_slot3_skill_id,
+                party_team.skill_slot4_skill_id,
+                party_team.skill_slot5_skill_id
             )
 
-            party_hero_list.append(party_team["user_hero_log_id"])
+            party_hero_list.append(party_team.user_hero_log_id)
 
-        self.game_data.item.put_hero_party(user_id, req_data.party_data_list[0].party_team_data_list[0].user_party_team_id, party_hero_list[0], party_hero_list[1], party_hero_list[2])
+        self.game_data.item.put_hero_party(req_data.user_id, req_data.party_data_list[0].party_team_data_list[0].user_party_team_id, party_hero_list[0], party_hero_list[1], party_hero_list[2])
 
-        resp = SaoNoopResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoNoopResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c904(self, request: Any) -> bytes:
+    def handle_c904(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_start
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "episode_id" / Int32ub,  # episode_id is a int,
-            "play_mode" / Int8ub,  # play_mode is a byte
-            Padding(3),
-            "play_start_request_data_length" / Rebuild(Int8ub, len_(this.play_start_request_data)),  # play_start_request_data_length is a byte,
-            "play_start_request_data" / Array(this.play_start_request_data_length, Struct(
-                "user_party_id_size" / Rebuild(Int32ub, len_(this.user_party_id) * 2),  # calculates the length of the user_party_id
-                "user_party_id" / PaddedString(this.user_party_id_size, "utf_16_le"),  # user_party_id is a (zero) padded string
-                "appoint_leader_resource_card_code_size" / Rebuild(Int32ub, len_(this.appoint_leader_resource_card_code) * 2),  # calculates the length of the total_damage
-                "appoint_leader_resource_card_code" / PaddedString(this.appoint_leader_resource_card_code_size, "utf_16_le"),  # total_damage is a (zero) padded string
-                "use_profile_card_code_size" / Rebuild(Int32ub, len_(this.use_profile_card_code) * 2),  # calculates the length of the total_damage
-                "use_profile_card_code" / PaddedString(this.use_profile_card_code_size, "utf_16_le"),  # use_profile_card_code is a (zero) padded string
-                "quest_drop_boost_apply_flag" / Int8ub,  # quest_drop_boost_apply_flag is a byte
-            )),
-
-        )
-
-        req_data = req_struct.parse(req)
+        req_data = SaoEpisodePlayStartRequest(header, request)
 
         user_id = req_data.user_id
         profile_data = self.game_data.profile.get_profile(user_id)
@@ -608,114 +421,27 @@ class SaoBase:
             req_data.play_start_request_data[0].quest_drop_boost_apply_flag
             )
 
-        resp = SaoEpisodePlayStartResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c908(self, request: Any) -> bytes: # Level calculation missing for the profile and heroes
+    def handle_c908(self, header: SaoRequestHeader, request: bytes) -> bytes: # Level calculation missing for the profile and heroes
         #quest/episode_play_end
 
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            Padding(2),
-            "episode_id" / Int16ub,  # episode_id is a short,
-            Padding(3),
-            "play_end_request_data" / Int8ub,  # play_end_request_data is a byte
-            Padding(1),
-            "play_result_flag" / Int8ub,  # play_result_flag is a byte
-            Padding(2),
-            "base_get_data_length" / Rebuild(Int8ub, len_(this.base_get_data)),  # base_get_data_length is a byte,
-            "base_get_data" / Array(this.base_get_data_length, Struct(
-                "get_hero_log_exp" / Int32ub,  # get_hero_log_exp is an int
-                "get_col" / Int32ub,  # get_num is a short
-            )),
-            Padding(3),
-            "get_player_trace_data_list_length" / Rebuild(Int8ub, len_(this.get_player_trace_data_list)),  # get_player_trace_data_list_length is a byte
-            "get_player_trace_data_list" / Array(this.get_player_trace_data_list_length, Struct(
-                "user_quest_scene_player_trace_id" / Int32ub,  # user_quest_scene_player_trace_id is an int
-            )),
-            Padding(3),
-            "get_rare_drop_data_list_length" / Rebuild(Int8ub, len_(this.get_rare_drop_data_list)),  # get_rare_drop_data_list_length is a byte
-            "get_rare_drop_data_list" / Array(this.get_rare_drop_data_list_length, Struct(
-                "quest_rare_drop_id" / Int32ub,  # quest_rare_drop_id is an int
-            )),
-            Padding(3),
-            "get_special_rare_drop_data_list_length" / Rebuild(Int8ub, len_(this.get_special_rare_drop_data_list)),  # get_special_rare_drop_data_list_length is a byte
-            "get_special_rare_drop_data_list" / Array(this.get_special_rare_drop_data_list_length, Struct(
-                "quest_special_rare_drop_id" / Int32ub,  # quest_special_rare_drop_id is an int
-            )),
-            Padding(3),
-            "get_unanalyzed_log_tmp_reward_data_list_length" / Rebuild(Int8ub, len_(this.get_unanalyzed_log_tmp_reward_data_list)),  # get_unanalyzed_log_tmp_reward_data_list_length is a byte
-            "get_unanalyzed_log_tmp_reward_data_list" / Array(this.get_unanalyzed_log_tmp_reward_data_list_length, Struct(
-                "unanalyzed_log_grade_id" / Int32ub,  # unanalyzed_log_grade_id is an int,
-            )),
-            Padding(3),
-            "get_event_item_data_list_length" / Rebuild(Int8ub, len_(this.get_event_item_data_list)),  # get_event_item_data_list_length is a byte,
-            "get_event_item_data_list" / Array(this.get_event_item_data_list_length, Struct(
-                "event_item_id" / Int32ub,  # event_item_id is an int
-                "get_num" / Int16ub,  # get_num is a short
-            )),
-            Padding(3),
-            "discovery_enemy_data_list_length" / Rebuild(Int8ub, len_(this.discovery_enemy_data_list)),  # discovery_enemy_data_list_length is a byte
-            "discovery_enemy_data_list" / Array(this.discovery_enemy_data_list_length, Struct(
-                "enemy_kind_id" / Int32ub,  # enemy_kind_id is an int
-                "destroy_num" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "destroy_boss_data_list_length" / Rebuild(Int8ub, len_(this.destroy_boss_data_list)),  # destroy_boss_data_list_length is a byte
-            "destroy_boss_data_list" / Array(this.destroy_boss_data_list_length, Struct(
-                "boss_type" / Int8ub,  # boss_type is a byte
-                "enemy_kind_id" / Int32ub,  # enemy_kind_id is an int
-                "destroy_num" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "mission_data_list_length" / Rebuild(Int8ub, len_(this.mission_data_list)),  # mission_data_list_length is a byte
-            "mission_data_list" / Array(this.mission_data_list_length, Struct(
-                "mission_id" / Int32ub,  # enemy_kind_id is an int
-                "clear_flag" / Int8ub,  # boss_type is a byte
-                "mission_difficulty_id" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "score_data_length" / Rebuild(Int8ub, len_(this.score_data)),  # score_data_length is a byte
-            "score_data" / Array(this.score_data_length, Struct(
-                "clear_time" / Int32ub,  # clear_time is an int
-                "combo_num" / Int32ub,  # boss_type is a int
-                "total_damage_size" / Rebuild(Int32ub, len_(this.total_damage) * 2),  # calculates the length of the total_damage
-                "total_damage" / PaddedString(this.total_damage_size, "utf_16_le"),  # total_damage is a (zero) padded string
-                "concurrent_destroying_num" / Int16ub, # concurrent_destroying_num is a short
-                "reaching_skill_level" / Int16ub, # reaching_skill_level is a short
-                "ko_chara_num" / Int8ub,  # ko_chara_num is a byte
-                "acceleration_invocation_num" / Int16ub, # acceleration_invocation_num is a short
-                "boss_destroying_num" / Int16ub, # boss_destroying_num is a short
-                "synchro_skill_used_flag" / Int8ub,  # synchro_skill_used_flag is a byte
-                "used_friend_skill_id" / Int32ub,  # used_friend_skill_id is an int
-                "friend_skill_used_flag" / Int8ub,  # friend_skill_used_flag is a byte
-                "continue_cnt" / Int16ub, # continue_cnt is a short
-                "total_loss_num" / Int16ub, # total_loss_num is a short
-            )),
-
-        )
-
-        req_data = req_struct.parse(req)
+        req_data = SaoEpisodePlayEndRequest(header, request)
 
         # Add stage progression to database
         user_id = req_data.user_id
         episode_id = req_data.episode_id
-        quest_clear_flag = bool(req_data.score_data[0].boss_destroying_num)
-        clear_time = req_data.score_data[0].clear_time
-        combo_num = req_data.score_data[0].combo_num
-        total_damage = req_data.score_data[0].total_damage
-        concurrent_destroying_num = req_data.score_data[0].concurrent_destroying_num
+        quest_clear_flag = bool(req_data.play_end_request_data_list[0].score_data_list[0].boss_destroying_num)
+        clear_time = req_data.play_end_request_data_list[0].score_data_list[0].clear_time
+        combo_num = req_data.play_end_request_data_list[0].score_data_list[0].combo_num
+        total_damage = req_data.play_end_request_data_list[0].score_data_list[0].total_damage
+        concurrent_destroying_num = req_data.play_end_request_data_list[0].score_data_list[0].concurrent_destroying_num
 
         profile = self.game_data.profile.get_profile(user_id)
         vp = int(profile["own_vp"])
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
-        col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
+        col = int(profile["own_col"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_col)
 
         if quest_clear_flag is True:
             # Save stage progression - to be revised to avoid saving worse score
@@ -781,7 +507,7 @@ class SaoBase:
         for i in range(0,len(hero_list)):
             hero_data = self.game_data.item.get_hero_log(user_id, hero_list[i])
 
-            log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
+            log_exp = int(hero_data["log_exp"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_hero_log_exp)
 
             # Calculate hero level based off experience and the CSV list
             with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
@@ -817,8 +543,8 @@ class SaoBase:
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
         json_data = {"data": []}
 
-        for r in range(0,req_data.get_rare_drop_data_list_length):
-            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.get_rare_drop_data_list[r].quest_rare_drop_id))
+        for r in range(0,req_data.play_end_request_data_list[0].get_rare_drop_data_count):
+            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.play_end_request_data_list[0].get_rare_drop_data_list[r].quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
 
             heroList = self.game_data.static.get_hero_id(commonRewardId)
@@ -833,16 +559,12 @@ class SaoBase:
                 self.game_data.item.put_item(user_id, commonRewardId)
         
         # Generate random hero(es) based off the response    
-        for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
-            
+        for a in range(0,req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_count):
             with open('titles/sao/data/RewardTable.csv', 'r') as f:
                 keys_unanalyzed = next(f).strip().split(',')
                 data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
 
             randomized_unanalyzed_id = choice(data_unanalyzed)
-            while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != req_data.get_unanalyzed_log_tmp_reward_data_list[a].unanalyzed_log_grade_id:
-                randomized_unanalyzed_id = choice(data_unanalyzed)
-            
             heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
             equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
             itemList = self.game_data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
@@ -859,35 +581,12 @@ class SaoBase:
 
         self.game_data.item.create_end_session(user_id, episode_id, quest_clear_flag, json_data["data"])
 
-        resp = SaoEpisodePlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoEpisodePlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c914(self, request: Any) -> bytes:
+    def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_start
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            "trial_tower_id" / Int32ub,  # trial_tower_id is an int
-            "play_mode" / Int8ub,  # play_mode is a byte
-            Padding(3),
-            "play_start_request_data_length" / Rebuild(Int8ub, len_(this.play_start_request_data)),  # play_start_request_data_length is a byte,
-            "play_start_request_data" / Array(this.play_start_request_data_length, Struct(
-                "user_party_id_size" / Rebuild(Int32ub, len_(this.user_party_id) * 2),  # calculates the length of the user_party_id
-                "user_party_id" / PaddedString(this.user_party_id_size, "utf_16_le"),  # user_party_id is a (zero) padded string
-                "appoint_leader_resource_card_code_size" / Rebuild(Int32ub, len_(this.appoint_leader_resource_card_code) * 2),  # calculates the length of the total_damage
-                "appoint_leader_resource_card_code" / PaddedString(this.appoint_leader_resource_card_code_size, "utf_16_le"),  # total_damage is a (zero) padded string
-                "use_profile_card_code_size" / Rebuild(Int32ub, len_(this.use_profile_card_code) * 2),  # calculates the length of the total_damage
-                "use_profile_card_code" / PaddedString(this.use_profile_card_code_size, "utf_16_le"),  # use_profile_card_code is a (zero) padded string
-                "quest_drop_boost_apply_flag" / Int8ub,  # quest_drop_boost_apply_flag is a byte
-            )),
-        )
-
-        req_data = req_struct.parse(req)
+        req_data = SaoTrialTowerPlayStartRequest(header, request)
 
         user_id = req_data.user_id
         floor_id = req_data.trial_tower_id
@@ -901,109 +600,22 @@ class SaoBase:
             req_data.play_start_request_data[0].quest_drop_boost_apply_flag
             )
 
-        resp = SaoEpisodePlayStartResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, profile_data)
+        resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c918(self, request: Any) -> bytes:
+    def handle_c918(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_end
-        req = bytes.fromhex(request)[24:]
-
-        req_struct = Struct(
-            Padding(20),
-            "ticket_id" / Bytes(1),  # needs to be parsed as an int
-            Padding(1),
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-            Padding(2),
-            "trial_tower_id" / Int16ub,  # trial_tower_id is a short,
-            Padding(3),
-            "play_end_request_data" / Int8ub,  # play_end_request_data is a byte
-            Padding(1),
-            "play_result_flag" / Int8ub,  # play_result_flag is a byte
-            Padding(2),
-            "base_get_data_length" / Rebuild(Int8ub, len_(this.base_get_data)),  # base_get_data_length is a byte,
-            "base_get_data" / Array(this.base_get_data_length, Struct(
-                "get_hero_log_exp" / Int32ub,  # get_hero_log_exp is an int
-                "get_col" / Int32ub,  # get_num is a short
-            )),
-            Padding(3),
-            "get_player_trace_data_list_length" / Rebuild(Int8ub, len_(this.get_player_trace_data_list)),  # get_player_trace_data_list_length is a byte
-            "get_player_trace_data_list" / Array(this.get_player_trace_data_list_length, Struct(
-                "user_quest_scene_player_trace_id" / Int32ub,  # user_quest_scene_player_trace_id is an int
-            )),
-            Padding(3),
-            "get_rare_drop_data_list_length" / Rebuild(Int8ub, len_(this.get_rare_drop_data_list)),  # get_rare_drop_data_list_length is a byte
-            "get_rare_drop_data_list" / Array(this.get_rare_drop_data_list_length, Struct(
-                "quest_rare_drop_id" / Int32ub,  # quest_rare_drop_id is an int
-            )),
-            Padding(3),
-            "get_special_rare_drop_data_list_length" / Rebuild(Int8ub, len_(this.get_special_rare_drop_data_list)),  # get_special_rare_drop_data_list_length is a byte
-            "get_special_rare_drop_data_list" / Array(this.get_special_rare_drop_data_list_length, Struct(
-                "quest_special_rare_drop_id" / Int32ub,  # quest_special_rare_drop_id is an int
-            )),
-            Padding(3),
-            "get_unanalyzed_log_tmp_reward_data_list_length" / Rebuild(Int8ub, len_(this.get_unanalyzed_log_tmp_reward_data_list)),  # get_unanalyzed_log_tmp_reward_data_list_length is a byte
-            "get_unanalyzed_log_tmp_reward_data_list" / Array(this.get_unanalyzed_log_tmp_reward_data_list_length, Struct(
-                "unanalyzed_log_grade_id" / Int32ub,  # unanalyzed_log_grade_id is an int,
-            )),
-            Padding(3),
-            "get_event_item_data_list_length" / Rebuild(Int8ub, len_(this.get_event_item_data_list)),  # get_event_item_data_list_length is a byte,
-            "get_event_item_data_list" / Array(this.get_event_item_data_list_length, Struct(
-                "event_item_id" / Int32ub,  # event_item_id is an int
-                "get_num" / Int16ub,  # get_num is a short
-            )),
-            Padding(3),
-            "discovery_enemy_data_list_length" / Rebuild(Int8ub, len_(this.discovery_enemy_data_list)),  # discovery_enemy_data_list_length is a byte
-            "discovery_enemy_data_list" / Array(this.discovery_enemy_data_list_length, Struct(
-                "enemy_kind_id" / Int32ub,  # enemy_kind_id is an int
-                "destroy_num" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "destroy_boss_data_list_length" / Rebuild(Int8ub, len_(this.destroy_boss_data_list)),  # destroy_boss_data_list_length is a byte
-            "destroy_boss_data_list" / Array(this.destroy_boss_data_list_length, Struct(
-                "boss_type" / Int8ub,  # boss_type is a byte
-                "enemy_kind_id" / Int32ub,  # enemy_kind_id is an int
-                "destroy_num" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "mission_data_list_length" / Rebuild(Int8ub, len_(this.mission_data_list)),  # mission_data_list_length is a byte
-            "mission_data_list" / Array(this.mission_data_list_length, Struct(
-                "mission_id" / Int32ub,  # enemy_kind_id is an int
-                "clear_flag" / Int8ub,  # boss_type is a byte
-                "mission_difficulty_id" / Int16ub,  # destroy_num is a short
-            )),
-            Padding(3),
-            "score_data_length" / Rebuild(Int8ub, len_(this.score_data)),  # score_data_length is a byte
-            "score_data" / Array(this.score_data_length, Struct(
-                "clear_time" / Int32ub,  # clear_time is an int
-                "combo_num" / Int32ub,  # boss_type is a int
-                "total_damage_size" / Rebuild(Int32ub, len_(this.total_damage) * 2),  # calculates the length of the total_damage
-                "total_damage" / PaddedString(this.total_damage_size, "utf_16_le"),  # total_damage is a (zero) padded string
-                "concurrent_destroying_num" / Int16ub, # concurrent_destroying_num is a short
-                "reaching_skill_level" / Int16ub, # reaching_skill_level is a short
-                "ko_chara_num" / Int8ub,  # ko_chara_num is a byte
-                "acceleration_invocation_num" / Int16ub, # acceleration_invocation_num is a short
-                "boss_destroying_num" / Int16ub, # boss_destroying_num is a short
-                "synchro_skill_used_flag" / Int8ub,  # synchro_skill_used_flag is a byte
-                "used_friend_skill_id" / Int32ub,  # used_friend_skill_id is an int
-                "friend_skill_used_flag" / Int8ub,  # friend_skill_used_flag is a byte
-                "continue_cnt" / Int16ub, # continue_cnt is a short
-                "total_loss_num" / Int16ub, # total_loss_num is a short
-            )),
-
-        )
-
-        req_data = req_struct.parse(req)
+        req_data = SaoTrialTowerPlayEndRequest(header, request)
 
         # Add tower progression to database
         user_id = req_data.user_id
         trial_tower_id = req_data.trial_tower_id
         next_tower_id = 0
-        quest_clear_flag = bool(req_data.score_data[0].boss_destroying_num)
-        clear_time = req_data.score_data[0].clear_time
-        combo_num = req_data.score_data[0].combo_num
-        total_damage = req_data.score_data[0].total_damage
-        concurrent_destroying_num = req_data.score_data[0].concurrent_destroying_num
+        quest_clear_flag = bool(req_data.play_end_request_data_list[0].score_data_list[0].boss_destroying_num)
+        clear_time = req_data.play_end_request_data_list[0].score_data_list[0].clear_time
+        combo_num = req_data.play_end_request_data_list[0].score_data_list[0].combo_num
+        total_damage = req_data.play_end_request_data_list[0].score_data_list[0].total_damage
+        concurrent_destroying_num = req_data.play_end_request_data_list[0].score_data_list[0].concurrent_destroying_num
 
         if quest_clear_flag is True:
             # Save tower progression - to be revised to avoid saving worse score
@@ -1048,7 +660,7 @@ class SaoBase:
         profile = self.game_data.profile.get_profile(user_id)
         
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
-        col = int(profile["own_col"]) + int(req_data.base_get_data[0].get_col)
+        col = int(profile["own_col"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_col)
 
         # Calculate level based off experience and the CSV list
         with open(r'titles/sao/data/PlayerRank.csv') as csv_file:
@@ -1091,7 +703,7 @@ class SaoBase:
         for i in range(0,len(hero_list)):
             hero_data = self.game_data.item.get_hero_log(user_id, hero_list[i])
 
-            log_exp = int(hero_data["log_exp"]) + int(req_data.base_get_data[0].get_hero_log_exp)
+            log_exp = int(hero_data["log_exp"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_hero_log_exp)
 
             # Calculate hero level based off experience and the CSV list
             with open(r'titles/sao/data/HeroLogLevel.csv') as csv_file:
@@ -1127,8 +739,8 @@ class SaoBase:
         json_data = {"data": []}
         
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
-        for r in range(0,req_data.get_rare_drop_data_list_length):
-            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.get_rare_drop_data_list[r].quest_rare_drop_id))
+        for x in req_data.play_end_request_data_list[0].get_rare_drop_data_list:
+            rewardList = self.game_data.static.get_rare_drop_id(int(x.quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
 
             heroList = self.game_data.static.get_hero_id(commonRewardId)
@@ -1143,14 +755,14 @@ class SaoBase:
                 self.game_data.item.put_item(user_id, commonRewardId)
 
         # Generate random hero(es) based off the response    
-        for a in range(0,req_data.get_unanalyzed_log_tmp_reward_data_list_length):
+        for x in req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_list:
             
             with open('titles/sao/data/RewardTable.csv', 'r') as f:
                 keys_unanalyzed = next(f).strip().split(',')
                 data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
 
             randomized_unanalyzed_id = choice(data_unanalyzed)
-            while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != req_data.get_unanalyzed_log_tmp_reward_data_list[a].unanalyzed_log_grade_id:
+            while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != x.unanalyzed_log_grade_id:
                 randomized_unanalyzed_id = choice(data_unanalyzed)
             
             heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
@@ -1169,76 +781,54 @@ class SaoBase:
 
         self.game_data.item.create_end_session(user_id, trial_tower_id, quest_clear_flag, json_data["data"])
 
-        resp = SaoTrialTowerPlayEndResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoTrialTowerPlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c90a(self, request: Any) -> bytes:
+    def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_end_unanalyzed_log_fixed
 
-        req = bytes.fromhex(request)[24:]
+        req = SaoEpisodePlayEndUnanalyzedLogFixedRequest(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
+        end_session_data = self.game_data.item.get_end_session(req.user_id)
 
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        end_session_data = self.game_data.item.get_end_session(user_id)
-
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, end_session_data[4])
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_c91a(self, request: Any) -> bytes: # handler is identical to the episode
+    def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
         #quest/trial_tower_play_end_unanalyzed_log_fixed
-        req = bytes.fromhex(request)[24:]
+        req = TrialTowerPlayEndUnanalyzedLogFixed(header, request)
 
-        req_struct = Struct(
-            Padding(16),
-            "ticket_id_size" / Rebuild(Int32ub, len_(this.ticket_id) * 2),  # calculates the length of the ticket_id
-            "ticket_id" / PaddedString(this.ticket_id_size, "utf_16_le"),  # ticket_id is a (zero) padded string
-            "user_id_size" / Rebuild(Int32ub, len_(this.user_id) * 2),  # calculates the length of the user_id
-            "user_id" / PaddedString(this.user_id_size, "utf_16_le"),  # user_id is a (zero) padded string
-        )
+        end_session_data = self.game_data.item.get_end_session(req.user_id)
 
-        req_data = req_struct.parse(req)
-        user_id = req_data.user_id
-
-        end_session_data = self.game_data.item.get_end_session(user_id)
-
-        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1, end_session_data[4])
+        resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_cd00(self, request: Any) -> bytes:
+    def handle_cd00(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_basic_data
-        resp = SaoGetDefragMatchBasicDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetDefragMatchBasicDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd02(self, request: Any) -> bytes:
+    def handle_cd02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_ranking_user_data
-        resp = SaoGetDefragMatchRankingUserDataResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetDefragMatchRankingUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd04(self, request: Any) -> bytes:
+    def handle_cd04(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_point_ranking_list
-        resp = SaoGetDefragMatchLeaguePointRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetDefragMatchLeaguePointRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd06(self, request: Any) -> bytes:
+    def handle_cd06(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_score_ranking_list
-        resp = SaoGetDefragMatchLeagueScoreRankingListResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoGetDefragMatchLeagueScoreRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_d404(self, request: Any) -> bytes:
+    def handle_d404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #other/bnid_serial_code_check
-        resp = SaoBnidSerialCodeCheckResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoBnidSerialCodeCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c306(self, request: Any) -> bytes:
+    def handle_c306(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #card/scan_qr_quest_profile_card
-        resp = SaoScanQrQuestProfileCardResponse(int.from_bytes(bytes.fromhex(request[:4]), "big")+1)
+        resp = SaoScanQrQuestProfileCardResponse(header.cmd +1)
         return resp.make()

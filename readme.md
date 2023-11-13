@@ -11,7 +11,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + All versions + omnimix
 
 + maimai DX
-    + All versions up to FESTiVAL
+    + All versions up to FESTiVAL PLUS
 
 + Hatsune Miku: Project DIVA Arcade
     + All versions
@@ -43,7 +43,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
 - mysql/mariadb server
 
 ## Setup guides
-Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md) and [ubuntu](docs/INSTALL_UBUNTU.md) to setup and run the server.
+Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md), [ubuntu](docs/INSTALL_UBUNTU.md) or [docker](docs/INSTALL_DOCKER.md) to setup and run the server.
 
 ## Game specific information
 Read [Games specific info](docs/game_specific_info.md) for all supported games, importer settings, configuration option and database upgrades.

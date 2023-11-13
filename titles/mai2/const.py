@@ -20,13 +20,13 @@ class Mai2Constants:
 
     DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-    GAME_CODE = "SBXL"    
-    GAME_CODE_GREEN = "SBZF"    
-    GAME_CODE_ORANGE = "SDBM"    
-    GAME_CODE_PINK = "SDCQ"    
-    GAME_CODE_MURASAKI = "SDDK"    
-    GAME_CODE_MILK = "SDDZ"    
-    GAME_CODE_FINALE = "SDEY"    
+    GAME_CODE = "SBXL"
+    GAME_CODE_GREEN = "SBZF"
+    GAME_CODE_ORANGE = "SDBM"
+    GAME_CODE_PINK = "SDCQ"
+    GAME_CODE_MURASAKI = "SDDK"
+    GAME_CODE_MILK = "SDDZ"
+    GAME_CODE_FINALE = "SDEY"
     GAME_CODE_DX = "SDEZ"
 
     CONFIG_NAME = "mai2.yaml"
@@ -52,6 +52,7 @@ class Mai2Constants:
     VER_MAIMAI_DX_UNIVERSE = 17
     VER_MAIMAI_DX_UNIVERSE_PLUS = 18
     VER_MAIMAI_DX_FESTIVAL = 19
+    VER_MAIMAI_DX_FESTIVAL_PLUS = 20
 
     VERSION_STRING = (
         "maimai",
@@ -66,7 +67,7 @@ class Mai2Constants:
         "maimai MURASAKi PLUS",
         "maimai MiLK",
         "maimai MiLK PLUS",
-        "maimai FiNALE",        
+        "maimai FiNALE",
         "maimai DX",
         "maimai DX PLUS",
         "maimai DX Splash",
@@ -74,6 +75,7 @@ class Mai2Constants:
         "maimai DX UNiVERSE",
         "maimai DX UNiVERSE PLUS",
         "maimai DX FESTiVAL",
+        "maimai DX FESTiVAL PLUS",
     )
 
     @classmethod

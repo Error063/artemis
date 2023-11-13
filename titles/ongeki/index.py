@@ -12,25 +12,26 @@ from Crypto.Util.Padding import pad
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA1
 from os import path
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 from core.config import CoreConfig
 from core.utils import Utils
-from titles.ongeki.config import OngekiConfig
-from titles.ongeki.const import OngekiConstants
-from titles.ongeki.base import OngekiBase
-from titles.ongeki.plus import OngekiPlus
-from titles.ongeki.summer import OngekiSummer
-from titles.ongeki.summerplus import OngekiSummerPlus
-from titles.ongeki.red import OngekiRed
-from titles.ongeki.redplus import OngekiRedPlus
-from titles.ongeki.bright import OngekiBright
-from titles.ongeki.brightmemory import OngekiBrightMemory
+from core.title import BaseServlet
+from .config import OngekiConfig
+from .const import OngekiConstants
+from .base import OngekiBase
+from .plus import OngekiPlus
+from .summer import OngekiSummer
+from .summerplus import OngekiSummerPlus
+from .red import OngekiRed
+from .redplus import OngekiRedPlus
+from .bright import OngekiBright
+from .brightmemory import OngekiBrightMemory
 
 
-class OngekiServlet:
+class OngekiServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = OngekiConfig()
         self.hash_table: Dict[Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
@@ -106,9 +107,7 @@ class OngekiServlet:
                 )
 
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = OngekiConfig()
 
         if path.exists(f"{cfg_dir}/{OngekiConstants.CONFIG_NAME}"):
@@ -117,30 +116,41 @@ class OngekiServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
+        
+        return True
+    
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [("render_POST", "/SDDT/{version}/{endpoint}", {})]
+        )
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        title_port_int = Utils.get_title_port(self.core_cfg)
+        title_port_ssl_int = Utils.get_title_port_ssl(self.core_cfg)
+        proto = "https" if self.game_cfg.server.use_https and game_ver >= 120 else "http"
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                f"{core_cfg.title.hostname}:{core_cfg.title.port}/",
-            )
+        if proto == "https":
+            t_port = f":{title_port_ssl_int}" if title_port_ssl_int != 443 and not self.core_cfg.server.is_using_proxy else ""
+        
+        else:    
+            t_port = f":{title_port_int}" if title_port_int != 80 and not self.core_cfg.server.is_using_proxy else ""
 
         return (
-            True,
-            f"http://{core_cfg.title.hostname}/{game_code}/$v/",
-            f"{core_cfg.title.hostname}/",
+            f"{proto}://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"{self.core_cfg.title.hostname}{t_port}/",
         )
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "ping":
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = int(matchers['version'])
+        if endpoint.lower() == "ping":
             return zlib.compress(b'{"returnCode": 1}')
 
         req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
         encrtped = False
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0
@@ -198,6 +208,7 @@ class OngekiServlet:
         if (
             not encrtped
             and self.game_cfg.crypto.encrypted_only
+            and version >= 120
         ):
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
@@ -241,7 +252,7 @@ class OngekiServlet:
 
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
-        if not encrtped:
+        if not encrtped or version < 120:
             return zipped
 
         padded = pad(zipped, 16)

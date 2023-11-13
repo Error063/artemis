@@ -11,30 +11,31 @@ from Crypto.Util.Padding import pad
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA1
 from os import path
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
 from core import CoreConfig, Utils
-from titles.chuni.config import ChuniConfig
-from titles.chuni.const import ChuniConstants
-from titles.chuni.base import ChuniBase
-from titles.chuni.plus import ChuniPlus
-from titles.chuni.air import ChuniAir
-from titles.chuni.airplus import ChuniAirPlus
-from titles.chuni.star import ChuniStar
-from titles.chuni.starplus import ChuniStarPlus
-from titles.chuni.amazon import ChuniAmazon
-from titles.chuni.amazonplus import ChuniAmazonPlus
-from titles.chuni.crystal import ChuniCrystal
-from titles.chuni.crystalplus import ChuniCrystalPlus
-from titles.chuni.paradise import ChuniParadise
-from titles.chuni.new import ChuniNew
-from titles.chuni.newplus import ChuniNewPlus
-from titles.chuni.sun import ChuniSun
+from core.title import BaseServlet
+from .config import ChuniConfig
+from .const import ChuniConstants
+from .base import ChuniBase
+from .plus import ChuniPlus
+from .air import ChuniAir
+from .airplus import ChuniAirPlus
+from .star import ChuniStar
+from .starplus import ChuniStarPlus
+from .amazon import ChuniAmazon
+from .amazonplus import ChuniAmazonPlus
+from .crystal import ChuniCrystal
+from .crystalplus import ChuniCrystalPlus
+from .paradise import ChuniParadise
+from .new import ChuniNew
+from .newplus import ChuniNewPlus
+from .sun import ChuniSun
 
 
-class ChuniServlet:
+class ChuniServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = ChuniConfig()
         self.hash_table: Dict[Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
@@ -115,10 +116,19 @@ class ChuniServlet:
                     f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}"
                 )
 
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [
+               ("render_POST", "/{version}/ChuniServlet/{endpoint}", {}),
+               ("render_POST", "/{version}/ChuniServlet/MatchingServer/{endpoint}", {})
+            ]
+        )
+
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = ChuniConfig()
         if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -126,26 +136,26 @@ class ChuniServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                "",
-            )
+        return True
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
+            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/", "")
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
+        return (f"http://{self.core_cfg.title.hostname}/{game_ver}/", "")
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "ping":
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = int(matchers['version'])
+        
+        if endpoint.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
 
         req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
         encrtped = False
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
         if version < 105:  # 1.0

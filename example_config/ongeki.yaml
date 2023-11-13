@@ -1,6 +1,7 @@
 server:
   enable: True
   loglevel: "info"
+  use_https: False
 
 gachas:
   enabled_gachas:

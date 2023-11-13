@@ -10,7 +10,7 @@ from core.config import CoreConfig
 from titles.chuni.const import ChuniConstants
 from titles.chuni.database import ChuniData
 from titles.chuni.config import ChuniConfig
-
+SCORE_BUFFER = {}
 
 class ChuniBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: ChuniConfig) -> None:
@@ -181,21 +181,50 @@ class ChuniBase:
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
     def handle_get_game_message_api_request(self, data: Dict) -> Dict:
-        return {"type": data["type"], "length": "0", "gameMessageList": []}
+        return {
+            "type": data["type"], 
+            "length": 1, 
+            "gameMessageList": [{ 
+                "id": 1, 
+                "type": 1,
+                "message": f"Welcome to {self.core_cfg.server.name} network!" if not self.game_cfg.server.news_msg else self.game_cfg.server.news_msg,
+                "startDate": "2017-12-05 07:00:00.0",
+                "endDate": "2099-12-31 00:00:00.0"
+            }]
+        }
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"type": data["type"], "gameRankingList": []}
+        rankings = self.data.score.get_rankings(self.version)
+        return {"type": data["type"], "gameRankingList": rankings}
 
     def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
         return {"type": data["type"], "length": 0, "gameSaleList": []}
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        reboot_start = datetime.strftime(
-            datetime.now() - timedelta(hours=4), self.date_time_format
-        )
-        reboot_end = datetime.strftime(
-            datetime.now() - timedelta(hours=3), self.date_time_format
-        )
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
+
         return {
             "gameSetting": {
                 "dataVersion": "1.00.00",
@@ -361,11 +390,70 @@ class ChuniBase:
             "userDuelList": duel_list,
         }
 
+    def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
+        p = self.data.profile.get_rival(data["rivalId"])
+        if p is None:
+            return {}
+        userRivalData = {
+            "rivalId": p.user,
+            "rivalName": p.userName
+        }
+        return {
+            "userId": data["userId"],
+            "userRivalData": userRivalData
+        }
+    def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
+        rival_id = data["rivalId"]
+        next_index = int(data["nextIndex"])
+        max_count = int(data["maxCount"])
+        user_rival_music_list = []
+
+        # Fetch all the rival music entries for the user
+        all_entries = self.data.score.get_rival_music(rival_id)
+
+        # Process the entries based on max_count and nextIndex
+        for music in all_entries[next_index:]:
+            music_id = music["musicId"]
+            level = music["level"]
+            score = music["scoreMax"]
+            rank = music["scoreRank"]
+
+            # Create a music entry for the current music_id
+            music_entry = next((entry for entry in user_rival_music_list if entry["musicId"] == music_id), None)
+            if music_entry is None:
+                music_entry = {
+                    "musicId": music_id,
+                    "length": 0,
+                    "userRivalMusicDetailList": []
+                }
+                user_rival_music_list.append(music_entry)
+
+            # Create a level entry for the current level
+            level_entry = {
+                "level": level,
+                "scoreMax": score,
+                "scoreRank": rank
+            }
+            music_entry["userRivalMusicDetailList"].append(level_entry)
+
+        # Calculate the length for each "musicId" by counting the levels
+        for music_entry in user_rival_music_list:
+            music_entry["length"] = len(music_entry["userRivalMusicDetailList"])
+
+        # Prepare the result dictionary with user rival music data
+        result = {
+            "userId": data["userId"],
+            "rivalId": data["rivalId"],
+            "nextIndex": str(next_index + len(all_entries) if len(all_entries) <= len(user_rival_music_list) else -1),
+            "userRivalMusicList": user_rival_music_list[:max_count]
+        }
+
+        return result
     def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
         user_fav_item_list = []
 
         # still needs to be implemented on WebUI
-        # 1: Music, 3: Character
+        # 1: Music, 2: User, 3: Character
         fav_list = self.data.item.get_all_favorites(
             data["userId"], self.version, fav_kind=int(data["kind"])
         )
@@ -490,22 +578,39 @@ class ChuniBase:
             tmp.pop("id")
 
             for song in song_list:
+                score_buf = SCORE_BUFFER.get(str(data["userId"])) or []
                 if song["userMusicDetailList"][0]["musicId"] == tmp["musicId"]:
                     found = True
                     song["userMusicDetailList"].append(tmp)
                     song["length"] = len(song["userMusicDetailList"])
+                    score_buf.append(tmp["musicId"])
+                    SCORE_BUFFER[str(data["userId"])] = score_buf
 
-            if not found:
+            score_buf = SCORE_BUFFER.get(str(data["userId"])) or []
+            if not found and tmp["musicId"] not in score_buf:
                 song_list.append({"length": 1, "userMusicDetailList": [tmp]})
+                score_buf.append(tmp["musicId"])
+                SCORE_BUFFER[str(data["userId"])] = score_buf
 
             if len(song_list) >= max_ct:
                 break
-
-        if len(song_list) >= next_idx + max_ct:
-            next_idx += max_ct
+    
+        try:        
+            while song_list[-1]["userMusicDetailList"][0]["musicId"] == music_detail[x + 1]["musicId"]:
+                music = music_detail[x + 1]._asdict()
+                music.pop("user")
+                music.pop("id")
+                song_list[-1]["userMusicDetailList"].append(music)
+                song_list[-1]["length"] += 1
+                x += 1
+        except IndexError:
+            pass
+    
+        if len(song_list) >= max_ct:
+            next_idx += len(song_list)
         else:
             next_idx = -1
-
+            SCORE_BUFFER[str(data["userId"])] = []
         return {
             "userId": data["userId"],
             "length": len(song_list),
@@ -600,39 +705,94 @@ class ChuniBase:
         }
 
     def handle_get_user_team_api_request(self, data: Dict) -> Dict:
-        # TODO: use the database "chuni_profile_team" with a GUI
+        # Default values
+        team_id = 65535
         team_name = self.game_cfg.team.team_name
-        if team_name == "":
+        team_rank = 0
+
+        # Get user profile
+        profile = self.data.profile.get_profile_data(data["userId"], self.version)
+        if profile and profile["teamId"]:
+            # Get team by id
+            team = self.data.profile.get_team_by_id(profile["teamId"])
+
+            if team:
+                team_id = team["id"]
+                team_name = team["teamName"]
+                team_rank = self.data.profile.get_team_rank(team["id"])
+
+        # Don't return anything if no team name has been defined for defaults and there is no team set for the player
+        if not profile["teamId"] and team_name == "":
             return {"userId": data["userId"], "teamId": 0}
 
         return {
             "userId": data["userId"],
-            "teamId": 1,
-            "teamRank": 1,
+            "teamId": team_id,
+            "teamRank": team_rank,
             "teamName": team_name,
             "userTeamPoint": {
                 "userId": data["userId"],
-                "teamId": 1,
+                "teamId": team_id,
                 "orderId": 1,
                 "teamPoint": 1,
                 "aggrDate": data["playDate"],
             },
         }
-
     def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
-            "nextIndex": 0,
+            "nextIndex": -1,
             "teamCourseSettingList": [],
+        }
+
+    def handle_get_team_course_setting_api_request_proto(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 1,
+            "nextIndex": -1,
+            "teamCourseSettingList": [
+                {
+                    "orderId": 1,
+                    "courseId": 1,
+                    "classId": 1,
+                    "ruleId": 1,
+                    "courseName": "Test",
+                    "teamCourseMusicList": [
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1},
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1},
+                        {"track": 184, "type": 1, "level": 3, "selectLevel": -1}
+                    ],
+                    "teamCourseRankingInfoList": [],
+                    "recodeDate": "2099-12-31 11:59:99.0",
+                    "isPlayed": False
+                }
+            ],
         }
 
     def handle_get_team_course_rule_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
-            "nextIndex": 0,
-            "teamCourseRuleList": [],
+            "nextIndex": -1,
+            "teamCourseRuleList": []
+        }
+
+    def handle_get_team_course_rule_api_request_proto(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 1,
+            "nextIndex": -1,
+            "teamCourseRuleList": [
+                {
+                    "recoveryLife": 0,
+                    "clearLife": 100,
+                    "damageMiss": 1,
+                    "damageAttack": 1,
+                    "damageJustice": 1,
+                    "damageJusticeC": 1
+                }
+            ],
         }
 
     def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
@@ -706,12 +866,28 @@ class ChuniBase:
                 playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
                 playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
                 playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
-                self.data.score.put_playlog(user_id, playlog)
+                self.data.score.put_playlog(user_id, playlog, self.version)
 
         if "userTeamPoint" in upsert:
-            # TODO: team stuff
-            pass
+            team_points = upsert["userTeamPoint"]
+            try:
+                for tp in team_points:
+                    if tp["teamId"] != '65535':
+                        # Fetch the current team data
+                        current_team = self.data.profile.get_team_by_id(tp["teamId"])
 
+                        # Calculate the new teamPoint
+                        new_team_point = int(tp["teamPoint"]) + current_team["teamPoint"]
+
+                        # Prepare the data to update
+                        team_data = {
+                            "teamPoint": new_team_point
+                        }
+
+                        # Update the team data
+                        self.data.profile.update_team(tp["teamId"], team_data)
+            except:
+                pass # Probably a better way to catch if the team is not set yet (new profiles), but let's just pass
         if "userMapAreaList" in upsert:
             for map_area in upsert["userMapAreaList"]:
                 self.data.item.put_map_area(user_id, map_area)

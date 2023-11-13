@@ -637,3 +637,69 @@ class ChuniProfileData(BaseData):
         if result is None:
             return None
         return result.fetchall()
+
+    def get_team_by_id(self, team_id: int) -> Optional[Row]:
+        sql = select(team).where(team.c.id == team_id)
+        result = self.execute(sql)
+
+        if result is None:
+            return None
+        return result.fetchone()
+
+    def get_team_rank(self, team_id: int) -> int:
+        # Normal ranking system, likely the one used in the real servers
+        # Query all teams sorted by 'teamPoint'
+        result = self.execute(
+            select(team.c.id).order_by(team.c.teamPoint.desc())
+        )
+
+        # Get the rank of the team with the given team_id
+        rank = None
+        for i, row in enumerate(result, start=1):
+            if row.id == team_id:
+                rank = i
+                break
+
+        # Return the rank if found, or a default rank otherwise
+        return rank if rank is not None else 0
+
+    # RIP scaled team ranking. Gone, but forgotten
+    # def get_team_rank_scaled(self, team_id: int) -> int:
+
+    def update_team(self, team_id: int, team_data: Dict) -> bool:
+        team_data["id"] = team_id
+
+        sql = insert(team).values(**team_data)
+        conflict = sql.on_duplicate_key_update(**team_data)
+
+        result = self.execute(conflict)
+
+        if result is None:
+            self.logger.warn(
+                f"update_team: Failed to update team! team id: {team_id}"
+            )
+            return False
+        return True
+    def get_rival(self, rival_id: int) -> Optional[Row]:
+        sql = select(profile).where(profile.c.user == rival_id)
+        result = self.execute(sql)
+
+        if result is None:
+            return None
+        return result.fetchone()
+    def get_overview(self) -> Dict:
+        # Fetch and add up all the playcounts
+        playcount_sql = self.execute(select(profile.c.playCount))
+
+        if playcount_sql is None:
+            self.logger.warn(
+                f"get_overview: Couldn't pull playcounts"
+            )
+            return 0
+
+        total_play_count = 0;
+        for row in playcount_sql:
+            total_play_count += row[0]
+        return {
+            "total_play_count": total_play_count
+        }

@@ -16,4 +16,4 @@ game_codes = [
     Mai2Constants.GAME_CODE_GREEN,
     Mai2Constants.GAME_CODE,
 ]
-current_schema_version = 7
+current_schema_version = 8

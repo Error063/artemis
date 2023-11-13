@@ -5,20 +5,20 @@ import logging
 import json
 from hashlib import md5
 from twisted.web.http import Request
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from os import path
 
 from core import CoreConfig, Utils
-from titles.wacca.config import WaccaConfig
-from titles.wacca.config import WaccaConfig
-from titles.wacca.const import WaccaConstants
-from titles.wacca.reverse import WaccaReverse
-from titles.wacca.lilyr import WaccaLilyR
-from titles.wacca.lily import WaccaLily
-from titles.wacca.s import WaccaS
-from titles.wacca.base import WaccaBase
-from titles.wacca.handlers.base import BaseResponse
-from titles.wacca.handlers.helpers import Version
+from .config import WaccaConfig
+from .config import WaccaConfig
+from .const import WaccaConstants
+from .reverse import WaccaReverse
+from .lilyr import WaccaLilyR
+from .lily import WaccaLily
+from .s import WaccaS
+from .base import WaccaBase
+from .handlers.base import BaseResponse
+from .handlers.helpers import Version
 
 
 class WaccaServlet:
@@ -61,10 +61,17 @@ class WaccaServlet:
             level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
         )
 
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+        return (
+            [], 
+            [
+                ("render_POST", "/WaccaServlet/api/{api}/{endpoint}", {}),
+                ("render_POST", "/WaccaServlet/api/{api}/{branch}/{endpoint}", {})
+            ]
+        )
+
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = WaccaConfig()
         if path.exists(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -72,27 +79,42 @@ class WaccaServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
-        if core_cfg.server.is_develop:
+        return True
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v",
+                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/WaccaServlet",
                 "",
             )
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v", "")
-
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
+        return (f"http://{self.core_cfg.title.hostname}/WaccaServlet", "")
+    
+    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         def end(resp: Dict) -> bytes:
             hash = md5(json.dumps(resp, ensure_ascii=False).encode()).digest()
             request.responseHeaders.addRawHeader(b"X-Wacca-Hash", hash.hex().encode())
             return json.dumps(resp).encode()
 
+        api = matchers['api']
+        branch = matchers.get('branch', '')
+        endpoint = matchers['endpoint']
         client_ip = Utils.get_ip_addr(request)
+        
+        if branch:
+            url_path = f"{api}/{branch}/{endpoint}"
+            func_to_find = f"handle_{api}_{branch}_{endpoint}_request"
+
+        else:
+            url_path = f"{api}/{endpoint}"
+            func_to_find = f"handle_{api}_{endpoint}_request"
+
         try:
             req_json = json.loads(request.content.getvalue())
             version_full = Version(req_json["appVersion"])
+        
         except Exception:
             self.logger.error(
                 f"Failed to parse request to {url_path} -> {request.content.getvalue()}"
@@ -100,18 +122,6 @@ class WaccaServlet:
             resp = BaseResponse()
             resp.status = 1
             resp.message = "不正なリクエスト エラーです"
-            return end(resp.make())
-
-        if "api/" in url_path:
-            func_to_find = (
-                "handle_" + url_path.partition("api/")[2].replace("/", "_") + "_request"
-            )
-
-        else:
-            self.logger.error(f"Malformed url {url_path}")
-            resp = BaseResponse()
-            resp.status = 1
-            resp.message = "Bad URL"
             return end(resp.make())
 
         ver_search = int(version_full)
