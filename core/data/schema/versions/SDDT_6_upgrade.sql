@@ -85,4 +85,14 @@ CREATE TABLE ongeki_static_client_testmode (
 	minLeverMovable INT NOT NULL,
 	UNIQUE KEY ongeki_static_client_testmode_uk (clientId)
 );
+
+CREATE TABLE ongeki_static_game_point (
+	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	type INT NOT NULL,
+	cost INT NOT NULL,
+	startDate VARCHAR(25) NOT NULL DEFAULT "2000-01-01 05:00:00.0",
+	endDate VARCHAR(25) NOT NULL DEFAULT "2099-01-01 05:00:00.0",
+	UNIQUE KEY ongeki_static_game_point_uk (type)
+);
+
 SET FOREIGN_KEY_CHECKS=1;

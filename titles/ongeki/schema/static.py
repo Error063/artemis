@@ -134,7 +134,7 @@ present = Table(
     Column("message", String(255)),
     Column("startDate", String(25), nullable=False),
     Column("endDate", String(25), nullable=False),
-    UniqueConstraint("version", "presentId", "rewardId", name="ongeki_static_present_list_uk"),
+    UniqueConstraint("version", "presentId", name="ongeki_static_present_list_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -171,6 +171,18 @@ client_testmode = Table(
     Column("maxLeverMovable", Integer, nullable=False),
     Column("minLeverMovable", Integer, nullable=False),
     UniqueConstraint("clientId", name="ongeki_static_client_testmode_uk"),
+    mysql_charset="utf8mb4",
+)
+
+game_point = Table(
+    "ongeki_static_game_point",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column("type", Integer, nullable=False),
+    Column("cost", Integer, nullable=False),
+    Column("startDate", String(25), nullable=False, server_default="2000-01-01 05:00:00.0"),
+    Column("endDate", String(25), nullable=False, server_default="2099-01-01 05:00:00.0"),
+    UniqueConstraint("type", name="ongeki_static_game_point_uk"),
     mysql_charset="utf8mb4",
 )
 
@@ -482,3 +494,19 @@ class OngekiStaticData(BaseData):
             self.logger.warning(f"clientId: {clientId} Failed to update ClientSetting data"),
             return None
         return result.lastrowid
+
+    def put_static_game_point_defaults(self) -> Optional[List[Dict]]:
+        game_point_defaults = [{"type": 0, "cost": 100},{"type": 1, "cost": 230},{"type": 2, "cost": 370},{"type": 3, "cost": 120},{"type": 4, "cost": 240},{"type": 5, "cost": 360}]
+        sql = insert(game_point).values(game_point_defaults)
+        result = self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Failed to insert default GP table!")
+            return None
+        return result.lastrowid
+
+    def get_static_game_point(self) -> Optional[List[Dict]]:
+        sql = select(game_point.c.type, game_point.c.cost, game_point.c.startDate, game_point.c.endDate)
+        result = self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()

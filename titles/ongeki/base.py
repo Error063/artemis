@@ -173,51 +173,28 @@ class OngekiBase:
 
 
     def handle_get_game_point_api_request(self, data: Dict) -> Dict:
-        """
-        Sets the GP amount for A and B sets for 1 - 3 credits
-        """
-        return {
-            "length": 6,
-            "gamePointList": [
-                {
-                    "type": 0,
-                    "cost": 100,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 1,
-                    "cost": 230,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 2,
-                    "cost": 370,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 3,
-                    "cost": 120,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 4,
-                    "cost": 240,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 5,
-                    "cost": 360,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-            ],
-        }
+        get_game_point = self.data.static.get_static_game_point()
+        game_point = []
 
+        if not get_game_point:
+            self.logger.info(f"GP table is empty, inserting defaults")
+            self.data.static.put_static_game_point_defaults()
+            get_game_point = self.data.static.get_static_game_point()
+            for gp in get_game_point:
+                tmp = gp._asdict()
+                game_point.append(tmp)
+            return {
+                "length": len(game_point),
+                "gamePointList": game_point,
+                }
+        for gp in get_game_point:
+            tmp = gp._asdict()
+            game_point.append(tmp)
+        return {
+            "length": len(game_point),
+            "gamePointList": game_point,
+        }
+        
     def handle_game_login_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "gameLogin"}
 
