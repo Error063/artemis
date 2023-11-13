@@ -132,10 +132,10 @@ class OngekiServlet(BaseServlet):
         proto = "https" if self.game_cfg.server.use_https and game_ver >= 120 else "http"
 
         if proto == "https":
-            t_port = f":{title_port_ssl_int}" if title_port_ssl_int != 443 and not self.core_cfg.server.is_using_proxy else ""
+            t_port = f":{title_port_ssl_int}" if title_port_ssl_int and not self.core_cfg.server.is_using_proxy else ""
         
         else:    
-            t_port = f":{title_port_int}" if title_port_int != 80 and not self.core_cfg.server.is_using_proxy else ""
+            t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
 
         return (
             f"{proto}://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
@@ -252,7 +252,7 @@ class OngekiServlet(BaseServlet):
 
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
-        if not encrtped or version < 120:
+        if not encrtped and version < 120:
             return zipped
 
         padded = pad(zipped, 16)

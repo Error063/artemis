@@ -77,7 +77,7 @@ class CxbServlet(BaseServlet):
         return True
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg) != 443:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg):
             return (
                 f"https://{self.core_cfg.title.hostname}:{self.core_cfg.title.port_ssl}",
                 "",
