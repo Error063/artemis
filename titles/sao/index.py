@@ -6,7 +6,7 @@ from logging.handlers import TimedRotatingFileHandler
 from os import path
 from Crypto.Cipher import Blowfish
 from hashlib import md5
-import random
+import secrets
 
 from core import CoreConfig, Utils
 from core.title import BaseServlet
@@ -123,7 +123,7 @@ class SaoServlet(BaseServlet):
         self.logger.debug(f"Response: {resp.hex()}")
 
         if self.game_cfg.crypt.enable:
-            iv = random.randbytes(8)
+            iv = secrets.token_bytes(8)
             data_to_crypt = resp[24:]
             while len(data_to_crypt) % 8 != 0:
                 data_to_crypt += b"\x00"

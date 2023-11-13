@@ -1,5 +1,4 @@
 import logging
-from random import randbytes
 import socket
 
 from twisted.internet.protocol import DatagramProtocol
