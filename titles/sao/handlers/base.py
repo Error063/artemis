@@ -2177,7 +2177,7 @@ class SaoSynthesizeEnhancementHeroLogRequest(SaoBaseRequest):
         self.origin_user_hero_log_id = origin_user_hero_log_id[0]
         off += origin_user_hero_log_id[1]
 
-        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData]
+        self.material_common_reward_user_data_list: List[MaterialCommonRewardUserData] = []
         
         self.material_common_reward_user_data_count = decode_int(data, off)
         off += INT_OFF
