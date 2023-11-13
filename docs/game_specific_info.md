@@ -374,6 +374,27 @@ Mission Event (type 13) is a monthly type of event, which is used when another e
 
 If you're often trying fresh cards, registering new profiles etc., you can also consider disabling all Announcement Events (type 1), as it will disable all the banners that pop up on login (they show up only once though, so if you click through them once they won't show again)
 
+Event type 2 in Database are Advertisement Movies, enable only 1 you want to currently play, and disable others
+
+
+Present and Reward List - populate reward list using read.py
+
+Create present for players by adding an entry in `ongeki_static_present_list`
+```
+id: unique for each entry
+version: game version you want the present be in
+presentId: id of the present - starts with 1001 and go up from that, must be unique for each reward(don't set multiple rewardIds with same presentId)
+presentName: present name which will be shown on the bottom when received
+rewardId: ID of item from ongeki_static_rewards
+stock: how many you want to give (like 5 copies of same card, or 10000 money, etc.)
+message: no idea, can be left empty
+startDate: date when to start giving out
+endDate: date when ends
+```
+
+After inserting present to the table, add the presentId into players `ongeki_static_item`, where itemKind is 9, itemId is the presentId, and stock set 1 and isValid to 1
+
+After that, on next login the present should be received (or whenever it supposed to happen)
 
 
 
