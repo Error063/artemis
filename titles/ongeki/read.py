@@ -44,6 +44,7 @@ class OngekiReader(BaseReader):
             self.read_events(f"{dir}/event")
             self.read_music(f"{dir}/music")
             self.read_card(f"{dir}/card")
+            self.read_reward(f"{dir}/reward")
 
     def read_card(self, base_dir: str) -> None:
         self.logger.info(f"Reading cards from {base_dir}...")
@@ -171,3 +172,28 @@ class OngekiReader(BaseReader):
                             self.version, song_id, chart_id, title, artist, genre, level
                         )
                         self.logger.info(f"Added song {song_id} chart {chart_id}")
+
+    def read_reward(self, base_dir: str) -> None:
+            self.logger.info(f"Reading rewards from {base_dir}...")
+
+            for root, dirs, files in os.walk(base_dir):
+                for dir in dirs:
+                    if os.path.exists(f"{root}/{dir}/Reward.xml"):
+                        strdata = ""
+
+                    with open(f"{root}/{dir}/Reward.xml", "r", encoding="utf-8") as f:
+                        strdata = f.read()
+
+                    troot = ET.fromstring(strdata)
+
+                    if root is None:
+                        continue
+
+                    name = troot.find("Name")
+                    rewardId = name.find("id").text
+                    rewardname = name.find("str").text
+                    itemKind = OngekiConstants.REWARD_TYPES[troot.find("ItemType").text].value
+                    itemId = troot.find("RewardItem").find("ItemName").find("id").text
+
+                    self.data.static.put_reward(self.version, rewardId, rewardname, itemKind, itemId)
+                    self.logger.info(f"Added reward {rewardId}")

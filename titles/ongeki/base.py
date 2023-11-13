@@ -157,54 +157,44 @@ class OngekiBase:
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
     def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameRankingList": []}
+        game_ranking_list = self.data.static.get_ranking_list(self.version)
+        
+        ranking_list = []
+        for music in game_ranking_list:
+            tmp = music._asdict()
+            ranking_list.append(tmp)
 
-    def handle_get_game_point_api_request(self, data: Dict) -> Dict:
-        """
-        Sets the GP amount for A and B sets for 1 - 3 credits
-        """
+        if ranking_list is None:
+            return {"length": 0, "gameRankingList": []}
         return {
-            "length": 6,
-            "gamePointList": [
-                {
-                    "type": 0,
-                    "cost": 100,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 1,
-                    "cost": 230,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 2,
-                    "cost": 370,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 3,
-                    "cost": 120,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 4,
-                    "cost": 240,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 5,
-                    "cost": 360,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-            ],
+            "type": data["type"],
+            "gameRankingList": ranking_list,
         }
 
+
+    def handle_get_game_point_api_request(self, data: Dict) -> Dict:
+        get_game_point = self.data.static.get_static_game_point()
+        game_point = []
+
+        if not get_game_point:
+            self.logger.info(f"GP table is empty, inserting defaults")
+            self.data.static.put_static_game_point_defaults()
+            get_game_point = self.data.static.get_static_game_point()
+            for gp in get_game_point:
+                tmp = gp._asdict()
+                game_point.append(tmp)
+            return {
+                "length": len(game_point),
+                "gamePointList": game_point,
+                }
+        for gp in get_game_point:
+            tmp = gp._asdict()
+            game_point.append(tmp)
+        return {
+            "length": len(game_point),
+            "gamePointList": game_point,
+        }
+        
     def handle_game_login_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "gameLogin"}
 
@@ -215,11 +205,39 @@ class OngekiBase:
         return {"returnCode": 1, "apiName": "ExtendLockTimeApi"}
 
     def handle_get_game_reward_api_request(self, data: Dict) -> Dict:
-        # TODO: reward list
-        return {"length": 0, "gameRewardList": []}
+        get_game_rewards = self.data.static.get_reward_list(self.version)
+
+        reward_list = []
+        for reward in get_game_rewards:
+            tmp = reward._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            tmp.pop("rewardname")
+            reward_list.append(tmp)
+
+        if reward_list is None:
+            return {"length": 0, "gameRewardList": []}
+        return {
+            "length": len(reward_list),
+            "gameRewardList": reward_list,
+        }
 
     def handle_get_game_present_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gamePresentList": []}
+        get_present = self.data.static.get_present_list(self.version)
+
+        present_list = []
+        for present in get_present:
+            tmp = present._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            present_list.append(tmp)
+
+        if present_list is None:
+            return {"length": 0, "gamePresentList": []}
+        return {
+            "length": len(present_list),
+            "gamePresentList": present_list,
+        }
 
     def handle_get_game_message_api_request(self, data: Dict) -> Dict:
         return {"length": 0, "gameMessageList": []}
@@ -228,12 +246,39 @@ class OngekiBase:
         return {"length": 0, "gameSaleList": []}
 
     def handle_get_game_tech_music_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameTechMusicList": []}
+        music_list = self.data.static.get_tech_music(self.version)
+
+        prep_music_list = []
+        for music in music_list:
+            tmp = music._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            prep_music_list.append(tmp)
+
+        if prep_music_list is None:
+            return {"length": 0, "gameTechMusicList": []}
+
+        return {
+            "length": len(prep_music_list),
+            "gameTechMusicList": prep_music_list,
+        }
 
     def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
+
+        client_id = data["clientId"]
+        client_setting_data = data["clientSetting"]
+        self.data.static.put_client_setting_data(client_id, client_setting_data)
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
     def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
+
+        region_id = data["regionId"]
+        client_testmode_data = data["clientTestmode"]
+        self.data.static.put_client_testmode_data(region_id, client_testmode_data)
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
     def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
@@ -277,13 +322,12 @@ class OngekiBase:
                     "id": event["eventId"],
                     # actually use the startDate from the import so it
                     # properly shows all the events when new ones are imported
-                    "startDate": datetime.strftime(
-                        event["startDate"], "%Y-%m-%d %H:%M:%S.0"
-                    ),
-                    "endDate": "2099-12-31 00:00:00.0",
+                    "startDate": datetime.strftime(event["startDate"], "%Y-%m-%d %H:%M:%S.0"),
+                    #"endDate": "2099-12-31 00:00:00.0",
+                    "endDate": datetime.strftime(event["endDate"], "%Y-%m-%d %H:%M:%S.0"),
                 }
             )
-
+        
         return {
             "type": data["type"],
             "length": len(evt_list),
@@ -385,7 +429,7 @@ class OngekiBase:
         }
 
     def handle_get_user_tech_event_api_request(self, data: Dict) -> Dict:
-        user_tech_event_list = self.data.item.get_tech_event(data["userId"])
+        user_tech_event_list = self.data.item.get_tech_event(self.version, data["userId"])
         if user_tech_event_list is None:
             return {}
 
@@ -394,6 +438,7 @@ class OngekiBase:
             tmp = evt._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("version")
             tech_evt.append(tmp)
 
         return {
@@ -403,15 +448,24 @@ class OngekiBase:
         }
 
     def handle_get_user_tech_event_ranking_api_request(self, data: Dict) -> Dict:
-        # user_event_ranking_list = self.data.item.get_tech_event_ranking(data["userId"])
-        # if user_event_ranking_list is None: return {}
+        user_tech_event_ranks = self.data.item.get_tech_event_ranking(self.version, data["userId"])
+        if user_tech_event_ranks is None: 
+            return {
+            "userId": data["userId"],
+            "length": 0,
+            "userTechEventRankingList": [],
+        }
 
+        # collect the whole table and clear other players, to preserve proper ranking
         evt_ranking = []
-        # for evt in user_event_ranking_list:
-        #    tmp = evt._asdict()
-        #    tmp.pop("id")
-        #    tmp.pop("user")
-        #    evt_ranking.append(tmp)
+        for evt in user_tech_event_ranks:
+            tmp = evt._asdict()
+            if tmp["user"] != data["userId"]:
+                tmp.clear()
+            else:
+                tmp.pop("id")
+                tmp.pop("user")
+                evt_ranking.append(tmp)
 
         return {
             "userId": data["userId"],
@@ -533,20 +587,26 @@ class OngekiBase:
         return {"userId": data["userId"], "userData": user_data}
 
     def handle_get_user_event_ranking_api_request(self, data: Dict) -> Dict:
-        # user_event_ranking_list = self.data.item.get_event_ranking(data["userId"])
-        # if user_event_ranking_list is None: return {}
+        user_event_ranking_list = self.data.item.get_ranking_event_ranks(self.version, data["userId"])
+        if user_event_ranking_list is None:
+            return {}
 
-        evt_ranking = []
-        # for evt in user_event_ranking_list:
-        #    tmp = evt._asdict()
-        #    tmp.pop("id")
-        #    tmp.pop("user")
-        #    evt_ranking.append(tmp)
+        # We collect the whole ranking table, and clear out any not needed data, this way we preserve the proper ranking 
+        # In official spec this should be done server side, in maintenance period
+        prep_event_ranking = []
+        for evt in user_event_ranking_list:
+            tmp = evt._asdict()
+            if tmp["user"] != data["userId"]:
+                tmp.clear()
+            else:
+                tmp.pop("id")
+                tmp.pop("user")
+                prep_event_ranking.append(tmp)
 
         return {
             "userId": data["userId"],
-            "length": len(evt_ranking),
-            "userEventRankingList": evt_ranking,
+            "length": len(prep_event_ranking),
+            "userEventRankingList": prep_event_ranking,
         }
 
     def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
@@ -777,7 +837,7 @@ class OngekiBase:
         }
 
     def handle_get_user_mission_point_api_request(self, data: Dict) -> Dict:
-        user_mission_point_list = self.data.item.get_mission_points(data["userId"])
+        user_mission_point_list = self.data.item.get_mission_points(self.version, data["userId"])
         if user_mission_point_list is None:
             return {}
 
@@ -786,7 +846,9 @@ class OngekiBase:
             tmp = evt_music._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("version")
             mission_point_list.append(tmp)
+
 
         return {
             "userId": data["userId"],
@@ -804,6 +866,10 @@ class OngekiBase:
             tmp = evt_music._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            # pop other stuff event_point doesn't want
+            tmp.pop("rank")
+            tmp.pop("type")
+            tmp.pop("date")
             event_point_list.append(tmp)
 
         return {
@@ -951,11 +1017,11 @@ class OngekiBase:
 
         if "userEventPointList" in upsert:
             for x in upsert["userEventPointList"]:
-                self.data.item.put_event_point(user_id, x)
+                self.data.item.put_event_point(user_id, self.version, x)
 
         if "userMissionPointList" in upsert:
             for x in upsert["userMissionPointList"]:
-                self.data.item.put_mission_point(user_id, x)
+                self.data.item.put_mission_point(user_id, self.version, x)
 
         if "userRatinglogList" in upsert:
             for x in upsert["userRatinglogList"]:
@@ -985,7 +1051,10 @@ class OngekiBase:
 
         if "userTechEventList" in upsert:
             for x in upsert["userTechEventList"]:
-                self.data.item.put_tech_event(user_id, x)
+                self.data.item.put_tech_event(user_id, self.version, x)
+
+                # This should be updated once a day in maintenance window, but for time being we will push the update on each upsert
+                self.data.item.put_tech_event_ranking(user_id, self.version, x)
 
         if "userKopList" in upsert:
             for x in upsert["userKopList"]:

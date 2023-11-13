@@ -19,7 +19,6 @@ class OngekiConstants:
     EVT_TYPES: Enum = Enum(
         "EVT_TYPES",
         [
-            "None",
             "Announcement",
             "Movie",
             "AddMyList",
@@ -39,6 +38,36 @@ class OngekiConstants:
             "TechChallengeEvent",
             "AcceptTechChallengeEvent",
             "SilverJewelEvent",
+            "Max",
+            "None",
+        ],
+    )
+
+    REWARD_TYPES: Enum = Enum(
+        "REWARD_TYPES",
+        [
+            "Card",
+            "NamePlate",
+            "Trophy",
+            "LimitBreakItem",
+            "AlmightyJewel",
+            "Money",
+            "Music",
+            "ProfileVoice",
+            "Present",
+            "ChapterJewel",
+            "GachaTicket",
+            "KaikaItem",
+            "ExpUpItem",
+            "IntimateUpItem",
+            "BookItem",
+            "SystemVoice",
+            "Costume",
+            "Medal",
+            "Attachment",
+            "UnlockItem",
+            "Max",
+            "None",
         ],
     )
 
