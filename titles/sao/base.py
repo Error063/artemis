@@ -326,11 +326,19 @@ class SaoBase:
 
             if equipmentList:
                 equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, x.user_common_reward_id)
+                if equipment_data is None:
+                    self.logger.error(f"Failed to find equipment {x.user_common_reward_id} for user {req_data.user_id}!")
+                    continue
+
                 equipment_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
                 self.game_data.item.remove_equipment(req_data.user_id, x.user_common_reward_id)
 
             if heroList:
                 hero_data = self.game_data.item.get_hero_log(req_data.user_id, x.user_common_reward_id)
+                if hero_data is None:
+                    self.logger.error(f"Failed to find hero {x.user_common_reward_id} for user {req_data.user_id}!")
+                    continue
+
                 equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
                 self.game_data.item.remove_hero_log(req_data.user_id, x.user_common_reward_id)
 
