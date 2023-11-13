@@ -163,3 +163,5 @@ class IDACServlet:
                 self.game_cfg.server.echo2,
                 IDACEchoUDP(self.core_cfg, self.game_cfg, self.game_cfg.server.echo2),
             )
+            
+            self.logger.info(f"Matching listening on {self.game_cfg.server.matching} with echos on {self.game_cfg.server.echo1} and {self.game_cfg.server.echo2}")
