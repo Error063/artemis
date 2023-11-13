@@ -79,19 +79,19 @@ def decode_arr_str(data: bytes, offset: int) -> Tuple[List[str], int]:
     return (ret, size)
 
 def encode_byte(data: int) -> bytes:
-    return struct.pack("!B", data)
+    return struct.pack("!b", data)
 
 def encode_short(data: int) -> bytes:
-    return struct.pack("!H", data)
+    return struct.pack("!h", data)
 
 def encode_int(data: int) -> bytes:
-    return struct.pack("!I", data)
+    return struct.pack("!i", data)
 
 def encode_long(data: int) -> bytes:
-    return struct.pack("!L", data)
+    return struct.pack("!l", data)
 
 def encode_bigint(data: int) -> bytes:
-    return struct.pack("!Q", data)
+    return struct.pack("!q", data)
 
 def encode_str(s: str) -> bytes:
     try:
