@@ -6,7 +6,7 @@ import logging
 import coloredlogs
 
 from os import path
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 from logging.handlers import TimedRotatingFileHandler
 from twisted.web import server
 from twisted.web.http import Request
@@ -26,9 +26,10 @@ class IDACServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = IDACConfig()
-        self.game_cfg.update(
-            yaml.safe_load(open(f"{cfg_dir}/{IDACConstants.CONFIG_NAME}"))
-        )
+        if path.exists(f"{cfg_dir}/{IDACConstants.CONFIG_NAME}"):
+            self.game_cfg.update(
+                yaml.safe_load(open(f"{cfg_dir}/{IDACConstants.CONFIG_NAME}"))
+            )
 
         self.versions = [
             IDACBase(core_cfg, self.game_cfg),
@@ -59,9 +60,7 @@ class IDACServlet:
         )
 
     @classmethod
-    def get_allnet_info(
-        cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = IDACConfig()
 
         if path.exists(f"{cfg_dir}/{IDACConstants.CONFIG_NAME}"):
@@ -70,28 +69,34 @@ class IDACServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
+        
+        return True
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"",
-                # requires http or else it defautls to https
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-            )
-
+    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
-            True,
-            f"",
-            # requires http or else it defautls to https
-            f"http://{core_cfg.title.hostname}/{game_code}/$v/",
+            [], 
+            [("render_POST", "/SDGT/{version}/initiald/{category}/{endpoint}", {})]
         )
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
+    def get_allnet_info(
+        self, game_code: str, game_ver: int, keychip: str
+    ) -> Tuple[bool, str, str]:
+        title_port_int = Utils.get_title_port(self.core_cfg)
+        t_port = f":{title_port_int}" if title_port_int != 80 and not self.core_cfg.server.is_using_proxy else ""
+
+        return (
+            f"",
+            # requires http or else it defaults to https
+            f"http://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
+        )
+
+    def render_POST(self, request: Request, game_code: int, matchers: Dict) -> bytes:
         req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
+        version = int(matchers['version'])
+        category = matchers['category']
+        endpoint = matchers['endpoint']
         client_ip = Utils.get_ip_addr(request)
 
         if version >= 100 and version < 140:  # IDAC Season 1
@@ -99,45 +104,39 @@ class IDACServlet:
         elif version >= 140 and version < 171:  # IDAC Season 2
             internal_ver = IDACConstants.VER_IDAC_SEASON_2
 
-        if url_split[0] == "initiald":
-            header_application = self.decode_header(request.getAllHeaders())
+        header_application = self.decode_header(request.getAllHeaders())
 
-            req_data = json.loads(req_raw)
+        req_data = json.loads(req_raw)
 
-            self.logger.info(f"v{version} {endpoint} request from {client_ip}")
-            self.logger.debug(f"Headers: {header_application}")
-            self.logger.debug(req_data)
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
+        self.logger.debug(f"Headers: {header_application}")
+        self.logger.debug(req_data)
 
-            # func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
-            func_to_find = "handle_"
-            for x in url_split:
-                func_to_find += f"{x.lower()}_" if not x == "" and not x == "initiald" else ""
-            func_to_find += f"request"
+        # func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
+        func_to_find = "handle_"
+        func_to_find += f"{category.lower()}_" if not category == "" else ""
+        func_to_find += f"{endpoint.lower()}_request"
 
-            if not hasattr(self.versions[internal_ver], func_to_find):
-                self.logger.warning(f"Unhandled v{version} request {endpoint}")
-                return '{"status_code": "0"}'.encode("utf-8")
+        if not hasattr(self.versions[internal_ver], func_to_find):
+            self.logger.warning(f"Unhandled v{version} request {endpoint}")
+            return '{"status_code": "0"}'.encode("utf-8")
 
-            resp = None
-            try:
-                handler = getattr(self.versions[internal_ver], func_to_find)
-                resp = handler(req_data, header_application)
+        resp = None
+        try:
+            handler = getattr(self.versions[internal_ver], func_to_find)
+            resp = handler(req_data, header_application)
 
-            except Exception as e:
-                traceback.print_exc()
-                self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-                return '{"status_code": "0"}'.encode("utf-8")
+        except Exception as e:
+            traceback.print_exc()
+            self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
+            return '{"status_code": "0"}'.encode("utf-8")
 
-            if resp is None:
-                resp = {"status_code": "0"}
+        if resp is None:
+            resp = {"status_code": "0"}
 
-            self.logger.debug(f"Response {resp}")
-            return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+        self.logger.debug(f"Response {resp}")
+        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
 
-        self.logger.warning(
-            f"IDAC unknown request {url_path} - {request.content.getvalue().decode()}"
-        )
-        return '{"status_code": "0"}'.encode("utf-8")
 
     def decode_header(self, data: Dict) -> Dict:
         app: str = data[b"application"].decode()
