@@ -532,7 +532,7 @@ class OngekiItemData(BaseData):
             return None
         return result.fetchall()
 
-    def put_mission_point(self, version: int, aime_id: int, mission_point_data: Dict) -> Optional[int]:
+    def put_mission_point(self, aime_id: int, version: int, mission_point_data: Dict) -> Optional[int]:
         mission_point_data["user"] = aime_id
         mission_point_data["version"] = version
 
