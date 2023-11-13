@@ -1717,6 +1717,35 @@ class SaoTrialTowerPlayStartRequest(SaoBaseRequest):
 class SaoTrialTowerPlayEndRequest(SaoBaseRequest):
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
         super().__init__(header, data)
+        off = 0
+        ticket_id = decode_str(data, off)
+        self.ticket_id = ticket_id[0]
+        off += ticket_id[1]
+
+        user_id = decode_str(data, off)
+        self.user_id = user_id[0]
+        off += user_id[1]
+
+        self.trial_tower_id = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+
+        self.play_end_request_data_list: List[PlayEndRequestData] = []
+        for _ in range(self.play_end_request_data_count):
+            tmp = PlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.play_end_request_data_list.append(tmp)
+
+        self.multi_play_end_request_data_count = decode_int(data, off)
+        off += INT_OFF
+        
+        self.multi_play_end_request_data_list: List[MultiPlayEndRequestData] = []
+        for _ in range(self.multi_play_end_request_data_count):
+            tmp = MultiPlayEndRequestData(data, off)
+            off += tmp.get_size()
+            self.multi_play_end_request_data_list.append(tmp)
 
 class SaoTrialTowerPlayEndResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
