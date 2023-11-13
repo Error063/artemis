@@ -630,6 +630,7 @@ class YuiMedalShopUserData(BaseHelper):
         ret.yui_medal_shop_id = yui_medal_shop_id
         ret.purchase_num = purchase_num
         ret.last_purchase_date = last_purchase_date
+        return ret
     
     def make(self) -> bytes:
         ret = encode_int(self.yui_medal_shop_id)
@@ -651,6 +652,7 @@ class GashaMedalShopUserData(BaseHelper):
         ret = cls(b"\x00" * 20, 0)
         ret.gasha_medal_shop_id = gasha_medal_shop_id
         ret.purchase_num = purchase_num
+        return ret
     
     def make(self) -> bytes:
         ret = encode_int(self.gasha_medal_shop_id)
@@ -699,6 +701,7 @@ class YuiMedalShopData(BaseHelper):
         ret.yui_medal_shop_id = shop_id
         ret.name = name
         ret.description = desc
+        return ret
     
     def make(self) -> bytes:
         ret = encode_int(self.yui_medal_shop_id)
