@@ -8,6 +8,18 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 ### Card Maker
 + Added support for maimai DX FESTiVAL PLUS
 
+## 20231001
+### Initial D THE ARCADE
++ Added support for Initial D THE ARCADE S2
+  + Story mode progress added
+  + Bunta Challenge/Touhou Project modes added
+  + Time Trials added
+  + Leaderboards added, but doesn't refresh sometimes
+  + Theory of Street mode added (with CPUs)
+  + Play Stamp/Timetrial events added
+  + Frontend to download profile added
+  + Importer to import profiles added
+
 ## 20230716
 ### General
 + Docker files added (#19)

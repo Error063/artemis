@@ -10,11 +10,11 @@ This step-by-step guide assumes that you are using a fresh install of Windows 10
     3. Make sure that you enable "Create shortcuts for installed applications" and "Add Python to environment variables" and hit Install
 
 ## Install MySQL 8.0
-1. Download MySQL 8.0 Server : [Link](https://cdn.mysql.com//Downloads/MySQLInstaller/mysql-installer-web-community-8.0.31.0.msi)
-2. Install mysql-installer-web-community-8.0.31.0.msi
+1. Download MySQL 8.0 Server : [Link](https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-community-8.0.34.0.msi)
+2. Install mysql-installer-web-community-8.0.34.0.msi
     1. Click on "Add ..." on the side
     2. Click on the "+" next to MySQL Servers
-    3. Make sure MySQL Server 8.0.29 - X64 is under the products to be installed.
+    3. Make sure MySQL Server 8.0.34 - X64 is under the products to be installed.
     4. Hit Next and Next once installed
     5. Select the configuration type "Development Computer"
     6. Hit Next
@@ -23,9 +23,10 @@ This step-by-step guide assumes that you are using a fresh install of Windows 10
     9. Leave everything under Windows Service as default and hit Next >
     10. Click on Execute and for it to finish and hit Next> and then Finish
 3. Open MySQL 8.0 Command Line Client and login as your root user
-4. Type those commands to create your user and the database
-```
-CREATE USER 'aime'@'localhost' IDENTIFIED BY 'MyStrongPass.';
+4. Change `<Enter Password Here>` to a new password for the user aime, type those commands to create your user and the database
+
+```sql
+CREATE USER 'aime'@'localhost' IDENTIFIED BY '<Enter Password Here>';
 CREATE DATABASE aime;
 GRANT Alter,Create,Delete,Drop,Index,Insert,References,Select,Update ON aime.* TO 'aime'@'localhost';
 FLUSH PRIVILEGES;
@@ -34,33 +35,50 @@ exit;
 
 ## Install Python modules
 1. Change your work path to the artemis-master folder using 'cd' and install the requirements:
-> pip install -r requirements.txt
 
-## Copy/Rename the folder example_config to config
+```shell
+pip install -r requirements.txt
+```	
 
-## Adjust /config/core.yaml
+## Copy/Rename the folder `example_config` to `config`
 
-1. Make sure to change the server listen_address to be set to your local machine IP (ex.: 192.168.1.xxx) 
+## Adjust `config/core.yaml`
+
+1. Make sure to change the server `hostname` to be set to your local machine IP (ex.: 192.168.xxx.xxx) 
     - In case you want to run this only locally, set the following values:
-```
+
+```yaml
 server:
     listen_address: 0.0.0.0
 title: 
-    hostname: localhost
+    hostname: 192.168.xxx.xxx
 ```
-2. Adjust the proper MySQL information you created earlier
+
+1. Adjust the proper MySQL information you created earlier
+```yaml
+database:
+  host: "localhost"
+  username: "aime"
+  password: "<Enter Password Here>"
+  name: "aime"
+```
 3. Add the AimeDB key at the bottom of the file
 4. If the webui is needed, change the flag from False to True
 
 ## Create the database tables for ARTEMiS
-> python dbutils.py create
+
+```shell
+python dbutils.py create
+```
 
 ## Firewall Adjustements 
 Make sure the following ports are open both on your router and local Windows firewall in case you want to use this for public use (NOT recommended):
 > Port 80 (TCP), 443 (TCP), 8443 (TCP), 22345 (TCP), 8080 (TCP), 8090 (TCP) **webui, 8444 (TCP) **mucha
 
 ## Running the ARTEMiS instance
-> python index.py
+```shell
+python index.py
+```
 
 # Troubleshooting
 
@@ -78,6 +96,7 @@ Make sure the following ports are open both on your router and local Windows fir
 ## AttributeError: module 'collections' has no attribute 'Hashable'
 1. This means the pyYAML module is obsolete, simply rerun pip with the -U (force update) flag, as shown below.
     - Change your work path to the artemis-master (or artemis-develop) folder using 'cd' and run the following commands:
-```
+
+```shell
 pip install -r requirements.txt -U
 ```

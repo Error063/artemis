@@ -1,0 +1,22 @@
+server:
+  enable: True
+  loglevel: "info"
+  ssl: False
+  ssl_key: "cert/idac.key"
+  ssl_cert: "cert/idac.crt"
+  matching_host: "127.0.0.1"
+  port_matching: 20000
+  port_echo1: 20001
+  port_echo2: 20002
+  port_matching_p2p: 20003
+
+stamp:
+  enable: True
+  enabled_stamps: # max 3 play stamps
+    - "touhou_remilia_scarlet"
+    - "touhou_flandre_scarlet"
+    - "touhou_sakuya_izayoi"
+
+timetrial:
+  enable: True
+  enabled_timetrial: "touhou_remilia_scarlet"

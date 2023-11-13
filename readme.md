@@ -33,6 +33,9 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + Sword Art Online Arcade (partial support)
     + Final
 
++ Initial D THE ARCADE
+    + Season 2
+
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)
 - pip

@@ -6,6 +6,12 @@ the corresponding importer and database upgrades.
 **Important: The described database upgrades are only required if you are using an old database schema, f.e. still
 using the megaime database. Clean installations always create the latest database structure!**
 
+To upgrade the core database and the database for every game, execute:
+
+```shell
+python dbutils.py autoupgrade
+```
+
 # Table of content
 
 - [Supported Games](#supported-games)
@@ -16,6 +22,7 @@ using the megaime database. Clean installations always create the latest databas
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
     - [Sword Art Online Arcade](#sao)
+	- [Initial D THE ARCADE](#initial-d-the-arcade)
 
 
 # Supported Games
@@ -27,7 +34,7 @@ Games listed below have been tested and confirmed working.
 ### SDBT
 
 | Version ID | Version Name          |
-|------------|-----------------------|
+| ---------- | --------------------- |
 | 0          | CHUNITHM              |
 | 1          | CHUNITHM PLUS         |
 | 2          | CHUNITHM AIR          |
@@ -43,7 +50,7 @@ Games listed below have been tested and confirmed working.
 ### SDHD/SDBT
 
 | Version ID | Version Name        |
-|------------|---------------------|
+| ---------- | ------------------- |
 | 11         | CHUNITHM NEW!!      |
 | 12         | CHUNITHM NEW PLUS!! |
 | 13         | CHUNITHM SUN        |
@@ -83,9 +90,7 @@ crypto:
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDBT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDBT upgrade
@@ -146,7 +151,7 @@ The songId is based on the actual ID within your version of Chunithm.
 ### SDCA
 
 | Version ID | Version Name                       |
-|------------|------------------------------------|
+| ---------- | ---------------------------------- |
 | 0          | crossbeats REV.                    |
 | 1          | crossbeats REV. SUNRISE            |
 | 2          | crossbeats REV. SUNRISE S2         |
@@ -166,26 +171,26 @@ The importer for crossbeats REV. will import Music.
 
 Config file is located in `config/cxb.yaml`.
 
-| Option                 | Info                                                       |
-|------------------------|------------------------------------------------------------|
-| `hostname`             | Requires a proper `hostname` (not localhost!) to run       |
-| `ssl_enable`           | Enables/Disables the use of the `ssl_cert` and `ssl_key`   |
-| `port`                 | Set your unsecure port number                              |
-| `port_secure`          | Set your secure/SSL port number                            |
-| `ssl_cert`, `ssl_key`  | Enter your SSL certificate (requires not self signed cert) |
+| Option                | Info                                                       |
+| --------------------- | ---------------------------------------------------------- |
+| `hostname`            | Requires a proper `hostname` (not localhost!) to run       |
+| `ssl_enable`          | Enables/Disables the use of the `ssl_cert` and `ssl_key`   |
+| `port`                | Set your unsecure port number                              |
+| `port_secure`         | Set your secure/SSL port number                            |
+| `ssl_cert`, `ssl_key` | Enter your SSL certificate (requires not self signed cert) |
 
 
 ## maimai DX
 
 ### SDEZ
 
-| Game Code | Version ID | Version Name            |
-|-----------|------------|-------------------------|
+| Game Code | Version ID | Version Name |
+| --------- | ---------- | ------------ |
 
 
 For versions pre-dx
 | Game Code | Version ID | Version Name            |
-|-----------|------------|-------------------------|
+| --------- | ---------- | ----------------------- |
 | SBXL      | 0          | maimai                  |
 | SBXL      | 1          | maimai PLUS             |
 | SBZF      | 2          | maimai GreeN            |
@@ -227,11 +232,12 @@ The importer for maimai Pre-DX will import Events and Music. Not all games will 
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEZ_2_upgrade.sql`. In order to upgrade to version 2 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDEZ upgrade
 ```
+
 Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 
 ## Hatsune Miku Project Diva
@@ -239,7 +245,7 @@ Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
 ### SBZV
 
 | Version ID | Version Name                    |
-|------------|---------------------------------|
+| ---------- | ------------------------------- |
 | 0          | Project Diva Arcade             |
 | 1          | Project Diva Arcade Future Tone |
 
@@ -260,7 +266,7 @@ the Shop, Modules and Customizations.
 Config file is located in `config/diva.yaml`.
 
 | Option               | Info                                                                                            |
-|----------------------|-------------------------------------------------------------------------------------------------|
+| -------------------- | ----------------------------------------------------------------------------------------------- |
 | `unlock_all_modules` | Unlocks all modules (costumes) by default, if set to `False` all modules need to be purchased   |
 | `unlock_all_items`   | Unlocks all items (customizations) by default, if set to `False` all items need to be purchased |
 
@@ -270,9 +276,7 @@ In order to use custom PV Lists, simply drop in your .dat files inside of /title
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SBZV_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SBZV upgrade
@@ -283,7 +287,7 @@ python dbutils.py --game SBZV upgrade
 ### SDDT
 
 | Version ID | Version Name               |
-|------------|----------------------------|
+| ---------- | -------------------------- |
 | 0          | O.N.G.E.K.I.               |
 | 1          | O.N.G.E.K.I. +             |
 | 2          | O.N.G.E.K.I. SUMMER        |
@@ -311,7 +315,7 @@ The importer for O.N.G.E.K.I. will all all Cards, Music and Events.
 Config file is located in `config/ongeki.yaml`.
 
 | Option           | Info                                                                                                           |
-|------------------|----------------------------------------------------------------------------------------------------------------|
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
 | `enabled_gachas` | Enter all gacha IDs for Card Maker to work, other than default may not work due to missing cards added to them |
 | `crypto`         | This option is used to enable the TLS Encryption                                                               |
 
@@ -328,9 +332,7 @@ crypto:
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see
-which version is the latest, f.e. `SDDT_4_upgrade.sql`. In order to upgrade to version 4 in this case you need to
-perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDDT upgrade
@@ -403,7 +405,7 @@ After that, on next login the present should be received (or whenever it suppose
 ### SDED
 
 | Version ID | Version Name    |
-|------------|-----------------|
+| ---------- | --------------- |
 | 0          | Card Maker 1.30 |
 | 1          | Card Maker 1.35 |
 
@@ -525,7 +527,7 @@ Gacha IDs up to 1140 will be loaded for CM 1.34 and all gachas will be loaded fo
 ### SDFE
 
 | Version ID | Version Name  |
-|------------|---------------|
+| ---------- | ------------- |
 | 0          | WACCA         |
 | 1          | WACCA S       |
 | 2          | WACCA Lily    |
@@ -548,7 +550,7 @@ The importer for WACCA will import all Music data.
 Config file is located in `config/wacca.yaml`.
 
 | Option             | Info                                                                        |
-|--------------------|-----------------------------------------------------------------------------|
+| ------------------ | --------------------------------------------------------------------------- |
 | `always_vip`       | Enables/Disables VIP, if disabled it needs to be purchased manually in game |
 | `infinite_tickets` | Always set the "unlock expert" tickets to 5                                 |
 | `infinite_wp`      | Sets the user WP to `999999`                                                |
@@ -557,7 +559,7 @@ Config file is located in `config/wacca.yaml`.
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDFE_3_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDFE upgrade
@@ -602,9 +604,9 @@ Below is a list of VIP rewards. Currently, VIP is not implemented, and thus thes
 
 ### SDEW
 
-| Version ID | Version Name  |
-|------------|---------------|
-| 0          | SAO           |
+| Version ID | Version Name |
+| ---------- | ------------ |
+| 0          | SAO          |
 
 
 ### Importer
@@ -621,16 +623,16 @@ The importer for SAO will import all items, heroes, support skills and titles da
 
 Config file is located in `config/sao.yaml`.
 
-| Option             | Info                                                                        |
-|--------------------|-----------------------------------------------------------------------------|
-| `hostname`         | Changes the server listening address for Mucha                              |
-| `port`             | Changes the listing port                                                    |
-| `auto_register`    | Allows the game to handle the automatic registration of new cards           |
+| Option          | Info                                                              |
+| --------------- | ----------------------------------------------------------------- |
+| `hostname`      | Changes the server listening address for Mucha                    |
+| `port`          | Changes the listing port                                          |
+| `auto_register` | Allows the game to handle the automatic registration of new cards |
 
 
 ### Database upgrade
 
-Always make sure your database (tables) are up-to-date, to do so go to the `core/data/schema/versions` folder and see which version is the latest, f.e. `SDEW_1_upgrade.sql`. In order to upgrade to version 3 in this case you need to perform all previous updates as well:
+Always make sure your database (tables) are up-to-date:
 
 ```shell
 python dbutils.py --game SDEW upgrade
@@ -650,3 +652,134 @@ python dbutils.py --game SDEW upgrade
 - Midorica - Limited Network Support
 - Dniel97 - Helping with network base
 - tungnotpunk - Source
+
+## Initial D THE ARCADE
+
+### SDGT
+
+| Version ID | Version Name                  |
+| ---------- | ----------------------------- |
+| 0          | Initial D THE ARCADE Season 1 |
+| 1          | Initial D THE ARCADE Season 2 |
+
+**Important: Only version 1.50.00 (Season 2) is currently working and actively supported!**
+
+### Profile Importer
+
+In order to use the profile importer download the `idac_profile.json` file from the frontend
+and either directly use the folder path with `idac_profile.json` in it or specify the complete
+path to the `.json` file
+
+```shell
+python read.py --game SDGT --version <Version ID> --optfolder /path/to/game/download/folder
+```
+
+The importer for SDGT will import the complete profile data with personal high scores as well.
+
+### Config
+
+Config file is located in `config/idac.yaml`.
+
+| Option                        | Info                                                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `ssl`                         | Enables/Disables the use of the `ssl_cert` and `ssl_key` (currently unsuported)                             |
+| `matching_host`               | IPv4 address of your PC for the Online Battle (currently unsupported)                                       |
+| `port_matching`               | Port number for the Online Battle Matching                                                                  |
+| `port_echo1/2`                | Port numbers for Echos                                                                                      |
+| `port_matching_p2p`           | Port number for Online Battle (currently unsupported)                                                       |
+| `stamp.enable`               | Enables/Disabled the play stamp events                                                                      |
+| `stamp.enabled_stamps`        | Define up to 3 play stamp events (without `.json` extension, which are placed in `titles/idac/data/stamps`) |
+| `timetrial.enable`           | Enables/Disables the time trial event                                                                       |
+| `timetrial.enabled_timetrial` | Define one! trial event (without `.json` extension, which are placed in `titles/idac/data/timetrial`)       |
+
+
+### Database upgrade
+
+Always make sure your database (tables) are up-to-date:
+
+```shell
+python dbutils.py --game SDGT upgrade
+```
+
+### Notes
+- Online Battle is not supported
+- Online Battle Matching is not supported
+
+### Item categories
+
+| Category ID | Category Name            |
+| ----------- | ------------------------ |
+| 1           | D Coin                   |
+| 3           | Car Dressup Token        |
+| 5           | Avatar Dressup Token     |
+| 6           | Tachometer               |
+| 7           | Aura                     |
+| 8           | Aura Color               |
+| 9           | Avatar Face              |
+| 10          | Avatar Eye               |
+| 11          | Avatar Mouth             |
+| 12          | Avatar Hair              |
+| 13          | Avatar Glasses           |
+| 14          | Avatar Face accessories  |
+| 15          | Avatar Body              |
+| 18          | Avatar Background        |
+| 21          | Chat Stamp               |
+| 22          | Keychain                 |
+| 24          | Title                    |
+| 25          | FullTune Ticket          |
+| 26          | Paper Cup                |
+| 27          | BGM                      |
+| 28          | Drifting Text            |
+| 31          | Start Menu BG            |
+| 32          | Car Color/Paint          |
+| 33          | Aura Level               |
+| 34          | FullTune Ticket Fragment |
+| 35          | Underneon Lights         |
+
+### TimeRelease Chapter:
+
+1. Story: 1, 2, 3, 4, 5, 6, 7, 8, 9, 19 (Chapter 10), (29 Chapter 11?)
+2. MF Ghost: 10, 11, 12, 13, 14, 15
+3. Bunta: 15, 16, 17, 18, 19, 20, (21, 21, 22?)
+4. Special Event: 23, 24, 25, 26, 27, 28 (Touhou Project)
+
+### TimeRelease Courses:
+
+
+| Course ID | Course Name               | Direction                |
+| --------- | ------------------------- | ------------------------ |
+| 0         | Akina Lake(秋名湖)        | CounterClockwise(左周り) |
+| 2         | Akina Lake(秋名湖)        | Clockwise(右周り)        |
+| 52        | Hakone(箱根)              | Downhill(下り)           |
+| 54        | Hakone(箱根)              | Hillclimb(上り)          |
+| 36        | Usui(碓氷)                | CounterClockwise(左周り) |
+| 38        | Usui(碓氷)                | Clockwise(右周り)        |
+| 4         | Myogi(妙義)               | Downhill(下り)           |
+| 6         | Myogi(妙義)               | Hillclimb(上り)          |
+| 8         | Akagi(赤城)               | Downhill(下り)           |
+| 10        | Akagi(赤城)               | Hillclimb(上り)          |
+| 12        | Akina(秋名)               | Downhill(下り)           |
+| 14        | Akina(秋名)               | Hillclimb(上り)          |
+| 16        | Irohazaka(いろは坂)       | Downhill(下り)           |
+| 18        | Irohazaka(いろは坂)       | Reverse(逆走)            |
+| 56        | Momiji Line(もみじライン) | Downhill(下り)           |
+| 58        | Momiji Line(もみじライン) | Hillclimb(上り)          |
+| 20        | Tsukuba(筑波)             | Outbound(往路)           |
+| 22        | Tsukuba(筑波)             | Inbound(復路)            |
+| 24        | Happogahara(八方ヶ原)     | Outbound(往路)           |
+| 26        | Happogahara(八方ヶ原)     | Inbound(復路)            |
+| 40        | Sadamine(定峰)            | Downhill(下り)           |
+| 42        | Sadamine(定峰)            | Hillclimb(上り)          |
+| 44        | Tsuchisaka(土坂)          | Outbound(往路)           |
+| 46        | Tsuchisaka(土坂)          | Inbound(復路)            |
+| 48        | Akina Snow(秋名雪)        | Downhill(下り)           |
+| 50        | Akina Snow(秋名雪)        | Hillclimb(上り)          |
+| 68        | Odawara(小田原)           | Forward(順走)            |
+| 70        | Odawara(小田原)           | Reverse(逆走)            |
+
+### Credits
+- Bottersnike: For the HUGE Reverse Engineering help
+- Kinako: For helping with the timeRelease unlocking of courses and special mode
+
+A huge thanks to all people who helped shaping this project to what it is now and don't want to be mentioned here.
+
