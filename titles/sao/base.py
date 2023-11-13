@@ -303,26 +303,30 @@ class SaoBase:
         req_data = SaoSynthesizeEnhancementEquipmentRequest(header, request)
         synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
-        for i in range(0,req_data.material_common_reward_user_data_count):
-
-            itemList = self.game_data.static.get_item_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+        for x in req_data.material_common_reward_user_data_list:
+            equipment_exp = 0
+            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
+            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 equipment_exp = 2000 + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_item(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_item(req_data.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, x.user_common_reward_id)
                 equipment_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_equipment(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_equipment(req_data.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                hero_data = self.game_data.item.get_hero_log(req_data.user_id, x.user_common_reward_id)
                 equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_hero_log(req_data.user_id, req_data.material_common_reward_user_data_list[i].user_common_reward_id)
+                self.game_data.item.remove_hero_log(req_data.user_id, x.user_common_reward_id)
 
+            if equipment_exp == 0:
+                self.logger.warn(f"Common reward {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
+                continue
+            
             self.game_data.item.put_equipment_data(req_data.user_id, int(req_data.origin_user_equipment_id), synthesize_equipment_data["enhancement_value"], equipment_exp, 0, 0, 0)
 
             profile = self.game_data.profile.get_profile(req_data.user_id)

@@ -73,12 +73,13 @@ class BaseHelper:
     
 class MaterialCommonRewardUserData(BaseHelper):
     def __init__(self, data: bytes, offset: int) -> None:
-        self.common_reward_type = decode_short(data, offset)
-        offset += SHORT_OFF
+        super().__init__(data, offset)
+        self.common_reward_type = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
 
-        self.user_common_reward_id = decode_short(data, offset)
-
-        self._sz = SHORT_OFF + SHORT_OFF
+        user_common_reward_id = decode_str(data, offset + self._sz)
+        self.user_common_reward_id = user_common_reward_id[0]
+        self._sz += user_common_reward_id[1]
 
 class PartyTeamData(BaseHelper):
     def __init__(self, data: bytes, offset: int) -> None:
