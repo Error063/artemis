@@ -252,7 +252,7 @@ class OngekiServlet(BaseServlet):
 
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
-        if not encrtped and version < 120:
+        if not encrtped or version < 120:
             return zipped
 
         padded = pad(zipped, 16)
