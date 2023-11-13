@@ -719,8 +719,8 @@ class YuiMedalShopData(BaseHelper):
         ret += encode_byte(self.target_days)
         ret += encode_byte(self.target_hour)
         ret += encode_byte(self.interval_hour)
-        ret += encode_str(self.sales_end_date)
-        ret += encode_str(self.sales_end_date)
+        ret += encode_str(fmt_dt(self.sales_end_date))
+        ret += encode_str(fmt_dt(self.sales_end_date))
         ret += encode_byte(self.sort)
         return ret
 
