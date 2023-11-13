@@ -1,4 +1,4 @@
-// YuiMedalShopId,Name,Description,SellingYuiMedal,SellingCol,SellingEventItemId,SellingEventItemNum,SellingTicketNum,PurchaseLimit,PickUpFlag,ProductCategory,SalesType,TargetDays,TargetHour,IntervalHour,SalesStartDate,SalesEndDate,Sort
+YuiMedalShopId,Name,Description,SellingYuiMedal,SellingCol,SellingEventItemId,SellingEventItemNum,SellingTicketNum,PurchaseLimit,PickUpFlag,ProductCategory,SalesType,TargetDays,TargetHour,IntervalHour,SalesStartDate,SalesEndDate,Sort
 1,"≪想い馳せる窓辺≫キリト",,5,-1,0,-1,-1,-1,True,0,0,0,0,0,"2019/08/01","2019/11/01 2:00:00",0
 2,"≪悪戯なオネーサン≫アルゴ",,5,-1,0,-1,-1,-1,True,0,0,0,0,0,"2019/08/01","2019/11/01 2:00:00",0
 3,"ネックレス",,2,-1,0,-1,-1,-1,False,0,0,0,0,0,"2019/08/01","2019/11/01 2:00:00",0

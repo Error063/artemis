@@ -1,4 +1,4 @@
-// YuiMedalShopItemId,YuiMedalShopId,CommonRewardType,CommonRewardId,CommonRewardNum,Strength,Property1PropertyId,Property1Value1,Property1Value2,Property2PropertyId,Property2Value1,Property2Value2,Property3PropertyId,Property3Value1,Property3Value2,Property4PropertyId,Property4Value1,Property4Value2
+YuiMedalShopItemId,YuiMedalShopId,CommonRewardType,CommonRewardId,CommonRewardNum,Strength,Property1PropertyId,Property1Value1,Property1Value2,Property2PropertyId,Property2Value1,Property2Value2,Property3PropertyId,Property3Value1,Property3Value2,Property4PropertyId,Property4Value1,Property4Value2
 1,1,1,101000190,1,0,1,0,0,1,0,0,2,0,0,2,0,0
 2,2,1,110000150,1,0,1,0,0,1,0,0,2,0,0,2,0,0
 3,3,2,120000003,1,0,302000,10,0,301900,20,0,2,0,0,2,0,0

@@ -1,6 +1,8 @@
 import logging
 from csv import *
 from random import choice
+from typing import Dict, List
+from os import path
 
 from core.data import Data
 from core import CoreConfig
@@ -16,6 +18,19 @@ class SaoBase:
         self.game_data = SaoData(core_cfg)
         self.version = 0
         self.logger = logging.getLogger("sao")
+
+    def load_data_csv(self, file: str) -> List[Dict]:
+        ret = []
+        if path.exists(f"titles/sao/data/{file}.csv"):
+            with open(f"titles/sao/data/{file}.csv", "r", encoding="utf8") as f:
+                data = csv.DictReader(f, delimiter=',')
+                for x in data:
+                    ret.append(x)
+            
+            return ret
+        
+        self.logger.warning(f"Failed to find csv file {file}.csv")
+        return ret
 
     def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
         self.logger.info(f"Using Generic handler")
@@ -835,7 +850,86 @@ class SaoBase:
     
     def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # shop/get_shop_resource_sales_data_list
-        # TODO: Shop data
+        # TODO: Get user shop data
         req = GetShopResourceSalesDataListRequest(header, request)
         resp = GetShopResourceSalesDataListResponse(header.cmd + 1)
         return resp.make()
+    
+    def handle_d100(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # shop/get_yui_medal_shop_user_data_list
+        # TODO: Get user shop data
+        req = GetYuiMedalShopUserDataListRequest(header, request)
+        resp = GetYuiMedalShopUserDataListResponse(header.cmd + 1)
+        return resp.make()
+    
+    def handle_cf0e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # gasha/get_gasha_medal_shop_user_data_list
+        # TODO: Get user shop data
+        req = GetGashaMedalShopUserDataListRequest(header, request)
+        resp = GetGashaMedalShopUserDataListResponse(header.cmd + 1)
+        return resp.make()
+    
+    def handle_d5da(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data/get_m_yui_medal_shops
+        req = GetMYuiMedalShopDataRequest(header, request)
+        resp = GetMYuiMedalShopDataResponse(header.cmd + 1)
+        
+        shops = self.load_data_csv("YuiMedalShops")
+        for shop in shops:
+            tmp = YuiMedalShopData.from_args(int(shop['YuiMedalShopId']), shop['Name'], shop['Description'])
+            tmp.selling_yui_medal = int(shop['SellingYuiMedal'])
+            tmp.selling_col = int(shop['SellingCol'])
+            tmp.selling_event_item_id = int(shop['SellingEventItemId'])
+            tmp.selling_event_item_num = int(shop['SellingEventItemNum'])
+            tmp.selling_ticket_num = int(shop['SellingTicketNum'])
+            tmp.purchase_limit = int(shop['PurchaseLimit'])
+            tmp.pick_up_flag = 1 if shop['PickUpFlag'] == "True" else 0
+            tmp.product_category = int(shop['ProductCategory'])
+            tmp.sales_type = int(shop['SalesType'])
+            tmp.target_days = int(shop['TargetDays'])
+            tmp.target_hour = int(shop['TargetHour'])
+            tmp.interval_hour = int(shop['IntervalHour'])
+            tmp.sort = int(shop['Sort'])
+            
+            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            
+            resp.data_list.append(tmp)
+            
+        return resp.make()
+    
+    def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data/get_m_yui_medal_shop_items
+        req = GetMYuiMedalShopItemsRequest(header, request)
+        resp = GetMYuiMedalShopItemsResponse(header.cmd + 1)
+        
+        shops = self.load_data_csv("YuiMedalShopItems")
+        for shop in shops:
+            tmp = YuiMedalShopItemData.from_args(int(shop['YuiMedalShopItemId']), int(shop['YuiMedalShopId']), int(shop['CommonRewardType']), int(shop['CommonRewardId']), int(shop['CommonRewardNum']), int(shop['Strength']))
+            
+            tmp.property1_property_id = int(shop['Property1PropertyId'])
+            tmp.property1_value1 = int(shop['Property1Value1'])
+            tmp.property1_value2 = int(shop['Property1Value2'])
+            
+            tmp.property2_property_id = int(shop['Property2PropertyId'])
+            tmp.property2_value1 = int(shop['Property2Value1'])
+            tmp.property2_value2 = int(shop['Property2Value2'])
+            
+            tmp.property3_property_id = int(shop['Property3PropertyId'])
+            tmp.property3_value1 = int(shop['Property3Value1'])
+            tmp.property3_value2 = int(shop['Property3Value2'])
+            
+            tmp.property4_property_id = int(shop['Property4PropertyId'])
+            tmp.property4_value1 = int(shop['Property4Value1'])
+            tmp.property4_value2 = int(shop['Property4Value2'])
+            
+            resp.data_list.append(tmp)
+            
+        return resp.make()
+    
+    def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data/get_m_gasha_medal_shops
+        pass
+    
+    def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data_2/get_m_res_earn_campaign_shops
+        pass

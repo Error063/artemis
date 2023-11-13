@@ -1,4 +1,4 @@
-// GashaMedalShopId,Name,GashaMedalId,UseGashaMedalNum,PurchaseLimit,StartDate,EndDate
+GashaMedalShopId,Name,GashaMedalId,UseGashaMedalNum,PurchaseLimit,StartDate,EndDate
 15701,"≪不屈の誓い≫キリト",10002,300,-1,"2020/03/10 7:00:00","2020/03/31 2:00:00"
 15702,"≪明日への誓い≫アスナ",10002,300,-1,"2020/03/10 7:00:00","2020/03/31 2:00:00"
 15703,"ダークリパルサー",10002,60,-1,"2020/03/10 7:00:00","2020/03/31 2:00:00"

@@ -594,7 +594,7 @@ class ShopResourceSalesData(BaseHelper):
         self._sz += sales_resource_data_list[1]
 
     @classmethod
-    def from_args(cls, resource_id: str = "0", discharge_id: int = "0", remaining: int = 0, purchased: int = 0) -> "ShopResourceSalesData":
+    def from_args(cls, resource_id: str = "0", discharge_id: str = "0", remaining: int = 0, purchased: int = 0) -> "ShopResourceSalesData":
         ret = cls(b"\x00" * 20, 0)
         ret.user_shop_resource_id = resource_id
         ret.discharge_user_id = discharge_id
@@ -610,4 +610,193 @@ class ShopResourceSalesData(BaseHelper):
         ret += encode_str(fmt_dt(self.sales_start_date))
         ret += encode_arr_cls(self.sales_resource_data_list)
         return ret
+
+class YuiMedalShopUserData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.yui_medal_shop_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
         
+        self.purchase_num = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        last_purchase_date = decode_str(data, offset + self._sz)
+        self.last_purchase_date = last_purchase_date[0]
+        self._sz += last_purchase_date[1]
+    
+    @classmethod
+    def from_args(cls, yui_medal_shop_id: int = 0, purchase_num: int = 0, last_purchase_date: datetime = datetime.fromtimestamp(0)) -> "YuiMedalShopUserData":
+        ret = cls(b"\x00" * 20, 0)
+        ret.yui_medal_shop_id = yui_medal_shop_id
+        ret.purchase_num = purchase_num
+        ret.last_purchase_date = last_purchase_date
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.yui_medal_shop_id)
+        ret += encode_int(self.purchase_num)
+        ret += encode_str(fmt_dt(self.last_purchase_date))
+        return ret
+
+class GashaMedalShopUserData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.gasha_medal_shop_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.purchase_num = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+    
+    @classmethod
+    def from_args(cls, gasha_medal_shop_id: int = 0, purchase_num: int = 0) -> "GashaMedalShopUserData":
+        ret = cls(b"\x00" * 20, 0)
+        ret.gasha_medal_shop_id = gasha_medal_shop_id
+        ret.purchase_num = purchase_num
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.gasha_medal_shop_id)
+        ret += encode_int(self.purchase_num)
+        return ret
+
+class YuiMedalShopData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.yui_medal_shop_id = decode_int(data, offset + self._sz)
+        
+        name = decode_str(data, offset + self._sz)
+        self.name = name[0]
+        self._sz += name[1]
+
+        description = decode_str(data, offset + self._sz)
+        self.description = description[0]
+        self._sz += description[1]
+        
+        self.selling_yui_medal = decode_short(data, offset + self._sz)
+        self.selling_col = decode_int(data, offset + self._sz)
+        self.selling_event_item_id = decode_int(data, offset + self._sz)
+        self.selling_event_item_num = decode_int(data, offset + self._sz)
+        self.selling_ticket_num = decode_int(data, offset + self._sz)
+        self.purchase_limit = decode_short(data, offset + self._sz)
+        self.pick_up_flag = decode_byte(data, offset + self._sz)
+        self.product_category = decode_byte(data, offset + self._sz)
+        self.sales_type = decode_byte(data, offset + self._sz)
+        self.target_days = decode_byte(data, offset + self._sz)
+        self.target_hour = decode_byte(data, offset + self._sz)
+        self.interval_hour = decode_byte(data, offset + self._sz)
+        
+        sales_start_date = decode_str(data, offset + self._sz)
+        self.sales_start_date = prs_dt(sales_start_date[0])
+        self._sz += sales_start_date[1]
+        
+        sales_end_date = decode_str(data, offset + self._sz)
+        self.sales_end_date = prs_dt(sales_end_date[0])
+        self._sz += sales_end_date[1]
+        
+        self.sort = decode_byte(data, offset + self._sz)
+
+    @classmethod
+    def from_args(cls, shop_id: int = 0, name: str = "", desc: str = "") -> "YuiMedalShopData":
+        ret = cls(b"\x00" * 43, 0)
+        ret.yui_medal_shop_id = shop_id
+        ret.name = name
+        ret.description = desc
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.yui_medal_shop_id)
+        ret += encode_str(self.name)
+        ret += encode_str(self.description)
+        ret += encode_short(self.selling_yui_medal)
+        ret += encode_int(self.selling_col)
+        ret += encode_int(self.selling_event_item_id)
+        ret += encode_int(self.selling_event_item_num)
+        ret += encode_int(self.selling_ticket_num)
+        ret += encode_short(self.purchase_limit)
+        ret += encode_byte(self.pick_up_flag)
+        ret += encode_byte(self.product_category)
+        ret += encode_byte(self.sales_type)
+        ret += encode_byte(self.target_days)
+        ret += encode_byte(self.target_hour)
+        ret += encode_byte(self.interval_hour)
+        ret += encode_str(self.sales_end_date)
+        ret += encode_str(self.sales_end_date)
+        ret += encode_byte(self.sort)
+        return ret
+
+class YuiMedalShopItemData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.yui_medal_shop_item_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.yui_medal_shop_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.common_reward_type = decode_byte(data, offset + self._sz)
+        self._sz += BYTE_OFF
+        self.common_reward_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.common_reward_num = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.strength = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property1_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property1_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property1_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property2_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property2_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property2_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property3_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property3_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property3_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        
+        self.property4_property_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property4_value1 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.property4_value2 = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+    
+    @classmethod
+    def from_args(cls, item_id: int = 0, shop_id: int = 0, reward_type: int = 0, reward_id: int = 0, reward_num: int = 0, strength: int = 0) -> "YuiMedalShopItemData":
+        ret = cls(b"\x00" * 67, 0)
+        ret.yui_medal_shop_item_id = item_id
+        ret.yui_medal_shop_id = shop_id
+        ret.common_reward_type = reward_type
+        ret.common_reward_id = reward_id
+        ret.common_reward_num = reward_num
+        ret.strength = strength
+        return ret
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.yui_medal_shop_item_id)
+        ret += encode_int(self.yui_medal_shop_id)
+        ret += encode_byte(self.common_reward_type)
+        ret += encode_int(self.common_reward_id)
+        ret += encode_short(self.common_reward_num)
+        ret += encode_int(self.strength)
+        
+        ret += encode_int(self.property1_property_id)
+        ret += encode_int(self.property1_value1)
+        ret += encode_int(self.property1_value2)
+        
+        ret += encode_int(self.property2_property_id)
+        ret += encode_int(self.property2_value1)
+        ret += encode_int(self.property2_value2)
+        
+        ret += encode_int(self.property3_property_id)
+        ret += encode_int(self.property3_value1)
+        ret += encode_int(self.property3_value2)
+        
+        ret += encode_int(self.property4_property_id)
+        ret += encode_int(self.property4_value1)
+        ret += encode_int(self.property4_value2)
+        return ret
