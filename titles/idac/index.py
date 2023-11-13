@@ -83,7 +83,7 @@ class IDACServlet:
         self, game_code: str, game_ver: int, keychip: str
     ) -> Tuple[bool, str, str]:
         title_port_int = Utils.get_title_port(self.core_cfg)
-        t_port = f":{title_port_int}" if title_port_int != 80 and not self.core_cfg.server.is_using_proxy else ""
+        t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
 
         return (
             f"",

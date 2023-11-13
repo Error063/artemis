@@ -1,6 +1,13 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20231015
+### maimai DX
++ Added support for FESTiVAL PLUS
+
+### Card Maker
++ Added support for maimai DX FESTiVAL PLUS
+
 ## 20231001
 ### Initial D THE ARCADE
 + Added support for Initial D THE ARCADE S2
@@ -12,13 +19,6 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
   + Play Stamp/Timetrial events added
   + Frontend to download profile added
   + Importer to import profiles added
-
-## 20231015
-### maimai DX
-+ Added support for FESTiVAL PLUS
-
-### Card Maker
-+ Added support for maimai DX FESTiVAL PLUS
 
 ## 20230716
 ### General
