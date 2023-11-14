@@ -803,3 +803,8 @@ class YuiMedalShopItemData(BaseHelper):
         ret += encode_int(self.property4_value1)
         ret += encode_int(self.property4_value2)
         return ret
+
+class GashaMedalShop(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        
