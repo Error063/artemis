@@ -119,6 +119,12 @@ class SaoServlet(BaseServlet):
         self.logger.info(f"{endpoint} - {cmd_str} request")
         self.logger.debug(f"Request: {req_raw.hex()}")
         resp = handler(req_header, req_data)
+
+        if resp is None:
+            resp = SaoNoopResponse(req_header.cmd + 1).make()
+        
+        elif issubclass(resp, SaoBaseResponse):
+            resp = resp.make()
         
         self.logger.debug(f"Response: {resp.hex()}")
 

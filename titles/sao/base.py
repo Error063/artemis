@@ -944,7 +944,7 @@ class SaoBase:
     
     def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shop_items
-        return SaoNoopResponse(header.cmd + 1)
+        return SaoNoopResponse(header.cmd + 1).make()
     
     def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
@@ -970,4 +970,4 @@ class SaoBase:
     
     def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shop_items
-        return SaoNoopResponse(header.cmd + 1)
+        return SaoNoopResponse(header.cmd + 1).make()
