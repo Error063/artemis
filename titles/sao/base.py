@@ -939,9 +939,27 @@ class SaoBase:
             
             resp.data_list.append(tmp)
 
-        self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shop Items")
+        self.logger.debug(f"Load {len(resp.data_list)} Gasha Medal Shops")
         return resp.make()
     
     def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
-        return SaoNoopResponse(header.cmd + 1).make()
+        req = GetMResEarnCampaignShopsRequest(header, request)
+        resp = GetMResEarnCampaignShopsResponse(header.cmd + 1)
+        
+        shops = self.load_data_csv("ResEarnCampaignShops")
+        for shop in shops:
+            tmp = ResEarnCampaignShop.from_args(shop['ResEarnCampaignShopId'], shop['ResEarnCampaignApplicationId'], shop['Name'])
+            tmp.selling_yui_medal = shop['SellingYuiMedal']
+            tmp.selling_col = shop['SellingCol']
+            tmp.selling_event_item_id = shop['SellingEventItemId']
+            tmp.selling_event_item_num = shop['SellingEventItemNum']
+            tmp.purchase_limit = shop['PurchaseLimit']
+            tmp.get_application_point = shop['GetApplicationPoint']
+            
+            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            
+            resp.data_list.append(tmp)
+
+        self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
+        return resp.make()

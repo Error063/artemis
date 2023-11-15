@@ -3212,3 +3212,21 @@ class GetMGashaMedalShopsResponse(SaoBaseResponse):
         
         self.header.length = len(ret)
         return super().make() + ret
+
+class GetMResEarnCampaignShopsRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        self.dummy = decode_byte(data, 0)
+
+class GetMResEarnCampaignShopsResponse(SaoBaseResponse):
+    def __init__(self, cmd_id: int) -> None:
+        super().__init__(cmd_id)
+        self.result = 1 # byte
+        self.data_list: List[ResEarnCampaignShop] = []
+
+    def make(self) -> bytes:
+        ret = encode_byte(self.result)
+        ret += encode_arr_cls(self.data_list)
+        
+        self.header.length = len(ret)
+        return super().make() + ret

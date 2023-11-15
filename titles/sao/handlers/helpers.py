@@ -816,6 +816,61 @@ class YuiMedalShopItemData(BaseHelper):
         ret += encode_int(self.property4_value2)
         return ret
 
+class ResEarnCampaignShop(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.res_earn_campaign_shop_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.res_earn_campaign_application_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+
+        name = decode_str(data, offset + self._sz)
+        self.name = name[0]
+        self._sz += name[1]
+
+        self.selling_yui_medal = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.selling_col = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.selling_event_item_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.selling_event_item_num = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.purchase_limit = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.get_application_point = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+
+        sales_start_date = decode_str(data, offset + self._sz)
+        self.sales_start_date = prs_dt(sales_start_date[0])
+        self._sz += sales_start_date[1]
+        
+        sales_end_date = decode_str(data, offset + self._sz)
+        self.sales_end_date = prs_dt(sales_end_date[0])
+        self._sz += sales_end_date[1]
+    
+    @classmethod
+    def from_args(cls, shop_id: int = 0, app_id: int = 0, name: str = "") -> "ResEarnCampaignShop":
+        ret = cls(b"\x00" * 26, 0)
+        ret.res_earn_campaign_shop_id = shop_id
+        ret.res_earn_campaign_application_id = app_id
+        ret.name = name
+        return ret
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.res_earn_campaign_shop_id)
+        ret = encode_int(self.res_earn_campaign_application_id)
+        ret += encode_str(self.name)
+        ret += encode_short(self.selling_yui_medal)
+        ret += encode_int(self.selling_col)
+        ret += encode_int(self.selling_event_item_id)
+        ret += encode_int(self.selling_event_item_num)
+        ret += encode_short(self.purchase_limit)
+        ret += encode_short(self.get_application_point)
+        ret += encode_str(fmt_dt(self.sales_start_date))
+        ret += encode_str(fmt_dt(self.sales_end_date))
+        return ret
+
 class GashaMedalShop(BaseHelper):
     def __init__(self, data: bytes, offset: int) -> None:
         super().__init__(data, offset)
