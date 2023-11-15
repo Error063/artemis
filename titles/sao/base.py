@@ -965,8 +965,8 @@ class SaoBase:
             
             resp.data_list.append(tmp)
 
-        self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
-        return resp.make()
+        #self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
+        return SaoNoopResponse(header.cmd + 1).make()
     
     def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shop_items
