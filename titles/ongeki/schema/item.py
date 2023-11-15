@@ -533,8 +533,8 @@ class OngekiItemData(BaseData):
         return result.fetchall()
 
     def put_mission_point(self, aime_id: int, version: int, mission_point_data: Dict) -> Optional[int]:
-        mission_point_data["user"] = aime_id
         mission_point_data["version"] = version
+        mission_point_data["user"] = aime_id
 
         sql = insert(mission_point).values(**mission_point_data)
         conflict = sql.on_duplicate_key_update(**mission_point_data)
