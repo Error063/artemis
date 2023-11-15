@@ -894,7 +894,7 @@ class SaoBase:
             tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
             
             resp.data_list.append(tmp)
-            
+        self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shops")
         return resp.make()
     
     def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
@@ -923,12 +923,24 @@ class SaoBase:
             tmp.property4_value2 = int(shop['Property4Value2'])
             
             resp.data_list.append(tmp)
-            
+        
+        self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shop Items")
         return resp.make()
     
     def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shops
-        return SaoNoopResponse(header.cmd + 1).make()
+        req = GetMGashaMedalShopsRequest(header.cmd + 1).make()
+        resp = GetMGashaMedalShopsResponse(header.cmd + 1)
+        
+        shops = self.load_data_csv("GashaMedalShops")
+        for shop in shops:
+            tmp = GashaMedalShop.from_args(shop['GashaMedalShopId'], shop['Name'], shop['GashaMedalId'], shop['UseGashaMedalNum'], shop['PurchaseLimit'])
+            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            
+            resp.data_list.append(tmp)
+
+        self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shop Items")
+        return resp.make()
     
     def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
