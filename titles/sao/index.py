@@ -123,8 +123,15 @@ class SaoServlet(BaseServlet):
         if resp is None:
             resp = SaoNoopResponse(req_header.cmd + 1).make()
         
+        if type(resp) == bytes:
+            pass
+        
         elif issubclass(resp, SaoBaseResponse):
             resp = resp.make()
+        
+        else:
+            self.logger.error(f"Unknown response type {type(resp)}")
+            return b""
         
         self.logger.debug(f"Response: {resp.hex()}")
 
