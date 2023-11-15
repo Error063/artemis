@@ -891,7 +891,7 @@ class SaoBase:
             tmp.interval_hour = int(shop['IntervalHour'])
             tmp.sort = int(shop['Sort'])
             
-            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            tmp.sales_end_date = datetime(2121, 1, 1, 0, 0, 0, 0) # always open
             
             resp.data_list.append(tmp)
         self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shops")
@@ -929,18 +929,22 @@ class SaoBase:
     
     def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shops
-        req = GetMGashaMedalShopsRequest(header.cmd + 1).make()
+        req = GetMGashaMedalShopsRequest(header, request)
         resp = GetMGashaMedalShopsResponse(header.cmd + 1)
         
         shops = self.load_data_csv("GashaMedalShops")
         for shop in shops:
             tmp = GashaMedalShop.from_args(shop['GashaMedalShopId'], shop['Name'], shop['GashaMedalId'], shop['UseGashaMedalNum'], shop['PurchaseLimit'])
-            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            tmp.sales_end_date = datetime(2121, 1, 1, 0, 0, 0, 0) # always open
             
             resp.data_list.append(tmp)
 
         self.logger.debug(f"Load {len(resp.data_list)} Gasha Medal Shops")
         return resp.make()
+    
+    def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data/get_m_gasha_medal_shop_items
+        return SaoNoopResponse(header.cmd + 1)
     
     def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
@@ -957,9 +961,13 @@ class SaoBase:
             tmp.purchase_limit = shop['PurchaseLimit']
             tmp.get_application_point = shop['GetApplicationPoint']
             
-            tmp.sales_end_date = datetime(2100, 1, 1, 0, 0, 0, 0) # always open
+            tmp.sales_end_date = datetime(2121, 1, 1, 0, 0, 0, 0) # always open
             
             resp.data_list.append(tmp)
 
         self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
         return resp.make()
+    
+    def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # master_data_2/get_m_res_earn_campaign_shop_items
+        return SaoNoopResponse(header.cmd + 1)
