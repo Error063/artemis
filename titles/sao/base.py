@@ -934,7 +934,7 @@ class SaoBase:
         
         shops = self.load_data_csv("GashaMedalShops")
         for shop in shops:
-            tmp = GashaMedalShop.from_args(shop['GashaMedalShopId'], shop['Name'], shop['GashaMedalId'], shop['UseGashaMedalNum'], shop['PurchaseLimit'])
+            tmp = GashaMedalShop.from_args(int(shop['GashaMedalShopId']), shop['Name'], int(shop['GashaMedalId']), int(shop['UseGashaMedalNum']), int(shop['PurchaseLimit']))
             tmp.sales_end_date = datetime(2121, 1, 1, 0, 0, 0, 0) # always open
             
             resp.data_list.append(tmp)
@@ -953,13 +953,13 @@ class SaoBase:
         
         shops = self.load_data_csv("ResEarnCampaignShops")
         for shop in shops:
-            tmp = ResEarnCampaignShop.from_args(shop['ResEarnCampaignShopId'], shop['ResEarnCampaignApplicationId'], shop['Name'])
-            tmp.selling_yui_medal = shop['SellingYuiMedal']
-            tmp.selling_col = shop['SellingCol']
-            tmp.selling_event_item_id = shop['SellingEventItemId']
-            tmp.selling_event_item_num = shop['SellingEventItemNum']
-            tmp.purchase_limit = shop['PurchaseLimit']
-            tmp.get_application_point = shop['GetApplicationPoint']
+            tmp = ResEarnCampaignShop.from_args(int(shop['ResEarnCampaignShopId']), int(shop['ResEarnCampaignApplicationId']), shop['Name'])
+            tmp.selling_yui_medal = int(shop['SellingYuiMedal'])
+            tmp.selling_col = int(shop['SellingCol'])
+            tmp.selling_event_item_id = int(shop['SellingEventItemId'])
+            tmp.selling_event_item_num = int(shop['SellingEventItemNum'])
+            tmp.purchase_limit = int(shop['PurchaseLimit'])
+            tmp.get_application_point = int(shop['GetApplicationPoint'])
             
             tmp.sales_end_date = datetime(2121, 1, 1, 0, 0, 0, 0) # always open
             
