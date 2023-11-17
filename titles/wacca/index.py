@@ -179,4 +179,4 @@ class WaccaServlet:
             resp = BaseResponse()
             resp.status = 1
             resp.message = "A server error occoured."
-            return end(resp)
+            return end(resp.make())
