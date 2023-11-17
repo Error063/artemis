@@ -18,7 +18,7 @@ from .lilyr import WaccaLilyR
 from .lily import WaccaLily
 from .s import WaccaS
 from .base import WaccaBase
-from .handlers.base import BaseResponse
+from .handlers.base import BaseResponse, BaseRequest
 from .handlers.helpers import Version
 
 
@@ -115,10 +115,20 @@ class WaccaServlet:
         try:
             req_json = json.loads(request.content.getvalue())
             version_full = Version(req_json["appVersion"])
+            req = BaseRequest(req_json)
         
-        except Exception:
+        except KeyError as e:
             self.logger.error(
-                f"Failed to parse request to {url_path} -> {request.content.getvalue()}"
+                f"Failed to parse request to {request.content.getvalue()} -> Missing required value {e}"
+            )
+            resp = BaseResponse()
+            resp.status = 1
+            resp.message = "不正なリクエスト エラーです"
+            return end(resp.make())
+        
+        except Exception as e:
+            self.logger.error(
+                f"Failed to parse request to {url_path} -> {request.content.getvalue()} -> {e}"
             )
             resp = BaseResponse()
             resp.status = 1
@@ -144,7 +154,7 @@ class WaccaServlet:
 
         else:
             self.logger.warning(
-                f"Unsupported version ({req_json['appVersion']}) request {url_path} - {req_json}"
+                f"Unsupported version ({req.appVersion}) request {url_path} - {req_json}"
             )
             resp = BaseResponse()
             resp.status = 1
@@ -152,7 +162,7 @@ class WaccaServlet:
             return end(resp.make())
 
         self.logger.info(
-            f"v{req_json['appVersion']} {url_path} request from {client_ip} with chipId {req_json['chipId']}"
+            f"v{req.appVersion} {url_path} request from {client_ip} with chipId {req.chipId}"
         )
         self.logger.debug(req_json)
 
@@ -167,12 +177,12 @@ class WaccaServlet:
             handler = getattr(self.versions[internal_ver], func_to_find)
             resp = handler(req_json)
 
-            self.logger.debug(f"{req_json['appVersion']} response {resp}")
+            self.logger.debug(f"{req.appVersion} response {resp}")
             return end(resp)
 
         except Exception as e:
             self.logger.error(
-                f"{req_json['appVersion']} Error handling method {url_path} -> {e}"
+                f"{req.appVersion} Error handling method {url_path} -> {e}"
             )
             if self.logger.level == logging.DEBUG:
                 traceback.print_exception(e, limit=1)

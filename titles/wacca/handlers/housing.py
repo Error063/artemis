@@ -32,6 +32,8 @@ class HousingStartRequestV1(BaseRequest):
 class HousingStartRequestV2(HousingStartRequestV1):
     def __init__(self, data: Dict) -> None:
         super(HousingStartRequestV1, self).__init__(data)
+        self.unknown0: str = self.params[0]
+        self.errorLog: str = self.params[1]
         self.creditLog: str = self.params[2]
         self.info: List[HousingInfo] = []
 
