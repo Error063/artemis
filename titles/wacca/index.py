@@ -7,6 +7,7 @@ from hashlib import md5
 from twisted.web.http import Request
 from typing import Dict, Tuple, List
 from os import path
+import traceback
 
 from core import CoreConfig, Utils
 from .config import WaccaConfig
@@ -173,8 +174,10 @@ class WaccaServlet:
             self.logger.error(
                 f"{req_json['appVersion']} Error handling method {url_path} -> {e}"
             )
-            if self.core_cfg.server.is_develop:
-                raise
+            if self.logger.level == logging.DEBUG:
+                traceback.print_exception(e, limit=1)
+                with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "wacca"), "a") as f:
+                    traceback.print_exception(e, limit=1, file=f)
 
             resp = BaseResponse()
             resp.status = 1
