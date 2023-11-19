@@ -43,13 +43,18 @@ class WaccaLily(WaccaS):
 
     def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
-        resp = super().handle_user_status_create_request(data)
+        super().handle_user_status_create_request(data)
+
+        new_user = self.data.profile.get_profile(aime_id=req.aimeId)
+
+        if new_user is None:
+            return BaseResponse().make()
 
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210002
         )  # Lily, Added Lily
 
-        return resp
+        return UserStatusCreateResponseV1(new_user['id'], new_user['username']).make()
 
     def handle_user_status_get_request(self, data: Dict) -> Dict:
         req = UserStatusGetRequest(data)
