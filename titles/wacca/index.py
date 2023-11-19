@@ -8,6 +8,7 @@ from twisted.web.http import Request
 from typing import Dict, Tuple, List
 from os import path
 import traceback
+import sys
 
 from core import CoreConfig, Utils
 from .config import WaccaConfig
@@ -185,9 +186,10 @@ class WaccaServlet:
                 f"{req.appVersion} Error handling method {url_path} -> {e}"
             )
             if self.logger.level == logging.DEBUG:
-                traceback.print_exception(e, limit=1)
+                tp, val, tb  = sys.exc_info()
+                traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "wacca"), "a") as f:
-                    traceback.print_exception(e, limit=1, file=f)
+                    traceback.print_exception(tp, val, tb, limit=1, file=f)
 
             resp = BaseResponse()
             resp.status = 1

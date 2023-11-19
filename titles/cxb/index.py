@@ -1,7 +1,6 @@
 from twisted.web.http import Request
 import traceback
-from twisted.web import resource, server
-from twisted.internet import reactor, endpoints
+import sys
 import yaml
 import json
 import re
@@ -190,9 +189,10 @@ class CxbServlet(BaseServlet):
         except Exception as e:
             self.logger.error(f"Error handling request for file {filetype} - {e}")
             if self.logger.level == logging.DEBUG:
-                traceback.print_exception(e, limit=1)
+                tp, val, tb  = sys.exc_info()
+                traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
-                    traceback.print_exception(e, limit=1, file=f)
+                    traceback.print_exception(tp, val, tb, limit=1, file=f)
             return ""
         
         self.logger.debug(f"{version_string} Response {resp}")
@@ -218,9 +218,10 @@ class CxbServlet(BaseServlet):
         except Exception as e:
             self.logger.error(f"Error handling action {subcmd} request - {e}")
             if self.logger.level == logging.DEBUG:
-                traceback.print_exception(e, limit=1)
+                tp, val, tb  = sys.exc_info()
+                traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
-                    traceback.print_exception(e, limit=1, file=f)
+                    traceback.print_exception(tp, val, tb, limit=1, file=f)
             return ""
         
         self.logger.debug(f"Response {resp}")
@@ -246,9 +247,10 @@ class CxbServlet(BaseServlet):
         except Exception as e:
             self.logger.error(f"Error handling auth {subcmd} request - {e}")
             if self.logger.level == logging.DEBUG:
-                traceback.print_exception(e, limit=1)
+                tp, val, tb  = sys.exc_info()
+                traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
-                    traceback.print_exception(e, limit=1, file=f)
+                    traceback.print_exception(tp, val, tb, limit=1, file=f)
             return ""
         
         self.logger.debug(f"Response {resp}")
