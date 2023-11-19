@@ -41,19 +41,6 @@ class WaccaLily(WaccaS):
         resp = GetNewsResponseV3()
         return resp.make()
 
-    def handle_housing_start_request(self, data: Dict) -> Dict:
-        req = HousingStartRequestV2(data)
-
-        if req.appVersion.country != "JPN" and req.appVersion.country in [
-            region.name for region in WaccaConstants.Region
-        ]:
-            region_id = WaccaConstants.Region[req.appVersion.country]
-        else:
-            region_id = self.region_id
-
-        resp = HousingStartResponseV1(region_id)
-        return resp.make()
-
     def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
         resp = super().handle_user_status_create_request(data)
