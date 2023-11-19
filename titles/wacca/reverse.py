@@ -315,5 +315,12 @@ class WaccaReverse(WaccaLilyR):
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 310002
         )  # Added reverse
+        
+        self.data.item.put_item(
+            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312000
+        )  # Added reverse
+        self.data.item.put_item(
+            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312001
+        )  # Added reverse
 
         return resp

@@ -236,6 +236,11 @@ class WaccaBase:
 
         if profileId is None:
             return BaseResponse().make()
+        
+        if profileId == 0:
+            # We've already made this profile, just return success
+            new_user = self.data.profile.get_profile(aime_id=req.aimeId)
+            profileId = new_user['id']
 
         # Insert starting items
         self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104001)
@@ -256,24 +261,10 @@ class WaccaBase:
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["note_sound"], 105001
         )
-        self.data.item.put_item(
-            req.aimeId, WaccaConstants.ITEM_TYPES["note_sound"], 205005
-        )  # Added lily
 
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210001
         )
-
-        self.data.item.put_item(
-            req.aimeId, WaccaConstants.ITEM_TYPES["user_plate"], 211001
-        )  # Added lily
-
-        self.data.item.put_item(
-            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312000
-        )  # Added reverse
-        self.data.item.put_item(
-            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312001
-        )  # Added reverse
 
         return UserStatusCreateResponseV2(profileId, req.username).make()
 
