@@ -426,7 +426,7 @@ class WaccaLily(WaccaS):
 
                 except Exception:
                     self.logger.error(
-                        f"{__name__} Failed to load item {item['item_id']} for user {profile['user']}"
+                        f"Failed to load item {item['item_id']} for user {profile['user']}"
                     )
 
         resp.seasonInfo.level = profile["xp"]

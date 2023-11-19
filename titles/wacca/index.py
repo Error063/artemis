@@ -187,9 +187,9 @@ class WaccaServlet:
             )
             if self.logger.level == logging.DEBUG:
                 tp, val, tb  = sys.exc_info()
-                traceback.print_exception(tp, val, tb, limit=1)
+                traceback.print_exception(tp, val, tb, limit=3)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "wacca"), "a") as f:
-                    traceback.print_exception(tp, val, tb, limit=1, file=f)
+                    traceback.print_exception(tp, val, tb, limit=3, file=f)
 
             resp = BaseResponse()
             resp.status = 1
