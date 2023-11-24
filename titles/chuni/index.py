@@ -142,9 +142,9 @@ class ChuniServlet(BaseServlet):
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/", "")
+            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/", self.core_cfg.title.hostname)
 
-        return (f"http://{self.core_cfg.title.hostname}/{game_ver}/", "")
+        return (f"http://{self.core_cfg.title.hostname}/{game_ver}/", self.core_cfg.title.hostname)
 
     def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         endpoint = matchers['endpoint']

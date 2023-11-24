@@ -59,9 +59,9 @@ class DivaServlet(BaseServlet):
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/DivaServlet/", "")
+            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/DivaServlet/", self.core_cfg.title.hostname)
 
-        return (f"http://{self.core_cfg.title.hostname}/DivaServlet/", "")
+        return (f"http://{self.core_cfg.title.hostname}/DivaServlet/", self.core_cfg.title.hostname)
 
     @classmethod
     def is_game_enabled(

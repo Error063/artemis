@@ -89,10 +89,10 @@ class WaccaServlet:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
                 f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/WaccaServlet",
-                "",
+                self.core_cfg.title.hostname,
             )
 
-        return (f"http://{self.core_cfg.title.hostname}/WaccaServlet", "")
+        return (f"http://{self.core_cfg.title.hostname}/WaccaServlet", self.core_cfg.title.hostname)
     
     def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         def end(resp: Dict) -> bytes:
