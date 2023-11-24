@@ -228,8 +228,8 @@ class Mai2Base:
             user_id,
             charge["chargeId"],
             charge["stock"],
-            datetime.strptime(charge["purchaseDate"], Mai2Constants.DATE_TIME_FORMAT),
-            datetime.strptime(charge["validDate"], Mai2Constants.DATE_TIME_FORMAT),
+            charge["purchaseDate"], # Ideally these should be datetimes, but db was
+            charge["validDate"] # set up with them being str, so str it is for now
         )
 
         return {"returnCode": 1, "apiName": "UpsertUserChargelogApi"}
@@ -303,12 +303,8 @@ class Mai2Base:
                     user_id,
                     charge["chargeId"],
                     charge["stock"],
-                    datetime.strptime(
-                        charge["purchaseDate"], Mai2Constants.DATE_TIME_FORMAT
-                    ),
-                    datetime.strptime(
-                        charge["validDate"], Mai2Constants.DATE_TIME_FORMAT
-                    ),
+                    charge["purchaseDate"],
+                    charge["validDate"]
                 )
 
         if "userCharacterList" in upsert and len(upsert["userCharacterList"]) > 0:
@@ -458,12 +454,6 @@ class Mai2Base:
             tmp = charge._asdict()
             tmp.pop("id")
             tmp.pop("user")
-            tmp["purchaseDate"] = datetime.strftime(
-                tmp["purchaseDate"], Mai2Constants.DATE_TIME_FORMAT
-            )
-            tmp["validDate"] = datetime.strftime(
-                tmp["validDate"], Mai2Constants.DATE_TIME_FORMAT
-            )
 
             user_charge_list.append(tmp)
 

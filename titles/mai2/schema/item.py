@@ -501,8 +501,8 @@ class Mai2ItemData(BaseData):
         user_id: int,
         charge_id: int,
         stock: int,
-        purchase_date: datetime,
-        valid_date: datetime,
+        purchase_date: str,
+        valid_date: str,
     ) -> Optional[Row]:
         sql = insert(charge).values(
             user=user_id,
