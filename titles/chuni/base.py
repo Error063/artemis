@@ -313,6 +313,14 @@ class ChuniBase:
             "userChargeList": charge_list,
         }
 
+    def handle_get_user_recent_player_api_request(self, data: Dict) -> Dict:
+        return {
+            "userId": data["userId"],
+            "length": 0,
+            "nextIndex": -1,
+            "userRecentPlayerList": [],
+        }
+
     def handle_get_user_course_api_request(self, data: Dict) -> Dict:
         user_course_list = self.data.score.get_courses(data["userId"])
         if user_course_list is None:
@@ -324,8 +332,8 @@ class ChuniBase:
             }
 
         course_list = []
-        next_idx = int(data["nextIndex"])
-        max_ct = int(data["maxCount"])
+        next_idx = int(data.get("nextIndex", 0))
+        max_ct = int(data.get("maxCount", 300))
 
         for x in range(next_idx, len(user_course_list)):
             tmp = user_course_list[x]._asdict()
@@ -402,6 +410,7 @@ class ChuniBase:
             "userId": data["userId"],
             "userRivalData": userRivalData
         }
+    
     def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
         rival_id = data["rivalId"]
         next_index = int(data["nextIndex"])
@@ -449,6 +458,7 @@ class ChuniBase:
         }
 
         return result
+    
     def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
         user_fav_item_list = []
 
@@ -738,6 +748,7 @@ class ChuniBase:
                 "aggrDate": data["playDate"],
             },
         }
+    
     def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
