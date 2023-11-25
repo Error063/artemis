@@ -317,8 +317,7 @@ class ChuniBase:
         return {
             "userId": data["userId"],
             "length": 0,
-            "nextIndex": -1,
-            "userRecentPlayerList": [],
+            "userRecentPlayerList": [], # playUserId, playUserName, playDate, friendPoint
         }
 
     def handle_get_user_course_api_request(self, data: Dict) -> Dict:
@@ -916,6 +915,10 @@ class ChuniBase:
                 self.data.item.put_login_bonus(
                     user_id, self.version, login["presetId"], isWatched=True
                 )
+        
+        if "userRecentPlayerList" in upsert: # TODO: Seen in Air, maybe implement sometime
+            for rp in upsert["userRecentPlayerList"]:
+                pass
 
         return {"returnCode": "1"}
 
