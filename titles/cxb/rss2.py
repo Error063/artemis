@@ -140,7 +140,12 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ""}
 
     def handle_data_free_coupon_request(self, data: Dict) -> Dict:
-        return {"data": ""}
+        ret_str=""
+        with open(r"titles/cxb/data/rss2/FreeCoupon.csv") as coupon:
+            lines = coupon.readlines()
+            for line in lines:
+                ret_str += f"{line[:-1]}\r\n"
+        return({"data":ret_str})
 
     @cached(lifetime=86400)
     def handle_data_news_list_request(self, data: Dict) -> Dict:
