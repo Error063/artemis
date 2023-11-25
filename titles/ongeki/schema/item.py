@@ -639,8 +639,9 @@ class OngekiItemData(BaseData):
             return None
         return result.fetchall()
 
-    def put_tech_event(self, aime_id: int, tech_event_data: Dict) -> Optional[int]:
+    def put_tech_event(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
+        tech_event_data["version"] = version
 
         sql = insert(tech_event).values(**tech_event_data)
         conflict = sql.on_duplicate_key_update(**tech_event_data)
@@ -651,7 +652,7 @@ class OngekiItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_tech_event_ranking(self, version: int, aime_id: int, tech_event_data: Dict) -> Optional[int]:
+    def put_tech_event_ranking(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
         tech_event_data["version"] = version
         tech_event_data.pop("isRankingRewarded")
