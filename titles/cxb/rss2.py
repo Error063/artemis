@@ -22,8 +22,17 @@ class CxbRevSunriseS2(CxbBase):
 
     @cached(lifetime=86400)
     def handle_data_music_list_request(self, data: Dict) -> Dict:
+        version = data["dldate"]["filetype"].split("/")[0]
         ret_str = ""
-        with open(r"titles/cxb/data/rss2/MusicArchiveList.csv") as music:
+
+        if "10104" in version:
+            self.logger.warning("Game Version is Season 2 Non-Omni")
+            file = "titles/cxb/data/rss2/MusicArchiveList-NonOmni.csv"
+        else:
+            self.logger.warning("Game Version is Season 2 Omnimix")
+            file = "titles/cxb/data/rss2/MusicArchiveList.csv"
+        
+        with open(rf"{file}") as music:
             lines = music.readlines()
             for line in lines:
                 line_split = line.split(",")
