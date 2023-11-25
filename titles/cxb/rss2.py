@@ -120,9 +120,14 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     def handle_data_extra_stage_list_request(self, data: Dict) -> Dict:
-        return {"data": ""}
+        ret_str=""
+        with open(r"titles/cxb/data/rss2/ExtraStageList.csv") as extra:
+            lines = extra.readlines()
+            for line in lines:
+                ret_str += f"{line[:-1]}\r\n"
+        return({"data":ret_str})
 
-    def handle_data_ex0001_request(self, data: Dict) -> Dict:
+    def handle_data_exxxxx_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     def handle_data_one_more_extra_list_request(self, data: Dict) -> Dict:
@@ -131,7 +136,7 @@ class CxbRevSunriseS2(CxbBase):
     def handle_data_bonus_list10100_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_oe0001_request(self, data: Dict) -> Dict:
+    def handle_data_oexxxx_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     def handle_data_free_coupon_request(self, data: Dict) -> Dict:

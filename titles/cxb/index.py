@@ -175,8 +175,8 @@ class CxbServlet(BaseServlet):
             internal_ver = CxbConstants.VER_CROSSBEATS_REV_SUNRISE_S2
 
         if not hasattr(self.versions[internal_ver], func_to_find):
-            self.logger.warn(f"{version_string} has no handler for filetype {filetype}")
-            return ""
+            self.logger.warn(f"{version_string} has no handler for filetype {filetype} / {func_to_find}")
+            return({"data":""})
         
         self.logger.info(f"{version_string} request for filetype {filetype}")
         self.logger.debug(req_json)
