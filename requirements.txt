@@ -18,3 +18,4 @@ jinja2
 protobuf
 autobahn
 pillow
+pyjwt
