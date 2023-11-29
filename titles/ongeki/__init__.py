@@ -9,4 +9,4 @@ database = OngekiData
 reader = OngekiReader
 frontend = OngekiFrontend
 game_codes = [OngekiConstants.GAME_CODE]
-current_schema_version = 5
+current_schema_version = 6

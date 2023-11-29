@@ -171,7 +171,6 @@ class OngekiBase:
             "gameRankingList": ranking_list,
         }
 
-
     def handle_get_game_point_api_request(self, data: Dict) -> Dict:
         get_game_point = self.data.static.get_static_game_point()
         game_point = []
@@ -313,6 +312,13 @@ class OngekiBase:
 
     def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         evts = self.data.static.get_enabled_events(self.version)
+
+        if evts is None:
+            return {
+            "type": data["type"],
+            "length": 0,
+            "gameEventList": [],
+        } 
 
         evt_list = []
         for event in evts:
