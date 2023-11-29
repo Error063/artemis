@@ -126,7 +126,7 @@ class Mai2Servlet(BaseServlet):
             )
 
         return (
-            f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/{servlet_name}",
+            f"http://{self.core_cfg.title.hostname}/{game_ver}/{servlet_name}",
             f"{self.core_cfg.title.hostname}",
         )
 
