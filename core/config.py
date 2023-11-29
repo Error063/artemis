@@ -314,6 +314,12 @@ class AimedbConfig:
             self.__config, "core", "aimedb", "key", default=""
         )
 
+    @property
+    def id_secret(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "aimedb", "id_secret", default=""
+        )
+
 
 class MuchaConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:

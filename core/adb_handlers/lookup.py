@@ -52,6 +52,7 @@ class ADBLookupExResponse(ADBBaseResponse):
         super().__init__(code, length, status, game_id, store_id, keychip_id)
         self.user_id = user_id if user_id is not None else -1
         self.portal_reg = PortalRegStatus.NO_REG
+        self.auth_key = [0] * 256
 
     @classmethod
     def from_req(cls, req: ADBHeader, user_id: Union[int, None]) -> "ADBLookupExResponse":
@@ -72,7 +73,7 @@ class ADBLookupExResponse(ADBBaseResponse):
         body = resp_struct.build(dict(
             user_id = self.user_id,
             portal_reg = self.portal_reg.value,
-            auth_key = [0] * 256,
+            auth_key = self.auth_key,
             relation1 = -1,
             relation2 = -1
         ))

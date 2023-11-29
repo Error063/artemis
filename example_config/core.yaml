@@ -56,6 +56,7 @@ aimedb:
   loglevel: "info"
   port: 22345
   key: ""
+  id_secret: ""
 
 mucha:
   enable: False

@@ -52,6 +52,7 @@ class ADBFelicaLookup2Response(ADBBaseResponse):
         self.access_code = access_code if access_code is not None else "00000000000000000000"
         self.company = CompanyCodes.SEGA
         self.portal_status = PortalRegStatus.NO_REG
+        self.auth_key = [0] * 256
 
     @classmethod
     def from_req(cls, req: ADBHeader, user_id: Union[int, None] = None, access_code: Union[str, None] = None) -> "ADBFelicaLookup2Response":
@@ -76,7 +77,7 @@ class ADBFelicaLookup2Response(ADBBaseResponse):
             access_code = bytes.fromhex(self.access_code),
             portal_status = self.portal_status.value,
             company_code = self.company.value,
-            auth_key = [0] * 256 # Unsupported
+            auth_key = self.auth_key
         ))
 
         self.head.length = HEADER_SIZE + len(resp_struct)

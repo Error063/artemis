@@ -7,6 +7,7 @@ from typing_extensions import Final
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
+from core.utils import create_sega_auth_key
 from core.data import Data
 from .adb_handlers import *
 
@@ -179,6 +180,14 @@ class AimedbProtocol(Protocol):
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
+
+        if user_id > 0 and self.config.aimedb.id_secret:
+            auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
+            if auth_key is not None:
+                auth_key_extra_len = 256 - len(auth_key)
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len) # TODO: impl
+                self.logger.debug(f"Generated auth token {auth_key}")
+
         return ret
 
     def handle_felica_lookup(self, data: bytes, resp_code: int) -> bytes:
@@ -241,7 +250,16 @@ class AimedbProtocol(Protocol):
             f"idm {req.idm} ipm {req.pmm} -> access_code {access_code} user_id {user_id}"
         )
 
-        return ADBFelicaLookup2Response.from_req(req.head, user_id, access_code)
+        resp = ADBFelicaLookup2Response.from_req(req.head, user_id, access_code)
+
+        if user_id > 0 and self.config.aimedb.id_secret:
+            auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
+            if auth_key is not None:
+                auth_key_extra_len = 256 - len(auth_key)
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len) # TODO: impl
+                self.logger.debug(f"Generated auth token {auth_key}")
+
+        return resp
 
     def handle_campaign_clear(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         req = ADBCampaignClearRequest(data)
