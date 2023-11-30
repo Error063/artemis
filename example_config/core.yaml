@@ -57,6 +57,7 @@ aimedb:
   port: 22345
   key: ""
   id_secret: ""
+  id_lifetime_seconds: 86400
 
 mucha:
   enable: False

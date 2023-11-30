@@ -320,6 +320,12 @@ class AimedbConfig:
             self.__config, "core", "aimedb", "id_secret", default=""
         )
 
+    @property
+    def id_lifetime_seconds(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "aimedb", "id_lifetime_seconds", default=86400
+        )
+
 
 class MuchaConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
