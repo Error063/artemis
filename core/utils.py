@@ -64,7 +64,7 @@ class Utils:
         
         return cls.real_title_port_ssl
 
-def create_sega_auth_key(aime_id: int, game: str, place_id: str, b64_secret: str, err_logger: str = 'aimedb') -> Optional[str]:
+def create_sega_auth_key(aime_id: int, game: str, place_id: int, b64_secret: str, err_logger: str = 'aimedb') -> Optional[str]:
     logger = logging.getLogger(err_logger)
     try:
         return jwt.encode({ "aime_id": aime_id, "game": game, "place_id": place_id, "exp": int(datetime.now(tz=timezone.utc).timestamp()) + 86400 }, b64decode(b64_secret), algorithm="HS256")
