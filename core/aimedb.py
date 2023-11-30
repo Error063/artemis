@@ -185,8 +185,9 @@ class AimedbProtocol(Protocol):
             auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
             if auth_key is not None:
                 auth_key_extra_len = 256 - len(auth_key)
-                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len) # TODO: impl
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len)
                 self.logger.debug(f"Generated auth token {auth_key}")
+                ret.auth_key = auth_key_full
 
         return ret
 
@@ -256,8 +257,9 @@ class AimedbProtocol(Protocol):
             auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
             if auth_key is not None:
                 auth_key_extra_len = 256 - len(auth_key)
-                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len) # TODO: impl
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len)
                 self.logger.debug(f"Generated auth token {auth_key}")
+                resp.auth_key = auth_key_full
 
         return resp
 
