@@ -181,7 +181,7 @@ class AimedbProtocol(Protocol):
             f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
 
-        if user_id > 0 and self.config.aimedb.id_secret:
+        if user_id and user_id > 0 and self.config.aimedb.id_secret:
             auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
             if auth_key is not None:
                 auth_key_extra_len = 256 - len(auth_key)
@@ -253,7 +253,7 @@ class AimedbProtocol(Protocol):
 
         resp = ADBFelicaLookup2Response.from_req(req.head, user_id, access_code)
 
-        if user_id > 0 and self.config.aimedb.id_secret:
+        if user_id and user_id > 0 and self.config.aimedb.id_secret:
             auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, self.config.aimedb.id_secret)
             if auth_key is not None:
                 auth_key_extra_len = 256 - len(auth_key)
