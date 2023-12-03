@@ -432,16 +432,17 @@ class AllnetServlet:
         signer = PKCS1_v1_5.new(rsa)
         digest = SHA.new()
         traces: List[TraceData] = []
-
         try:
-            for x in range(len(req_dict)):
-                if not req_dict[x]:
-                    continue
-                
-                if x == 0:                    
-                    req = BillingInfo(req_dict[x])
-                    continue
+            req = BillingInfo(req_dict[0])
+        except KeyError as e:
+            self.logger.error(f"Billing request failed to parse: {e}")
+            return f"result=5&linelimit=&message=field is missing or formatting is incorrect\r\n".encode()
 
+        for x in range(1, len(req_dict)):
+            if not req_dict[x]:
+                continue
+            
+            try:
                 tmp = TraceData(req_dict[x])
                 if tmp.trace_type == TraceDataType.CHARGE:
                     tmp = TraceDataCharge(req_dict[x])
@@ -451,12 +452,12 @@ class AllnetServlet:
                     tmp = TraceDataCredit(req_dict[x])
                 
                 traces.append(tmp)
+            
+            except KeyError as e:
+                self.logger.warn(f"Tracelog failed to parse: {e}")
 
-            kc_serial_bytes = req.keychipid.encode()
+        kc_serial_bytes = req.keychipid.encode()
         
-        except KeyError as e:
-            self.logger.error(f"Billing request failed to parse: {e}")
-            return f"result=5&linelimit=&message=field is missing or formatting is incorrect\r\n".encode()
 
         machine = self.data.arcade.get_machine(req.keychipid)
         if machine is None and not self.config.server.allow_unregistered_serials:
@@ -693,9 +694,17 @@ class TraceData:
             self.seq_number = int(data.get("sn", None))
             self.trace_type = TraceDataType(int(data.get("tt", None)))
             self.date_sync_flg = bool(data.get("ds", None))
-            self.date = datetime.strptime(data.get("dt", None), BILLING_DT_FORMAT)
+            
+            dt = data.get("dt", None)
+            if dt is None:
+                raise KeyError("dt not present")
+            if dt == "20000000000000": # Not sure what causes it to send like this...
+                self.date = datetime(2000, 1, 1, 0, 0, 0, 0)
+            else:
+                self.date = datetime.strptime(data.get("dt", None), BILLING_DT_FORMAT)
+            
             self.keychip = str(data.get("kn", None))
-            self.lib_ver = float(data.get("alib", None))
+            self.lib_ver = float(data.get("alib", 0))
         except Exception as e:
             raise KeyError(e)
 
@@ -703,8 +712,8 @@ class TraceDataCharge(TraceData):
     def __init__(self, data: Dict) -> None:
         super().__init__(data)
         try:
-            self.game_id = str(data.get("gi", None))
-            self.game_version = float(data.get("gv", None))
+            self.game_id = str(data.get("gi", None)) # these seem optional...?
+            self.game_version = float(data.get("gv", 0))
             self.board_serial = str(data.get("bn", None))
             self.shop_ip = str(data.get("ti", None))
             self.play_count = int(data.get("pc", None))
