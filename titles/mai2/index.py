@@ -104,13 +104,15 @@ class Mai2Servlet(BaseServlet):
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
             [
-                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint:..?}", {}),
-                ("handle_old_srv", "/{version}/MaimaiServlet/old/{endpoint:..?}", {}),
-                ("handle_usbdl", "/{version}/MaimaiServlet/usbdl/{endpoint:..?}", {}),
-                ("handle_deliver", "/{version}/MaimaiServlet/deliver/{endpoint:..?}", {}),
+                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint}", {}),
+                ("handle_old_srv", "/{version}/MaimaiServlet/old/{endpoint}", {}),
+                ("handle_old_srv_userdata", "/{version}/MaimaiServlet/old/{endpoint}/{placeid}/{keychip}/{userid}", {}),
+                ("handle_old_srv_userdata", "/{version}/MaimaiServlet/old/{endpoint}/{userid}", {}),
+                ("handle_usbdl", "/{version}/MaimaiServlet/usbdl/{endpoint}", {}),
+                ("handle_deliver", "/{version}/MaimaiServlet/deliver/{endpoint}", {}),
             ], 
             [
-                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint:..?}", {}),
+                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint}", {}),
                 ("handle_mai", "/{version}/MaimaiServlet/{endpoint}", {}),
                 ("handle_mai2", "/{version}/Maimai2Servlet/{endpoint}", {}),
             ]
@@ -304,6 +306,18 @@ class Mai2Servlet(BaseServlet):
 
         return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
+    def handle_old_srv(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = matchers['version']
+        self.logger.info(f"v{version} old server {endpoint}")
+        return zlib.compress(b"ok")
+
+    def handle_old_srv_userdata(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = matchers['version']
+        self.logger.info(f"v{version} old server {endpoint}")
+        return zlib.compress(b"{}")
+
     def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
         self.logger.debug(f"v{version} GET {url_path}")
         url_split = url_path.split("/")
@@ -313,23 +327,6 @@ class Mai2Servlet(BaseServlet):
         ] == "movie":
             if url_split[2] == "moviestart":
                 return json.dumps({"moviestart": {"status": "OK"}}).encode()
-
-            else:
-                request.setResponseCode(404)
-                return b""
-
-        if url_split[0] == "old":
-            if url_split[1] == "ping":
-                self.logger.info(f"v{version} old server ping")
-                return zlib.compress(b"ok")
-
-            elif url_split[1].startswith("userdata"):
-                self.logger.info(f"v{version} old server userdata inquire")
-                return zlib.compress(b"{}")
-
-            elif url_split[1].startswith("friend"):
-                self.logger.info(f"v{version} old server friend inquire")
-                return zlib.compress(b"{}")
 
             else:
                 request.setResponseCode(404)

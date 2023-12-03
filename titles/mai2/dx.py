@@ -14,13 +14,7 @@ class Mai2DX(Mai2Base):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX
-        
-        if self.core_config.server.is_develop and self.core_config.title.port > 0:
-            self.old_server = f"http://{self.core_config.title.hostname}:{self.core_config.title.port}/SDEZ/100/"
-        
-        else:
-            self.old_server = f"http://{self.core_config.title.hostname}/SDEZ/100/"
-    
+
     def handle_get_game_setting_api_request(self, data: Dict):
         return {
             "gameSetting": {
