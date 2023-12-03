@@ -182,13 +182,8 @@ Config file is located in `config/cxb.yaml`.
 
 ## maimai DX
 
-### SDEZ
+### Versions
 
-| Game Code | Version ID | Version Name |
-| --------- | ---------- | ------------ |
-
-
-For versions pre-dx
 | Game Code | Version ID | Version Name            |
 | --------- | ---------- | ----------------------- |
 | SBXL      | 0          | maimai                  |
