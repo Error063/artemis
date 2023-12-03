@@ -116,17 +116,15 @@ class Mai2Servlet(BaseServlet):
             ]
         )
     
-    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        servlet_name = "" if game_code == Mai2Constants.GAME_CODE_DX else "MaimaiServlet/"
-        
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:        
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/{servlet_name}",
+                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/",
                 f"{self.core_cfg.title.hostname}",
             )
 
         return (
-            f"http://{self.core_cfg.title.hostname}/{game_ver}/{servlet_name}",
+            f"http://{self.core_cfg.title.hostname}/{game_ver}/",
             f"{self.core_cfg.title.hostname}",
         )
 
@@ -155,6 +153,80 @@ class Mai2Servlet(BaseServlet):
                     f"Failed to make movie upload directory at {self.game_cfg.uploads.movies_dir}"
                 )
 
+    def handle_mai(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        endpoint = matchers['endpoint']
+        version = int(matchers['version'])
+        if endpoint.lower() == "ping":
+            return zlib.compress(b'{"returnCode": "1"}')
+        
+        req_raw = request.content.getvalue()
+        internal_ver = 0
+        client_ip = Utils.get_ip_addr(request)
+        
+        if version < 110:  # 1.0
+            internal_ver = Mai2Constants.VER_MAIMAI
+        elif version >= 110 and version < 120:  # Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_PLUS
+        elif version >= 120 and version < 130:  # Green
+            internal_ver = Mai2Constants.VER_MAIMAI_GREEN
+        elif version >= 130 and version < 140:  # Green Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_GREEN_PLUS
+        elif version >= 140 and version < 150:  # Orange
+            internal_ver = Mai2Constants.VER_MAIMAI_ORANGE
+        elif version >= 150 and version < 160:  # Orange Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_ORANGE_PLUS
+        elif version >= 160 and version < 170:  # Pink
+            internal_ver = Mai2Constants.VER_MAIMAI_PINK
+        elif version >= 170 and version < 180:  # Pink Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_PINK_PLUS
+        elif version >= 180 and version < 185:  # Murasaki
+            internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI
+        elif version >= 185 and version < 190:  # Murasaki Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI_PLUS
+        elif version >= 190 and version < 195:  # Milk
+            internal_ver = Mai2Constants.VER_MAIMAI_MILK
+        elif version >= 195 and version < 197:  # Milk Plus
+            internal_ver = Mai2Constants.VER_MAIMAI_MILK_PLUS
+        elif version >= 197:  # Finale
+            internal_ver = Mai2Constants.VER_MAIMAI_FINALE
+
+        try:
+            unzip = zlib.decompress(req_raw)
+
+        except zlib.error as e:
+            self.logger.error(
+                f"Failed to decompress v{version} {endpoint} request -> {e}"
+            )
+            return zlib.compress(b'{"stat": "0"}')
+
+        req_data = json.loads(unzip)
+
+        self.logger.info(f"v{version} {endpoint} request from {client_ip}")
+        self.logger.debug(req_data)
+
+        func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
+        handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
+
+        if not hasattr(handler_cls, func_to_find):
+            self.logger.warning(f"Unhandled v{version} request {endpoint}")
+            resp = {"returnCode": 1}
+
+        else:
+            try:
+                handler = getattr(handler_cls, func_to_find)
+                resp = handler(req_data)
+
+            except Exception as e:
+                self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
+                return zlib.compress(b'{"returnCode": "0"}')
+
+        if resp == None:
+            resp = {"returnCode": 1}
+
+        self.logger.debug(f"Response {resp}")
+
+        return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+
     def handle_mai2(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         endpoint = matchers['endpoint']
         version = int(matchers['version'])
@@ -164,52 +236,22 @@ class Mai2Servlet(BaseServlet):
         req_raw = request.content.getvalue()
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
-
-        if game_code == "SDEZ":
-            if version < 105:  # 1.0
-                internal_ver = Mai2Constants.VER_MAIMAI_DX
-            elif version >= 105 and version < 110:  # PLUS
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
-            elif version >= 110 and version < 115:  # Splash
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
-            elif version >= 115 and version < 120:  # Splash PLUS
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
-            elif version >= 120 and version < 125:  # UNiVERSE
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
-            elif version >= 125 and version < 130:  # UNiVERSE PLUS
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
-            elif version >= 130 and version < 135:  # FESTiVAL
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
-            elif version >= 135:  # FESTiVAL PLUS
-                internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
-
-        else:
-            if version < 110:  # 1.0
-                internal_ver = Mai2Constants.VER_MAIMAI
-            elif version >= 110 and version < 120:  # Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_PLUS
-            elif version >= 120 and version < 130:  # Green
-                internal_ver = Mai2Constants.VER_MAIMAI_GREEN
-            elif version >= 130 and version < 140:  # Green Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_GREEN_PLUS
-            elif version >= 140 and version < 150:  # Orange
-                internal_ver = Mai2Constants.VER_MAIMAI_ORANGE
-            elif version >= 150 and version < 160:  # Orange Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_ORANGE_PLUS
-            elif version >= 160 and version < 170:  # Pink
-                internal_ver = Mai2Constants.VER_MAIMAI_PINK
-            elif version >= 170 and version < 180:  # Pink Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_PINK_PLUS
-            elif version >= 180 and version < 185:  # Murasaki
-                internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI
-            elif version >= 185 and version < 190:  # Murasaki Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_MURASAKI_PLUS
-            elif version >= 190 and version < 195:  # Milk
-                internal_ver = Mai2Constants.VER_MAIMAI_MILK
-            elif version >= 195 and version < 197:  # Milk Plus
-                internal_ver = Mai2Constants.VER_MAIMAI_MILK_PLUS
-            elif version >= 197:  # Finale
-                internal_ver = Mai2Constants.VER_MAIMAI_FINALE
+        if version < 105:  # 1.0
+            internal_ver = Mai2Constants.VER_MAIMAI_DX
+        elif version >= 105 and version < 110:  # PLUS
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
+        elif version >= 110 and version < 115:  # Splash
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
+        elif version >= 115 and version < 120:  # Splash PLUS
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
+        elif version >= 120 and version < 125:  # UNiVERSE
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
+        elif version >= 125 and version < 130:  # UNiVERSE PLUS
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
+        elif version >= 130 and version < 135:  # FESTiVAL
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+        elif version >= 135:  # FESTiVAL PLUS
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
 
         if (
             request.getHeader("Mai-Encoding") is not None
