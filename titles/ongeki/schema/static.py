@@ -486,13 +486,12 @@ class OngekiStaticData(BaseData):
             return None
         return result.lastrowid
 
-    def put_client_setting_data(self, client_id: str, client_setting_data: Dict) -> Optional[List[Dict]]:
-        sql = insert(machine).values(data=client_setting_data)
-        conflict = sql.on_duplicate_key_update(serial=client_id)
+    def put_client_setting_data(self, machine_id: int, client_setting_data: Dict) -> Optional[List[Dict]]:
+        sql = machine.update(machine.c.id == machine_id).values(data=client_setting_data)
 
-        result = self.execute(conflict)
+        result = self.execute(sql)
         if result is None:
-            self.logger.warning(f"clientId: {client_id} Failed to update ClientSetting data"),
+            self.logger.warning(f"machine_id: {machine_id} Failed to update ClientSetting data"),
             return None
         return result.lastrowid
 

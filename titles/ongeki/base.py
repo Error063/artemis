@@ -268,7 +268,9 @@ class OngekiBase:
 
         client_id = data["clientId"]
         client_setting_data = data["clientSetting"]
-        self.data.static.put_client_setting_data(client_id, client_setting_data)
+        cab = self.data.arcade.get_machine(client_id)
+        if cab is not None:
+            self.data.static.put_client_setting_data(cab['id'], client_setting_data)
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
     def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
