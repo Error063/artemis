@@ -7,6 +7,7 @@ from sqlalchemy.engine import Row
 from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
+from core.data.schema.arcade import machine
 
 events = Table(
     "ongeki_static_events",
@@ -481,7 +482,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warning(f"clientId: {clientId} Failed to update ClientTestMode data"),
+            self.logger.warning(f"region_id: {region_id} Failed to update ClientTestMode data"),
             return None
         return result.lastrowid
 
@@ -491,7 +492,7 @@ class OngekiStaticData(BaseData):
 
         result = self.execute(conflict)
         if result is None:
-            self.logger.warning(f"clientId: {clientId} Failed to update ClientSetting data"),
+            self.logger.warning(f"clientId: {client_id} Failed to update ClientSetting data"),
             return None
         return result.lastrowid
 
