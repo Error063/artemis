@@ -3,10 +3,13 @@ from datetime import datetime, timedelta
 import json
 
 from core.config import CoreConfig
+from titles.wacca.handlers import Dict
 from titles.wacca.lily import WaccaLily
 from titles.wacca.config import WaccaConfig
 from titles.wacca.const import WaccaConstants
 from titles.wacca.handlers import *
+
+from core.const import AllnetCountryCode
 
 
 class WaccaLilyR(WaccaLily):
@@ -35,6 +38,37 @@ class WaccaLilyR(WaccaLily):
             (210002, 0),
             (210003, 0),
         ]
+
+    def handle_housing_start_request(self, data: Dict) -> Dict:
+        req = HousingStartRequestV2(data)
+        
+        machine = self.data.arcade.get_machine(req.chipId)
+        if machine is not None:
+            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            allnet_region_id = arcade["region_id"]
+
+        if req.appVersion.country == AllnetCountryCode.JAPAN.value:
+            if allnet_region_id is not None:
+                region = WaccaConstants.allnet_region_id_to_wacca_region(
+                    allnet_region_id
+                )
+
+                if region is None:
+                    region_id = self.region_id
+                else:
+                    region_id = region
+
+            else:
+                region_id = self.region_id
+
+        elif req.appVersion.country in WaccaConstants.VALID_COUNTRIES:
+            region_id = WaccaConstants.Region[req.appVersion.country]
+
+        else:
+            region_id = WaccaConstants.Region.NONE
+
+        resp = HousingStartResponseV1(region_id)
+        return resp.make()
 
     def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
