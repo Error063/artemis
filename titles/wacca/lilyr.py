@@ -41,6 +41,7 @@ class WaccaLilyR(WaccaLily):
 
     def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV2(data)
+        allnet_region_id = None
         
         machine = self.data.arcade.get_machine(req.chipId)
         if machine is not None:
