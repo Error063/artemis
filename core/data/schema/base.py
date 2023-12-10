@@ -157,6 +157,8 @@ class BaseData:
 
     def fix_bools(self, data: Dict) -> Dict:
         for k, v in data.items():
+            if k == "userName" or k == "teamName":
+                continue
             if type(v) == str and v.lower() == "true":
                 data[k] = True
             elif type(v) == str and v.lower() == "false":
