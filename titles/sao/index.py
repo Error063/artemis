@@ -76,13 +76,17 @@ class SaoServlet(BaseServlet):
         return True
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg) != 443:
-            return (
-                f"https://{self.core_cfg.title.hostname}:{Utils.get_title_port_ssl(self.core_cfg)}/",
-                f"{self.core_cfg.title.hostname}/",
-            )
+        port_ssl = Utils.get_title_port_ssl(self.core_cfg)
+        port_normal = Utils.get_title_port(self.core_cfg)
 
-        return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/", "")
+        proto = "http"
+        port = f":{port_normal}" if not self.core_cfg.server.is_using_proxy and port_normal != 80 else ""
+        
+        if self.game_cfg.server.use_https:            
+            proto = "https"
+            port = f":{port_ssl}" if not self.core_cfg.server.is_using_proxy and port_ssl != 443 else ""
+
+        return (f"{proto}://{self.core_cfg.title.hostname}{port}/", "")
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
         if not self.game_cfg.server.enable:
@@ -96,7 +100,9 @@ class SaoServlet(BaseServlet):
         iv = b""
 
         req_raw = request.content.read()
-        sao_request = req_raw.hex()
+        if len(req_raw) < 40:
+            self.logger.warn(f"Malformed request to {endpoint} - {req_raw.hex()}")
+            return b""
         req_header = SaoRequestHeader(req_raw)
         
         cmd_str = f"{req_header.cmd:04x}"

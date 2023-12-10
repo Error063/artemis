@@ -29,6 +29,12 @@ class SaoServerConfig:
             self.__config, "sao", "server", "auto_register", default=True
         )
 
+    @property
+    def use_https(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "sao", "server", "use_https", default=False
+        )
+
 class SaoCryptConfig:
     def __init__(self, parent_config: "SaoConfig"):
         self.__config = parent_config
