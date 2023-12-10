@@ -96,6 +96,10 @@ class Mai2DX(Mai2Base):
     def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         upsert = data["upsertUserAll"]
+        
+        if int(user_id) & 1000000000001 == 1000000000001:
+            self.logger.info("Guest play, ignoring.")
+            return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             upsert["userData"][0]["isNetMember"] = 1
