@@ -76,13 +76,13 @@ class SaoServlet(BaseServlet):
         return True
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg):
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg) != 443:
             return (
-                f"https://{self.core_cfg.title.hostname}:{self.core_cfg.title.port_ssl}/",
+                f"https://{self.core_cfg.title.hostname}:{Utils.get_title_port_ssl(self.core_cfg)}/",
                 f"{self.core_cfg.title.hostname}/",
             )
 
-        return (f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/", "")
+        return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/", "")
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
         if not self.game_cfg.server.enable:
