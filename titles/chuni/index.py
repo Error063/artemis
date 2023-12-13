@@ -31,6 +31,7 @@ from .paradise import ChuniParadise
 from .new import ChuniNew
 from .newplus import ChuniNewPlus
 from .sun import ChuniSun
+from .sunplus import ChuniSunPlus
 
 
 class ChuniServlet(BaseServlet):
@@ -58,6 +59,7 @@ class ChuniServlet(BaseServlet):
             ChuniNew,
             ChuniNewPlus,
             ChuniSun,
+            ChuniSunPlus,
         ]
 
         self.logger = logging.getLogger("chuni")
@@ -120,8 +122,8 @@ class ChuniServlet(BaseServlet):
         return (
             [], 
             [
-               ("render_POST", "/{version}/ChuniServlet/{endpoint}", {}),
-               ("render_POST", "/{version}/ChuniServlet/MatchingServer/{endpoint}", {})
+               ("render_POST", "/{game}/{version}/ChuniServlet/{endpoint}", {}),
+               ("render_POST", "/{game}/{version}/ChuniServlet/MatchingServer/{endpoint}", {})
             ]
         )
 
@@ -139,53 +141,69 @@ class ChuniServlet(BaseServlet):
             return False
 
         return True
-    
+
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/", self.core_cfg.title.hostname)
+            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", self.core_cfg.title.hostname)
 
-        return (f"http://{self.core_cfg.title.hostname}/{game_ver}/", self.core_cfg.title.hostname)
+        return (f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/", self.core_cfg.title.hostname)
 
     def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
         endpoint = matchers['endpoint']
         version = int(matchers['version'])
-        
+        game_code = matchers['game']
+
         if endpoint.lower() == "ping":
             return zlib.compress(b'{"returnCode": "1"}')
 
         req_raw = request.content.getvalue()
+
         encrtped = False
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
 
-        if version < 105:  # 1.0
-            internal_ver = ChuniConstants.VER_CHUNITHM
-        elif version >= 105 and version < 110:  # PLUS
-            internal_ver = ChuniConstants.VER_CHUNITHM_PLUS
-        elif version >= 110 and version < 115:  # AIR
-            internal_ver = ChuniConstants.VER_CHUNITHM_AIR
-        elif version >= 115 and version < 120:  # AIR PLUS
-            internal_ver = ChuniConstants.VER_CHUNITHM_AIR_PLUS
-        elif version >= 120 and version < 125:  # STAR
-            internal_ver = ChuniConstants.VER_CHUNITHM_STAR
-        elif version >= 125 and version < 130:  # STAR PLUS
-            internal_ver = ChuniConstants.VER_CHUNITHM_STAR_PLUS
-        elif version >= 130 and version < 135:  # AMAZON
-            internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON
-        elif version >= 135 and version < 140:  # AMAZON PLUS
-            internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON_PLUS
-        elif version >= 140 and version < 145:  # CRYSTAL
-            internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL
-        elif version >= 145 and version < 150:  # CRYSTAL PLUS
-            internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
-        elif version >= 150 and version < 200:  # PARADISE
-            internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE
-        elif version >= 200 and version < 205:  # NEW!!
-            internal_ver = ChuniConstants.VER_CHUNITHM_NEW
-        elif version >= 205 and version < 210:  # NEW PLUS!!
-            internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
-        elif version >= 210:  # SUN
-            internal_ver = ChuniConstants.VER_CHUNITHM_SUN
+        if game_code == "SDHD" or game_code == "SDBT": # JP
+          if version < 105:  # 1.0
+              internal_ver = ChuniConstants.VER_CHUNITHM
+          elif version >= 105 and version < 110:  # PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_PLUS
+          elif version >= 110 and version < 115:  # AIR
+              internal_ver = ChuniConstants.VER_CHUNITHM_AIR
+          elif version >= 115 and version < 120:  # AIR PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_AIR_PLUS
+          elif version >= 120 and version < 125:  # STAR
+              internal_ver = ChuniConstants.VER_CHUNITHM_STAR
+          elif version >= 125 and version < 130:  # STAR PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_STAR_PLUS
+          elif version >= 130 and version < 135:  # AMAZON
+              internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON
+          elif version >= 135 and version < 140:  # AMAZON PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON_PLUS
+          elif version >= 140 and version < 145:  # CRYSTAL
+              internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL
+          elif version >= 145 and version < 150:  # CRYSTAL PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
+          elif version >= 150 and version < 200:  # PARADISE
+              internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE
+          elif version >= 200 and version < 205:  # NEW!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW
+          elif version >= 205 and version < 210:  # NEW PLUS!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+          elif version >= 210 and version < 215:  # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN
+          elif version >= 215: # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN_PLUS
+        elif game_code == "SDGS": # Int
+          if version < 110: # SUPERSTAR
+              internal_ver = ChuniConstants.PARADISE
+          elif version >= 110 and version < 115: # NEW
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW
+          elif version >= 115 and version < 120: # NEW PLUS!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+          elif version >= 120 and version < 125: # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN
+          elif version >= 125: # SUN PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN_PLUS
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
@@ -250,6 +268,7 @@ class ChuniServlet(BaseServlet):
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
+        endpoint = endpoint.replace("C3Exp", "") if game_code == "SDGS" else endpoint
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
