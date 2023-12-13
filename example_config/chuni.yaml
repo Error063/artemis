@@ -19,6 +19,9 @@ version:
   13:
     rom: 2.10.00
     data: 2.10.00
+  14:
+    rom: 2.15.00
+    data: 2.15.00
 
 crypto:
   encrypted_only: False
