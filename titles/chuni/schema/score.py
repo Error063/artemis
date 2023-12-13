@@ -24,7 +24,7 @@ course = Table(
     Column("scoreMax", Integer),
     Column("isFullCombo", Boolean),
     Column("isAllJustice", Boolean),
-    Column("isSuccess", Boolean),
+    Column("isSuccess", Integer),
     Column("scoreRank", Integer),
     Column("eventId", Integer),
     Column("lastPlayDate", String(25)),
@@ -32,7 +32,7 @@ course = Table(
     Column("param2", Integer),
     Column("param3", Integer),
     Column("param4", Integer),
-    Column("isClear", Boolean),
+    Column("isClear", Integer),
     Column("theoryCount", Integer),
     Column("orderId", Integer),
     Column("playerRating", Integer),
@@ -60,7 +60,7 @@ best_score = Table(
     Column("maxComboCount", Integer),
     Column("isFullCombo", Boolean),
     Column("isAllJustice", Boolean),
-    Column("isSuccess", Boolean),
+    Column("isSuccess", Integer),
     Column("fullChain", Integer),
     Column("maxChain", Integer),
     Column("scoreRank", Integer),
@@ -125,7 +125,7 @@ playlog = Table(
     Column("characterId", Integer),
     Column("skillId", Integer),
     Column("playKind", Integer),
-    Column("isClear", Boolean),
+    Column("isClear", Integer),
     Column("skillLevel", Integer),
     Column("skillEffect", Integer),
     Column("placeName", String(255)),
@@ -136,6 +136,7 @@ playlog = Table(
     Column("judgeHeaven", Integer),
     Column("regionId", Integer),
     Column("machineType", Integer),
+    Column("ticketId", Integer),
     mysql_charset="utf8mb4"
 )
 
@@ -255,4 +256,3 @@ class ChuniScoreData(BaseData):
         if result is None:
             return None
         return result.fetchall()
-
