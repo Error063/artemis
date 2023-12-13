@@ -240,7 +240,6 @@ class ChuniBase:
             "isDumpUpload": "false",
             "isAou": "false",
         }
-
     def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
         user_activity_list = self.data.profile.get_profile_activity(
             data["userId"], data["kind"]
@@ -873,9 +872,12 @@ class ChuniBase:
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:
                 # convert the player names to utf-8
-                playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
-                playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
-                playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
+                if playlog["playedUserName1"] is not None:
+                  playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
+                if playlog["playedUserName2"] is not None:
+                  playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
+                if playlog["playedUserName3"] is not None:
+                  playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
                 self.data.score.put_playlog(user_id, playlog, self.version)
 
         if "userTeamPoint" in upsert:
