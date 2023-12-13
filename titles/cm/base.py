@@ -45,7 +45,7 @@ class CardMakerBase:
                 {
                     "modelKind": 0,
                     "type": 1,
-                    "titleUri": f"{uri}/{self._parse_int_ver(games_ver['chuni'])}/ChuniServlet/",
+                    "titleUri": f"{uri}/SDHD/{self._parse_int_ver(games_ver['chuni'])}/ChuniServlet/",
                 },
                 # maimai DX
                 {
