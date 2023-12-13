@@ -5,7 +5,7 @@ A network service emulator for games running SEGA'S ALL.NET service, and similar
 Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
 
 + CHUNITHM
-    + All versions up to SUN
+    + All versions up to SUN PLUS
 
 + crossbeats REV.
     + All versions + omnimix
