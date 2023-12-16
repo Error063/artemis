@@ -240,7 +240,6 @@ class ChuniBase:
             "isDumpUpload": "false",
             "isAou": "false",
         }
-
     def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
         user_activity_list = self.data.profile.get_profile_activity(
             data["userId"], data["kind"]
@@ -420,13 +419,13 @@ class ChuniBase:
         all_entries = self.data.score.get_rival_music(rival_id)
 
         # Process the entries based on max_count and nextIndex
-        for music in all_entries[next_index:]:
+        for music in all_entries:
             music_id = music["musicId"]
             level = music["level"]
             score = music["scoreMax"]
             rank = music["scoreRank"]
 
-            # Create a music entry for the current music_id
+            # Create a music entry for the current music_id if it's unique
             music_entry = next((entry for entry in user_rival_music_list if entry["musicId"] == music_id), None)
             if music_entry is None:
                 music_entry = {
@@ -436,15 +435,20 @@ class ChuniBase:
                 }
                 user_rival_music_list.append(music_entry)
 
-            # Create a level entry for the current level
-            level_entry = {
-                "level": level,
-                "scoreMax": score,
-                "scoreRank": rank
-            }
-            music_entry["userRivalMusicDetailList"].append(level_entry)
+            # Create a level entry for the current level if it's unique or has a higher score
+            level_entry = next((entry for entry in music_entry["userRivalMusicDetailList"] if entry["level"] == level), None)
+            if level_entry is None:
+                level_entry = {
+                    "level": level,
+                    "scoreMax": score,
+                    "scoreRank": rank
+                }
+                music_entry["userRivalMusicDetailList"].append(level_entry)
+            elif score > level_entry["scoreMax"]:
+                level_entry["scoreMax"] = score
+                level_entry["scoreRank"] = rank
 
-        # Calculate the length for each "musicId" by counting the levels
+        # Calculate the length for each "musicId" by counting the unique levels
         for music_entry in user_rival_music_list:
             music_entry["length"] = len(music_entry["userRivalMusicDetailList"])
 
@@ -452,11 +456,11 @@ class ChuniBase:
         result = {
             "userId": data["userId"],
             "rivalId": data["rivalId"],
-            "nextIndex": str(next_index + len(all_entries) if len(all_entries) <= len(user_rival_music_list) else -1),
-            "userRivalMusicList": user_rival_music_list[:max_count]
+            "nextIndex": str(next_index + len(user_rival_music_list[next_index: next_index + max_count]) if max_count <= len(user_rival_music_list[next_index: next_index + max_count]) else -1),
+            "userRivalMusicList": user_rival_music_list[next_index: next_index + max_count]
         }
-
         return result
+
     
     def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
         user_fav_item_list = []
@@ -873,9 +877,12 @@ class ChuniBase:
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:
                 # convert the player names to utf-8
-                playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
-                playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
-                playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
+                if playlog["playedUserName1"] is not None:
+                  playlog["playedUserName1"] = self.read_wtf8(playlog["playedUserName1"])
+                if playlog["playedUserName2"] is not None:
+                  playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
+                if playlog["playedUserName3"] is not None:
+                  playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
                 self.data.score.put_playlog(user_id, playlog, self.version)
 
         if "userTeamPoint" in upsert:

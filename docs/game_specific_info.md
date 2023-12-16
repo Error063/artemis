@@ -54,6 +54,7 @@ Games listed below have been tested and confirmed working.
 | 11         | CHUNITHM NEW!!      |
 | 12         | CHUNITHM NEW PLUS!! |
 | 13         | CHUNITHM SUN        |
+| 14         | CHUNITHM SUN PLUS   |
 
 
 ### Importer
@@ -74,7 +75,6 @@ Config file is located in `config/chuni.yaml`.
 |------------------|----------------------------------------------------------------------------------------------------------------|
 | `news_msg`       | If this is set, the news at the top of the main screen will be displayed (up to Chunithm Paradise Lost)        |
 | `name`           | If this is set, all players that are not on a team will use this one by default.                               |
-| `rank_scale`     | Scales the in-game ranking based on the number of teams within the database                                    |
 | `use_login_bonus`| This is used to enable the login bonuses                                                                       |
 | `crypto`         | This option is used to enable the TLS Encryption                                                               |
 
@@ -131,12 +131,6 @@ You can also configure teams for users to be on. There is no UI to do this curre
 INSERT INTO aime.chuni_profile_team (teamName) VALUES (<teamName>);
 ```
 Team names can be regular ASCII, and they will be displayed ingame.
-
-On smaller installations, you may also wish to enable scaled team rankings. By default, Chunithm determines team ranking within the first 100 teams. This can be configured in the YAML:
-```yaml
-team:
-  rank_scale: True # Scales the in-game ranking based on the number of teams within the database, rather than the default scale of ~100 that the game normally uses.
-```
 
 ### Favorite songs
 You can set the songs that will be in a user's Favorite Songs category using the following SQL entries:
