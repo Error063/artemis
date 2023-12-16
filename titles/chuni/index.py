@@ -101,8 +101,14 @@ class ChuniServlet(BaseServlet):
             ]
             for method in method_list:
                 method_fixed = inflection.camelize(method)[6:-7]
-                # number of iterations was changed to 70 in SUN
-                iter_count = 70 if version >= ChuniConstants.VER_CHUNITHM_SUN else 44
+                # number of iterations was changed to 70 in SUN and then to 36
+                if version == ChuniConstants.VER_CHUNITHM_SUN_PLUS:
+                    iter_count = 36
+                elif version == ChuniConstants.VER_CHUNITHM_SUN:
+                    iter_count = 70
+                else:
+                    iter_count = 44
+                    
                 hash = PBKDF2(
                     method_fixed,
                     bytes.fromhex(keys[2]),
