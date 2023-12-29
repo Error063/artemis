@@ -76,13 +76,21 @@ class CxbServlet(BaseServlet):
         return True
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port_ssl(self.core_cfg):
-            return (
-                f"https://{self.core_cfg.title.hostname}:{self.core_cfg.title.port_ssl}",
-                "",
-            )
+        title_port_int = Utils.get_title_port(self.core_cfg)
+        title_port_ssl_int = Utils.get_title_port_ssl(self.core_cfg)
+    
+        proto = "https" if title_port_ssl_int != 443 else "http"
 
-        return (f"https://{self.core_cfg.title.hostname}", "")
+        if proto == "https":
+            t_port = f":{title_port_ssl_int}" if title_port_ssl_int and not self.core_cfg.server.is_using_proxy else ""
+        
+        else:    
+            t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
+
+        return (
+            f"{proto}://{self.core_cfg.title.hostname}{t_port}",
+            "",
+        )
     
     def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
         return (
