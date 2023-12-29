@@ -165,15 +165,6 @@ The importer for crossbeats REV. will import Music.
 
 Config file is located in `config/cxb.yaml`.
 
-| Option                | Info                                                       |
-| --------------------- | ---------------------------------------------------------- |
-| `hostname`            | Requires a proper `hostname` (not localhost!) to run       |
-| `ssl_enable`          | Enables/Disables the use of the `ssl_cert` and `ssl_key`   |
-| `port`                | Set your unsecure port number                              |
-| `port_secure`         | Set your secure/SSL port number                            |
-| `ssl_cert`, `ssl_key` | Enter your SSL certificate (requires not self signed cert) |
-
-
 ## maimai DX
 
 ### Versions
