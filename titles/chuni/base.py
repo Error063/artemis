@@ -608,16 +608,14 @@ class ChuniBase:
             if len(song_list) >= max_ct:
                 break
     
-        try:        
-            while song_list[-1]["userMusicDetailList"][0]["musicId"] == music_detail[x + 1]["musicId"]:
-                music = music_detail[x + 1]._asdict()
-                music.pop("user")
-                music.pop("id")
-                song_list[-1]["userMusicDetailList"].append(music)
-                song_list[-1]["length"] += 1
-                x += 1
-        except IndexError:
-            pass
+        for songIdx in range(len(song_list)): 
+            for recordIdx in range(x+1, len(music_detail)):
+                if song_list[songIdx]["userMusicDetailList"][0]["musicId"] == music_detail[recordIdx]["musicId"]:
+                    music = music_detail[recordIdx]._asdict()
+                    music.pop("user")
+                    music.pop("id")
+                    song_list[songIdx]["userMusicDetailList"].append(music)
+                    song_list[songIdx]["length"] += 1
     
         if len(song_list) >= max_ct:
             next_idx += len(song_list)
