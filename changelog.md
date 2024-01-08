@@ -20,6 +20,9 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 + Add support for SegaAuthKey
 + Fix a bug arising if a user set their name to be 'true' or 'false'
 + Add support for Sun+ [#78](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/78) (Thanks EmmyHeart!)
++ Add `matching` section to `chuni.yaml`
++ Change `udpHolePunchUri` and `reflectorUri` to be STUN and TURN servers
+
 ### maimai DX
 + Fix user charges failing to save
 
