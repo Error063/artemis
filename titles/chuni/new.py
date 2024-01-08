@@ -5,6 +5,7 @@ from typing import Dict
 
 import pytz
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.chuni.const import ChuniConstants
 from titles.chuni.database import ChuniData
 from titles.chuni.base import ChuniBase
@@ -55,6 +56,7 @@ class ChuniNew(ChuniBase):
             # create strings for use in gameSetting
             reboot_start = reboot_start_time.strftime(self.date_time_format)
             reboot_end = reboot_end_time.strftime(self.date_time_format)
+        t_port = Utils.get_title_port(self.core_cfg)
         return {
             "gameSetting": {
                 "isMaintenance": False,
@@ -67,15 +69,16 @@ class ChuniNew(ChuniBase):
                 "maxCountMusic": 300,
                 "matchStartTime": match_start,
                 "matchEndTime": match_end,
-                "matchTimeLimit": 60,
-                "matchErrorLimit": 9999,
+                "matchTimeLimit": self.game_cfg.matching.match_time_limit,
+                "matchErrorLimit": self.game_cfg.matching.match_error_limit,
                 "romVersion": self.game_cfg.version.version(self.version)["rom"],
                 "dataVersion": self.game_cfg.version.version(self.version)["data"],
-                "matchingUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
-                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
+                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/200/ChuniServlet/" if self.game_cfg.matching.enable else "",
+                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/200/ChuniServlet/" if self.game_cfg.matching.enable else "",
                 # might be really important for online battle to connect the cabs via UDP port 50201
-                "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
-                "reflectorUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/200/ChuniServlet/",
+                # Hay1tsme 01/08/2023: Pretty sure this is a stun and turn server respectivly...
+                "udpHolePunchUri": self.game_cfg.matching.stun_uri if self.game_cfg.matching.enable else "",
+                "reflectorUri": self.game_cfg.matching.turn_uri if self.game_cfg.matching.enable else "",
             },
             "isDumpUpload": False,
             "isAou": False,
