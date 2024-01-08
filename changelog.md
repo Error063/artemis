@@ -22,6 +22,7 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 + Add support for Sun+ [#78](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/78) (Thanks EmmyHeart!)
 + Add `matching` section to `chuni.yaml`
 + Change `udpHolePunchUri` and `reflectorUri` to be STUN and TURN servers
++ Imrpove `GetGameSetting` request handling for different versions
 
 ### maimai DX
 + Fix user charges failing to save

@@ -11,7 +11,6 @@ from titles.chuni.database import ChuniData
 from titles.chuni.base import ChuniBase
 from titles.chuni.config import ChuniConfig
 
-
 class ChuniNew(ChuniBase):
     ITEM_TYPE = {"character": 20, "story": 21, "card": 22}
 
@@ -23,6 +22,16 @@ class ChuniNew(ChuniBase):
         self.logger = logging.getLogger("chuni")
         self.game = ChuniConstants.GAME_CODE
         self.version = ChuniConstants.VER_CHUNITHM_NEW
+    
+    def _interal_ver_to_intver(self) -> str:
+        if self.version == ChuniConstants.VER_CHUNITHM_NEW:
+            return "200"
+        if self.version == ChuniConstants.VER_CHUNITHM_NEW_PLUS:
+            return "205"
+        if self.version == ChuniConstants.VER_CHUNITHM_SUN:
+            return "210"
+        if self.version == ChuniConstants.VER_CHUNITHM_SUN_PLUS:
+            return "215"
 
     def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         # use UTC time and convert it to JST time by adding +9
@@ -73,8 +82,8 @@ class ChuniNew(ChuniBase):
                 "matchErrorLimit": self.game_cfg.matching.match_error_limit,
                 "romVersion": self.game_cfg.version.version(self.version)["rom"],
                 "dataVersion": self.game_cfg.version.version(self.version)["data"],
-                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/200/ChuniServlet/" if self.game_cfg.matching.enable else "",
-                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/200/ChuniServlet/" if self.game_cfg.matching.enable else "",
+                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/" if self.game_cfg.matching.enable else "",
+                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/" if self.game_cfg.matching.enable else "",
                 # might be really important for online battle to connect the cabs via UDP port 50201
                 # Hay1tsme 01/08/2023: Pretty sure this is a stun and turn server respectivly...
                 "udpHolePunchUri": self.game_cfg.matching.stun_uri if self.game_cfg.matching.enable else "",
