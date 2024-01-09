@@ -76,7 +76,7 @@ class IDACServlet(BaseServlet):
     def get_routes(self) -> List[Route]:
         return [
             Route("/{version:int}/initiald/{category:str}/{endpoint:str}", self.render_POST, methods=["POST"]),
-            Route("/{version:int}/initiald-matching/{endpoint:str}", self.render_POST, methods=["POST"]),
+            Route("/{version:int}/initiald-matching/{endpoint:str}", self.render_matching, methods=["POST"]),
         ]
 
     def get_allnet_info(

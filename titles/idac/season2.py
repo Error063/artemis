@@ -6,6 +6,7 @@ import json
 import logging
 
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.idac.const import IDACConstants
 from titles.idac.config import IDACConfig
 from titles.idac.base import IDACBase
@@ -108,10 +109,10 @@ class IDACSeason2(IDACBase):
         version = headers["device_version"]
         ver_str = version.replace(".", "")[:3]
 
-        if self.core_cfg.server.is_develop:
-            domain_api_game = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.server.port}/{ver_str}/"
-        else:
+        if self.core_cfg.server.is_using_proxy:
             domain_api_game = f"http://{self.core_cfg.server.hostname}/{ver_str}/"
+        else:
+            domain_api_game = f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{ver_str}/"
 
         return {
             "status_code": "0",
