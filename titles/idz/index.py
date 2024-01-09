@@ -8,12 +8,13 @@ from logging.handlers import TimedRotatingFileHandler
 from os import path
 from typing import Tuple, List, Dict
 import importlib
+import asyncio
 
 from core.config import CoreConfig
 from core.title import BaseServlet
 from .config import IDZConfig
 from .const import IDZConstants
-from .userdb import IDZUserDBFactory, IDZKey
+from .userdb import IDZUserDB, IDZKey
 from .echo import IDZEcho
 
 
@@ -135,27 +136,27 @@ class IDZServlet(BaseServlet):
             except AttributeError as e:
                 continue
         
-        """
-        endpoints.serverFromString(
-            reactor,
-            f"tcp:{self.game_cfg.ports.userdb}:interface={self.core_cfg.server.listen_address}",
-        ).listen(
-            IDZUserDBFactory(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        loop = asyncio.get_running_loop()
+        IDZUserDB(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.echo)
+            )
+        )
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.match)
+            )
+        )
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.userdb + 1)
+            )
         )
 
-        reactor.listenUDP(
-            self.game_cfg.ports.echo, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.echo + 1, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.match, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.userdb + 1, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        """
         self.logger.info(f"UserDB Listening on port {self.game_cfg.ports.userdb}")
 
     async def render_GET(self, request: Request) -> bytes:

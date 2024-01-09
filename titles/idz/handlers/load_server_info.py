@@ -91,7 +91,7 @@ class IDZHandlerLoadServerInfo(IDZHandlerBase):
         )
 
         struct.pack_into("<I", ret, 0x39C + offset, self.game_cfg.ports.echo)
-        struct.pack_into("<I", ret, 0x39E + offset, self.game_cfg.ports.echo + 1)
+        struct.pack_into("<I", ret, 0x39E + offset, self.game_cfg.ports.echo) # TODO: Test
 
         struct.pack_into(f"{len_news}s", ret, 0x03A0 + offset, news_str.encode())
         struct.pack_into(f"{len_error}s", ret, 0x0424 + offset, err_str.encode())
