@@ -40,9 +40,17 @@ class Utils:
     def get_title_port(cls, cfg: CoreConfig):
         if cls.real_title_port is not None: return cls.real_title_port
 
-        cls.real_title_port = cfg.server.proxy_port if cfg.server.is_using_proxy else cfg.server.port
+        cls.real_title_port = cfg.server.proxy_port if cfg.server.is_using_proxy and cfg.server.proxy_port else cfg.server.port
         
         return cls.real_title_port
+    
+    @classmethod
+    def get_title_port_ssl(cls, cfg: CoreConfig):
+        if cls.real_title_port_ssl is not None: return cls.real_title_port_ssl
+
+        cls.real_title_port_ssl = cfg.server.proxy_port_ssl if cfg.server.is_using_proxy and cfg.server.proxy_port_ssl else Utils.get_title_port(cfg)
+        
+        return cls.real_title_port_ssl
 
 def create_sega_auth_key(aime_id: int, game: str, place_id: int, keychip_id: str, b64_secret: str, exp_seconds: int = 86400, err_logger: str = 'aimedb') -> Optional[str]:
     logger = logging.getLogger(err_logger)

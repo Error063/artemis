@@ -129,13 +129,20 @@ class OngekiServlet(BaseServlet):
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         title_port_int = Utils.get_title_port(self.core_cfg)
+        title_port_ssl_int = Utils.get_title_port_ssl(self.core_cfg)
         proto = "https" if self.game_cfg.server.use_https and game_ver >= 120 else "http"
-        t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
+
+        if proto == "https":
+            t_port = f":{title_port_ssl_int}" if title_port_ssl_int != 443 else ""
+        
+        else:    
+            t_port = f":{title_port_int}" if title_port_int != 80 else ""
 
         return (
-            f"{proto}://{self.core_cfg.server.hostname}{t_port}/{game_code}/{game_ver}/",
-            f"{self.core_cfg.server.hostname}{t_port}/",
+            f"{proto}://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"{self.core_cfg.title.hostname}{t_port}/",
         )
+
 
     async def render_POST(self, request: Request) -> bytes:
         endpoint: str = request.path_params.get('endpoint', '')

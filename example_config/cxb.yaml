@@ -1,3 +1,4 @@
 server:
   enable: True
   loglevel: "info"
+  use:https: True

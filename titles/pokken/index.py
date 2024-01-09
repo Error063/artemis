@@ -78,8 +78,8 @@ class PokkenServlet(BaseServlet):
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         return (
-            f"https://{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
-            f"{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
+            f"https://{self.game_cfg.server.hostname}:{Utils.get_title_port_ssl(self.core_cfg)}/pokken/",
+            f"{self.game_cfg.server.hostname}:{Utils.get_title_port_ssl(self.core_cfg)}/pokken/",
         )
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:

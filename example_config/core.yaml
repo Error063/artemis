@@ -10,6 +10,7 @@ server:
   is_develop: True
   is_using_proxy: False
   proxy_port: 0
+  proxy_port_ssl: 0
   log_dir: "logs"
   check_arcade_ip: False
   strict_ip_checking: False

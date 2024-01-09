@@ -81,13 +81,14 @@ class SaoServlet(BaseServlet):
         port_normal = Utils.get_title_port(self.core_cfg)
 
         proto = "http"
-        port = f":{port_normal}" if not self.core_cfg.server.is_using_proxy and port_normal != 80 else ""
+        port = f":{port_normal}" if port_normal != 80 else ""
         
         if self.game_cfg.server.use_https:            
             proto = "https"
-            port = f":{port_ssl}" if not self.core_cfg.server.is_using_proxy and port_ssl != 443 else ""
+            port = f":{port_ssl}" if port_ssl != 443 else ""
 
-        return (f"{proto}://{self.core_cfg.server.hostname}{port}/", "")
+        return (f"{proto}://{self.core_cfg.title.hostname}{port}/", "")
+
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
         if not self.game_cfg.server.enable:

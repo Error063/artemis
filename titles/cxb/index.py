@@ -89,18 +89,19 @@ class CxbServlet(BaseServlet):
         title_port_int = Utils.get_title_port(self.core_cfg)
         title_port_ssl_int = Utils.get_title_port_ssl(self.core_cfg)
     
-        proto = "https" if title_port_ssl_int != 443 else "http"
+        proto = "https" if self.game_cfg.server.use_https else "http"
 
         if proto == "https":
-            t_port = f":{title_port_ssl_int}" if title_port_ssl_int and not self.core_cfg.server.is_using_proxy else ""
+            t_port = f":{title_port_ssl_int}" if title_port_ssl_int != 443 else ""
         
         else:    
-            t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
+            t_port = f":{title_port_int}" if title_port_int != 80 else ""
 
         return (
-            f"{proto}://{self.core_cfg.server.hostname}{t_port}",
+            f"{proto}://{self.core_cfg.title.hostname}{t_port}",
             "",
         )
+
     
     async def preprocess(self, req: Request) -> Dict:
         req_bytes = await req.body()

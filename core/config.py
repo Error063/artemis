@@ -85,6 +85,16 @@ class ServerConfig:
         )
 
     @property
+    def proxy_port_ssl(self) -> int:
+        """
+        What port the proxy is listening for secure connections on. This will be sent 
+        instead of 'port' if is_using_proxy is True and this value is non-zero
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "core", "title", "proxy_port_ssl", default=0
+        )
+
+    @property
     def log_dir(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "core", "server", "log_dir", default="logs"
