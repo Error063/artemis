@@ -58,7 +58,7 @@ class CardData(BaseData):
         """
         Given a 20 digit access code as a string, get the user id associated with that card
         """
-        card = self.get_card_by_access_code(access_code)
+        card = await self.get_card_by_access_code(access_code)
         if card is None:
             return None
 
@@ -68,7 +68,7 @@ class CardData(BaseData):
         """
         Given a 20 digit access code as a string, check if the card is banned
         """
-        card = self.get_card_by_access_code(access_code)
+        card = await self.get_card_by_access_code(access_code)
         if card is None:
             return None
         if card["is_banned"]:
@@ -78,7 +78,7 @@ class CardData(BaseData):
         """
         Given a 20 digit access code as a string, check if the card is locked
         """
-        card = self.get_card_by_access_code(access_code)
+        card = await self.get_card_by_access_code(access_code)
         if card is None:
             return None
         if card["is_locked"]:

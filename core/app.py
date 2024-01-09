@@ -76,10 +76,12 @@ if not cfg.billing.standalone:
         Route("/request/", billing.handle_billing_request, methods=["POST"]),
     ]
 
-if not cfg.frontend.standalone:
+if not cfg.frontend.standalone and cfg.frontend.secret:
     frontend = FrontendServlet(cfg, cfg_dir)
     route_lst += frontend.get_routes()
 else:
+    if not cfg.frontend.secret:
+        logger.error("Frontend secret not specified, cannot start frontend!")
     route_lst.append(Route("/", dummy_rt))
     route_lst.append(Route("/robots.txt", FrontendServlet.robots))
 

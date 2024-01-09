@@ -64,8 +64,8 @@ class UserData(BaseData):
             return False
         return result.fetchone()
 
-    def check_password(self, user_id: int, passwd: bytes = None) -> bool:
-        usr = self.get_user(user_id)
+    async def check_password(self, user_id: int, passwd: bytes = None) -> bool:
+        usr = await self.get_user(user_id)
         if usr is None:
             return False
 

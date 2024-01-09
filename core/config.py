@@ -212,7 +212,7 @@ class FrontendConfig:
     
     @property
     def secret(self) -> str:
-        CoreConfig.get_config_field(
+        return CoreConfig.get_config_field(
             self.__config, "core", "frontend", "secret", default=""
         )
 

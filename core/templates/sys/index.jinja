@@ -1,0 +1,69 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+<h1>System Management</h1>
+{% if error is defined %}
+{% include "core/templates/widgets/err_banner.jinja" %}
+{% endif %}
+<div class="row" id="rowForm">
+    {% if "{:08b}".format(sesh.permissions)[6] == "1" %}
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="usrLookup" name="usrLookup" action="/sys/lookup.user" class="form-inline">
+            <h3>User Search</h3>
+            <div class="form-group">
+                <label for="usrId">User ID</label>
+                <input type="number" class="form-control" id="usrId" name="usrId">
+            </div>
+            OR
+            <div class="form-group">
+                <label for="usrName">Username</label>
+                <input type="text" class="form-control" id="usrName" name="usrName">
+            </div>
+            OR
+            <div class="form-group">
+                <label for="usrEmail">Email address</label>
+                <input type="email" class="form-control" id="usrEmail" name="usrEmail" aria-describedby="emailHelp">
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+    {% endif %}
+    {% if "{:08b}".format(sesh.permissions)[5] == "1" %}
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="shopLookup" name="shopLookup" action="/sys/lookup.shop" class="form-inline">
+            <h3>Shop search</h3>
+            <div class="form-group">
+                <label for="shopId">Shop ID</label>
+                <input type="number" class="form-control" id="shopId" name="shopId">
+            </div>
+            OR
+            <div class="form-group">
+                <label for="serialNum">Serial Number</label>
+                <input type="text" class="form-control" id="serialNum" name="serialNum" maxlength="12">
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+<div class="row" id="rowResult" style="margin: 10px;">
+    {% if "{:08b}".format(sesh.permissions)[6] == "1" %}
+    <div id="userSearchResult" class="col-sm-6" style="max-width: 25%;">
+        {% for usr in usrlist %}
+        <a href=/user/{{ usr.id }}><pre>{{ usr.username if usr.username is not none else "<i>No Name Set</i>"}}</pre></a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if "{:08b}".format(sesh.permissions)[5] == "1" %}
+    <div id="shopSearchResult" class="col-sm-6" style="max-width: 25%;">
+        {% for shop in shoplist %}
+        <a href="/shop/{{ shop.id }}"><pre>{{ shop.name if shop.name else "<i>No Name Set</i>"}}</pre></a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+<div class="row" id="rowAdd">
+
+</div>
+{% endblock content %}

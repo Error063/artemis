@@ -1,8 +1,8 @@
-{% extends "core/frontend/index.jinja" %}
+{% extends "core/templates/index.jinja" %}
 {% block content %}
 <h1 class="mb-3">頭文字D THE ARCADE</h1>
 
-{% if sesh is defined and sesh["userId"] > 0 %}
+{% if sesh is defined and sesh["user_id"] > 0 %}
 <div class="card mb-3">
     <div class="card-body">
         <div class="card-title">
@@ -128,7 +128,7 @@
 </div>
 
 <script type="text/javascript">
-    {% include "titles/idac/frontend/js/idac_scripts.js" %}
+    {% include "titles/idac/templates/js/idac_scripts.js" %}
 </script>
 
 {% endblock content %}

@@ -1,7 +1,7 @@
-{% extends "core/frontend/index.jinja" %}
+{% extends "core/templates/index.jinja" %}
 {% block content %}
 
-{% if sesh is defined and sesh["userId"] > 0 %}
+{% if sesh is defined and sesh["user_id"] > 0 %}
 <br>
 <br>
 <br>
@@ -75,7 +75,7 @@
 </div>
 
 <script>
-{% include 'titles/ongeki/frontend/js/ongeki_scripts.js' %}
+{% include 'titles/ongeki/templates/js/ongeki_scripts.js' %}
 </script>
 {% else %}
 <h2>Not Currently Logged In</h2>

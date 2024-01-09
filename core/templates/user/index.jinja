@@ -1,0 +1,175 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+<script type="text/javascript">
+function toggle_new_name_form() {
+  let frm = document.getElementById("new_name_form");
+  let btn = document.getElementById("btn_toggle_form");
+
+  if (frm.style['display'] != "") {
+    frm.style['display'] = "";
+    frm.style['max-height'] = "";
+    btn.innerText = "Cancel";
+  } else {
+    frm.style['display'] = "none";
+    frm.style['max-height'] = "0px";
+    btn.innerText = "Edit";
+  }
+}
+function toggle_add_card_form() {
+  let btn = document.getElementById("btn_add_card");
+  let dv = document.getElementById("add_card_container")
+
+  if (dv.style['display'] != "") {
+    btn.innerText = "Cancel";
+    dv.style['display'] = "";
+  } else {
+    btn.innerText = "Add";
+    dv.style['display'] = "none";
+  }
+}
+
+function prep_edit_form(access_code, chip_id, idm, card_type, u_memo) {
+  ac = document.getElementById("card_edit_frm_access_code");
+  cid = document.getElementById("card_edit_frm_chip_id");
+  fidm = document.getElementById("card_edit_frm_idm");
+  memo = document.getElementById("card_edit_frm_memo");
+
+  if (chip_id == "None" || chip_id == undefined) {
+    chip_id = ""
+  }
+  if (idm == "None" || idm == undefined) {
+    idm = ""
+  }
+  if (u_memo == "None" || u_memo == undefined) {
+    u_memo = ""
+  }
+
+  ac.value = access_code;
+  cid.value = chip_id;
+  fidm.value = idm;
+  memo.value = u_memo;
+
+  if (card_type == "AmusementIC") {
+    cid.disabled = true;
+    fidm.disabled = false;
+  } else {
+    cid.disabled = false;
+    fidm.disabled = true;
+  }
+}
+</script>
+<h1>Management for {{ username }}&nbsp;<button onclick="toggle_new_name_form()" class="btn btn-secondary" id="btn_toggle_form">Edit</button></h1>
+{% if error is defined %}
+{% include "core/templates/widgets/err_banner.jinja" %}
+{% endif %}
+{% if success is defined and success == 2 %}
+<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
+Update successful
+</div>
+{% endif %}
+<form style="max-width: 33%; display: none; max-height: 0px;" action="/user/update.name" method="post" id="new_name_form">
+  <div class="mb-3">
+    <label for="new_name" class="form-label">New Nickname</label>
+    <input type="text" class="form-control" id="new_name" name="new_name" aria-describedby="new_name_help">
+    <div id="new_name_help" class="form-text">Must be 10 characters or less</div>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+<p></p>
+<h2>Cards <button class="btn btn-success" id="btn_add_card" onclick="toggle_add_card_form()">Add</button></h2>
+{% if success is defined and success == 3 %}
+<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
+Card added successfully
+</div>
+{% endif %}
+<div id="add_card_container" style="display: none; max-width: 33%;">
+  <form action="/user/add.card" method="post", id="frm_add_card">
+    <label class="form-label" for="card_add_frm_access_code">Access Code:</label>
+    <input class="form-control" name="add_access_code" id="card_add_frm_access_code" maxlength="20" type="text" required aria-describedby="ac_help">
+    <div id="ac_help" class="form-text">20 digit code on the back of the card.</div>
+    <button type="submit" class="btn btn-primary">Add</button>
+  </form>
+  <br>
+</div>
+<ul style="font-size: 20px;">
+{% for c in cards %}
+<li>{{ c.access_code }} ({{ c.type}}): {{ c.status }}&nbsp;<button onclick="prep_edit_form('{{ c.access_code }}', '{{ c.chip_id}}', '{{ c.idm }}', '{{ c.type }}', '{{ c.memo }}')" data-bs-toggle="modal" data-bs-target="#card_edit" class="btn btn-secondary" id="btn_edit_card_{{ c.access_code }}">Edit</button>&nbsp;{% if c.status == 'Active'%}<button class="btn-warning btn">Lock</button>{% elif c.status == 'Locked' %}<button class="btn-warning btn">Unlock</button>{% endif %}&nbsp;<button class="btn-danger btn">Delete</button></li>
+{% endfor %}
+</ul>
+
+<h2>Reset Password</h2>
+{% if success is defined and success == 1 %}
+<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
+Update successful
+</div>
+{% endif %}
+<form style="max-width: 33%;" action="/user/update.pw" method="post">
+  <div class="mb-3">
+    <label for="current_pw" class="form-label">Current Password</label>
+    <input type="password" class="form-control" id="current_pw" name="current_pw">
+  </div>
+  <div class="mb-3">
+    <label for="password1" class="form-label">New Password</label>
+    <input type="password" class="form-control" id="password1" name="password1" aria-describedby="password_help">
+    <div id="password_help" class="form-text">Password must be at least 10 characters long, contain an upper and lowercase character, number, and special character</div>
+  </div>
+  <div class="mb-3">
+    <label for="password2" class="form-label">Retype New Password</label>
+    <input type="password" class="form-control" id="password2" name="password2">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{% if arcades is defined and arcades|length > 0 %}
+<h2>Arcades</h2>
+  <ul>
+  {% for a in arcades %}
+    <li><h3>{{ a.name }}</h3>
+      {% if a.machines|length > 0 %}
+        <table>
+          <tr><th>Serial</th><th>Game</th><th>Last Seen</th></tr>
+          {% for m in a.machines %}
+            <tr><td>{{ m.serial }}</td><td>{{ m.game }}</td><td>{{ m.last_seen }}</td></tr>
+          {% endfor %}
+        </table>
+      {% endif %}
+    </li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
+<div class="modal fade" id="card_edit" tabindex="-1" aria-labelledby="card_edit_label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="card_edit_label">Edit Card</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/user/edit.card" method="post", id="frm_edit_card">
+          <label class="form-label" for="card_edit_frm_access_code">Access Code:</label>
+          <input class="form-control" readonly name="add_access_code" id="card_edit_frm_access_code" maxlength="20" type="text" required aria-describedby="ac_help">
+          <div id="ac_help" class="form-text">20 digit code on the back of the card. If this is incorrect, contact a sysadmin.</div>
+
+          <label class="form-label" for="card_edit_frm_memo" id="card_edit_frm_memo_lbl">Memo:</label>
+          <input class="form-control" aria-describedby="memo_help" name="add_memo" id="card_edit_frm_memo" maxlength="16" type="text">
+          <div id="memo_help" class="form-text">Must be 16 characters or less.</div>
+
+          <label class="form-label" for="card_edit_frm_idm" id="card_edit_frm_idm_lbl">FeliCa IDm:</label>
+          <input class="form-control" aria-describedby="idm_help" name="add_felica_idm" id="card_edit_frm_idm" maxlength="16" type="text">
+          <div id="idm_help" class="form-text">8 bytes that uniquly idenfites a FeliCa card. Obtained by reading the card with an NFC reader.</div>
+        
+          <label class="form-label" for="card_edit_frm_chip_id" id="card_edit_frm_chip_id_lbl">Mifare UID:</label>
+          <input class="form-control" aria-describedby="chip_id_help" name="add_mifare_chip_id" id="card_edit_frm_chip_id" maxlength="8" type="text">
+          <div id="chip_id_help" class="form-text">4 byte integer that uniquly identifies a Mifare card. Obtained by reading the card with an NFC reader.</div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary" form="frm_edit_card">Edit</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
