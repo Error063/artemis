@@ -697,7 +697,7 @@ class ChuniProfileData(BaseData):
             )
             return 0
 
-        total_play_count = 0;
+        total_play_count = 0
         for row in playcount_sql:
             total_play_count += row[0]
         return {
