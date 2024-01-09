@@ -1,6 +1,13 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240109
+### System
++ Removed `ADD config config` from dockerfile
+
+### Aimedb
++ Fixed an error that resulted from trying to scan a banned or locked card
+
 ## 20240108
 ### System
 + Change how the underlying system handles URLs

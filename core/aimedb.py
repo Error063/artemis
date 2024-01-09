@@ -149,13 +149,13 @@ class AimedbProtocol(Protocol):
         is_banned = self.data.card.get_card_banned(req.access_code)
         is_locked = self.data.card.get_card_locked(req.access_code)
 
+        ret = ADBLookupResponse.from_req(req.head, user_id)
         if is_banned and is_locked:
             ret.head.status = ADBStatus.BAN_SYS_USER
         elif is_banned:
             ret.head.status = ADBStatus.BAN_SYS
         elif is_locked:
             ret.head.status = ADBStatus.LOCK_USER
-        ret = ADBLookupResponse.from_req(req.head, user_id)
         
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
