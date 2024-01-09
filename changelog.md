@@ -1,7 +1,7 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
-## 20XXXXXX
+## 20240108
 ### System
 + Change how the underlying system handles URLs
   + This can now allow for things like version-specific, or even keychip-specific URLs
@@ -21,7 +21,7 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 + Fix a bug arising if a user set their name to be 'true' or 'false'
 + Add support for Sun+ [#78](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/78) (Thanks EmmyHeart!)
 + Add `matching` section to `chuni.yaml`
-+ Change `udpHolePunchUri` and `reflectorUri` to be STUN and TURN servers
++ ~~Change `udpHolePunchUri` and `reflectorUri` to be STUN and TURN servers~~ Reverted
 + Imrpove `GetGameSetting` request handling for different versions
 + Fix issue where songs would not always return all scores [#92](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/92) (Thanks Kumubou!)
 
