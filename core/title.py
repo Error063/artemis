@@ -1,4 +1,5 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
+import json
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from starlette.requests import Request
@@ -8,6 +9,15 @@ from starlette.routing import Route
 from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
+
+class JSONResponseNoASCII(Response):
+    media_type = "application/json"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+        ).encode("utf-8")
 
 class BaseServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
