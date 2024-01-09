@@ -97,7 +97,7 @@ class WaccaServlet(BaseServlet):
     async def render_POST(self, request: Request) -> bytes:
         def end(resp: Dict) -> bytes:
             hash = md5(json.dumps(resp, ensure_ascii=False).encode()).digest()
-            return JSONResponse(resp, headers=["X-Wacca-Hash", hash.hex()])
+            return JSONResponse(resp, headers={"X-Wacca-Hash": hash.hex()})
 
         api = request.path_params.get('api', '')
         branch = request.path_params.get('branch', '')
