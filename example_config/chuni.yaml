@@ -28,7 +28,5 @@ crypto:
 
 matching:
   enable: False
-  stun_uri: "stun:stunserver.stunprotocol.org:3478"
-  turn_uri: "turn:stunserver.stunprotocol.org:3478"
   match_time_limit: 60
   match_error_limit: 9999

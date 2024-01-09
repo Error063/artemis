@@ -82,12 +82,11 @@ class ChuniNew(ChuniBase):
                 "matchErrorLimit": self.game_cfg.matching.match_error_limit,
                 "romVersion": self.game_cfg.version.version(self.version)["rom"],
                 "dataVersion": self.game_cfg.version.version(self.version)["data"],
-                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/" if self.game_cfg.matching.enable else "",
-                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/" if self.game_cfg.matching.enable else "",
+                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
                 # might be really important for online battle to connect the cabs via UDP port 50201
-                # Hay1tsme 01/08/2023: Pretty sure this is a stun and turn server respectivly...
-                "udpHolePunchUri": self.game_cfg.matching.stun_uri if self.game_cfg.matching.enable else "",
-                "reflectorUri": self.game_cfg.matching.turn_uri if self.game_cfg.matching.enable else "",
+                "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "reflectorUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
             },
             "isDumpUpload": False,
             "isAou": False,

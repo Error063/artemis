@@ -100,18 +100,6 @@ class ChuniMatchingConfig:
         )
     
     @property
-    def stun_uri(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "chuni", "matching", "stun_uri", default="stun:stunserver.stunprotocol.org:3478"
-        )
-    
-    @property
-    def turn_uri(self) -> str:
-        return CoreConfig.get_config_field(
-            self.__config, "chuni", "matching", "turn_uri", default="turn:stunserver.stunprotocol.org:3478"
-        )
-    
-    @property
     def match_time_limit(self) -> int:
         return CoreConfig.get_config_field(
             self.__config, "chuni", "matching", "match_time_limit", default=60
