@@ -81,7 +81,7 @@ class AimedbServlette():
                 await self.process_data(data, reader, writer)
                 await writer.drain()
             except ConnectionResetError as e:
-                self.logger.warn("Connection reset, disconnecting")
+                self.logger.debug("Connection reset, disconnecting")
                 return
 
     async def process_data(self, data: bytes, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> Optional[bytes]:
