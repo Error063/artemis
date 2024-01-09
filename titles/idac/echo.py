@@ -1,7 +1,6 @@
 import logging
 import socket
 
-from twisted.internet.protocol import DatagramProtocol
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Tuple
 

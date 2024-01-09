@@ -1,7 +1,5 @@
-from twisted.internet.protocol import Factory, Protocol
 import logging, coloredlogs
 from Crypto.Cipher import AES
-import struct
 from typing import Dict, Tuple, Callable, Union, Optional
 import asyncio
 from logging.handlers import TimedRotatingFileHandler

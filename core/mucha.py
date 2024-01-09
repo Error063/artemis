@@ -1,7 +1,6 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from twisted.web import resource
 from starlette.requests import Request
 from datetime import datetime
 from Crypto.Cipher import Blowfish

@@ -5,8 +5,6 @@ import jinja2
 from starlette.requests import Request
 from starlette.responses import Response, RedirectResponse
 from os import path
-from twisted.web.util import redirectTo
-from twisted.web.server import Session
 
 from core.frontend import FE_Base, UserSession
 from core.config import CoreConfig

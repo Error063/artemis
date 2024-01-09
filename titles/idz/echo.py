@@ -1,8 +1,4 @@
-from twisted.internet.protocol import DatagramProtocol
 import logging
-
-from core.config import CoreConfig
-from .config import IDZConfig
 
 class IDZEcho:
     def connection_made(self, transport):

@@ -19,8 +19,6 @@ from titles.idac.season2 import IDACSeason2
 from titles.idac.config import IDACConfig
 from titles.idac.const import IDACConstants
 from titles.idac.echo import IDACEchoUDP
-from titles.idac.matching import IDACMatching
-
 
 class IDACServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
