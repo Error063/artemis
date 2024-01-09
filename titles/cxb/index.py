@@ -1,6 +1,6 @@
 from starlette.requests import Request
 from starlette.routing import Route
-from starlette.responses import Response, PlainTextResponse, JSONResponse
+from starlette.responses import Response, JSONResponse
 import traceback
 import sys
 import yaml
@@ -13,7 +13,7 @@ from typing import Dict, Tuple, List
 from os import path
 
 from core.config import CoreConfig
-from core.title import BaseServlet
+from core.title import BaseServlet, JSONResponseNoASCII
 from core.utils import Utils
 from .config import CxbConfig
 from .const import CxbConstants
@@ -200,7 +200,7 @@ class CxbServlet(BaseServlet):
             return Response()
         
         self.logger.debug(f"{version_string} Response {resp}")
-        return JSONResponse(resp, ensure_ascii=False)
+        return JSONResponseNoASCII(resp)
 
     async def handle_action(self, request: Request) -> bytes:
         req_json = await self.preprocess(request)
@@ -229,7 +229,7 @@ class CxbServlet(BaseServlet):
             return Response()
         
         self.logger.debug(f"Response {resp}")
-        return JSONResponse(resp)
+        return JSONResponseNoASCII(resp)
 
     async def handle_auth(self, request: Request) -> bytes:
         req_json = await self.preprocess(request)
@@ -258,4 +258,4 @@ class CxbServlet(BaseServlet):
             return Response()
         
         self.logger.debug(f"Response {resp}")
-        return JSONResponse(resp)
+        return JSONResponseNoASCII(resp)
