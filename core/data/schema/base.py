@@ -15,14 +15,6 @@ from core.config import CoreConfig
 
 metadata = MetaData()
 
-schema_ver = Table(
-    "schema_versions",
-    metadata,
-    Column("game", String(4), primary_key=True, nullable=False),
-    Column("version", Integer, nullable=False, server_default="1"),
-    mysql_charset="utf8mb4",
-)
-
 event_log = Table(
     "event_log",
     metadata,
