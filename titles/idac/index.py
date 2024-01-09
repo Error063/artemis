@@ -9,10 +9,10 @@ import coloredlogs
 from os import path
 from typing import Dict, List, Tuple
 from logging.handlers import TimedRotatingFileHandler
-
+import asyncio
 
 from core.config import CoreConfig
-from core.title import BaseServlet
+from core.title import BaseServlet, JSONResponseNoASCII
 from core.utils import Utils
 from titles.idac.base import IDACBase
 from titles.idac.season2 import IDACSeason2
@@ -75,7 +75,8 @@ class IDACServlet(BaseServlet):
     
     def get_routes(self) -> List[Route]:
         return [
-            Route("/{version:int}/initiald/{category:str}/{endpoint:str}", self.render_POST, methods=["POST"])
+            Route("/{version:int}/initiald/{category:str}/{endpoint:str}", self.render_POST, methods=["POST"]),
+            Route("/{version:int}/initiald-matching/{endpoint:str}", self.render_POST, methods=["POST"]),
         ]
 
     def get_allnet_info(
@@ -87,7 +88,7 @@ class IDACServlet(BaseServlet):
         return (
             f"",
             # requires http or else it defaults to https
-            f"http://{self.core_cfg.server.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"http://{self.core_cfg.server.hostname}{t_port}/{game_ver}/",
         )
 
     async def render_POST(self, request: Request) -> bytes:
@@ -134,8 +135,43 @@ class IDACServlet(BaseServlet):
             resp = {"status_code": "0"}
 
         self.logger.debug(f"Response {resp}")
-        return JSONResponse(json.dumps(resp, ensure_ascii=False))
+        return JSONResponseNoASCII(resp)
 
+    async def render_matching(self, request: Request):
+        url: str = request.path_params.get("endpoint")
+        ver: int = request.path_params.get("version")
+        client_ip = Utils.get_ip_addr(request)
+        req_data = await request.json()
+        header_application = self.decode_header(request.headers.get('application', ''))
+        user_id = int(header_application["session"])
+
+        # self.getMatchingStatus(user_id)
+
+        self.logger.info(
+            f"IDAC Matching request from {client_ip}: {url} - {req_data}"
+        )
+
+        resp = {"status_code": "0"}
+        if url == "/regist":
+            self.queue = self.queue + 1
+        elif url == "/status":
+            if req_data.get("cancel_flag"):
+                self.queue = self.queue - 1
+                self.logger.info(
+                    f"IDAC Matching endpoint {client_ip} had quited"
+                )
+
+            resp = {
+                "status_code": "0",
+                # Only IPv4 is supported
+                "host": self.game_config.server.matching_host,
+                "port": self.game_config.server.matching_p2p,
+                "room_name": "INDTA",
+                "state": 1,
+            }
+
+        self.logger.debug(f"Response {resp}")
+        return JSONResponseNoASCII(resp)
 
     def decode_header(self, app: str) -> Dict:
         ret = {}
@@ -147,22 +183,14 @@ class IDACServlet(BaseServlet):
         return ret
 
     def setup(self):
-        return
-        """
         if self.game_cfg.server.enable:
-            endpoints.serverFromString(
-                reactor,
-                f"tcp:{self.game_cfg.server.matching}:interface={self.core_cfg.server.listen_address}",
-            ).listen(server.Site(IDACMatching(self.core_cfg, self.game_cfg)))
-
-            reactor.listenUDP(
-                self.game_cfg.server.echo1,
-                IDACEchoUDP(self.core_cfg, self.game_cfg, self.game_cfg.server.echo1),
-            )
-            reactor.listenUDP(
-                self.game_cfg.server.echo2,
-                IDACEchoUDP(self.core_cfg, self.game_cfg, self.game_cfg.server.echo2),
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(
+                loop.create_datagram_endpoint(
+                    lambda: IDACEchoUDP(),
+                    local_addr=(self.core_cfg.server.listen_address, self.game_cfg.server.echo1)
+                )
             )
             
-            self.logger.info(f"Matching listening on {self.game_cfg.server.matching} with echos on {self.game_cfg.server.echo1} and {self.game_cfg.server.echo2}")
-            """
+            self.logger.info(f"Matching listening on {self.game_cfg.server.matching} with echo on {self.game_cfg.server.echo1}")
+            

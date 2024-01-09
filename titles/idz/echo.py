@@ -9,6 +9,5 @@ class IDZEcho:
         self.transport = transport
 
     def datagram_received(self, data, addr):
-        message = data.decode()
-        self.logger.debug(f'Received echo from {addr}')
+        logging.getLogger('idz').debug(f'Received echo from {addr}')
         self.transport.sendto(data, addr)
