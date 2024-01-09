@@ -81,7 +81,7 @@ class IDZUserDB:
                     self.logger.debug("Connection closed")
                     return
                 
-                await self.dataReceived(data, reader, writer)
+                await self.data.Received(data, reader, writer)
                 await writer.drain()
             
             except ConnectionResetError as e:

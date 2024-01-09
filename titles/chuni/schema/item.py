@@ -245,7 +245,7 @@ matching = Table(
 
 
 class ChuniItemData(BaseData):
-    def get_oldest_free_matching(self, version: int) -> Optional[Row]:
+    async def get_oldest_free_matching(self, version: int) -> Optional[Row]:
         sql = matching.select(
             and_(
                 matching.c.version == version,
@@ -253,46 +253,46 @@ class ChuniItemData(BaseData):
             )
         ).order_by(matching.c.roomId.asc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_newest_matching(self, version: int) -> Optional[Row]:
+    async def get_newest_matching(self, version: int) -> Optional[Row]:
         sql = matching.select(
             and_(
                 matching.c.version == version
             )
         ).order_by(matching.c.roomId.desc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_all_matchings(self, version: int) -> Optional[List[Row]]:
+    async def get_all_matchings(self, version: int) -> Optional[List[Row]]:
         sql = matching.select(
             and_(
                 matching.c.version == version
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_matching(self, version: int, room_id: int) -> Optional[Row]:
+    async def get_matching(self, version: int, room_id: int) -> Optional[Row]:
         sql = matching.select(
             and_(matching.c.version == version, matching.c.roomId == room_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_matching(
+    async def put_matching(
         self,
         version: int,
         room_id: int,
@@ -314,22 +314,22 @@ class ChuniItemData(BaseData):
             restMSec=rest_sec, matchingMemberInfoList=matching_member_info_list
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def delete_matching(self, version: int, room_id: int):
+    async def delete_matching(self, version: int, room_id: int):
         sql = delete(matching).where(
             and_(matching.c.roomId == room_id, matching.c.version == version)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_all_favorites(
+    async def get_all_favorites(
         self, user_id: int, version: int, fav_kind: int = 1
     ) -> Optional[List[Row]]:
         sql = favorite.select(
@@ -340,12 +340,12 @@ class ChuniItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_login_bonus(
+    async def put_login_bonus(
         self, user_id: int, version: int, preset_id: int, **login_bonus_data
     ) -> Optional[int]:
         sql = insert(login_bonus).values(
@@ -354,12 +354,12 @@ class ChuniItemData(BaseData):
 
         conflict = sql.on_duplicate_key_update(presetId=preset_id, **login_bonus_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_all_login_bonus(
+    async def get_all_login_bonus(
         self, user_id: int, version: int, is_finished: bool = False
     ) -> Optional[List[Row]]:
         sql = login_bonus.select(
@@ -370,12 +370,12 @@ class ChuniItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_login_bonus(
+    async def get_login_bonus(
         self, user_id: int, version: int, preset_id: int
     ) -> Optional[Row]:
         sql = login_bonus.select(
@@ -386,12 +386,12 @@ class ChuniItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_character(self, user_id: int, character_data: Dict) -> Optional[int]:
+    async def put_character(self, user_id: int, character_data: Dict) -> Optional[int]:
         character_data["user"] = user_id
 
         character_data = self.fix_bools(character_data)
@@ -399,30 +399,30 @@ class ChuniItemData(BaseData):
         sql = insert(character).values(**character_data)
         conflict = sql.on_duplicate_key_update(**character_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_character(self, user_id: int, character_id: int) -> Optional[Dict]:
+    async def get_character(self, user_id: int, character_id: int) -> Optional[Dict]:
         sql = select(character).where(
             and_(character.c.user == user_id, character.c.characterId == character_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_characters(self, user_id: int) -> Optional[List[Row]]:
+    async def get_characters(self, user_id: int) -> Optional[List[Row]]:
         sql = select(character).where(character.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_item(self, user_id: int, item_data: Dict) -> Optional[int]:
+    async def put_item(self, user_id: int, item_data: Dict) -> Optional[int]:
         item_data["user"] = user_id
 
         item_data = self.fix_bools(item_data)
@@ -430,12 +430,12 @@ class ChuniItemData(BaseData):
         sql = insert(item).values(**item_data)
         conflict = sql.on_duplicate_key_update(**item_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_items(self, user_id: int, kind: int = None) -> Optional[List[Row]]:
+    async def get_items(self, user_id: int, kind: int = None) -> Optional[List[Row]]:
         if kind is None:
             sql = select(item).where(item.c.user == user_id)
         else:
@@ -443,12 +443,12 @@ class ChuniItemData(BaseData):
                 and_(item.c.user == user_id, item.c.itemKind == kind)
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_duel(self, user_id: int, duel_data: Dict) -> Optional[int]:
+    async def put_duel(self, user_id: int, duel_data: Dict) -> Optional[int]:
         duel_data["user"] = user_id
 
         duel_data = self.fix_bools(duel_data)
@@ -456,20 +456,20 @@ class ChuniItemData(BaseData):
         sql = insert(duel).values(**duel_data)
         conflict = sql.on_duplicate_key_update(**duel_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_duels(self, user_id: int) -> Optional[List[Row]]:
+    async def get_duels(self, user_id: int) -> Optional[List[Row]]:
         sql = select(duel).where(duel.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_map(self, user_id: int, map_data: Dict) -> Optional[int]:
+    async def put_map(self, user_id: int, map_data: Dict) -> Optional[int]:
         map_data["user"] = user_id
 
         map_data = self.fix_bools(map_data)
@@ -477,20 +477,20 @@ class ChuniItemData(BaseData):
         sql = insert(map).values(**map_data)
         conflict = sql.on_duplicate_key_update(**map_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_maps(self, user_id: int) -> Optional[List[Row]]:
+    async def get_maps(self, user_id: int) -> Optional[List[Row]]:
         sql = select(map).where(map.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_map_area(self, user_id: int, map_area_data: Dict) -> Optional[int]:
+    async def put_map_area(self, user_id: int, map_area_data: Dict) -> Optional[int]:
         map_area_data["user"] = user_id
 
         map_area_data = self.fix_bools(map_area_data)
@@ -498,28 +498,28 @@ class ChuniItemData(BaseData):
         sql = insert(map_area).values(**map_area_data)
         conflict = sql.on_duplicate_key_update(**map_area_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_map_areas(self, user_id: int) -> Optional[List[Row]]:
+    async def get_map_areas(self, user_id: int) -> Optional[List[Row]]:
         sql = select(map_area).where(map_area.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
         sql = gacha.select(gacha.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_user_gacha(
+    async def put_user_gacha(
         self, aime_id: int, gacha_id: int, gacha_data: Dict
     ) -> Optional[int]:
         sql = insert(gacha).values(user=aime_id, gachaId=gacha_id, **gacha_data)
@@ -527,14 +527,14 @@ class ChuniItemData(BaseData):
         conflict = sql.on_duplicate_key_update(
             user=aime_id, gachaId=gacha_id, **gacha_data
         )
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_user_print_states(
+    async def get_user_print_states(
         self, aime_id: int, has_completed: bool = False
     ) -> Optional[List[Row]]:
         sql = print_state.select(
@@ -544,12 +544,12 @@ class ChuniItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_user_print_states_by_gacha(
+    async def get_user_print_states_by_gacha(
         self, aime_id: int, gacha_id: int, has_completed: bool = False
     ) -> Optional[List[Row]]:
         sql = print_state.select(
@@ -560,16 +560,16 @@ class ChuniItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_user_print_state(self, aime_id: int, **print_data) -> Optional[int]:
+    async def put_user_print_state(self, aime_id: int, **print_data) -> Optional[int]:
         sql = insert(print_state).values(user=aime_id, **print_data)
 
         conflict = sql.on_duplicate_key_update(user=aime_id, **print_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -578,7 +578,7 @@ class ChuniItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_user_print_detail(
+    async def put_user_print_detail(
         self, aime_id: int, serial_id: str, user_print_data: Dict
     ) -> Optional[int]:
         sql = insert(print_detail).values(
@@ -586,7 +586,7 @@ class ChuniItemData(BaseData):
         )
 
         conflict = sql.on_duplicate_key_update(user=aime_id, **user_print_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(

@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Optional, List
 from sqlalchemy import Table, Column
 from sqlalchemy.types import Integer, String, TIMESTAMP
@@ -24,15 +23,8 @@ aime_user = Table(
     mysql_charset="utf8mb4",
 )
 
-
-class PermissionBits(Enum):
-    PermUser = 1
-    PermMod = 2
-    PermSysAdmin = 4
-
-
 class UserData(BaseData):
-    def create_user(
+    async def create_user(
         self,
         id: int = None,
         username: str = None,
@@ -60,14 +52,14 @@ class UserData(BaseData):
             username=username, email=email, password=password, permissions=permission
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_user(self, user_id: int) -> Optional[Row]:
+    async def get_user(self, user_id: int) -> Optional[Row]:
         sql = select(aime_user).where(aime_user.c.id == user_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return False
         return result.fetchone()
@@ -85,39 +77,34 @@ class UserData(BaseData):
 
         return bcrypt.checkpw(passwd, usr["password"].encode())
 
-    def reset_autoincrement(self, ai_value: int) -> None:
-        # ALTER TABLE isn't in sqlalchemy so we do this the ugly way
-        sql = f"ALTER TABLE aime_user AUTO_INCREMENT={ai_value}"
-        self.execute(sql)
-
-    def delete_user(self, user_id: int) -> None:
+    async def delete_user(self, user_id: int) -> None:
         sql = aime_user.delete(aime_user.c.id == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(f"Failed to delete user with id {user_id}")
 
-    def get_unregistered_users(self) -> List[Row]:
+    async def get_unregistered_users(self) -> List[Row]:
         """
         Returns a list of users who have not registered with the webui. They may or may not have cards.
         """
         sql = select(aime_user).where(aime_user.c.password == None)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def find_user_by_email(self, email: str) -> Row:
+    async def find_user_by_email(self, email: str) -> Row:
         sql = select(aime_user).where(aime_user.c.email == email)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return False
         return result.fetchone()
 
-    def find_user_by_username(self, username: str) -> List[Row]:
+    async def find_user_by_username(self, username: str) -> List[Row]:
         sql = aime_user.select(aime_user.c.username.like(f"%{username}%"))
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return False
         return result.fetchall()

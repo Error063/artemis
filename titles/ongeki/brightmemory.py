@@ -28,7 +28,7 @@ class OngekiBrightMemory(OngekiBright):
         return ret
 
     async def handle_get_user_memory_chapter_api_request(self, data: Dict) -> Dict:
-        memories = self.data.item.get_memorychapters(data["userId"])
+        memories = await self.data.item.get_memorychapters(data["userId"])
         if not memories:
             return {
                 "userId": data["userId"],

@@ -142,55 +142,55 @@ playlog = Table(
 
 
 class ChuniScoreData(BaseData):
-    def get_courses(self, aime_id: int) -> Optional[Row]:
+    async def get_courses(self, aime_id: int) -> Optional[Row]:
         sql = select(course).where(course.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_course(self, aime_id: int, course_data: Dict) -> Optional[int]:
+    async def put_course(self, aime_id: int, course_data: Dict) -> Optional[int]:
         course_data["user"] = aime_id
         course_data = self.fix_bools(course_data)
 
         sql = insert(course).values(**course_data)
         conflict = sql.on_duplicate_key_update(**course_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_scores(self, aime_id: int) -> Optional[Row]:
+    async def get_scores(self, aime_id: int) -> Optional[Row]:
         sql = select(best_score).where(best_score.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_score(self, aime_id: int, score_data: Dict) -> Optional[int]:
+    async def put_score(self, aime_id: int, score_data: Dict) -> Optional[int]:
         score_data["user"] = aime_id
         score_data = self.fix_bools(score_data)
 
         sql = insert(best_score).values(**score_data)
         conflict = sql.on_duplicate_key_update(**score_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_playlogs(self, aime_id: int) -> Optional[Row]:
+    async def get_playlogs(self, aime_id: int) -> Optional[Row]:
         sql = select(playlog).where(playlog.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_playlog(self, aime_id: int, playlog_data: Dict, version: int) -> Optional[int]:
+    async def put_playlog(self, aime_id: int, playlog_data: Dict, version: int) -> Optional[int]:
         # Calculate the ROM version that should be inserted into the DB, based on the version of the ggame being inserted
         # We only need from Version 10 (Plost) and back, as newer versions include romVersion in their upsert
         # This matters both for gameRankings, as well as a future DB update to keep version data separate
@@ -216,12 +216,12 @@ class ChuniScoreData(BaseData):
         sql = insert(playlog).values(**playlog_data)
         conflict = sql.on_duplicate_key_update(**playlog_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_rankings(self, version: int) -> Optional[List[Dict]]:
+    async def get_rankings(self, version: int) -> Optional[List[Dict]]:
         # Calculates the ROM version that should be fetched for rankings, based on the game version being retrieved
         # This prevents tracks that are not accessible in your version from counting towards the 10 results
         romVer = {
@@ -241,7 +241,7 @@ class ChuniScoreData(BaseData):
             0: "1.00%"
         }
         sql = select([playlog.c.musicId.label('id'), func.count(playlog.c.musicId).label('point')]).where((playlog.c.level != 4) & (playlog.c.romVersion.like(romVer.get(version, "%")))).group_by(playlog.c.musicId).order_by(func.count(playlog.c.musicId).desc()).limit(10)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
@@ -249,10 +249,10 @@ class ChuniScoreData(BaseData):
         rows = result.fetchall()
         return [dict(row) for row in rows]
 
-    def get_rival_music(self, rival_id: int) -> Optional[List[Dict]]:
+    async def get_rival_music(self, rival_id: int) -> Optional[List[Dict]]:
         sql = select(best_score).where(best_score.c.user == rival_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

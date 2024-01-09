@@ -28,7 +28,7 @@ class OngekiFrontend(FE_Base):
         self.nav_name = "O.N.G.E.K.I."
         self.version_list = OngekiConstants.VERSION_NAMES
 
-    def render_GET(self, request: Request) -> bytes:
+    async def render_GET(self, request: Request) -> bytes:
         template = self.environment.get_template(
             "titles/ongeki/frontend/ongeki_index.jinja"
         )
@@ -37,7 +37,7 @@ class OngekiFrontend(FE_Base):
         self.version = usr_sesh.ongeki_version
         if getattr(usr_sesh, "userId", 0) != 0:
             profile_data =self.data.profile.get_profile_data(usr_sesh.userId, self.version)
-            rival_list = self.data.profile.get_rivals(usr_sesh.userId)
+            rival_list = await self.data.profile.get_rivals(usr_sesh.userId)
             rival_data = {
                 "userRivalList": rival_list,
                 "userId": usr_sesh.userId
@@ -58,20 +58,20 @@ class OngekiFrontend(FE_Base):
         else:
             return redirectTo(b"/gate/", request)
     
-    def render_POST(self, request: Request):
+    async def render_POST(self, request: Request):
         uri = request.uri.decode()
         sesh: Session = request.getSession()
         usr_sesh = IUserSession(sesh)
         if hasattr(usr_sesh, "userId"):
             if uri == "/game/ongeki/rival.add":
                 rival_id = request.args[b"rivalUserId"][0].decode()
-                self.data.profile.put_rival(usr_sesh.userId, rival_id)
+                await self.data.profile.put_rival(usr_sesh.userId, rival_id)
                 # self.logger.info(f"{usr_sesh.userId} added a rival")
                 return redirectTo(b"/game/ongeki/", request)
             
             elif uri == "/game/ongeki/rival.delete":
                 rival_id = request.args[b"rivalUserId"][0].decode()
-                self.data.profile.delete_rival(usr_sesh.userId, rival_id)
+                await self.data.profile.delete_rival(usr_sesh.userId, rival_id)
                 # self.logger.info(f"{response}")
                 return redirectTo(b"/game/ongeki/", request)
             

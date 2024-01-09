@@ -37,7 +37,7 @@ class IDACFrontend(FE_Base):
             34: "full_tune_fragments",
         }
 
-    def generate_all_tables_json(self, user_id: int):
+    async def generate_all_tables_json(self, user_id: int):
         json_export = {}
 
         idac_tables = {
@@ -73,7 +73,7 @@ class IDACFrontend(FE_Base):
                 sql = sql.where(table.c.version == self.version)
 
             # lol use the profile connection for items, dirty hack
-            result = self.data.profile.execute(sql)
+            result = await self.data.profile.execute(sql)
             data_list = result.fetchall()
 
             # add the list to the json export with the correct table name
@@ -86,7 +86,7 @@ class IDACFrontend(FE_Base):
 
         return json.dumps(json_export, indent=4, default=str, ensure_ascii=False)
 
-    def render_GET(self, request: Request) -> bytes:
+    async def render_GET(self, request: Request) -> bytes:
         uri: str = request.uri.decode()
 
         template = self.environment.get_template(
@@ -103,7 +103,7 @@ class IDACFrontend(FE_Base):
                 return redirectTo(b"/game/idac", request)
 
             # set the file name, content type and size to download the json
-            content = self.generate_all_tables_json(user_id).encode("utf-8")
+            content = await self.generate_all_tables_json(user_id).encode("utf-8")
             request.responseHeaders.addRawHeader(
                 b"content-type", b"application/octet-stream"
             )
@@ -119,9 +119,9 @@ class IDACFrontend(FE_Base):
 
         profile_data, tickets, rank = None, None, None
         if user_id > 0:
-            profile_data = self.data.profile.get_profile(user_id, self.version)
-            ticket_data = self.data.item.get_tickets(user_id)
-            rank = self.data.profile.get_profile_rank(user_id, self.version)
+            profile_data = await self.data.profile.get_profile(user_id, self.version)
+            ticket_data = await self.data.item.get_tickets(user_id)
+            rank = await self.data.profile.get_profile_rank(user_id, self.version)
 
             tickets = {
                 self.ticket_names[ticket["ticket_id"]]: ticket["ticket_cnt"]
@@ -137,6 +137,3 @@ class IDACFrontend(FE_Base):
             sesh=vars(usr_sesh),
             active_page="idac",
         ).encode("utf-16")
-
-    def render_POST(self, request: Request) -> bytes:
-        pass

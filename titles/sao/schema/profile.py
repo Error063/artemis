@@ -30,17 +30,17 @@ profile = Table(
 )
 
 class SaoProfileData(BaseData):
-    def create_profile(self, user_id: int) -> Optional[int]:
+    async def create_profile(self, user_id: int) -> Optional[int]:
         sql = insert(profile).values(user=user_id)
         conflict = sql.on_duplicate_key_update(user=user_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"Failed to create SAO profile for user {user_id}!")
             return None
         return result.lastrowid
 
-    def put_profile(self, user_id: int, user_type: int, nick_name: str, rank_num: int, rank_exp: int, own_col: int, own_vp: int, own_yui_medal: int, setting_title_id: int) -> Optional[int]:
+    async def put_profile(self, user_id: int, user_type: int, nick_name: str, rank_num: int, rank_exp: int, own_col: int, own_vp: int, own_yui_medal: int, setting_title_id: int) -> Optional[int]:
         sql = insert(profile).values(
             user=user_id,
             user_type=user_type,
@@ -62,7 +62,7 @@ class SaoProfileData(BaseData):
             setting_title_id=setting_title_id
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert profile! user: {user_id}"
@@ -71,9 +71,9 @@ class SaoProfileData(BaseData):
 
         return result.lastrowid
 
-    def get_profile(self, user_id: int) -> Optional[Row]:
+    async def get_profile(self, user_id: int) -> Optional[Row]:
         sql = profile.select(profile.c.user == user_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

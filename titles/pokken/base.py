@@ -132,11 +132,11 @@ class PokkenBase:
         res.type = jackal_pb2.MessageType.LOAD_USER
         access_code = request.load_user.access_code
         load_usr = jackal_pb2.LoadUserResponseData()
-        user_id = self.data.card.get_user_id_from_card(access_code)
+        user_id = await self.data.card.get_user_id_from_card(access_code)
 
         if user_id is None and self.game_cfg.server.auto_register:
-            user_id = self.data.user.create_user()
-            card_id = self.data.card.create_card(user_id, access_code)
+            user_id = await self.data.user.create_user()
+            card_id = await self.data.card.create_card(user_id, access_code)
 
             self.logger.info(
                 f"Register new card {access_code} (UserId {user_id}, CardId {card_id})"
@@ -160,7 +160,7 @@ class PokkenBase:
         event_achievement_flag
         event_achievement_param
         """
-        profile = self.data.profile.get_profile(user_id)
+        profile = await self.data.profile.get_profile(user_id)
         load_usr.commidserv_result = 1
         load_usr.load_hash = 1
         load_usr.cardlock_status = False
@@ -169,7 +169,7 @@ class PokkenBase:
         load_usr.precedent_release_flag = 0xFFFFFFFF
 
         if profile is None:
-            profile_id = self.data.profile.create_profile(user_id)
+            profile_id = await self.data.profile.create_profile(user_id)
             profile_dict = {"id": profile_id, "user": user_id}
             pokemon_data = []
             tutorial_progress = []
@@ -184,7 +184,7 @@ class PokkenBase:
             self.logger.info(
                 f"Card-in user {user_id} (Trainer name {profile_dict.get('trainer_name', '')})"
             )
-            pokemon_data = self.data.profile.get_all_pokemon_data(user_id)
+            pokemon_data = await self.data.profile.get_all_pokemon_data(user_id)
             tutorial_progress = []
             rankmatch_progress = []
             achievement_flag = []
@@ -324,22 +324,22 @@ class PokkenBase:
         battle = req.battle_data
         mon = req.pokemon_data
 
-        p = self.data.profile.touch_profile(user_id)
+        p = await self.data.profile.touch_profile(user_id)
         if p is None or not p:
-            self.data.profile.create_profile(user_id)
+            await self.data.profile.create_profile(user_id)
 
         if req.trainer_name_pending is not None and req.trainer_name_pending: # we're saving for the first time
-            self.data.profile.set_profile_name(user_id, req.trainer_name_pending, req.avatar_gender if req.avatar_gender else None)
+            await self.data.profile.set_profile_name(user_id, req.trainer_name_pending, req.avatar_gender if req.avatar_gender else None)
 
         for tut_flg in req.tutorial_progress_flag:
             tut_flgs.append(tut_flg)
         
-        self.data.profile.update_profile_tutorial_flags(user_id, tut_flgs)
+        await self.data.profile.update_profile_tutorial_flags(user_id, tut_flgs)
 
         for ach_flg in req.achievement_flag:
             ach_flgs.append(ach_flg)
         
-        self.data.profile.update_profile_tutorial_flags(user_id, ach_flg)
+        await self.data.profile.update_profile_tutorial_flags(user_id, ach_flg)
 
         for evt_flg in req.event_achievement_flag:
             evt_flgs.append(evt_flg)
@@ -347,29 +347,29 @@ class PokkenBase:
         for evt_param in req.event_achievement_param:
             evt_params.append(evt_param)
 
-        self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, req.last_play_event_id)
+        await self.data.profile.update_profile_event(user_id, evt_state, evt_flgs, evt_params, req.last_play_event_id)
         
         for reward in req.reward_data:
-            self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
+            await self.data.item.add_reward(user_id, reward.get_category_id, reward.get_content_id, reward.get_type_id)
         
-        self.data.profile.add_profile_points(user_id, get_rank_pts, get_money, get_score_pts, grade_max)
+        await self.data.profile.add_profile_points(user_id, get_rank_pts, get_money, get_score_pts, grade_max)
         
-        self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
-        self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
-        self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
+        await self.data.profile.update_support_team(user_id, 1, req.support_set_1[0], req.support_set_1[1])
+        await self.data.profile.update_support_team(user_id, 2, req.support_set_2[0], req.support_set_2[1])
+        await self.data.profile.update_support_team(user_id, 3, req.support_set_3[0], req.support_set_3[1])
 
-        self.data.profile.put_pokemon(user_id, mon.char_id, mon.illustration_book_no, mon.bp_point_atk, mon.bp_point_res, mon.bp_point_def, mon.bp_point_sp)
-        self.data.profile.add_pokemon_xp(user_id, mon.char_id, mon.get_pokemon_exp)
+        await self.data.profile.put_pokemon(user_id, mon.char_id, mon.illustration_book_no, mon.bp_point_atk, mon.bp_point_res, mon.bp_point_def, mon.bp_point_sp)
+        await self.data.profile.add_pokemon_xp(user_id, mon.char_id, mon.get_pokemon_exp)
         
         for x in range(len(battle.play_mode)):
-            self.data.profile.put_pokemon_battle_result(
+            await self.data.profile.put_pokemon_battle_result(
                 user_id, 
                 mon.char_id, 
                 PokkenConstants.BATTLE_TYPE(battle.play_mode[x]), 
                 PokkenConstants.BATTLE_RESULT(battle.result[x])
             )
 
-        self.data.profile.put_stats(
+        await self.data.profile.put_stats(
             user_id,
             battle.ex_ko_num,
             battle.wko_num,
@@ -379,7 +379,7 @@ class PokkenBase:
             num_continues
         )
 
-        self.data.profile.put_extra(
+        await self.data.profile.put_extra(
             user_id,
             extra_counter,
             evt_reward_get_flg,

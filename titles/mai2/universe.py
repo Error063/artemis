@@ -16,7 +16,7 @@ class Mai2Universe(Mai2SplashPlus):
         self.version = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
 
     async def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_detail(data["userId"], self.version)
+        p = await self.data.profile.get_profile_detail(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -32,9 +32,9 @@ class Mai2Universe(Mai2SplashPlus):
 
     async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         # user already exists, because the preview checks that already
-        p = self.data.profile.get_profile_detail(data["userId"], self.version)
+        p = await self.data.profile.get_profile_detail(data["userId"], self.version)
 
-        cards = self.data.card.get_user_cards(data["userId"])
+        cards = await self.data.card.get_user_cards(data["userId"])
         if cards is None or len(cards) == 0:
             # This should never happen
             self.logger.error(
@@ -59,7 +59,7 @@ class Mai2Universe(Mai2SplashPlus):
         return {"returnCode": 1}
 
     async def handle_cm_get_selling_card_api_request(self, data: Dict) -> Dict:
-        selling_cards = self.data.static.get_enabled_cards(self.version)
+        selling_cards = await self.data.static.get_enabled_cards(self.version)
         if selling_cards is None:
             return {"length": 0, "sellingCardList": []}
 
@@ -89,7 +89,7 @@ class Mai2Universe(Mai2SplashPlus):
         return {"length": len(selling_card_list), "sellingCardList": selling_card_list}
 
     async def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
-        user_cards = self.data.item.get_cards(data["userId"])
+        user_cards = await self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {"returnCode": 1, "length": 0, "nextIndex": 0, "userCardList": []}
 
@@ -128,7 +128,7 @@ class Mai2Universe(Mai2SplashPlus):
         super().handle_get_user_item_api_request(data)
 
     async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
-        characters = self.data.item.get_characters(data["userId"])
+        characters = await self.data.item.get_characters(data["userId"])
 
         chara_list = []
         for chara in characters:
@@ -168,7 +168,7 @@ class Mai2Universe(Mai2SplashPlus):
         end_date = datetime.utcnow() + timedelta(days=15)
 
         user_card = upsert["userCard"]
-        self.data.item.put_card(
+        await self.data.item.put_card(
             user_id,
             user_card["cardId"],
             user_card["cardTypeId"],
@@ -180,7 +180,7 @@ class Mai2Universe(Mai2SplashPlus):
         )
 
         # get the profile extend to save the new bought card
-        extend = self.data.profile.get_profile_extend(user_id, self.version)
+        extend = await self.data.profile.get_profile_extend(user_id, self.version)
         if extend:
             extend = extend._asdict()
             # parse the selectedCardList
@@ -192,14 +192,14 @@ class Mai2Universe(Mai2SplashPlus):
                 selected_cards.insert(0, user_card["cardTypeId"])
 
             extend["selectedCardList"] = selected_cards
-            self.data.profile.put_profile_extend(user_id, self.version, extend)
+            await self.data.profile.put_profile_extend(user_id, self.version, extend)
 
         # properly format userPrintDetail for the database
         upsert.pop("userCard")
         upsert.pop("serialId")
         upsert["printDate"] = datetime.strptime(upsert["printDate"], "%Y-%m-%d")
 
-        self.data.item.put_user_print_detail(user_id, serial_id, upsert)
+        await self.data.item.put_user_print_detail(user_id, serial_id, upsert)
 
         return {
             "returnCode": 1,

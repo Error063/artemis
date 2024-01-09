@@ -29,17 +29,15 @@ class SaoReader(BaseReader):
             self.logger.error(f"Invalid project SAO version {version}")
             exit(1)
 
-    def read(self) -> None:
-        pull_bin_ram = True
+    async def read(self) -> None:
+        if path.exists(self.bin_dir):
+            await self.read_csv(f"{self.bin_dir}")
 
-        if not path.exists(f"{self.bin_dir}"):
-            self.logger.warning(f"Couldn't find csv file in {self.bin_dir}, skipping")
-            pull_bin_ram = False
+        else:
+            self.logger.warn("Directory not found, nothing to import")
+            
 
-        if pull_bin_ram:
-            self.read_csv(f"{self.bin_dir}")
-
-    def read_csv(self, bin_dir: str) -> None:
+    async def read_csv(self, bin_dir: str) -> None:
         self.logger.info(f"Read csv from {bin_dir}")
 
         self.logger.info("Now reading QuestScene.csv")
@@ -56,7 +54,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added quest {questSceneId} | Name: {name}")
                     
                     try:
-                        self.data.static.put_quest(
+                        await self.data.static.put_quest(
                             questSceneId,
                             0,
                             sortNo,
@@ -86,7 +84,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added hero {heroLogId} | Name: {name}")
                     
                     try:
-                        self.data.static.put_hero(
+                        await self.data.static.put_hero(
                             0,
                             heroLogId,
                             name,
@@ -119,7 +117,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added equipment {equipmentId} | Name: {name}")
                     
                     try:
-                        self.data.static.put_equipment(
+                        await self.data.static.put_equipment(
                             0,
                             equipmentId,
                             name,
@@ -150,7 +148,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added item {itemId} | Name: {name}")
                     
                     try:
-                        self.data.static.put_item(
+                        await self.data.static.put_item(
                             0,
                             itemId,
                             name,
@@ -181,7 +179,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added support log {supportLogId} | Name: {name}")
                     
                     try:
-                        self.data.static.put_support_log(
+                        await self.data.static.put_support_log(
                             0,
                             supportLogId,
                             charaId,
@@ -213,7 +211,7 @@ class SaoReader(BaseReader):
                     
                     if len(titleId) > 5:
                         try:
-                            self.data.static.put_title(
+                            await self.data.static.put_title(
                                 0,
                                 titleId,
                                 displayName,
@@ -242,7 +240,7 @@ class SaoReader(BaseReader):
                     self.logger.info(f"Added rare drop {questRareDropId} | Reward: {commonRewardId}")
                     
                     try:
-                        self.data.static.put_rare_drop(
+                        await self.data.static.put_rare_drop(
                             0,
                             questRareDropId,
                             commonRewardId,

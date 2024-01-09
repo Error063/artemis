@@ -23,11 +23,11 @@ class OngekiBright(OngekiBase):
 
     async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         # check for a bright profile
-        p = self.data.profile.get_profile_data(data["userId"], self.version)
+        p = await self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
-        cards = self.data.card.get_user_cards(data["userId"])
+        cards = await self.data.card.get_user_cards(data["userId"])
         if cards is None or len(cards) == 0:
             # This should never happen
             self.logger.error(
@@ -62,7 +62,7 @@ class OngekiBright(OngekiBase):
         return {"returnCode": 1}
 
     async def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
-        user_cards = self.data.item.get_cards(data["userId"])
+        user_cards = await self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {}
 
@@ -91,7 +91,7 @@ class OngekiBright(OngekiBase):
         }
 
     async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
-        user_characters = self.data.item.get_characters(data["userId"])
+        user_characters = await self.data.item.get_characters(data["userId"])
         if user_characters is None:
             return {
                 "userId": data["userId"],
@@ -125,7 +125,7 @@ class OngekiBright(OngekiBase):
         }
 
     async def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
-        user_gachas = self.data.item.get_user_gachas(data["userId"])
+        user_gachas = await self.data.item.get_user_gachas(data["userId"])
         if user_gachas is None:
             return {"userId": data["userId"], "length": 0, "userGachaList": []}
 
@@ -148,7 +148,7 @@ class OngekiBright(OngekiBase):
 
     async def handle_cm_get_user_gacha_supply_api_request(self, data: Dict) -> Dict:
         # not used for now? not sure what it even does
-        user_gacha_supplies = self.data.item.get_user_gacha_supplies(data["userId"])
+        user_gacha_supplies = await self.data.item.get_user_gacha_supplies(data["userId"])
         if user_gacha_supplies is None:
             return {"supplyId": 1, "length": 0, "supplyCardList": []}
 
@@ -168,7 +168,7 @@ class OngekiBright(OngekiBase):
         game_gachas = []
         # for every gacha_id in the OngekiConfig, grab the banner from the db
         for gacha_id in self.game_cfg.gachas.enabled_gachas:
-            game_gacha = self.data.static.get_gacha(self.version, gacha_id)
+            game_gacha = await self.data.static.get_gacha(self.version, gacha_id)
             if game_gacha:
                 game_gachas.append(game_gacha)
 
@@ -265,26 +265,26 @@ class OngekiBright(OngekiBase):
                 return self.handle_roll_gacha_api_request(data)
 
         # get a list of cards for each rarity
-        cards_r = self.data.static.get_cards_by_rarity(self.version, 1)
+        cards_r = await self.data.static.get_cards_by_rarity(self.version, 1)
         cards_sr, cards_ssr = [], []
 
         # free gachas are only allowed to get their specific cards! (R irrelevant)
         if gacha_id in {1011, 1012}:
-            gacha_cards = self.data.static.get_gacha_cards(gacha_id)
+            gacha_cards = await self.data.static.get_gacha_cards(gacha_id)
             for card in gacha_cards:
                 if card["rarity"] == 3:
                     cards_sr.append({"cardId": card["cardId"], "rarity": 2})
                 elif card["rarity"] == 4:
                     cards_ssr.append({"cardId": card["cardId"], "rarity": 3})
         else:
-            cards_sr = self.data.static.get_cards_by_rarity(self.version, 2)
-            cards_ssr = self.data.static.get_cards_by_rarity(self.version, 3)
+            cards_sr = await self.data.static.get_cards_by_rarity(self.version, 2)
+            cards_ssr = await self.data.static.get_cards_by_rarity(self.version, 3)
 
             # get the promoted cards for that gacha and add them multiple
             # times to increase chances by factor chances
             chances = 10
 
-            gacha_cards = self.data.static.get_gacha_cards(gacha_id)
+            gacha_cards = await self.data.static.get_gacha_cards(gacha_id)
             for card in gacha_cards:
                 # make sure to add the cards to the corresponding rarity
                 if card["rarity"] == 2:
@@ -339,7 +339,7 @@ class OngekiBright(OngekiBase):
         daily_gacha_date = datetime.strptime("2000-01-01", "%Y-%m-%d")
 
         # check if the user previously rolled the exact same gacha
-        user_gacha = self.data.item.get_user_gacha(user_id, gacha_id)
+        user_gacha = await self.data.item.get_user_gacha(user_id, gacha_id)
         if user_gacha:
             total_gacha_count = user_gacha["totalGachaCnt"]
             ceiling_gacha_count = user_gacha["ceilingGachaCnt"]
@@ -358,7 +358,7 @@ class OngekiBright(OngekiBase):
             daily_gacha_date = play_date
             daily_gacha_cnt = 0
 
-        self.data.item.put_user_gacha(
+        await self.data.item.put_user_gacha(
             user_id,
             gacha_id,
             totalGachaCnt=total_gacha_count + gacha_count,
@@ -375,29 +375,29 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version)
+            p = await self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
             else:
                 # save the bright profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
 
         if "userCharacterList" in upsert:
             for x in upsert["userCharacterList"]:
-                self.data.item.put_character(user_id, x)
+                await self.data.item.put_character(user_id, x)
 
         if "userItemList" in upsert:
             for x in upsert["userItemList"]:
-                self.data.item.put_item(user_id, x)
+                await self.data.item.put_item(user_id, x)
 
         if "userCardList" in upsert:
             for x in upsert["userCardList"]:
-                self.data.item.put_card(user_id, x)
+                await self.data.item.put_card(user_id, x)
 
         # TODO?
         # if "gameGachaCardList" in upsert:
@@ -411,29 +411,29 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version)
+            p = await self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
             else:
                 # save the bright profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
 
         if "userCharacterList" in upsert:
             for x in upsert["userCharacterList"]:
-                self.data.item.put_character(user_id, x)
+                await self.data.item.put_character(user_id, x)
 
         if "userCardList" in upsert:
             for x in upsert["userCardList"]:
-                self.data.item.put_card(user_id, x)
+                await self.data.item.put_card(user_id, x)
 
         if "selectGachaLogList" in data:
             for x in data["selectGachaLogList"]:
-                self.data.item.put_user_gacha(
+                await self.data.item.put_user_gacha(
                     user_id,
                     x["gachaId"],
                     selectPoint=0,
@@ -443,7 +443,7 @@ class OngekiBright(OngekiBase):
         return {"returnCode": 1, "apiName": "cmUpsertUserSelectGacha"}
 
     async def handle_get_game_gacha_card_by_id_api_request(self, data: Dict) -> Dict:
-        game_gacha_cards = self.data.static.get_gacha_cards(data["gachaId"])
+        game_gacha_cards = await self.data.static.get_gacha_cards(data["gachaId"])
         if game_gacha_cards == []:
             # fallback to be at least able to select that gacha
             return {
@@ -579,7 +579,7 @@ class OngekiBright(OngekiBase):
         )
 
         # add the entry to the user print table with the random serialId
-        self.data.item.put_user_print_detail(
+        await self.data.item.put_user_print_detail(
             data["userId"], serial_id, user_print_detail
         )
 
@@ -595,21 +595,21 @@ class OngekiBright(OngekiBase):
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
             # check if the profile is a bright memory profile
-            p = self.data.profile.get_profile_data(data["userId"], self.version)
+            p = await self.data.profile.get_profile_data(data["userId"], self.version)
             if p is not None:
                 # save the bright memory profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
             else:
                 # save the bright profile
-                self.data.profile.put_profile_data(
+                await self.data.profile.put_profile_data(
                     user_id, self.version, upsert["userData"][0]
                 )
 
         if "userActivityList" in upsert:
             for act in upsert["userActivityList"]:
-                self.data.profile.put_profile_activity(
+                await self.data.profile.put_profile_activity(
                     user_id,
                     act["kind"],
                     act["id"],
@@ -622,10 +622,10 @@ class OngekiBright(OngekiBase):
 
         if "userItemList" in upsert:
             for x in upsert["userItemList"]:
-                self.data.item.put_item(user_id, x)
+                await self.data.item.put_item(user_id, x)
 
         if "userCardList" in upsert:
             for x in upsert["userCardList"]:
-                self.data.item.put_card(user_id, x)
+                await self.data.item.put_card(user_id, x)
 
         return {"returnCode": 1, "apiName": "cmUpsertUserAll"}

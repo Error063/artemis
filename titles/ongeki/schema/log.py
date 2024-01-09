@@ -39,7 +39,7 @@ session_log = Table(
 
 
 class OngekiLogData(BaseData):
-    def put_gp_log(
+    async def put_gp_log(
         self,
         aime_id: Optional[int],
         used_credit: int,
@@ -61,7 +61,7 @@ class OngekiLogData(BaseData):
             currentGP=current_gp,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(
                 f"put_gp_log: Failed to insert GP log! aime_id: {aime_id} kind {kind} pattern {pattern} current_gp {current_gp}"

@@ -139,7 +139,7 @@ end_sessions = Table(
 )
 
 class SaoItemData(BaseData):
-    def create_session(self, user_id: int, user_party_team_id: int, episode_id: int, play_mode: int, quest_drop_boost_apply_flag: int) -> Optional[int]:
+    async def create_session(self, user_id: int, user_party_team_id: int, episode_id: int, play_mode: int, quest_drop_boost_apply_flag: int) -> Optional[int]:
         sql = insert(sessions).values(
             user=user_id,
             user_party_team_id=user_party_team_id,
@@ -150,13 +150,13 @@ class SaoItemData(BaseData):
 
         conflict = sql.on_duplicate_key_update(user=user_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"Failed to create SAO session for user {user_id}!")
             return None
         return result.lastrowid
 
-    def create_end_session(self, user_id: int, quest_id: int, play_result_flag: bool, reward_data: JSON) -> Optional[int]:
+    async def create_end_session(self, user_id: int, quest_id: int, play_result_flag: bool, reward_data: JSON) -> Optional[int]:
         sql = insert(end_sessions).values(
             user=user_id,
             quest_id=quest_id,
@@ -166,13 +166,13 @@ class SaoItemData(BaseData):
 
         conflict = sql.on_duplicate_key_update(user=user_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"Failed to create SAO end session for user {user_id}!")
             return None
         return result.lastrowid
 
-    def put_item(self, user_id: int, item_id: int) -> Optional[int]:
+    async def put_item(self, user_id: int, item_id: int) -> Optional[int]:
         sql = insert(item_data).values(
             user=user_id,
             item_id=item_id,
@@ -182,7 +182,7 @@ class SaoItemData(BaseData):
             item_id=item_id,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert item! user: {user_id}, item_id: {item_id}"
@@ -191,7 +191,7 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
     
-    def put_equipment_data(self, user_id: int, equipment_id: int, enhancement_value: int, enhancement_exp: int, awakening_exp: int, awakening_stage: int, possible_awakening_flag: int) -> Optional[int]:
+    async def put_equipment_data(self, user_id: int, equipment_id: int, enhancement_value: int, enhancement_exp: int, awakening_exp: int, awakening_stage: int, possible_awakening_flag: int) -> Optional[int]:
         sql = insert(equipment_data).values(
             user=user_id,
             equipment_id=equipment_id,
@@ -210,7 +210,7 @@ class SaoItemData(BaseData):
             possible_awakening_flag=possible_awakening_flag,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert equipment! user: {user_id}, equipment_id: {equipment_id}"
@@ -219,7 +219,7 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
 
-    def put_hero_log(self, user_id: int, user_hero_log_id: int, log_level: int, log_exp: int, main_weapon: int, sub_equipment: int, skill_slot1_skill_id: int, skill_slot2_skill_id: int, skill_slot3_skill_id: int, skill_slot4_skill_id: int, skill_slot5_skill_id: int) -> Optional[int]:
+    async def put_hero_log(self, user_id: int, user_hero_log_id: int, log_level: int, log_exp: int, main_weapon: int, sub_equipment: int, skill_slot1_skill_id: int, skill_slot2_skill_id: int, skill_slot3_skill_id: int, skill_slot4_skill_id: int, skill_slot5_skill_id: int) -> Optional[int]:
         sql = insert(hero_log_data).values(
             user=user_id,
             user_hero_log_id=user_hero_log_id,
@@ -246,7 +246,7 @@ class SaoItemData(BaseData):
             skill_slot5_skill_id=skill_slot5_skill_id,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert hero! user: {user_id}, user_hero_log_id: {user_hero_log_id}"
@@ -255,7 +255,7 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
 
-    def put_hero_party(self, user_id: int, user_party_team_id: int, user_hero_log_id_1: int, user_hero_log_id_2: int, user_hero_log_id_3: int) -> Optional[int]:
+    async def put_hero_party(self, user_id: int, user_party_team_id: int, user_hero_log_id_1: int, user_hero_log_id_2: int, user_hero_log_id_3: int) -> Optional[int]:
         sql = insert(hero_party).values(
             user=user_id,
             user_party_team_id=user_party_team_id,
@@ -270,7 +270,7 @@ class SaoItemData(BaseData):
             user_hero_log_id_3=user_hero_log_id_3,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert hero party! user: {user_id}, user_party_team_id: {user_party_team_id}"
@@ -279,7 +279,7 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
 
-    def put_player_quest(self, user_id: int, episode_id: int, quest_clear_flag: bool, clear_time: int, combo_num: int, total_damage: int, concurrent_destroying_num: int) -> Optional[int]:
+    async def put_player_quest(self, user_id: int, episode_id: int, quest_clear_flag: bool, clear_time: int, combo_num: int, total_damage: int, concurrent_destroying_num: int) -> Optional[int]:
         sql = insert(quest).values(
             user=user_id,
             episode_id=episode_id,
@@ -298,7 +298,7 @@ class SaoItemData(BaseData):
             concurrent_destroying_num=concurrent_destroying_num
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert quest! user: {user_id}, episode_id: {episode_id}"
@@ -307,15 +307,15 @@ class SaoItemData(BaseData):
 
         return result.lastrowid
 
-    def get_user_equipment(self, user_id: int, equipment_id: int) -> Optional[Dict]:
+    async def get_user_equipment(self, user_id: int, equipment_id: int) -> Optional[Dict]:
         sql = equipment_data.select(equipment_data.c.user == user_id and equipment_data.c.equipment_id == equipment_id)
         
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
     
-    def get_user_equipments(
+    async def get_user_equipments(
         self, user_id: int
     ) -> Optional[List[Row]]:
         """
@@ -327,12 +327,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_user_items(
+    async def get_user_items(
         self, user_id: int
     ) -> Optional[List[Row]]:
         """
@@ -344,12 +344,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_hero_log(
+    async def get_hero_log(
         self, user_id: int, user_hero_log_id: int = None
     ) -> Optional[List[Row]]:
         """
@@ -362,12 +362,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_hero_logs(
+    async def get_hero_logs(
         self, user_id: int
     ) -> Optional[List[Row]]:
         """
@@ -379,12 +379,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_hero_party(
+    async def get_hero_party(
         self, user_id: int, user_party_team_id: int = None
     ) -> Optional[List[Row]]:
         sql = hero_party.select(
@@ -394,12 +394,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_quest_log(
+    async def get_quest_log(
         self, user_id: int, episode_id: int = None
     ) -> Optional[List[Row]]:
         """
@@ -412,12 +412,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_quest_logs(
+    async def get_quest_logs(
         self, user_id: int
     ) -> Optional[List[Row]]:
         """
@@ -429,12 +429,12 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_session(
+    async def get_session(
         self, user_id: int = None
     ) -> Optional[List[Row]]:
         sql = sessions.select(
@@ -445,12 +445,12 @@ class SaoItemData(BaseData):
             sessions.c.play_date.asc()
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_end_session(
+    async def get_end_session(
         self, user_id: int = None
     ) -> Optional[List[Row]]:
         sql = end_sessions.select(
@@ -461,12 +461,12 @@ class SaoItemData(BaseData):
             end_sessions.c.play_date.asc()
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def remove_hero_log(self, user_id: int, user_hero_log_id: int) -> None:
+    async def remove_hero_log(self, user_id: int, user_hero_log_id: int) -> None:
         sql = hero_log_data.delete(
            and_(
                 hero_log_data.c.user == user_id,
@@ -474,31 +474,31 @@ class SaoItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to remove hero log! profile: {user_id}, user_hero_log_id: {user_hero_log_id}"
             )
         return None
 
-    def remove_equipment(self, user_id: int, equipment_id: int) -> None:
+    async def remove_equipment(self, user_id: int, equipment_id: int) -> None:
         sql = equipment_data.delete(
             and_(equipment_data.c.user == user_id, equipment_data.c.equipment_id == equipment_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to remove equipment! profile: {user_id}, equipment_id: {equipment_id}"
             )
         return None
 
-    def remove_item(self, user_id: int, item_id: int) -> None:
+    async def remove_item(self, user_id: int, item_id: int) -> None:
         sql = item_data.delete(
             and_(item_data.c.user == user_id, item_data.c.item_id == item_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to remove item! profile: {user_id}, item_id: {item_id}"

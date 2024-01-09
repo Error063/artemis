@@ -124,7 +124,7 @@ class IDACServlet(BaseServlet):
         resp = None
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data, header_application)
+            resp = await handler(req_data, header_application)
 
         except Exception as e:
             traceback.print_exc()

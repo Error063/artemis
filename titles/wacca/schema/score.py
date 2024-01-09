@@ -95,7 +95,7 @@ stageup = Table(
 
 
 class WaccaScoreData(BaseData):
-    def put_best_score(
+    async def put_best_score(
         self,
         user_id: int,
         song_id: int,
@@ -164,7 +164,7 @@ class WaccaScoreData(BaseData):
             lowest_miss_ct=lowest_miss_ct,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__}: failed to insert best score! profile: {user_id}, song: {song_id}, chart: {chart_id}"
@@ -173,7 +173,7 @@ class WaccaScoreData(BaseData):
 
         return result.lastrowid
 
-    def put_playlog(
+    async def put_playlog(
         self,
         user_id: int,
         song_id: int,
@@ -210,7 +210,7 @@ class WaccaScoreData(BaseData):
             season=season,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {chart_id}"
@@ -219,7 +219,7 @@ class WaccaScoreData(BaseData):
 
         return result.lastrowid
 
-    def get_best_score(
+    async def get_best_score(
         self, user_id: int, song_id: int, chart_id: int
     ) -> Optional[Row]:
         sql = best_score.select(
@@ -230,20 +230,20 @@ class WaccaScoreData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
+    async def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
         sql = best_score.select(best_score.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def update_song_rating(
+    async def update_song_rating(
         self, user_id: int, song_id: int, chart_id: int, new_rating: int
     ) -> None:
         sql = best_score.update(
@@ -254,14 +254,14 @@ class WaccaScoreData(BaseData):
             )
         ).values(rating=new_rating)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"update_song_rating: failed to update rating! user_id: {user_id} song_id: {song_id} chart_id {chart_id} new_rating {new_rating}"
             )
         return None
 
-    def put_stageup(
+    async def put_stageup(
         self,
         user_id: int,
         version: int,
@@ -292,7 +292,7 @@ class WaccaScoreData(BaseData):
             play_ct=stageup.c.play_ct + 1,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_stageup: failed to update! user_id: {user_id} version: {version} stage_id: {stage_id}"
@@ -300,17 +300,17 @@ class WaccaScoreData(BaseData):
             return None
         return result.lastrowid
 
-    def get_stageup(self, user_id: int, version: int) -> Optional[List[Row]]:
+    async def get_stageup(self, user_id: int, version: int) -> Optional[List[Row]]:
         sql = select(stageup).where(
             and_(stageup.c.user == user_id, stageup.c.version == version)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_stageup_stage(
+    async def get_stageup_stage(
         self, user_id: int, version: int, stage_id: int
     ) -> Optional[Row]:
         sql = select(stageup).where(
@@ -321,7 +321,7 @@ class WaccaScoreData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

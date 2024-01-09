@@ -395,7 +395,7 @@ team = Table(
 
 
 class ChuniProfileData(BaseData):
-    def put_profile_data(
+    async def put_profile_data(
         self, aime_id: int, version: int, profile_data: Dict
     ) -> Optional[int]:
         profile_data["user"] = aime_id
@@ -407,26 +407,26 @@ class ChuniProfileData(BaseData):
 
         sql = insert(profile).values(**profile_data)
         conflict = sql.on_duplicate_key_update(**profile_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_profile_data: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
         sql = (
             select([profile, option])
             .join(option, profile.c.user == option.c.user)
             .filter(and_(profile.c.user == aime_id, profile.c.version <= version))
         ).order_by(profile.c.version.desc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_data(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_data(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(profile).where(
             and_(
                 profile.c.user == aime_id,
@@ -434,12 +434,12 @@ class ChuniProfileData(BaseData):
             )
         ).order_by(profile.c.version.desc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_data_ex(
+    async def put_profile_data_ex(
         self, aime_id: int, version: int, profile_ex_data: Dict
     ) -> Optional[int]:
         profile_ex_data["user"] = aime_id
@@ -449,7 +449,7 @@ class ChuniProfileData(BaseData):
 
         sql = insert(profile_ex).values(**profile_ex_data)
         conflict = sql.on_duplicate_key_update(**profile_ex_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -458,7 +458,7 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_data_ex(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_data_ex(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(profile_ex).where(
             and_(
                 profile_ex.c.user == aime_id,
@@ -466,17 +466,17 @@ class ChuniProfileData(BaseData):
             )
         ).order_by(profile_ex.c.version.desc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_option(self, aime_id: int, option_data: Dict) -> Optional[int]:
+    async def put_profile_option(self, aime_id: int, option_data: Dict) -> Optional[int]:
         option_data["user"] = aime_id
 
         sql = insert(option).values(**option_data)
         conflict = sql.on_duplicate_key_update(**option_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -485,22 +485,22 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_option(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_option(self, aime_id: int) -> Optional[Row]:
         sql = select(option).where(option.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_option_ex(
+    async def put_profile_option_ex(
         self, aime_id: int, option_ex_data: Dict
     ) -> Optional[int]:
         option_ex_data["user"] = aime_id
 
         sql = insert(option_ex).values(**option_ex_data)
         conflict = sql.on_duplicate_key_update(**option_ex_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -509,15 +509,15 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_option_ex(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_option_ex(self, aime_id: int) -> Optional[Row]:
         sql = select(option_ex).where(option_ex.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_recent_rating(
+    async def put_profile_recent_rating(
         self, aime_id: int, recent_rating_data: List[Dict]
     ) -> Optional[int]:
         sql = insert(recent_rating).values(
@@ -525,7 +525,7 @@ class ChuniProfileData(BaseData):
         )
         conflict = sql.on_duplicate_key_update(recentRating=recent_rating_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_recent_rating: Failed to update! aime_id: {aime_id}"
@@ -533,15 +533,15 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_recent_rating(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_recent_rating(self, aime_id: int) -> Optional[Row]:
         sql = select(recent_rating).where(recent_rating.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_activity(self, aime_id: int, activity_data: Dict) -> Optional[int]:
+    async def put_profile_activity(self, aime_id: int, activity_data: Dict) -> Optional[int]:
         # The game just uses "id" but we need to distinguish that from the db column "id"
         activity_data["user"] = aime_id
         activity_data["activityId"] = activity_data["id"]
@@ -549,7 +549,7 @@ class ChuniProfileData(BaseData):
 
         sql = insert(activity).values(**activity_data)
         conflict = sql.on_duplicate_key_update(**activity_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -558,24 +558,24 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_activity(self, aime_id: int, kind: int) -> Optional[List[Row]]:
+    async def get_profile_activity(self, aime_id: int, kind: int) -> Optional[List[Row]]:
         sql = (
             select(activity)
             .where(and_(activity.c.user == aime_id, activity.c.kind == kind))
             .order_by(activity.c.sortNumber.desc())  # to get the last played track
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_profile_charge(self, aime_id: int, charge_data: Dict) -> Optional[int]:
+    async def put_profile_charge(self, aime_id: int, charge_data: Dict) -> Optional[int]:
         charge_data["user"] = aime_id
 
         sql = insert(charge).values(**charge_data)
         conflict = sql.on_duplicate_key_update(**charge_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -584,40 +584,40 @@ class ChuniProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_charge(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_charge(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(charge).where(charge.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def add_profile_region(self, aime_id: int, region_id: int) -> Optional[int]:
+    async def add_profile_region(self, aime_id: int, region_id: int) -> Optional[int]:
         pass
 
-    def get_profile_regions(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_regions(self, aime_id: int) -> Optional[List[Row]]:
         pass
 
-    def put_profile_emoney(self, aime_id: int, emoney_data: Dict) -> Optional[int]:
+    async def put_profile_emoney(self, aime_id: int, emoney_data: Dict) -> Optional[int]:
         emoney_data["user"] = aime_id
 
         sql = insert(emoney).values(**emoney_data)
         conflict = sql.on_duplicate_key_update(**emoney_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_profile_emoney(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_emoney(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(emoney).where(emoney.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_profile_overpower(
+    async def put_profile_overpower(
         self, aime_id: int, overpower_data: Dict
     ) -> Optional[int]:
         overpower_data["user"] = aime_id
@@ -625,31 +625,31 @@ class ChuniProfileData(BaseData):
         sql = insert(overpower).values(**overpower_data)
         conflict = sql.on_duplicate_key_update(**overpower_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_profile_overpower(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_overpower(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(overpower).where(overpower.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_team_by_id(self, team_id: int) -> Optional[Row]:
+    async def get_team_by_id(self, team_id: int) -> Optional[Row]:
         sql = select(team).where(team.c.id == team_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchone()
 
-    def get_team_rank(self, team_id: int) -> int:
+    async def get_team_rank(self, team_id: int) -> int:
         # Normal ranking system, likely the one used in the real servers
         # Query all teams sorted by 'teamPoint'
-        result = self.execute(
+        result = await self.execute(
             select(team.c.id).order_by(team.c.teamPoint.desc())
         )
 
@@ -666,13 +666,13 @@ class ChuniProfileData(BaseData):
     # RIP scaled team ranking. Gone, but forgotten
     # def get_team_rank_scaled(self, team_id: int) -> int:
 
-    def update_team(self, team_id: int, team_data: Dict) -> bool:
+    async def update_team(self, team_id: int, team_data: Dict) -> bool:
         team_data["id"] = team_id
 
         sql = insert(team).values(**team_data)
         conflict = sql.on_duplicate_key_update(**team_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -680,16 +680,16 @@ class ChuniProfileData(BaseData):
             )
             return False
         return True
-    def get_rival(self, rival_id: int) -> Optional[Row]:
+    async def get_rival(self, rival_id: int) -> Optional[Row]:
         sql = select(profile).where(profile.c.user == rival_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchone()
-    def get_overview(self) -> Dict:
+    async def get_overview(self) -> Dict:
         # Fetch and add up all the playcounts
-        playcount_sql = self.execute(select(profile.c.playCount))
+        playcount_sql = await self.execute(select(profile.c.playCount))
 
         if playcount_sql is None:
             self.logger.warn(

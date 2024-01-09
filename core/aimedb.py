@@ -177,9 +177,9 @@ class AimedbServlette():
 
     async def handle_lookup(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         req = ADBLookupRequest(data)
-        user_id = self.data.card.get_user_id_from_card(req.access_code)
-        is_banned = self.data.card.get_card_banned(req.access_code)
-        is_locked = self.data.card.get_card_locked(req.access_code)
+        user_id = await self.data.card.get_user_id_from_card(req.access_code)
+        is_banned = await self.data.card.get_card_banned(req.access_code)
+        is_locked = await self.data.card.get_card_locked(req.access_code)
         
         ret = ADBLookupResponse.from_req(req.head, user_id)
         if is_banned and is_locked:
@@ -196,10 +196,10 @@ class AimedbServlette():
 
     async def handle_lookup_ex(self, data: bytes, resp_code: int) -> ADBBaseResponse:
         req = ADBLookupRequest(data)
-        user_id = self.data.card.get_user_id_from_card(req.access_code)
+        user_id = await self.data.card.get_user_id_from_card(req.access_code)
 
-        is_banned = self.data.card.get_card_banned(req.access_code)
-        is_locked = self.data.card.get_card_locked(req.access_code)
+        is_banned = await self.data.card.get_card_banned(req.access_code)
+        is_locked = await self.data.card.get_card_locked(req.access_code)
 
         ret = ADBLookupExResponse.from_req(req.head, user_id)
         if is_banned and is_locked:
@@ -233,7 +233,7 @@ class AimedbServlette():
         be fine.
         """
         req = ADBFelicaLookupRequest(data)
-        ac = self.data.card.to_access_code(req.idm)
+        ac = await self.data.card.to_access_code(req.idm)
         self.logger.info(
             f"idm {req.idm} ipm {req.pmm} -> access_code {ac}"
         )
@@ -244,17 +244,17 @@ class AimedbServlette():
         I've never seen this used.
         """
         req = ADBFelicaLookupRequest(data)
-        ac = self.data.card.to_access_code(req.idm)
+        ac = await self.data.card.to_access_code(req.idm)
         
         if self.config.server.allow_user_registration:
-            user_id = self.data.user.create_user()
+            user_id = await self.data.user.create_user()
 
             if user_id is None:
                 self.logger.error("Failed to register user!")
                 user_id = -1
 
             else:
-                card_id = self.data.card.create_card(user_id, ac)
+                card_id = await self.data.card.create_card(user_id, ac)
 
                 if card_id is None:
                     self.logger.error("Failed to register card!")
@@ -273,8 +273,8 @@ class AimedbServlette():
 
     async def handle_felica_lookup_ex(self, data: bytes, resp_code: int) -> bytes:
         req = ADBFelicaLookup2Request(data)
-        access_code = self.data.card.to_access_code(req.idm)
-        user_id = self.data.card.get_user_id_from_card(access_code=access_code)
+        access_code = await self.data.card.to_access_code(req.idm)
+        user_id = await self.data.card.get_user_id_from_card(access_code=access_code)
 
         if user_id is None:
             user_id = -1
@@ -308,14 +308,14 @@ class AimedbServlette():
         user_id = -1
 
         if self.config.server.allow_user_registration:
-            user_id = self.data.user.create_user()
+            user_id = await self.data.user.create_user()
 
             if user_id is None:
                 self.logger.error("Failed to register user!")
                 user_id = -1
 
             else:
-                card_id = self.data.card.create_card(user_id, req.access_code)
+                card_id = await self.data.card.create_card(user_id, req.access_code)
 
                 if card_id is None:
                     self.logger.error("Failed to register card!")

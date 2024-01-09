@@ -491,7 +491,7 @@ consec_logins = Table(
 
 
 class Mai2ProfileData(BaseData):
-    def put_profile_detail(
+    async def put_profile_detail(
         self, user_id: int, version: int, detail_data: Dict, is_dx: bool = True
     ) -> Optional[Row]:
         detail_data["user"] = user_id
@@ -504,7 +504,7 @@ class Mai2ProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(**detail_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile: Failed to create profile! user_id {user_id} is_dx {is_dx}"
@@ -512,7 +512,7 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_detail(
+    async def get_profile_detail(
         self, user_id: int, version: int, is_dx: bool = True
     ) -> Optional[Row]:
         if is_dx:
@@ -531,12 +531,12 @@ class Mai2ProfileData(BaseData):
                 .order_by(detail_old.c.version.desc())
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_ghost(
+    async def put_profile_ghost(
         self, user_id: int, version: int, ghost_data: Dict
     ) -> Optional[int]:
         ghost_data["user"] = user_id
@@ -545,25 +545,25 @@ class Mai2ProfileData(BaseData):
         sql = insert(ghost).values(**ghost_data)
         conflict = sql.on_duplicate_key_update(**ghost_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_profile_ghost: failed to update! {user_id}")
             return None
         return result.lastrowid
 
-    def get_profile_ghost(self, user_id: int, version: int) -> Optional[Row]:
+    async def get_profile_ghost(self, user_id: int, version: int) -> Optional[Row]:
         sql = (
             select(ghost)
             .where(and_(ghost.c.user == user_id, ghost.c.version_int <= version))
             .order_by(ghost.c.version.desc())
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_extend(
+    async def put_profile_extend(
         self, user_id: int, version: int, extend_data: Dict
     ) -> Optional[int]:
         extend_data["user"] = user_id
@@ -572,25 +572,25 @@ class Mai2ProfileData(BaseData):
         sql = insert(extend).values(**extend_data)
         conflict = sql.on_duplicate_key_update(**extend_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_profile_extend: failed to update! {user_id}")
             return None
         return result.lastrowid
 
-    def get_profile_extend(self, user_id: int, version: int) -> Optional[Row]:
+    async def get_profile_extend(self, user_id: int, version: int) -> Optional[Row]:
         sql = (
             select(extend)
             .where(and_(extend.c.user == user_id, extend.c.version <= version))
             .order_by(extend.c.version.desc())
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_option(
+    async def put_profile_option(
         self, user_id: int, version: int, option_data: Dict, is_dx: bool = True
     ) -> Optional[int]:
         option_data["user"] = user_id
@@ -602,7 +602,7 @@ class Mai2ProfileData(BaseData):
             sql = insert(option_old).values(**option_data)
         conflict = sql.on_duplicate_key_update(**option_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_option: failed to update! {user_id} is_dx {is_dx}"
@@ -610,7 +610,7 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_option(
+    async def get_profile_option(
         self, user_id: int, version: int, is_dx: bool = True
     ) -> Optional[Row]:
         if is_dx:
@@ -628,12 +628,12 @@ class Mai2ProfileData(BaseData):
                 .order_by(option_old.c.version.desc())
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_rating(
+    async def put_profile_rating(
         self, user_id: int, version: int, rating_data: Dict
     ) -> Optional[int]:
         rating_data["user"] = user_id
@@ -642,25 +642,25 @@ class Mai2ProfileData(BaseData):
         sql = insert(rating).values(**rating_data)
         conflict = sql.on_duplicate_key_update(**rating_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_profile_rating: failed to update! {user_id}")
             return None
         return result.lastrowid
 
-    def get_profile_rating(self, user_id: int, version: int) -> Optional[Row]:
+    async def get_profile_rating(self, user_id: int, version: int) -> Optional[Row]:
         sql = (
             select(rating)
             .where(and_(rating.c.user == user_id, rating.c.version <= version))
             .order_by(rating.c.version.desc())
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile_region(self, user_id: int, region_id: int) -> Optional[int]:
+    async def put_profile_region(self, user_id: int, region_id: int) -> Optional[int]:
         sql = insert(region).values(
             user=user_id,
             regionId=region_id,
@@ -669,21 +669,21 @@ class Mai2ProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(playCount=region.c.playCount + 1)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_region: failed to update! {user_id}")
             return None
         return result.lastrowid
 
-    def get_regions(self, user_id: int) -> Optional[List[Dict]]:
+    async def get_regions(self, user_id: int) -> Optional[List[Dict]]:
         sql = select(region).where(region.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_profile_activity(self, user_id: int, activity_data: Dict) -> Optional[int]:
+    async def put_profile_activity(self, user_id: int, activity_data: Dict) -> Optional[int]:
         if "id" in activity_data:
             activity_data["activityId"] = activity_data["id"]
             activity_data.pop("id")
@@ -694,7 +694,7 @@ class Mai2ProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(**activity_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_activity: failed to update! user_id: {user_id}"
@@ -702,7 +702,7 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_profile_activity(
+    async def get_profile_activity(
         self, user_id: int, kind: int = None
     ) -> Optional[List[Row]]:
         sql = activity.select(
@@ -712,12 +712,12 @@ class Mai2ProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_web_option(
+    async def put_web_option(
         self, user_id: int, version: int, web_opts: Dict
     ) -> Optional[int]:
         web_opts["user"] = user_id
@@ -726,29 +726,29 @@ class Mai2ProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(**web_opts)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_web_option: failed to update! user_id: {user_id}")
             return None
         return result.lastrowid
 
-    def get_web_option(self, user_id: int, version: int) -> Optional[Row]:
+    async def get_web_option(self, user_id: int, version: int) -> Optional[Row]:
         sql = web_opt.select(
             and_(web_opt.c.user == user_id, web_opt.c.version == version)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_grade_status(self, user_id: int, grade_stat: Dict) -> Optional[int]:
+    async def put_grade_status(self, user_id: int, grade_stat: Dict) -> Optional[int]:
         grade_stat["user"] = user_id
         sql = insert(grade_status).values(**grade_stat)
 
         conflict = sql.on_duplicate_key_update(**grade_stat)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_grade_status: failed to update! user_id: {user_id}"
@@ -756,40 +756,40 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_grade_status(self, user_id: int) -> Optional[Row]:
+    async def get_grade_status(self, user_id: int) -> Optional[Row]:
         sql = grade_status.select(grade_status.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
+    async def put_boss_list(self, user_id: int, boss_stat: Dict) -> Optional[int]:
         boss_stat["user"] = user_id
         sql = insert(boss).values(**boss_stat)
 
         conflict = sql.on_duplicate_key_update(**boss_stat)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"put_boss_list: failed to update! user_id: {user_id}")
             return None
         return result.lastrowid
 
-    def get_boss_list(self, user_id: int) -> Optional[Row]:
+    async def get_boss_list(self, user_id: int) -> Optional[Row]:
         sql = boss.select(boss.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
+    async def put_recent_rating(self, user_id: int, rr: Dict) -> Optional[int]:
         sql = insert(recent_rating).values(user=user_id, userRecentRatingList=rr)
 
         conflict = sql.on_duplicate_key_update({"userRecentRatingList": rr})
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_recent_rating: failed to update! user_id: {user_id}"
@@ -797,26 +797,26 @@ class Mai2ProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_recent_rating(self, user_id: int) -> Optional[Row]:
+    async def get_recent_rating(self, user_id: int) -> Optional[Row]:
         sql = recent_rating.select(recent_rating.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def add_consec_login(self, user_id: int, version: int) -> None:
+    async def add_consec_login(self, user_id: int, version: int) -> None:
         sql = insert(consec_logins).values(user=user_id, version=version, logins=1)
 
         conflict = sql.on_duplicate_key_update(logins=consec_logins.c.logins + 1)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"Failed to update consecutive login count for user {user_id} version {version}"
             )
 
-    def get_consec_login(self, user_id: int, version: int) -> Optional[Row]:
+    async def get_consec_login(self, user_id: int, version: int) -> Optional[Row]:
         sql = select(consec_logins).where(
             and_(
                 consec_logins.c.user == user_id,
@@ -824,12 +824,12 @@ class Mai2ProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def reset_consec_login(self, user_id: int, version: int) -> Optional[Row]:
+    async def reset_consec_login(self, user_id: int, version: int) -> Optional[Row]:
         sql = consec_logins.update(
             and_(
                 consec_logins.c.user == user_id,
@@ -837,7 +837,7 @@ class Mai2ProfileData(BaseData):
             )
         ).values(logins=1)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

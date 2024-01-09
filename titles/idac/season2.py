@@ -53,7 +53,7 @@ class IDACSeason2(IDACBase):
                         "timetrial_event_id"
                     )
 
-    def handle_alive_get_request(self, data: Dict, headers: Dict):
+    async def handle_alive_get_request(self, data: Dict, headers: Dict):
         return {
             "status_code": "0",
             # 1 = success, 0 = failed
@@ -76,7 +76,7 @@ class IDACSeason2(IDACBase):
             output[key] = value
         return output
 
-    def handle_boot_getconfigdata_request(self, data: Dict, headers: Dict):
+    async def handle_boot_getconfigdata_request(self, data: Dict, headers: Dict):
         """
         category:
         1  = D Coin
@@ -297,10 +297,10 @@ class IDACSeason2(IDACBase):
             "timetrial_event_data": self.timetrial_event,
         }
 
-    def handle_boot_bookkeep_request(self, data: Dict, headers: Dict):
+    async def handle_boot_bookkeep_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_boot_getgachadata_request(self, data: Dict, headers: Dict):
+    async def handle_boot_getgachadata_request(self, data: Dict, headers: Dict):
         """
         Reward category types:
         9: Face
@@ -350,7 +350,7 @@ class IDACSeason2(IDACBase):
 
         return avatar_gacha_data
 
-    def handle_boot_gettimereleasedata_request(self, data: Dict, headers: Dict):
+    async def handle_boot_gettimereleasedata_request(self, data: Dict, headers: Dict):
         """
         timerelease chapter:
         1 = Story: 1, 2, 3, 4, 5, 6, 7, 8, 9, 19 (Chapter 10), (29 Chapter 11 lol?)
@@ -385,12 +385,12 @@ class IDACSeason2(IDACBase):
 
         return time_release_data
 
-    def handle_advertise_getrankingdata_request(self, data: Dict, headers: Dict):
+    async def handle_advertise_getrankingdata_request(self, data: Dict, headers: Dict):
         best_data = []
         for last_update in data.get("last_update_date"):
             course_id = last_update.get("course_id")
 
-            ranking = self.data.item.get_time_trial_ranking_by_course(
+            ranking = await self.data.item.get_time_trial_ranking_by_course(
                 self.version, course_id
             )
             ranking_data = []
@@ -398,8 +398,8 @@ class IDACSeason2(IDACBase):
                 user_id = rank["user"]
 
                 # get the username, country and store from the profile
-                profile = self.data.profile.get_profile(user_id, self.version)
-                arcade = self.data.arcade.get_arcade(profile["store"])
+                profile = await self.data.profile.get_profile(user_id, self.version)
+                arcade = await self.data.arcade.get_arcade(profile["store"])
 
                 if arcade is None:
                     arcade = {}
@@ -444,7 +444,7 @@ class IDACSeason2(IDACBase):
             "rank_management_flag": 0,
         }
 
-    def handle_login_checklock_request(self, data: Dict, headers: Dict):
+    async def handle_login_checklock_request(self, data: Dict, headers: Dict):
         user_id = data["id"]
         access_code = data["accesscode"]
         is_new_player = 0
@@ -454,7 +454,7 @@ class IDACSeason2(IDACBase):
             lock_result = 1
 
             # check if an IDAC profile already exists
-            p = self.data.profile.get_profile(user_id, self.version)
+            p = await self.data.profile.get_profile(user_id, self.version)
             is_new_player = 1 if p is None else 0
         else:
             lock_result = 0
@@ -474,35 +474,35 @@ class IDACSeason2(IDACBase):
             "server_status": 1,
         }
 
-    def handle_login_unlock_request(self, data: Dict, headers: Dict):
+    async def handle_login_unlock_request(self, data: Dict, headers: Dict):
         return {
             "status_code": "0",
             "lock_result": 1,
         }
 
-    def handle_login_relock_request(self, data: Dict, headers: Dict):
+    async def handle_login_relock_request(self, data: Dict, headers: Dict):
         return {
             "status_code": "0",
             "lock_result": 1,
             "lock_date": int(datetime.now().timestamp()),
         }
 
-    def handle_login_guestplay_request(self, data: Dict, headers: Dict):
+    async def handle_login_guestplay_request(self, data: Dict, headers: Dict):
         # TODO
         pass
 
-    def _generate_story_data(self, user_id: int) -> Dict:
-        stories = self.data.item.get_stories(user_id)
+    async def _generate_story_data(self, user_id: int) -> Dict:
+        stories = await self.data.item.get_stories(user_id)
 
         story_data = []
         for s in stories:
             chapter_id = s["chapter"]
-            episodes = self.data.item.get_story_episodes(user_id, chapter_id)
+            episodes = await self.data.item.get_story_episodes(user_id, chapter_id)
 
             episode_data = []
             for e in episodes:
                 episode_id = e["episode"]
-                difficulties = self.data.item.get_story_episode_difficulties(
+                difficulties = await self.data.item.get_story_episode_difficulties(
                     user_id, episode_id
                 )
 
@@ -537,9 +537,9 @@ class IDACSeason2(IDACBase):
 
         return story_data
 
-    def _generate_special_data(self, user_id: int) -> Dict:
+    async def _generate_special_data(self, user_id: int) -> Dict:
         # 4 = special mode
-        specials = self.data.item.get_best_challenges_by_vs_type(user_id, story_type=4)
+        specials = await self.data.item.get_best_challenges_by_vs_type(user_id, story_type=4)
 
         special_data = []
         for s in specials:
@@ -556,9 +556,9 @@ class IDACSeason2(IDACBase):
 
         return special_data
 
-    def _generate_challenge_data(self, user_id: int) -> Dict:
+    async def _generate_challenge_data(self, user_id: int) -> Dict:
         # challenge mode (Bunta challenge only right now)
-        challenges = self.data.item.get_best_challenges_by_vs_type(
+        challenges = await self.data.item.get_best_challenges_by_vs_type(
             user_id, story_type=3
         )
 
@@ -578,24 +578,24 @@ class IDACSeason2(IDACBase):
 
         return challenge_data
 
-    def _save_stock_data(self, user_id: int, stock_data: Dict):
+    async def _save_stock_data(self, user_id: int, stock_data: Dict):
         updated_stock_data = {}
         for k, v in stock_data.items():
             if v != "":
                 updated_stock_data[k] = v
 
         if updated_stock_data:
-            self.data.profile.put_profile_stock(
+            await self.data.profile.put_profile_stock(
                 user_id, self.version, updated_stock_data
             )
 
-    def handle_user_getdata_request(self, data: Dict, headers: Dict):
+    async def handle_user_getdata_request(self, data: Dict, headers: Dict):
         user_id = int(headers["session"])
 
         # get the user's profile, can never be None
-        p = self.data.profile.get_profile(user_id, self.version)
+        p = await self.data.profile.get_profile(user_id, self.version)
         user_data = p._asdict()
-        arcade = self.data.arcade.get_arcade(user_data["store"])
+        arcade = await self.data.arcade.get_arcade(user_data["store"])
 
         del user_data["id"]
         del user_data["user"]
@@ -608,7 +608,7 @@ class IDACSeason2(IDACBase):
         user_data["create_date"] = int(user_data["create_date"].timestamp())
 
         # get the user's rank
-        r = self.data.profile.get_profile_rank(user_id, self.version)
+        r = await self.data.profile.get_profile_rank(user_id, self.version)
         rank_data = r._asdict()
         del rank_data["id"]
         del rank_data["user"]
@@ -618,27 +618,27 @@ class IDACSeason2(IDACBase):
         user_data["mode_rank_data"] = rank_data
 
         # get the user's avatar
-        a = self.data.profile.get_profile_avatar(user_id)
+        a = await self.data.profile.get_profile_avatar(user_id)
         avatar_data = a._asdict()
         del avatar_data["id"]
         del avatar_data["user"]
 
         # get the user's stock
-        s = self.data.profile.get_profile_stock(user_id, self.version)
+        s = await self.data.profile.get_profile_stock(user_id, self.version)
         stock_data = s._asdict()
         del stock_data["id"]
         del stock_data["user"]
         del stock_data["version"]
 
         # get the user's config
-        c = self.data.profile.get_profile_config(user_id)
+        c = await self.data.profile.get_profile_config(user_id)
         config_data = c._asdict()
         del config_data["id"]
         del config_data["user"]
         config_data["id"] = config_data.pop("config_id")
 
         # get the user's ticket
-        tickets: list = self.data.item.get_tickets(user_id)
+        tickets: list = await self.data.item.get_tickets(user_id)
 
         """
         ticket_id:
@@ -658,7 +658,7 @@ class IDACSeason2(IDACBase):
             )
 
         # get the user's course, required for the "course proeficiency"
-        courses = self.data.item.get_courses(user_id)
+        courses = await self.data.item.get_courses(user_id)
         course_data = []
         for course in courses:
             course_data.append(
@@ -673,7 +673,7 @@ class IDACSeason2(IDACBase):
 
         # get the profile theory data
         theory_data = {}
-        theory = self.data.profile.get_profile_theory(user_id, self.version)
+        theory = await self.data.profile.get_profile_theory(user_id, self.version)
         if theory is not None:
             theory_data = theory._asdict()
             del theory_data["id"]
@@ -682,7 +682,7 @@ class IDACSeason2(IDACBase):
 
         # get the users theory course data
         theory_course_data = []
-        theory_courses = self.data.item.get_theory_courses(user_id)
+        theory_courses = await self.data.item.get_theory_courses(user_id)
         for course in theory_courses:
             tmp = course._asdict()
             del tmp["id"]
@@ -693,7 +693,7 @@ class IDACSeason2(IDACBase):
 
         # get the users theory partner data
         theory_partner_data = []
-        theory_partners = self.data.item.get_theory_partners(user_id)
+        theory_partners = await self.data.item.get_theory_partners(user_id)
         for partner in theory_partners:
             tmp = partner._asdict()
             del tmp["id"]
@@ -703,7 +703,7 @@ class IDACSeason2(IDACBase):
 
         # get the users theory running pram data
         theory_running_pram_data = []
-        theory_running = self.data.item.get_theory_running(user_id)
+        theory_running = await self.data.item.get_theory_running(user_id)
         for running in theory_running:
             tmp = running._asdict()
             del tmp["id"]
@@ -713,7 +713,7 @@ class IDACSeason2(IDACBase):
 
         # get the users vs info data
         vs_info_data = []
-        vs_info = self.data.item.get_vs_infos(user_id)
+        vs_info = await self.data.item.get_vs_infos(user_id)
         for vs in vs_info:
             vs_info_data.append(
                 {
@@ -737,7 +737,7 @@ class IDACSeason2(IDACBase):
             )
 
         # get the user's car
-        cars = self.data.item.get_cars(self.version, user_id, only_pickup=True)
+        cars = await self.data.item.get_cars(self.version, user_id, only_pickup=True)
         fulltune_count = 0
         total_car_parts_count = 0
         car_data = []
@@ -761,7 +761,7 @@ class IDACSeason2(IDACBase):
         user_data["have_car_cnt"] = len(car_data)
 
         # get the user's play stamps
-        stamps = self.data.item.get_stamps(user_id)
+        stamps = await self.data.item.get_stamps(user_id)
         stamp_event_data = []
         for stamp in stamps:
             tmp = stamp._asdict()
@@ -790,7 +790,7 @@ class IDACSeason2(IDACBase):
                 tmp["weekly_bonus"] = 0
 
             # update the play stamp in the database
-            self.data.item.put_stamp(user_id, tmp)
+            await self.data.item.put_stamp(user_id, tmp)
 
             del tmp["create_date_daily"]
             del tmp["create_date_weekly"]
@@ -798,7 +798,7 @@ class IDACSeason2(IDACBase):
 
         # get the user's timetrial event data
         timetrial_event_data = {}
-        timetrial = self.data.item.get_timetrial_event(user_id, self.timetrial_event_id)
+        timetrial = await self.data.item.get_timetrial_event(user_id, self.timetrial_event_id)
         if timetrial is not None:
             timetrial_event_data = {
                 "timetrial_event_id": timetrial["timetrial_event_id"],
@@ -810,7 +810,7 @@ class IDACSeason2(IDACBase):
             "user_base_data": user_data,
             "avatar_data": avatar_data,
             "pick_up_car_data": car_data,
-            "story_data": self._generate_story_data(user_id),
+            "story_data": await self._generate_story_data(user_id),
             "vsinfo_data": vs_info_data,
             "stock_data": stock_data,
             "mission_data": {
@@ -878,21 +878,21 @@ class IDACSeason2(IDACBase):
             "theory_course_data": theory_course_data,
             "theory_partner_data": theory_partner_data,
             "theory_running_pram_data": theory_running_pram_data,
-            "special_mode_data": self._generate_special_data(user_id),
-            "challenge_mode_data": self._generate_challenge_data(user_id),
+            "special_mode_data": await self._generate_special_data(user_id),
+            "challenge_mode_data": await self._generate_challenge_data(user_id),
             "season_rewards_data": [],
             "timetrial_event_data": timetrial_event_data,
             "special_mode_hint_data": {"story_type": 0, "hint_display_flag": 0},
         }
 
-    def handle_timetrial_getbestrecordpreta_request(self, data: Dict, headers: Dict):
+    async def handle_timetrial_getbestrecordpreta_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         for car_id in data["car_ids"]:
             pass
 
         course_mybest_data = []
-        courses = self.data.item.get_time_trial_user_best_courses(self.version, user_id)
+        courses = await self.data.item.get_time_trial_user_best_courses(self.version, user_id)
         for course in courses:
             course_mybest_data.append(
                 {
@@ -920,10 +920,10 @@ class IDACSeason2(IDACBase):
             )
 
         course_pickup_car_best_data = []
-        courses = self.data.item.get_time_trial_courses(self.version)
+        courses = await self.data.item.get_time_trial_courses(self.version)
         for course in courses:
             car_list = []
-            best_cars = self.data.item.get_time_trial_best_cars_by_course(
+            best_cars = await self.data.item.get_time_trial_best_cars_by_course(
                 self.version, course["course_id"], user_id
             )
 
@@ -960,7 +960,7 @@ class IDACSeason2(IDACBase):
             "course_pickup_car_best_data": course_pickup_car_best_data,
         }
 
-    def handle_timetrial_getbestrecordprerace_request(self, data: Dict, headers: Dict):
+    async def handle_timetrial_getbestrecordprerace_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         course_id = data["course_id"]
@@ -969,7 +969,7 @@ class IDACSeason2(IDACBase):
             style_car_id = car["style_car_id"]
 
         # Not sure if this is actually correct
-        ranking = self.data.item.get_time_trial_ranking_by_course(
+        ranking = await self.data.item.get_time_trial_ranking_by_course(
             self.version, course_id
         )
         course_best_data = []
@@ -977,8 +977,8 @@ class IDACSeason2(IDACBase):
             car_user_id = rank["user"]
 
             # get the username, country and store from the profile
-            profile = self.data.profile.get_profile(car_user_id, self.version)
-            arcade = self.data.arcade.get_arcade(profile["store"])
+            profile = await self.data.profile.get_profile(car_user_id, self.version)
+            arcade = await self.data.arcade.get_arcade(profile["store"])
 
             if arcade is None:
                 arcade = {}
@@ -1007,7 +1007,7 @@ class IDACSeason2(IDACBase):
                 }
             )
 
-        best_cars = self.data.item.get_time_trial_best_cars_by_course(
+        best_cars = await self.data.item.get_time_trial_best_cars_by_course(
             self.version, course_id
         )
 
@@ -1015,8 +1015,8 @@ class IDACSeason2(IDACBase):
         for i, rank in enumerate(best_cars):
             car_user_id = rank["user"]
             # get the username, country and store from the profile
-            profile = self.data.profile.get_profile(car_user_id, self.version)
-            arcade = self.data.arcade.get_arcade(profile["store"])
+            profile = await self.data.profile.get_profile(car_user_id, self.version)
+            arcade = await self.data.arcade.get_arcade(profile["store"])
 
             if arcade is None:
                 arcade = {}
@@ -1051,7 +1051,7 @@ class IDACSeason2(IDACBase):
             "course_best_data": course_best_data,
         }
 
-    def handle_user_createaccount_request(self, data: Dict, headers: Dict):
+    async def handle_user_createaccount_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         car_data: Dict = data.pop("car_obj")
@@ -1070,45 +1070,45 @@ class IDACSeason2(IDACBase):
         data["store"] = headers.get("a_store", 0)
         data["country"] = headers.get("a_country", 0)
         data["asset_version"] = headers.get("asset_version", 1)
-        self.data.profile.put_profile(user_id, self.version, data)
+        await self.data.profile.put_profile(user_id, self.version, data)
 
         # save rank data in database
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in takeover_ticket_list:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         config_data["config_id"] = config_data.pop("id")
-        self.data.profile.put_profile_config(user_id, config_data)
-        self.data.profile.put_profile_avatar(user_id, avatar_data)
+        await self.data.profile.put_profile_config(user_id, config_data)
+        await self.data.profile.put_profile_avatar(user_id, avatar_data)
 
         # save car data and car parts in database
         car_data["parts_list"] = parts_data
-        self.data.item.put_car(user_id, self.version, car_data)
+        await self.data.item.put_car(user_id, self.version, car_data)
 
         return {"status_code": "0"}
 
-    def handle_user_updatelogin_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatelogin_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_timetrial_getcarbest_request(self, data: Dict, headers: Dict):
+    async def handle_timetrial_getcarbest_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_factory_avatargacharesult_request(self, data: Dict, headers: Dict):
+    async def handle_factory_avatargacharesult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
         use_ticket_cnt = data["use_ticket_cnt"]
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # get the user's ticket
-        tickets: list = self.data.item.get_tickets(user_id)
+        tickets: list = await self.data.item.get_tickets(user_id)
         ticket_list = []
         for ticket in tickets:
             # avatar tickets
@@ -1119,7 +1119,7 @@ class IDACSeason2(IDACBase):
                 }
 
                 # update the ticket in the database
-                self.data.item.put_ticket(user_id, ticket_data)
+                await self.data.item.put_ticket(user_id, ticket_data)
                 ticket_list.append(ticket_data)
 
                 continue
@@ -1133,15 +1133,15 @@ class IDACSeason2(IDACBase):
 
         return {"status_code": "0", "ticket_data": ticket_list}
 
-    def handle_factory_savefavoritecar_request(self, data: Dict, headers: Dict):
+    async def handle_factory_savefavoritecar_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         # save favorite cars in database
         for car in data["pickup_on_car_ids"]:
-            self.data.item.put_car(user_id, self.version, car)
+            await self.data.item.put_car(user_id, self.version, car)
 
         for car in data["pickup_off_car_ids"]:
-            self.data.item.put_car(
+            await self.data.item.put_car(
                 user_id,
                 self.version,
                 {"style_car_id": car["style_car_id"], "pickup_seq": 0},
@@ -1149,7 +1149,7 @@ class IDACSeason2(IDACBase):
 
         return {"status_code": "0"}
 
-    def handle_factory_updatemultiplecustomizeresult_request(
+    async def handle_factory_updatemultiplecustomizeresult_request(
         self, data: Dict, headers: Dict
     ):
         user_id = headers["session"]
@@ -1162,15 +1162,15 @@ class IDACSeason2(IDACBase):
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         for car in car_list:
             # save car data and car parts in database
-            self.data.item.put_car(user_id, self.version, car)
+            await self.data.item.put_car(user_id, self.version, car)
 
         return {"status_code": "0"}
 
-    def handle_factory_updatecustomizeresult_request(self, data: Dict, headers: Dict):
+    async def handle_factory_updatecustomizeresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         parts_data: List = data.pop("parts_list")
@@ -1178,18 +1178,18 @@ class IDACSeason2(IDACBase):
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save car data in database
         data["parts_list"] = parts_data
-        self.data.item.put_car(user_id, self.version, data)
+        await self.data.item.put_car(user_id, self.version, data)
 
         return {"status_code": "0"}
 
-    def handle_factory_getcardata_request(self, data: Dict, headers: Dict):
+    async def handle_factory_getcardata_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
-        cars = self.data.item.get_cars(self.version, user_id)
+        cars = await self.data.item.get_cars(self.version, user_id)
         car_data = []
         for car in cars:
             tmp = car._asdict()
@@ -1204,10 +1204,10 @@ class IDACSeason2(IDACBase):
             "car_data": car_data,
         }
 
-    def handle_factory_renamebefore_request(self, data: Dict, headers: Dict):
+    async def handle_factory_renamebefore_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_factory_buycarresult_request(self, data: Dict, headers: Dict):
+    async def handle_factory_buycarresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         parts_data: List = data.pop("parts_list")
@@ -1224,7 +1224,7 @@ class IDACSeason2(IDACBase):
             if car["style_car_id"] == style_car_id:
                 pickup_seq = car["pickup_seq"]
             else:
-                self.data.item.put_car(user_id, self.version, car)
+                await self.data.item.put_car(user_id, self.version, car)
 
         data["pickup_seq"] = pickup_seq
 
@@ -1232,7 +1232,7 @@ class IDACSeason2(IDACBase):
         total_cash = data.pop("total_cash")
 
         # save the new cash in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id, self.version, {"total_cash": total_cash, "cash": cash}
         )
 
@@ -1240,10 +1240,10 @@ class IDACSeason2(IDACBase):
         use_ticket = data.pop("use_ticket")
         if use_ticket:
             # get the user's tickets, full tune ticket id is 25
-            ticket = self.data.item.get_ticket(user_id, ticket_id=25)
+            ticket = await self.data.item.get_ticket(user_id, ticket_id=25)
 
             # update the ticket in the database
-            self.data.item.put_ticket(
+            await self.data.item.put_ticket(
                 user_id,
                 {
                     "ticket_id": ticket["ticket_id"],
@@ -1256,17 +1256,17 @@ class IDACSeason2(IDACBase):
 
         # save car data and car parts in database
         data["parts_list"] = parts_data
-        self.data.item.put_car(user_id, self.version, data)
+        await self.data.item.put_car(user_id, self.version, data)
 
         for car in pickup_off_list:
-            self.data.item.put_car(
+            await self.data.item.put_car(
                 user_id,
                 self.version,
                 {"style_car_id": car["style_car_id"], "pickup_seq": 0},
             )
 
         # get the user's car
-        cars = self.data.item.get_cars(self.version, user_id)
+        cars = await self.data.item.get_cars(self.version, user_id)
         fulltune_count = 0
         total_car_parts_count = 0
         for car in cars:
@@ -1278,7 +1278,7 @@ class IDACSeason2(IDACBase):
             # total_car_parts_count += car["total_car_parts_count"]
 
         # get the user's ticket
-        tickets = self.data.item.get_tickets(user_id)
+        tickets = await self.data.item.get_tickets(user_id)
         ticket_data = []
         for ticket in tickets:
             ticket_data.append(
@@ -1297,54 +1297,54 @@ class IDACSeason2(IDACBase):
             "car_style_count": [],
         }
 
-    def handle_factory_renameresult_request(self, data: Dict, headers: Dict):
+    async def handle_factory_renameresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         new_username = data.get("username")
 
         # save new username in database
         if new_username:
-            self.data.profile.put_profile(user_id, self.version, data)
+            await self.data.profile.put_profile(user_id, self.version, data)
 
         return {"status_code": "0"}
 
-    def handle_factory_updatecustomizeavatar_request(self, data: Dict, headers: Dict):
+    async def handle_factory_updatecustomizeavatar_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         avatar_data: Dict = data.pop("avatar_obj")
         stock_data: Dict = data.pop("stock_obj")
 
         # update the stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save avatar data and avatar parts in database
-        self.data.profile.put_profile_avatar(user_id, avatar_data)
+        await self.data.profile.put_profile_avatar(user_id, avatar_data)
 
         return {"status_code": "0"}
 
-    def handle_factory_updatecustomizeuser_request(self, data: Dict, headers: Dict):
+    async def handle_factory_updatecustomizeuser_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
 
         # update the stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # update profile data and config in database
-        self.data.profile.put_profile(user_id, self.version, data)
+        await self.data.profile.put_profile(user_id, self.version, data)
 
         return {"status_code": "0"}
 
-    def handle_user_updatestampinfo_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatestampinfo_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stamp_event_data = data.pop("stamp_event_data")
         for stamp in stamp_event_data:
-            self.data.item.put_stamp(user_id, stamp)
+            await self.data.item.put_stamp(user_id, stamp)
 
         return {"status_code": "0"}
 
-    def handle_user_updatetimetrialresult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatetimetrialresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -1357,22 +1357,22 @@ class IDACSeason2(IDACBase):
         event_point = data.pop("event_point")
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save mode rank data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # update profile
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -1392,7 +1392,7 @@ class IDACSeason2(IDACBase):
         # get the use_count and story_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
 
         # increase the use_count and story_use_count of the used car
         used_car["use_count"] += 1
@@ -1400,7 +1400,7 @@ class IDACSeason2(IDACBase):
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
-        self.data.item.put_car(user_id, self.version, used_car)
+        await self.data.item.put_car(user_id, self.version, used_car)
 
         # skill_level_exp is the "course proeficiency" and is saved
         # in the course table
@@ -1409,12 +1409,12 @@ class IDACSeason2(IDACBase):
         skill_level_exp = data.pop("skill_level_exp")
 
         # get the course data
-        course = self.data.item.get_course(user_id, course_id)
+        course = await self.data.item.get_course(user_id, course_id)
         if course:
             # update run_counts
             run_counts = course["run_counts"] + 1
 
-        self.data.item.put_course(
+        await self.data.item.put_course(
             user_id,
             {
                 "course_id": course_id,
@@ -1426,12 +1426,12 @@ class IDACSeason2(IDACBase):
         goal_time = data.get("goal_time")
         # grab the ranking data and count the numbers of rows with a faster time
         # than the current goal_time
-        course_rank = self.data.item.get_time_trial_ranking_by_course(
+        course_rank = await self.data.item.get_time_trial_ranking_by_course(
             self.version, course_id, limit=None
         )
         course_rank = len([r for r in course_rank if r["goal_time"] < goal_time]) + 1
 
-        car_course_rank = self.data.item.get_time_trial_ranking_by_course(
+        car_course_rank = await self.data.item.get_time_trial_ranking_by_course(
             self.version, course_id, style_car_id, limit=None
         )
         car_course_rank = (
@@ -1442,7 +1442,7 @@ class IDACSeason2(IDACBase):
         if data.get("goal_time") > 0:
             # get the current best goal time
             best_time_trial = (
-                self.data.item.get_time_trial_user_best_time_by_course_car(
+                await self.data.item.get_time_trial_user_best_time_by_course_car(
                     self.version, user_id, course_id, style_car_id
                 )
             )
@@ -1453,10 +1453,10 @@ class IDACSeason2(IDACBase):
             ):
                 # now finally save the time trial with updated timestamp
                 data["play_dt"] = datetime.now()
-                self.data.item.put_time_trial(self.version, user_id, data)
+                await self.data.item.put_time_trial(self.version, user_id, data)
 
         # update the timetrial event points
-        self.data.item.put_timetrial_event(
+        await self.data.item.put_timetrial_event(
             user_id, self.timetrial_event_id, event_point
         )
 
@@ -1473,7 +1473,7 @@ class IDACSeason2(IDACBase):
             },
         }
 
-    def handle_user_updatestoryresult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatestoryresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -1484,15 +1484,15 @@ class IDACSeason2(IDACBase):
         # stamp_event_data = data.pop("stamp_event_data")
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save mode rank data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # save the current story progress in database
         max_loop = data.get("chapter_loop_max")
@@ -1503,7 +1503,7 @@ class IDACSeason2(IDACBase):
         play_status = data.get("play_status")
 
         # get the current loop from the database
-        story_data = self.data.item.get_story(user_id, chapter_id)
+        story_data = await self.data.item.get_story(user_id, chapter_id)
         # 1 = active, 2+ = cleared?
         loop_count = 1
         if story_data:
@@ -1517,13 +1517,13 @@ class IDACSeason2(IDACBase):
 
         # if the episode has already been cleared, set the play_status to 2
         # so it won't be set to unplayed (play_status = 1)
-        episode_data = self.data.item.get_story_episode(user_id, episode_id)
+        episode_data = await self.data.item.get_story_episode(user_id, episode_id)
         if episode_data:
             if play_status < episode_data["play_status"]:
                 play_status = 2
 
         # save the current episode progress in database
-        self.data.item.put_story_episode(
+        await self.data.item.put_story_episode(
             user_id,
             chapter_id,
             {
@@ -1537,9 +1537,9 @@ class IDACSeason2(IDACBase):
             loop_count += 1
 
             # for the current chapter set all episode play_status back to 1
-            self.data.item.put_story_episode_play_status(user_id, chapter_id, 1)
+            await self.data.item.put_story_episode_play_status(user_id, chapter_id, 1)
 
-        self.data.item.put_story(
+        await self.data.item.put_story(
             user_id,
             {
                 "story_type": data.get("story_type"),
@@ -1549,7 +1549,7 @@ class IDACSeason2(IDACBase):
         )
 
         # save the current episode difficulty progress in database
-        self.data.item.put_story_episode_difficulty(
+        await self.data.item.put_story_episode_difficulty(
             user_id,
             episode_id,
             {
@@ -1564,7 +1564,7 @@ class IDACSeason2(IDACBase):
         # get the use_count and story_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.get("car_mileage")
-        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
 
         # increase the use_count and story_use_count of the used car
         used_car["use_count"] += 1
@@ -1572,14 +1572,14 @@ class IDACSeason2(IDACBase):
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
-        self.data.item.put_car(user_id, self.version, used_car)
+        await self.data.item.put_car(user_id, self.version, used_car)
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save user profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -1598,12 +1598,12 @@ class IDACSeason2(IDACBase):
 
         return {
             "status_code": "0",
-            "story_data": self._generate_story_data(user_id),
+            "story_data": await self._generate_story_data(user_id),
             "car_use_count": [],
             "maker_use_count": [],
         }
 
-    def handle_user_updatespecialmoderesult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatespecialmoderesult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -1617,11 +1617,11 @@ class IDACSeason2(IDACBase):
 
         # get the vs use count from database and update it
         style_car_id = data.pop("style_car_id")
-        car_data = self.data.item.get_car(user_id, self.version, style_car_id)
+        car_data = await self.data.item.get_car(user_id, self.version, style_car_id)
         story_use_count = car_data["story_use_count"] + 1
 
         # save car data in database
-        self.data.item.put_car(
+        await self.data.item.put_car(
             user_id,
             self.version,
             {
@@ -1632,11 +1632,11 @@ class IDACSeason2(IDACBase):
         )
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save user profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -1654,18 +1654,18 @@ class IDACSeason2(IDACBase):
         )
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save ticket data in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save mode_rank and reward_dist data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # finally save the special mode with story_type=4 in database
-        self.data.item.put_challenge(user_id, data)
+        await self.data.item.put_challenge(user_id, data)
 
         return {
             "status_code": "0",
@@ -1674,7 +1674,7 @@ class IDACSeason2(IDACBase):
             "maker_use_count": [],
         }
 
-    def handle_user_updatechallengemoderesult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatechallengemoderesult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -1685,11 +1685,11 @@ class IDACSeason2(IDACBase):
 
         # get the vs use count from database and update it
         style_car_id = data.get("style_car_id")
-        car_data = self.data.item.get_car(user_id, self.version, style_car_id)
+        car_data = await self.data.item.get_car(user_id, self.version, style_car_id)
         story_use_count = car_data["story_use_count"] + 1
 
         # save car data in database
-        self.data.item.put_car(
+        await self.data.item.put_car(
             user_id,
             self.version,
             {
@@ -1700,11 +1700,11 @@ class IDACSeason2(IDACBase):
         )
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save user profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -1722,18 +1722,18 @@ class IDACSeason2(IDACBase):
         )
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save ticket data in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save mode_rank and reward_dist data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # get the challenge mode data from database
-        challenge_data = self.data.item.get_challenge(
+        challenge_data = await self.data.item.get_challenge(
             user_id, data.get("vs_type"), data.get("play_difficulty")
         )
 
@@ -1743,7 +1743,7 @@ class IDACSeason2(IDACBase):
             data["play_count"] = play_count
 
         # finally save the challenge mode with story_type=3 in database
-        self.data.item.put_challenge(user_id, data)
+        await self.data.item.put_challenge(user_id, data)
 
         return {
             "status_code": "0",
@@ -1752,11 +1752,11 @@ class IDACSeason2(IDACBase):
             "maker_use_count": [],
         }
 
-    def _generate_time_trial_data(self, season_id: int, user_id: int) -> List[Dict]:
+    async def _generate_time_trial_data(self, season_id: int, user_id: int) -> List[Dict]:
         # get the season time trial data from database
         timetrial_data = []
 
-        courses = self.data.item.get_courses(user_id)
+        courses = await self.data.item.get_courses(user_id)
         if courses is None or len(courses) == 0:
             return {"status_code": "0", "timetrial_data": timetrial_data}
 
@@ -1766,7 +1766,7 @@ class IDACSeason2(IDACBase):
             skill_level_exp = course["skill_level_exp"]
 
             # get the best time for the current course for the current user
-            best_trial = self.data.item.get_time_trial_best_ranking_by_course(
+            best_trial = await self.data.item.get_time_trial_best_ranking_by_course(
                 season_id, user_id, course_id
             )
             if not best_trial:
@@ -1774,7 +1774,7 @@ class IDACSeason2(IDACBase):
 
             goal_time = best_trial["goal_time"]
             # get the rank for the current course
-            course_rank = self.data.item.get_time_trial_ranking_by_course(
+            course_rank = await self.data.item.get_time_trial_ranking_by_course(
                 season_id, course_id, limit=None
             )
             course_rank = (
@@ -1794,12 +1794,12 @@ class IDACSeason2(IDACBase):
 
         return timetrial_data
 
-    def handle_user_getpastseasontadata_request(self, data: Dict, headers: Dict):
+    async def handle_user_getpastseasontadata_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
         season_id = data.get("season_id")
 
         # so to get the season 1 data just subtract 1 from the season id
-        past_timetrial_data = self._generate_time_trial_data(season_id - 1, user_id)
+        past_timetrial_data = await self._generate_time_trial_data(season_id - 1, user_id)
 
         # TODO: get the current season timetrial data somehow, because after requesting
         # GetPastSeasonTAData the game will NOT request GetTAData?!
@@ -1809,10 +1809,10 @@ class IDACSeason2(IDACBase):
             "past_season_timetrial_data": past_timetrial_data,
         }
 
-    def handle_user_gettadata_request(self, data: Dict, headers: Dict):
+    async def handle_user_gettadata_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
-        timetrial_data = self._generate_time_trial_data(self.version, user_id)
+        timetrial_data = await self._generate_time_trial_data(self.version, user_id)
 
         # TODO: get the past season timetrial data somehow, because after requesting
         # GetTAData the game will NOT request GetPastSeasonTAData?!
@@ -1822,17 +1822,17 @@ class IDACSeason2(IDACBase):
             # "past_season_timetrial_data": timetrial_data,
         }
 
-    def handle_user_updatecartune_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatecartune_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         # full tune ticket
         use_ticket = data.pop("use_ticket")
         if use_ticket:
             # get the user's tickets, full tune ticket id is 25
-            ticket = self.data.item.get_ticket(user_id, ticket_id=25)
+            ticket = await self.data.item.get_ticket(user_id, ticket_id=25)
 
             # update the ticket in the database
-            self.data.item.put_ticket(
+            await self.data.item.put_ticket(
                 user_id,
                 {
                     "ticket_id": ticket["ticket_id"],
@@ -1843,22 +1843,22 @@ class IDACSeason2(IDACBase):
             # also set the tune_level to 16 (fully tuned)
             data["tune_level"] = 16
 
-        self.data.item.put_car(user_id, self.version, data)
+        await self.data.item.put_car(user_id, self.version, data)
 
         return {
             "status_code": "0",
-            "story_data": self._generate_story_data(user_id),
+            "story_data": await self._generate_story_data(user_id),
             "car_use_count": [],
             "maker_use_count": [],
         }
 
-    def handle_log_saveplaylog_request(self, data: Dict, headers: Dict):
+    async def handle_log_saveplaylog_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_log_saveendlog_request(self, data: Dict, headers: Dict):
+    async def handle_log_saveendlog_request(self, data: Dict, headers: Dict):
         pass
 
-    def handle_user_updatemoderesult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatemoderesult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         config_data: Dict = data.pop("config_obj")
@@ -1872,30 +1872,30 @@ class IDACSeason2(IDACBase):
         tips_list = data.pop("tips_list")
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save rank dist data in database
-        self.data.profile.put_profile_rank(user_id, self.version, reward_dist_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, reward_dist_data)
 
         # update profile data and config in database
-        self.data.profile.put_profile(user_id, self.version, data)
+        await self.data.profile.put_profile(user_id, self.version, data)
         config_data["config_id"] = config_data.pop("id")
-        self.data.profile.put_profile_config(user_id, config_data)
+        await self.data.profile.put_profile_config(user_id, config_data)
 
         return {"status_code": "0", "server_status": 1}
 
-    def _generate_theory_rival_data(
+    async def _generate_theory_rival_data(
         self, user_list: list, course_id: int, req_user_id: int
     ) -> list:
         rival_data = []
         for user_id in user_list:
             # if not enough players are available just use the data from the req_user
             if user_id == -1:
-                profile = self.data.profile.get_profile(req_user_id, self.version)
+                profile = await self.data.profile.get_profile(req_user_id, self.version)
                 profile = profile._asdict()
                 # set the name to CPU
                 profile["username"] = f"ＣＰＵ"
@@ -1908,9 +1908,9 @@ class IDACSeason2(IDACBase):
                 profile["stamp_key_assign_3"] = 3
                 profile["mytitle_id"] = 0
             else:
-                profile = self.data.profile.get_profile(user_id, self.version)
+                profile = await self.data.profile.get_profile(user_id, self.version)
 
-            rank = self.data.profile.get_profile_rank(profile["user"], self.version)
+            rank = await self.data.profile.get_profile_rank(profile["user"], self.version)
 
             avatars = [
                 {
@@ -1978,21 +1978,21 @@ class IDACSeason2(IDACBase):
             if user_id == -1:
                 # get a random avatar from the list and some random car from all users
                 avatar = choice(avatars)
-                car = self.data.item.get_random_car(self.version)
+                car = await self.data.item.get_random_car(self.version)
             else:
-                avatar = self.data.profile.get_profile_avatar(profile["user"])
-                car = self.data.item.get_random_user_car(profile["user"], self.version)
+                avatar = await self.data.profile.get_profile_avatar(profile["user"])
+                car = await self.data.item.get_random_user_car(profile["user"], self.version)
 
             parts_list = []
             for part in car["parts_list"]:
                 parts_list.append(part["parts"])
 
-            course = self.data.item.get_theory_course(profile["user"], course_id)
+            course = await self.data.item.get_theory_course(profile["user"], course_id)
             powerhose_lv = 0
             if course:
                 powerhose_lv = course["powerhouse_lv"]
 
-            theory_running = self.data.item.get_theory_running_by_course(
+            theory_running = await self.data.item.get_theory_running_by_course(
                 profile["user"], course_id
             )
 
@@ -2011,13 +2011,13 @@ class IDACSeason2(IDACBase):
 
             # get the time trial ranking medal
             eval_id = 0
-            time_trial = self.data.item.get_time_trial_best_ranking_by_course(
+            time_trial = await self.data.item.get_time_trial_best_ranking_by_course(
                 self.version, profile["user"], course_id
             )
             if time_trial:
                 eval_id = time_trial["eval_id"]
 
-            arcade = self.data.arcade.get_arcade(profile["store"])
+            arcade = await self.data.arcade.get_arcade(profile["store"])
             if arcade is None:
                 arcade = {}
                 arcade["name"] = self.core_cfg.server.name
@@ -2079,7 +2079,7 @@ class IDACSeason2(IDACBase):
 
         return rival_data
 
-    def handle_theory_matching_request(self, data: Dict, headers: Dict):
+    async def handle_theory_matching_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         course_id = data.pop("course_id")
@@ -2094,7 +2094,7 @@ class IDACSeason2(IDACBase):
         powerhose_lv = data.pop("powerhouse_lv")
 
         # get random profiles for auto match
-        profiles = self.data.profile.get_different_random_profiles(
+        profiles = await self.data.profile.get_different_random_profiles(
             user_id, self.version, count=count_auto_match
         )
 
@@ -2103,10 +2103,10 @@ class IDACSeason2(IDACBase):
         while len(user_list) < count_auto_match:
             user_list.append(-1)
 
-        auto_match = self._generate_theory_rival_data(user_list, course_id, user_id)
+        auto_match = await self._generate_theory_rival_data(user_list, course_id, user_id)
 
         # get profiles with the same powerhouse_lv for power match
-        theory_courses = self.data.item.get_theory_course_by_powerhouse_lv(
+        theory_courses = await self.data.item.get_theory_course_by_powerhouse_lv(
             user_id, course_id, powerhose_lv, count=count_power_match
         )
         user_list = [course["user"] for course in theory_courses]
@@ -2115,7 +2115,7 @@ class IDACSeason2(IDACBase):
         while len(user_list) < count_power_match:
             user_list.append(-1)
 
-        power_match = self._generate_theory_rival_data(user_list, course_id, user_id)
+        power_match = await self._generate_theory_rival_data(user_list, course_id, user_id)
 
         return {
             "status_code": "0",
@@ -2126,7 +2126,7 @@ class IDACSeason2(IDACBase):
             },
         }
 
-    def handle_user_updatetheoryresult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatetheoryresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -2136,15 +2136,15 @@ class IDACSeason2(IDACBase):
         driver_debut_data: Dict = data.pop("driver_debut_obj")
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save rank dist data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # save the profile theory data in database
         play_count = 1
@@ -2152,7 +2152,7 @@ class IDACSeason2(IDACBase):
         win_count = 0
         win_count_multi = 0
 
-        theory_data = self.data.profile.get_profile_theory(user_id, self.version)
+        theory_data = await self.data.profile.get_profile_theory(user_id, self.version)
         if theory_data:
             play_count = theory_data["play_count"] + 1
             play_count_multi = theory_data["play_count_multi"] + 1
@@ -2170,7 +2170,7 @@ class IDACSeason2(IDACBase):
             win_count += 1
             win_count_multi += 1
 
-        self.data.profile.put_profile_theory(
+        await self.data.profile.put_profile_theory(
             user_id,
             self.version,
             {
@@ -2190,7 +2190,7 @@ class IDACSeason2(IDACBase):
         )
 
         # save theory course in database
-        self.data.item.put_theory_course(
+        await self.data.item.put_theory_course(
             user_id,
             {
                 "course_id": data.get("course_id"),
@@ -2205,7 +2205,7 @@ class IDACSeason2(IDACBase):
         )
 
         # save the theory partner in database
-        self.data.item.put_theory_partner(
+        await self.data.item.put_theory_partner(
             user_id,
             {
                 "partner_id": data.get("partner_id"),
@@ -2215,7 +2215,7 @@ class IDACSeason2(IDACBase):
         )
 
         # save the theory running in database?
-        self.data.item.put_theory_running(
+        await self.data.item.put_theory_running(
             user_id,
             {
                 "course_id": data.get("course_id"),
@@ -2230,7 +2230,7 @@ class IDACSeason2(IDACBase):
         # get the use_count and theory_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.get("car_mileage")
-        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
 
         # increase the use_count and theory_use_count of the used car
         used_car["use_count"] += 1
@@ -2238,14 +2238,14 @@ class IDACSeason2(IDACBase):
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
-        self.data.item.put_car(user_id, self.version, used_car)
+        await self.data.item.put_car(user_id, self.version, used_car)
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save the profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -2273,16 +2273,16 @@ class IDACSeason2(IDACBase):
             "win_count_multi": win_count_multi,
         }
 
-    def handle_timetrial_getbestrecordprebattle_request(
+    async def handle_timetrial_getbestrecordprebattle_request(
         self, data: Dict, headers: Dict
     ):
         user_id = headers["session"]
 
         course_pickup_car_best_data = []
-        courses = self.data.item.get_time_trial_courses(self.version)
+        courses = await self.data.item.get_time_trial_courses(self.version)
         for course in courses:
             car_list = []
-            best_cars = self.data.item.get_time_trial_best_cars_by_course(
+            best_cars = await self.data.item.get_time_trial_best_cars_by_course(
                 self.version, course["course_id"], user_id
             )
 
@@ -2318,36 +2318,36 @@ class IDACSeason2(IDACBase):
             "course_pickup_car_best_data": course_pickup_car_best_data,
         }
 
-    def handle_user_updateonlinebattle_request(self, data: Dict, headers: Dict):
+    async def handle_user_updateonlinebattle_request(self, data: Dict, headers: Dict):
         return {
             "status_code": "0",
             "bothwin_penalty": 1,
         }
 
-    def handle_user_updateonlinebattleresult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updateonlinebattleresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         ticket_data: List = data.pop("ticket_data")
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         reward_dist_data: Dict = data.pop("reward_dist_obj")
         rank_data: Dict = data.pop("mode_rank_obj")
 
         # save rank dist data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         driver_debut_data = data.pop("driver_debut_obj")
 
         # get the use_count and net_vs_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
 
         # increase the use_count and net_vs_use_count of the used car
         used_car["use_count"] += 1
@@ -2355,14 +2355,14 @@ class IDACSeason2(IDACBase):
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
-        self.data.item.put_car(user_id, self.version, used_car)
+        await self.data.item.put_car(user_id, self.version, used_car)
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save the profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -2379,7 +2379,7 @@ class IDACSeason2(IDACBase):
             },
         )
 
-        self.data.item.put_vs_info(user_id, data)
+        await self.data.item.put_vs_info(user_id, data)
 
         vs_info = {
             "battle_mode": 0,
@@ -2416,7 +2416,7 @@ class IDACSeason2(IDACBase):
             "maker_use_count": [],
         }
 
-    def handle_user_updatestorebattleresult_request(self, data: Dict, headers: Dict):
+    async def handle_user_updatestorebattleresult_request(self, data: Dict, headers: Dict):
         user_id = headers["session"]
 
         stock_data: Dict = data.pop("stock_obj")
@@ -2431,20 +2431,20 @@ class IDACSeason2(IDACBase):
         gift_id = data.pop("gift_id")
 
         # save stock data in database
-        self._save_stock_data(user_id, stock_data)
+        await self._save_stock_data(user_id, stock_data)
 
         # save tickets in database
         for ticket in ticket_data:
-            self.data.item.put_ticket(user_id, ticket)
+            await self.data.item.put_ticket(user_id, ticket)
 
         # save rank dist data in database
         rank_data.update(reward_dist_data)
-        self.data.profile.put_profile_rank(user_id, self.version, rank_data)
+        await self.data.profile.put_profile_rank(user_id, self.version, rank_data)
 
         # get the use_count and net_vs_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
 
         # increase the use_count and net_vs_use_count of the used car
         used_car["use_count"] += 1
@@ -2452,14 +2452,14 @@ class IDACSeason2(IDACBase):
         used_car["car_mileage"] = car_mileage
 
         # save the used car in database
-        self.data.item.put_car(user_id, self.version, used_car)
+        await self.data.item.put_car(user_id, self.version, used_car)
 
         # get the profile data, update total_play and daily_play, and save it
-        profile = self.data.profile.get_profile(user_id, self.version)
+        profile = await self.data.profile.get_profile(user_id, self.version)
         total_play = profile["total_play"] + 1
 
         # save the profile in database
-        self.data.profile.put_profile(
+        await self.data.profile.put_profile(
             user_id,
             self.version,
             {
@@ -2477,7 +2477,7 @@ class IDACSeason2(IDACBase):
         )
 
         # save vs_info in database
-        self.data.item.put_vs_info(user_id, data)
+        await self.data.item.put_vs_info(user_id, data)
 
         vs_info = {
             "battle_mode": 0,

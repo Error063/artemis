@@ -128,7 +128,7 @@ class DivaBase:
     async def handle_shop_catalog_request(self, data: Dict) -> Dict:
         catalog = ""
 
-        shopList = self.data.static.get_enabled_shops(self.version)
+        shopList = await self.data.static.get_enabled_shops(self.version)
         if not shopList:
             with open(r"titles/diva/data/ShopCatalog.dat", encoding="utf-8") as shop:
                 lines = shop.readlines()
@@ -164,8 +164,8 @@ class DivaBase:
         return response
 
     async def handle_buy_module_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        module = self.data.static.get_enabled_shop(self.version, int(data["mdl_id"]))
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
+        module = await self.data.static.get_enabled_shop(self.version, int(data["mdl_id"]))
 
         # make sure module is available to purchase
         if not module:
@@ -177,11 +177,11 @@ class DivaBase:
 
         new_vcld_pts = profile["vcld_pts"] - int(data["mdl_price"])
 
-        self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
-        self.data.module.put_module(data["pd_id"], self.version, data["mdl_id"])
+        await self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
+        await self.data.module.put_module(data["pd_id"], self.version, data["mdl_id"])
 
         # generate the mdl_have string
-        mdl_have = self.data.module.get_modules_have_string(data["pd_id"], self.version)
+        mdl_have = await self.data.module.get_modules_have_string(data["pd_id"], self.version)
 
         response = "&shp_rslt=1"
         response += f"&mdl_id={data['mdl_id']}"
@@ -193,7 +193,7 @@ class DivaBase:
     async def handle_cstmz_itm_ctlg_request(self, data: Dict) -> Dict:
         catalog = ""
 
-        itemList = self.data.static.get_enabled_items(self.version)
+        itemList = await self.data.static.get_enabled_items(self.version)
         if not itemList:
             with open(r"titles/diva/data/ItemCatalog.dat", encoding="utf-8") as item:
                 lines = item.readlines()
@@ -229,8 +229,8 @@ class DivaBase:
         return response
 
     async def handle_buy_cstmz_itm_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        item = self.data.static.get_enabled_item(
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
+        item = await self.data.static.get_enabled_item(
             self.version, int(data["cstmz_itm_id"])
         )
 
@@ -245,14 +245,14 @@ class DivaBase:
         new_vcld_pts = profile["vcld_pts"] - int(data["cstmz_itm_price"])
 
         # save new Vocaloid Points balance
-        self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
+        await self.data.profile.update_profile(profile["user"], vcld_pts=new_vcld_pts)
 
-        self.data.customize.put_customize_item(
+        await self.data.customize.put_customize_item(
             data["pd_id"], self.version, data["cstmz_itm_id"]
         )
 
         # generate the cstmz_itm_have string
-        cstmz_itm_have = self.data.customize.get_customize_items_have_string(
+        cstmz_itm_have = await self.data.customize.get_customize_items_have_string(
             data["pd_id"], self.version
         )
 
@@ -297,7 +297,7 @@ class DivaBase:
     async def handle_qst_inf_request(self, data: Dict) -> Dict:
         quest = ""
 
-        questList = self.data.static.get_enabled_quests(self.version)
+        questList = await self.data.static.get_enabled_quests(self.version)
         if not questList:
             with open(r"titles/diva/data/QuestInfo.dat", encoding="utf-8") as shop:
                 lines = shop.readlines()
@@ -381,8 +381,8 @@ class DivaBase:
         return f""
 
     async def handle_pre_start_request(self, data: Dict) -> str:
-        profile = self.data.profile.get_profile(data["aime_id"], self.version)
-        profile_shop = self.data.item.get_shop(data["aime_id"], self.version)
+        profile = await self.data.profile.get_profile(data["aime_id"], self.version)
+        profile_shop = await self.data.item.get_shop(data["aime_id"], self.version)
 
         if profile is None:
             return f"&ps_result=-3"
@@ -422,28 +422,28 @@ class DivaBase:
             return response
 
     async def handle_registration_request(self, data: Dict) -> Dict:
-        self.data.profile.create_profile(
+        await self.data.profile.create_profile(
             self.version, data["aime_id"], data["player_name"]
         )
         return f"&cd_adm_result=1&pd_id={data['aime_id']}"
 
     async def handle_start_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
-        profile_shop = self.data.item.get_shop(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
+        profile_shop = await self.data.item.get_shop(data["pd_id"], self.version)
         if profile is None:
             return
 
         mdl_have = "F" * 250
         # generate the mdl_have string if "unlock_all_modules" is disabled
         if not self.game_config.mods.unlock_all_modules:
-            mdl_have = self.data.module.get_modules_have_string(
+            mdl_have = await self.data.module.get_modules_have_string(
                 data["pd_id"], self.version
             )
 
         cstmz_itm_have = "F" * 250
         # generate the cstmz_itm_have string if "unlock_all_items" is disabled
         if not self.game_config.mods.unlock_all_items:
-            cstmz_itm_have = self.data.customize.get_customize_items_have_string(
+            cstmz_itm_have = await self.data.customize.get_customize_items_have_string(
                 data["pd_id"], self.version
             )
 
@@ -524,7 +524,7 @@ class DivaBase:
         }
 
         # get clear status from user scores
-        pv_records = self.data.score.get_best_scores(data["pd_id"])
+        pv_records = await self.data.score.get_best_scores(data["pd_id"])
         clear_status = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
 
         if pv_records is not None:
@@ -586,7 +586,7 @@ class DivaBase:
         return f""
 
     async def handle_spend_credit_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
         if profile is None:
             return
 
@@ -663,30 +663,30 @@ class DivaBase:
 
         return pv_result
 
-    def task_generateScoreData(self, data: Dict, pd_by_pv_id, song):
+    async def task_generateScoreData(self, data: Dict, pd_by_pv_id, song):
         
         if int(song) > 0:
             # the request do not send a edition so just perform a query best score and ranking for each edition.
             # 0=ORIGINAL, 1=EXTRA
-            pd_db_song_0 = self.data.score.get_best_user_score(
+            pd_db_song_0 = await self.data.score.get_best_user_score(
                 data["pd_id"], int(song), data["difficulty"], edition=0
             )
-            pd_db_song_1 = self.data.score.get_best_user_score(
+            pd_db_song_1 = await self.data.score.get_best_user_score(
                 data["pd_id"], int(song), data["difficulty"], edition=1
             )
 
             pd_db_ranking_0, pd_db_ranking_1 = None, None
             if pd_db_song_0:
-                pd_db_ranking_0 = self.data.score.get_global_ranking(
+                pd_db_ranking_0 = await self.data.score.get_global_ranking(
                     data["pd_id"], int(song), data["difficulty"], edition=0
                 )
 
             if pd_db_song_1:
-                pd_db_ranking_1 = self.data.score.get_global_ranking(
+                pd_db_ranking_1 = await self.data.score.get_global_ranking(
                     data["pd_id"], int(song), data["difficulty"], edition=1
                 )
 
-            pd_db_customize = self.data.pv_customize.get_pv_customize(
+            pd_db_customize = await self.data.pv_customize.get_pv_customize(
                 data["pd_id"], int(song)
             )
 
@@ -712,7 +712,7 @@ class DivaBase:
         pd_by_pv_id = []
 
         for song in song_id:
-            thread_ScoreData = Thread(target=self.task_generateScoreData(data, pd_by_pv_id, song))
+            thread_ScoreData = Thread(target=await self.task_generateScoreData(data, pd_by_pv_id, song))
             threads.append(thread_ScoreData)
 
         for x in threads:
@@ -735,7 +735,7 @@ class DivaBase:
         return f""
 
     async def handle_stage_result_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
 
         pd_song_list = data["stg_ply_pv_id"].split(",")
         pd_song_difficulty = data["stg_difficulty"].split(",")
@@ -753,14 +753,14 @@ class DivaBase:
 
         for index, value in enumerate(pd_song_list):
             if "-1" not in pd_song_list[index]:
-                profile_pd_db_song = self.data.score.get_best_user_score(
+                profile_pd_db_song = await self.data.score.get_best_user_score(
                     data["pd_id"],
                     pd_song_list[index],
                     pd_song_difficulty[index],
                     pd_song_edition[index],
                 )
                 if profile_pd_db_song is None:
-                    self.data.score.put_best_score(
+                    await self.data.score.put_best_score(
                         data["pd_id"],
                         self.version,
                         pd_song_list[index],
@@ -777,7 +777,7 @@ class DivaBase:
                         pd_song_worst_cnt[index],
                         pd_song_max_combo[index],
                     )
-                    self.data.score.put_playlog(
+                    await self.data.score.put_playlog(
                         data["pd_id"],
                         self.version,
                         pd_song_list[index],
@@ -795,7 +795,7 @@ class DivaBase:
                         pd_song_max_combo[index],
                     )
                 elif int(pd_song_max_score[index]) >= int(profile_pd_db_song["score"]):
-                    self.data.score.put_best_score(
+                    await self.data.score.put_best_score(
                         data["pd_id"],
                         self.version,
                         pd_song_list[index],
@@ -812,7 +812,7 @@ class DivaBase:
                         pd_song_worst_cnt[index],
                         pd_song_max_combo[index],
                     )
-                    self.data.score.put_playlog(
+                    await self.data.score.put_playlog(
                         data["pd_id"],
                         self.version,
                         pd_song_list[index],
@@ -830,7 +830,7 @@ class DivaBase:
                         pd_song_max_combo[index],
                     )
                 elif int(pd_song_max_score[index]) != int(profile_pd_db_song["score"]):
-                    self.data.score.put_playlog(
+                    await self.data.score.put_playlog(
                         data["pd_id"],
                         self.version,
                         pd_song_list[index],
@@ -851,7 +851,7 @@ class DivaBase:
         # Profile saving based on registration list
 
         # Calculate new level
-        best_scores = self.data.score.get_best_scores(data["pd_id"])
+        best_scores = await self.data.score.get_best_scores(data["pd_id"])
 
         total_atn_pnt = 0
         for best_score in best_scores:
@@ -865,7 +865,7 @@ class DivaBase:
         response += f"&lv_pnt_old={int(profile['lv_pnt'])}"
 
         # update the profile and commit changes to the db
-        self.data.profile.update_profile(
+        await self.data.profile.update_profile(
             profile["user"],
             lv_num=new_level,
             lv_pnt=new_level_pnt,
@@ -914,15 +914,15 @@ class DivaBase:
         return response
 
     async def handle_end_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
 
-        self.data.profile.update_profile(
+        await self.data.profile.update_profile(
             profile["user"], my_qst_id=data["my_qst_id"], my_qst_sts=data["my_qst_sts"]
         )
         return f""
 
     async def handle_shop_exit_request(self, data: Dict) -> Dict:
-        self.data.item.put_shop(
+        await self.data.item.put_shop(
             data["pd_id"],
             self.version,
             data["mdl_eqp_cmn_ary"],
@@ -930,7 +930,7 @@ class DivaBase:
             data["ms_itm_flg_cmn_ary"],
         )
         if int(data["use_pv_mdl_eqp"]) == 1:
-            self.data.pv_customize.put_pv_customize(
+            await self.data.pv_customize.put_pv_customize(
                 data["pd_id"],
                 self.version,
                 data["ply_pv_id"],
@@ -939,7 +939,7 @@ class DivaBase:
                 data["ms_itm_flg_pv_ary"],
             )
         else:
-            self.data.pv_customize.put_pv_customize(
+            await self.data.pv_customize.put_pv_customize(
                 data["pd_id"],
                 self.version,
                 data["ply_pv_id"],
@@ -952,7 +952,7 @@ class DivaBase:
         return response
 
     async def handle_card_procedure_request(self, data: Dict) -> str:
-        profile = self.data.profile.get_profile(data["aime_id"], self.version)
+        profile = await self.data.profile.get_profile(data["aime_id"], self.version)
         if profile is None:
             return "&cd_adm_result=0"
 
@@ -972,7 +972,7 @@ class DivaBase:
         return response
 
     async def handle_change_name_request(self, data: Dict) -> str:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
 
         # make sure user has enough Vocaloid Points
         if profile["vcld_pts"] < int(data["chg_name_price"]):
@@ -980,7 +980,7 @@ class DivaBase:
 
         # update the vocaloid points and player name
         new_vcld_pts = profile["vcld_pts"] - int(data["chg_name_price"])
-        self.data.profile.update_profile(
+        await self.data.profile.update_profile(
             profile["user"], player_name=data["player_name"], vcld_pts=new_vcld_pts
         )
 
@@ -992,14 +992,14 @@ class DivaBase:
         return response
 
     async def handle_change_passwd_request(self, data: Dict) -> str:
-        profile = self.data.profile.get_profile(data["pd_id"], self.version)
+        profile = await self.data.profile.get_profile(data["pd_id"], self.version)
 
         # TODO: return correct error number instead of 0
         if data["passwd"] != profile["passwd"]:
             return "&cd_adm_result=0"
 
         # set password to true and update the saved password
-        self.data.profile.update_profile(
+        await self.data.profile.update_profile(
             profile["user"], passwd_stat=1, passwd=data["new_passwd"]
         )
 

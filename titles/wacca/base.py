@@ -98,9 +98,9 @@ class WaccaBase:
         req = HousingStartRequestV1(data)
         allnet_region_id = None
 
-        machine = self.data.arcade.get_machine(req.chipId)
+        machine = await self.data.arcade.get_machine(req.chipId)
         if machine is not None:
-            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            arcade = await self.data.arcade.get_arcade(machine["arcade"])
             allnet_region_id = arcade["region_id"]
 
         if req.appVersion.country == AllnetCountryCode.JAPAN.value:
@@ -139,7 +139,7 @@ class WaccaBase:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV1Response()
 
-        profile = self.data.profile.get_profile(aime_id=req.aimeId)
+        profile = await self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
             self.logger.info(f"No user exists for aime id {req.aimeId}")
             resp.profileStatus = ProfileStatus.ProfileRegister
@@ -159,14 +159,14 @@ class WaccaBase:
         resp.userStatus.wp = profile["wp"]
         resp.userStatus.useCount = profile["login_count"]
 
-        set_title_id = self.data.profile.get_options(
+        set_title_id = await self.data.profile.get_options(
             WaccaConstants.OPTIONS["set_title_id"], profile["user"]
         )
         if set_title_id is None:
             set_title_id = self.OPTIONS_DEFAULTS["set_title_id"]
         resp.setTitleId = set_title_id
 
-        set_icon_id = self.data.profile.get_options(
+        set_icon_id = await self.data.profile.get_options(
             WaccaConstants.OPTIONS["set_title_id"], profile["user"]
         )
         if set_icon_id is None:
@@ -191,7 +191,7 @@ class WaccaBase:
             resp.lastLoginDate = 0
 
         else:
-            profile = self.data.profile.get_profile(req.userId)
+            profile = await self.data.profile.get_profile(req.userId)
             if profile is None:
                 self.logger.warning(
                     f"Unknown user id {req.userId} attempted login from {req.chipId}"
@@ -215,7 +215,7 @@ class WaccaBase:
             if midnight_today_ts - last_login_time > 86400:
                 is_consec_day = False
 
-            self.data.profile.session_login(
+            await self.data.profile.session_login(
                 req.userId, resp.firstLoginDaily, is_consec_day
             )
 
@@ -230,7 +230,7 @@ class WaccaBase:
     async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
 
-        profileId = self.data.profile.create_profile(
+        profileId = await self.data.profile.create_profile(
             req.aimeId, req.username, self.version
         )
 
@@ -239,30 +239,30 @@ class WaccaBase:
         
         if profileId == 0:
             # We've already made this profile, just return success
-            new_user = self.data.profile.get_profile(aime_id=req.aimeId)
+            new_user = await self.data.profile.get_profile(aime_id=req.aimeId)
             profileId = new_user['id']
 
         # Insert starting items
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104001)
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104002)
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104003)
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104005)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104001)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104002)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104003)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["title"], 104005)
 
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["icon"], 102001)
-        self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["icon"], 102002)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["icon"], 102001)
+        await self.data.item.put_item(req.aimeId, WaccaConstants.ITEM_TYPES["icon"], 102002)
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["note_color"], 103001
         )
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["note_color"], 203001
         )
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["note_sound"], 105001
         )
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210001
         )
 
@@ -272,7 +272,7 @@ class WaccaBase:
         req = UserStatusGetDetailRequest(data)
         resp = UserStatusGetDetailResponseV1()
 
-        profile = self.data.profile.get_profile(req.userId)
+        profile = await self.data.profile.get_profile(req.userId)
         if profile is None:
             self.logger.warning(f"Unknown profile {req.userId}")
             return resp.make()
@@ -280,12 +280,12 @@ class WaccaBase:
         self.logger.info(f"Get detail for profile {req.userId}")
         user_id = profile["user"]
 
-        profile_scores = self.data.score.get_best_scores(user_id)
-        profile_items = self.data.item.get_items(user_id)
-        profile_song_unlocks = self.data.item.get_song_unlocks(user_id)
-        profile_options = self.data.profile.get_options(user_id)
-        profile_trophies = self.data.item.get_trophies(user_id)
-        profile_tickets = self.data.item.get_tickets(user_id)
+        profile_scores = await self.data.score.get_best_scores(user_id)
+        profile_items = await self.data.item.get_items(user_id)
+        profile_song_unlocks = await self.data.item.get_song_unlocks(user_id)
+        profile_options = await self.data.profile.get_options(user_id)
+        profile_trophies = await self.data.item.get_trophies(user_id)
+        profile_tickets = await self.data.item.get_tickets(user_id)
 
         resp.songUpdateTime = int(profile["last_login_date"].timestamp())
         resp.songPlayStatus = [profile["last_song_id"], 1]
@@ -437,7 +437,7 @@ class WaccaBase:
         req = UserTrialGetRequest(data)
         resp = UserTrialGetResponse()
 
-        user_id = self.data.profile.profile_to_aime_user(req.profileId)
+        user_id = await self.data.profile.profile_to_aime_user(req.profileId)
         if user_id is None:
             self.logger.error(
                 f"handle_user_trial_get_request: No profile with id {req.profileId}"
@@ -445,7 +445,7 @@ class WaccaBase:
             return resp.make()
 
         self.logger.info(f"Get trial info for user {req.profileId}")
-        stages = self.data.score.get_stageup(user_id, self.version)
+        stages = await self.data.score.get_stageup(user_id, self.version)
         if stages is None:
             stages = []
 
@@ -485,15 +485,15 @@ class WaccaBase:
         while len(req.songScores) < 3:
             req.songScores.append(0)
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
 
         user_id = profile["user"]
-        old_stage = self.data.score.get_stageup_stage(
+        old_stage = await self.data.score.get_stageup_stage(
             user_id, self.version, req.stageId
         )
 
         if old_stage is None:
-            self.data.score.put_stageup(
+            await self.data.score.put_stageup(
                 user_id,
                 self.version,
                 req.stageId,
@@ -519,7 +519,7 @@ class WaccaBase:
                 best_score2 = old_stage["song2_score"]
                 best_score3 = old_stage["song3_score"]
 
-            self.data.score.put_stageup(
+            await self.data.score.put_stageup(
                 user_id,
                 self.version,
                 req.stageId,
@@ -537,17 +537,17 @@ class WaccaBase:
                 req.stageLevel == profile["dan_level"]
                 and req.clearType.value > profile["dan_type"]
             ):
-                self.data.profile.update_profile_dan(
+                await self.data.profile.update_profile_dan(
                     req.profileId, req.stageLevel, req.clearType.value
                 )
 
-        self.util_put_items(req.profileId, user_id, req.itemsObtained)
+        await self.util_put_items(req.profileId, user_id, req.itemsObtained)
 
         # user/status/update isn't called after stageup so we have to do some things now
-        current_icon = self.data.profile.get_options(
+        current_icon = await self.data.profile.get_options(
             user_id, WaccaConstants.OPTIONS["set_icon_id"]
         )
-        current_nav = self.data.profile.get_options(
+        current_nav = await self.data.profile.get_options(
             user_id, WaccaConstants.OPTIONS["set_nav_id"]
         )
 
@@ -560,13 +560,13 @@ class WaccaBase:
         else:
             current_nav = current_nav["value"]
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             user_id, WaccaConstants.ITEM_TYPES["icon"], current_icon
         )
-        self.data.item.put_item(
+        await self.data.item.put_item(
             user_id, WaccaConstants.ITEM_TYPES["navigator"], current_nav
         )
-        self.data.profile.update_profile_playtype(
+        await self.data.profile.update_profile_playtype(
             req.profileId, 4, data["appVersion"][:7]
         )
         return BaseResponse().make()
@@ -583,16 +583,16 @@ class WaccaBase:
             req = UserSugarokuUpdateRequestV2(data)
             mission_flg = req.mission_flag
 
-        user_id = self.data.profile.profile_to_aime_user(req.profileId)
+        user_id = await self.data.profile.profile_to_aime_user(req.profileId)
         if user_id is None:
             self.logger.info(
                 f"handle_user_sugoroku_update_request unknwon profile ID {req.profileId}"
             )
             return resp.make()
 
-        self.util_put_items(req.profileId, user_id, req.itemsObtainted)
+        await self.util_put_items(req.profileId, user_id, req.itemsObtainted)
 
-        self.data.profile.update_gate(
+        await self.data.profile.update_gate(
             user_id,
             req.gateId,
             req.page,
@@ -609,13 +609,13 @@ class WaccaBase:
     async def handle_user_music_unlock_request(self, data: Dict) -> Dict:
         req = UserMusicUnlockRequest(data)
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
         if profile is None:
             return BaseResponse().make()
         user_id = profile["user"]
         current_wp = profile["wp"]
 
-        tickets = self.data.item.get_tickets(user_id)
+        tickets = await self.data.item.get_tickets(user_id)
         new_tickets: List[TicketItem] = []
 
         for ticket in tickets:
@@ -628,7 +628,7 @@ class WaccaBase:
             ):
                 if current_wp >= item.quantity:
                     current_wp -= item.quantity
-                    self.data.profile.spend_wp(req.profileId, item.quantity)
+                    await self.data.profile.spend_wp(req.profileId, item.quantity)
                 else:
                     return BaseResponse().make()
 
@@ -641,21 +641,21 @@ class WaccaBase:
                         self.logger.debug(
                             f"Remove ticket ID {new_tickets[x].userTicketId} type {new_tickets[x].ticketId} from {user_id}"
                         )
-                        self.data.item.spend_ticket(new_tickets[x].userTicketId)
+                        await self.data.item.spend_ticket(new_tickets[x].userTicketId)
                         new_tickets.pop(x)
                         break
 
         # wp, ticket info
         if req.difficulty > WaccaConstants.Difficulty.HARD.value:
-            old_score = self.data.score.get_best_score(
+            old_score = await self.data.score.get_best_score(
                 user_id, req.songId, req.difficulty
             )
             if not old_score:
-                self.data.score.put_best_score(
+                await self.data.score.put_best_score(
                     user_id, req.songId, req.difficulty, 0, [0] * 5, [0] * 13, 0, 0
                 )
 
-        self.data.item.unlock_song(
+        await self.data.item.unlock_song(
             user_id,
             req.songId,
             req.difficulty
@@ -698,7 +698,7 @@ class WaccaBase:
             )
             return resp.make()
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
 
         if profile is None:
             self.logger.warning(
@@ -707,7 +707,7 @@ class WaccaBase:
             return resp.make()
 
         user_id = profile["user"]
-        self.util_put_items(req.profileId, user_id, req.itemsObtained)
+        await self.util_put_items(req.profileId, user_id, req.itemsObtained)
 
         playlog_clear_status = (
             req.songDetail.flagCleared
@@ -716,7 +716,7 @@ class WaccaBase:
             + req.songDetail.flagAllMarvelous
         )
 
-        self.data.score.put_playlog(
+        await self.data.score.put_playlog(
             user_id,
             req.songDetail.songId,
             req.songDetail.difficulty,
@@ -733,7 +733,7 @@ class WaccaBase:
             self.season,
         )
 
-        old_score = self.data.score.get_best_score(
+        old_score = await self.data.score.get_best_score(
             user_id, req.songDetail.songId, req.songDetail.difficulty
         )
 
@@ -749,7 +749,7 @@ class WaccaBase:
 
             grades[req.songDetail.grade.value - 1] = 1
 
-            self.data.score.put_best_score(
+            await self.data.score.put_best_score(
                 user_id,
                 req.songDetail.songId,
                 req.songDetail.difficulty,
@@ -805,7 +805,7 @@ class WaccaBase:
                 old_score["rating"],
             )
 
-            self.data.score.put_best_score(
+            await self.data.score.put_best_score(
                 user_id,
                 req.songDetail.songId,
                 req.songDetail.difficulty,
@@ -846,17 +846,17 @@ class WaccaBase:
         req = UserMissionUpdateRequest(data)
         page_status = req.params[1][1]
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
         if profile is None:
             return BaseResponse().make()
 
         if len(req.itemsObtained) > 0:
-            self.util_put_items(req.profileId, profile["user"], req.itemsObtained)
+            await self.util_put_items(req.profileId, profile["user"], req.itemsObtained)
 
-        self.data.profile.update_bingo(
+        await self.data.profile.update_bingo(
             profile["user"], req.bingoDetail.pageNumber, page_status
         )
-        self.data.profile.update_tutorial_flags(req.profileId, req.params[3])
+        await self.data.profile.update_tutorial_flags(req.profileId, req.params[3])
 
         return BaseResponse().make()
 
@@ -864,7 +864,7 @@ class WaccaBase:
         req = UserGoodsPurchaseRequest(data)
         resp = UserGoodsPurchaseResponse()
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
         if profile is None:
             return BaseResponse().make()
 
@@ -876,20 +876,20 @@ class WaccaBase:
             and not self.game_config.mods.infinite_wp
         ):
             resp.currentWp -= req.cost
-            self.data.profile.spend_wp(req.profileId, req.cost)
+            await self.data.profile.spend_wp(req.profileId, req.cost)
 
         elif req.purchaseType == PurchaseType.PurchaseTypeCredit:
             self.logger.info(
                 f"User {req.profileId} Purchased item {req.itemObtained.itemType} id {req.itemObtained.itemId} for {req.cost} credits on machine {req.chipId}"
             )
 
-        self.util_put_items(req.profileId, user_id, [req.itemObtained])
+        await self.util_put_items(req.profileId, user_id, [req.itemObtained])
 
         if self.game_config.mods.infinite_tickets:
             for x in range(5):
                 resp.tickets.append(TicketItem(x, 106002, 0))
         else:
-            tickets = self.data.item.get_tickets(user_id)
+            tickets = await self.data.item.get_tickets(user_id)
 
             for ticket in tickets:
                 resp.tickets.append(
@@ -914,7 +914,7 @@ class WaccaBase:
     async def handle_user_rating_update_request(self, data: Dict) -> Dict:
         req = UserRatingUpdateRequest(data)
 
-        user_id = self.data.profile.profile_to_aime_user(req.profileId)
+        user_id = await self.data.profile.profile_to_aime_user(req.profileId)
 
         if user_id is None:
             self.logger.error(
@@ -923,33 +923,33 @@ class WaccaBase:
             return BaseResponse().make()
 
         for song in req.songs:
-            self.data.score.update_song_rating(
+            await self.data.score.update_song_rating(
                 user_id, song.songId, song.difficulty, song.rating
             )
 
-        self.data.profile.update_user_rating(req.profileId, req.totalRating)
+        await self.data.profile.update_user_rating(req.profileId, req.totalRating)
 
         return BaseResponse().make()
 
     async def handle_user_status_update_request(self, data: Dict) -> Dict:
         req = UserStatusUpdateRequestV1(data)
 
-        user_id = self.data.profile.profile_to_aime_user(req.profileId)
+        user_id = await self.data.profile.profile_to_aime_user(req.profileId)
         if user_id is None:
             self.logger.info(
                 f"handle_user_status_update_request: No profile with ID {req.profileId}"
             )
             return BaseResponse().make()
 
-        self.util_put_items(req.profileId, user_id, req.itemsRecieved)
-        self.data.profile.update_profile_playtype(
+        await self.util_put_items(req.profileId, user_id, req.itemsRecieved)
+        await self.data.profile.update_profile_playtype(
             req.profileId, req.playType.value, data["appVersion"][:7]
         )
 
-        current_icon = self.data.profile.get_options(
+        current_icon = await self.data.profile.get_options(
             user_id, WaccaConstants.OPTIONS["set_icon_id"]
         )
-        current_nav = self.data.profile.get_options(
+        current_nav = await self.data.profile.get_options(
             user_id, WaccaConstants.OPTIONS["set_nav_id"]
         )
 
@@ -962,10 +962,10 @@ class WaccaBase:
         else:
             current_nav = current_nav["value"]
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             user_id, WaccaConstants.ITEM_TYPES["icon"], current_icon
         )
-        self.data.item.put_item(
+        await self.data.item.put_item(
             user_id, WaccaConstants.ITEM_TYPES["navigator"], current_nav
         )
         return BaseResponse().make()
@@ -973,19 +973,19 @@ class WaccaBase:
     async def handle_user_info_update_request(self, data: Dict) -> Dict:
         req = UserInfoUpdateRequest(data)
 
-        user_id = self.data.profile.profile_to_aime_user(req.profileId)
+        user_id = await self.data.profile.profile_to_aime_user(req.profileId)
 
         for opt in req.optsUpdated:
-            self.data.profile.update_option(user_id, opt.optId, opt.optVal)
+            await self.data.profile.update_option(user_id, opt.optId, opt.optVal)
 
         for update in req.datesUpdated:
             pass
 
         for fav in req.favoritesAdded:
-            self.data.profile.add_favorite_song(user_id, fav)
+            await self.data.profile.add_favorite_song(user_id, fav)
 
         for unfav in req.favoritesRemoved:
-            self.data.profile.remove_favorite_song(user_id, unfav)
+            await self.data.profile.remove_favorite_song(user_id, unfav)
 
         return BaseResponse().make()
 
@@ -993,7 +993,7 @@ class WaccaBase:
         req = UserVipGetRequest(data)
         resp = UserVipGetResponse()
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
         if profile is None:
             self.logger.warning(
                 f"handle_user_vip_get_request no profile with ID {req.profileId}"
@@ -1024,7 +1024,7 @@ class WaccaBase:
     async def handle_user_vip_start_request(self, data: Dict) -> Dict:
         req = UserVipStartRequest(data)
 
-        profile = self.data.profile.get_profile(req.profileId)
+        profile = await self.data.profile.get_profile(req.profileId)
         if profile is None:
             return BaseResponse().make()
 
@@ -1040,10 +1040,10 @@ class WaccaBase:
             ).make()
 
         vip_exp_time = self.srvtime + timedelta(days=req.days)
-        self.data.profile.update_vip_time(req.profileId, vip_exp_time)
+        await self.data.profile.update_vip_time(req.profileId, vip_exp_time)
         return UserVipStartResponse(int(vip_exp_time.timestamp())).make()
 
-    def util_put_items(
+    async def util_put_items(
         self, profile_id: int, user_id: int, items_obtained: List[GenericItemRecv]
     ) -> None:
         if user_id is None or profile_id <= 0:
@@ -1052,10 +1052,10 @@ class WaccaBase:
         if items_obtained:
             for item in items_obtained:
                 if item.itemType == WaccaConstants.ITEM_TYPES["xp"]:
-                    self.data.profile.add_xp(profile_id, item.quantity)
+                    await self.data.profile.add_xp(profile_id, item.quantity)
 
                 elif item.itemType == WaccaConstants.ITEM_TYPES["wp"]:
-                    self.data.profile.add_wp(profile_id, item.quantity)
+                    await self.data.profile.add_wp(profile_id, item.quantity)
 
                 elif (
                     item.itemType
@@ -1063,11 +1063,11 @@ class WaccaBase:
                     or item.itemType == WaccaConstants.ITEM_TYPES["music_unlock"]
                 ):
                     if item.quantity > WaccaConstants.Difficulty.HARD.value:
-                        old_score = self.data.score.get_best_score(
+                        old_score = await self.data.score.get_best_score(
                             user_id, item.itemId, item.quantity
                         )
                         if not old_score:
-                            self.data.score.put_best_score(
+                            await self.data.score.put_best_score(
                                 user_id,
                                 item.itemId,
                                 item.quantity,
@@ -1080,18 +1080,18 @@ class WaccaBase:
 
                     if item.quantity == 0:
                         item.quantity = WaccaConstants.Difficulty.HARD.value
-                    self.data.item.unlock_song(user_id, item.itemId, item.quantity)
+                    await self.data.item.unlock_song(user_id, item.itemId, item.quantity)
 
                 elif item.itemType == WaccaConstants.ITEM_TYPES["ticket"]:
-                    self.data.item.add_ticket(user_id, item.itemId)
+                    await self.data.item.add_ticket(user_id, item.itemId)
 
                 elif item.itemType == WaccaConstants.ITEM_TYPES["trophy"]:
-                    self.data.item.update_trophy(
+                    await self.data.item.update_trophy(
                         user_id, item.itemId, self.season, item.quantity, 0
                     )
 
                 else:
-                    self.data.item.put_item(user_id, item.itemType, item.itemId)
+                    await self.data.item.put_item(user_id, item.itemType, item.itemId)
 
     def util_calc_song_rating(self, score: int, difficulty: float) -> int:
         if score >= 990000:

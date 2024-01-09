@@ -25,7 +25,7 @@ class CxbRev(CxbBase):
             score_data = json.loads(data["putlog"]["data"])
             userid = score_data["usid"]
 
-            self.data.score.put_playlog(
+            await self.data.score.put_playlog(
                 userid,
                 score_data["mcode"],
                 score_data["difficulty"],

@@ -18,7 +18,6 @@ title:
   loglevel: "info"
   reboot_start_time: "04:00"
   reboot_end_time: "05:00"
-  ssl_key: "cert/title.key"
 
 database:
   host: "localhost"

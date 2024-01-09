@@ -38,20 +38,20 @@ class ChuniBase:
             return {"returnCode": 1}
 
         user_id = data["userId"]
-        login_bonus_presets = self.data.static.get_login_bonus_presets(self.version)
+        login_bonus_presets = await self.data.static.get_login_bonus_presets(self.version)
 
         for preset in login_bonus_presets:
             # check if a user already has some pogress and if not add the
             # login bonus entry
-            user_login_bonus = self.data.item.get_login_bonus(
+            user_login_bonus = await self.data.item.get_login_bonus(
                 user_id, self.version, preset["presetId"]
             )
             if user_login_bonus is None:
-                self.data.item.put_login_bonus(
+                await self.data.item.put_login_bonus(
                     user_id, self.version, preset["presetId"]
                 )
                 # yeah i'm lazy
-                user_login_bonus = self.data.item.get_login_bonus(
+                user_login_bonus = await self.data.item.get_login_bonus(
                     user_id, self.version, preset["presetId"]
                 )
 
@@ -67,7 +67,7 @@ class ChuniBase:
                 bonus_count = user_login_bonus["bonusCount"] + 1
                 last_update_date = datetime.now()
 
-                all_login_boni = self.data.static.get_login_bonus(
+                all_login_boni = await self.data.static.get_login_bonus(
                     self.version, preset["presetId"]
                 )
 
@@ -91,13 +91,13 @@ class ChuniBase:
                         is_finished = True
 
                 # grab the item for the corresponding day
-                login_item = self.data.static.get_login_bonus_by_required_days(
+                login_item = await self.data.static.get_login_bonus_by_required_days(
                     self.version, preset["presetId"], bonus_count
                 )
                 if login_item is not None:
                     # now add the present to the database so the
                     # handle_get_user_item_api_request can grab them
-                    self.data.item.put_item(
+                    await self.data.item.put_item(
                         user_id,
                         {
                             "itemId": login_item["presentId"],
@@ -107,7 +107,7 @@ class ChuniBase:
                         },
                     )
 
-                self.data.item.put_login_bonus(
+                await self.data.item.put_login_bonus(
                     user_id,
                     self.version,
                     preset["presetId"],
@@ -124,7 +124,7 @@ class ChuniBase:
         return {"returnCode": 1}
 
     async def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
-        game_charge_list = self.data.static.get_enabled_charges(self.version)
+        game_charge_list = await self.data.static.get_enabled_charges(self.version)
 
         if game_charge_list is None or len(game_charge_list) == 0:
             return {"length": 0, "gameChargeList": []}
@@ -146,7 +146,7 @@ class ChuniBase:
         return {"length": len(charges), "gameChargeList": charges}
 
     async def handle_get_game_event_api_request(self, data: Dict) -> Dict:
-        game_events = self.data.static.get_enabled_events(self.version)
+        game_events = await self.data.static.get_enabled_events(self.version)
 
         if game_events is None or len(game_events) == 0:
             self.logger.warning("No enabled events, did you run the reader?")
@@ -194,7 +194,7 @@ class ChuniBase:
         }
 
     async def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        rankings = self.data.score.get_rankings(self.version)
+        rankings = await self.data.score.get_rankings(self.version)
         return {"type": data["type"], "gameRankingList": rankings}
 
     async def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
@@ -241,7 +241,7 @@ class ChuniBase:
             "isAou": "false",
         }
     async def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
-        user_activity_list = self.data.profile.get_profile_activity(
+        user_activity_list = await self.data.profile.get_profile_activity(
             data["userId"], data["kind"]
         )
 
@@ -262,7 +262,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_character_api_request(self, data: Dict) -> Dict:
-        characters = self.data.item.get_characters(data["userId"])
+        characters = await self.data.item.get_characters(data["userId"])
         if characters is None:
             return {
                 "userId": data["userId"],
@@ -297,7 +297,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
-        user_charge_list = self.data.profile.get_profile_charge(data["userId"])
+        user_charge_list = await self.data.profile.get_profile_charge(data["userId"])
 
         charge_list = []
         for charge in user_charge_list:
@@ -320,7 +320,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_course_api_request(self, data: Dict) -> Dict:
-        user_course_list = self.data.score.get_courses(data["userId"])
+        user_course_list = await self.data.score.get_courses(data["userId"])
         if user_course_list is None:
             return {
                 "userId": data["userId"],
@@ -355,7 +355,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_data_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_data(data["userId"], self.version)
+        p = await self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -367,7 +367,7 @@ class ChuniBase:
         return {"userId": data["userId"], "userData": profile}
 
     async def handle_get_user_data_ex_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_data_ex(data["userId"], self.version)
+        p = await self.data.profile.get_profile_data_ex(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -379,7 +379,7 @@ class ChuniBase:
         return {"userId": data["userId"], "userDataEx": profile}
 
     async def handle_get_user_duel_api_request(self, data: Dict) -> Dict:
-        user_duel_list = self.data.item.get_duels(data["userId"])
+        user_duel_list = await self.data.item.get_duels(data["userId"])
         if user_duel_list is None:
             return {}
 
@@ -397,7 +397,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_rival(data["rivalId"])
+        p = await self.data.profile.get_rival(data["rivalId"])
         if p is None:
             return {}
         userRivalData = {
@@ -416,7 +416,7 @@ class ChuniBase:
         user_rival_music_list = []
 
         # Fetch all the rival music entries for the user
-        all_entries = self.data.score.get_rival_music(rival_id)
+        all_entries = await self.data.score.get_rival_music(rival_id)
 
         # Process the entries based on max_count and nextIndex
         for music in all_entries:
@@ -467,7 +467,7 @@ class ChuniBase:
 
         # still needs to be implemented on WebUI
         # 1: Music, 2: User, 3: Character
-        fav_list = self.data.item.get_all_favorites(
+        fav_list = await self.data.item.get_all_favorites(
             data["userId"], self.version, fav_kind=int(data["kind"])
         )
         if fav_list is not None:
@@ -492,7 +492,7 @@ class ChuniBase:
     async def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(int(data["nextIndex"]) / 10000000000)
         next_idx = int(int(data["nextIndex"]) % 10000000000)
-        user_item_list = self.data.item.get_items(data["userId"], kind)
+        user_item_list = await self.data.item.get_items(data["userId"], kind)
 
         if user_item_list is None or len(user_item_list) == 0:
             return {
@@ -528,7 +528,7 @@ class ChuniBase:
 
     async def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
-        user_login_bonus = self.data.item.get_all_login_bonus(user_id, self.version)
+        user_login_bonus = await self.data.item.get_all_login_bonus(user_id, self.version)
         # ignore the loginBonus request if its disabled in config
         if user_login_bonus is None or not self.game_cfg.mods.use_login_bonus:
             return {"userId": user_id, "length": 0, "userLoginBonusList": []}
@@ -553,7 +553,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_map_api_request(self, data: Dict) -> Dict:
-        user_map_list = self.data.item.get_maps(data["userId"])
+        user_map_list = await self.data.item.get_maps(data["userId"])
         if user_map_list is None:
             return {}
 
@@ -571,7 +571,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        music_detail = self.data.score.get_scores(data["userId"])
+        music_detail = await self.data.score.get_scores(data["userId"])
         if music_detail is None:
             return {
                 "userId": data["userId"],
@@ -630,7 +630,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_option_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_option(data["userId"])
+        p = await self.data.profile.get_profile_option(data["userId"])
 
         option = p._asdict()
         option.pop("id")
@@ -639,7 +639,7 @@ class ChuniBase:
         return {"userId": data["userId"], "userGameOption": option}
 
     async def handle_get_user_option_ex_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_option_ex(data["userId"])
+        p = await self.data.profile.get_profile_option_ex(data["userId"])
 
         option = p._asdict()
         option.pop("id")
@@ -651,10 +651,10 @@ class ChuniBase:
         return bytes([ord(c) for c in src]).decode("utf-8")
 
     async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_preview(data["userId"], self.version)
+        profile = await self.data.profile.get_profile_preview(data["userId"], self.version)
         if profile is None:
             return None
-        profile_character = self.data.item.get_character(
+        profile_character = await self.data.item.get_character(
             data["userId"], profile["characterId"]
         )
 
@@ -693,7 +693,7 @@ class ChuniBase:
         }
 
     async def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
-        recent_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
+        recent_rating_list = await self.data.profile.get_profile_recent_rating(data["userId"])
         if recent_rating_list is None:
             return {
                 "userId": data["userId"],
@@ -722,15 +722,15 @@ class ChuniBase:
         team_rank = 0
 
         # Get user profile
-        profile = self.data.profile.get_profile_data(data["userId"], self.version)
+        profile = await self.data.profile.get_profile_data(data["userId"], self.version)
         if profile and profile["teamId"]:
             # Get team by id
-            team = self.data.profile.get_team_by_id(profile["teamId"])
+            team = await self.data.profile.get_team_by_id(profile["teamId"])
 
             if team:
                 team_id = team["id"]
                 team_name = team["teamName"]
-                team_rank = self.data.profile.get_team_rank(team["id"])
+                team_rank = await self.data.profile.get_team_rank(team["id"])
 
         # Don't return anything if no team name has been defined for defaults and there is no team set for the player
         if not profile["teamId"] and team_name == "":
@@ -819,58 +819,58 @@ class ChuniBase:
             except Exception:
                 pass
 
-            self.data.profile.put_profile_data(
+            await self.data.profile.put_profile_data(
                 user_id, self.version, upsert["userData"][0]
             )
 
         if "userDataEx" in upsert:
-            self.data.profile.put_profile_data_ex(
+            await self.data.profile.put_profile_data_ex(
                 user_id, self.version, upsert["userDataEx"][0]
             )
 
         if "userGameOption" in upsert:
-            self.data.profile.put_profile_option(user_id, upsert["userGameOption"][0])
+            await self.data.profile.put_profile_option(user_id, upsert["userGameOption"][0])
 
         if "userGameOptionEx" in upsert:
-            self.data.profile.put_profile_option_ex(
+            await self.data.profile.put_profile_option_ex(
                 user_id, upsert["userGameOptionEx"][0]
             )
         if "userRecentRatingList" in upsert:
-            self.data.profile.put_profile_recent_rating(
+            await self.data.profile.put_profile_recent_rating(
                 user_id, upsert["userRecentRatingList"]
             )
 
         if "userCharacterList" in upsert:
             for character in upsert["userCharacterList"]:
-                self.data.item.put_character(user_id, character)
+                await self.data.item.put_character(user_id, character)
 
         if "userMapList" in upsert:
             for map in upsert["userMapList"]:
-                self.data.item.put_map(user_id, map)
+                await self.data.item.put_map(user_id, map)
 
         if "userCourseList" in upsert:
             for course in upsert["userCourseList"]:
-                self.data.score.put_course(user_id, course)
+                await self.data.score.put_course(user_id, course)
 
         if "userDuelList" in upsert:
             for duel in upsert["userDuelList"]:
-                self.data.item.put_duel(user_id, duel)
+                await self.data.item.put_duel(user_id, duel)
 
         if "userItemList" in upsert:
             for item in upsert["userItemList"]:
-                self.data.item.put_item(user_id, item)
+                await self.data.item.put_item(user_id, item)
 
         if "userActivityList" in upsert:
             for activity in upsert["userActivityList"]:
-                self.data.profile.put_profile_activity(user_id, activity)
+                await self.data.profile.put_profile_activity(user_id, activity)
 
         if "userChargeList" in upsert:
             for charge in upsert["userChargeList"]:
-                self.data.profile.put_profile_charge(user_id, charge)
+                await self.data.profile.put_profile_charge(user_id, charge)
 
         if "userMusicDetailList" in upsert:
             for song in upsert["userMusicDetailList"]:
-                self.data.score.put_score(user_id, song)
+                await self.data.score.put_score(user_id, song)
 
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:
@@ -881,7 +881,7 @@ class ChuniBase:
                   playlog["playedUserName2"] = self.read_wtf8(playlog["playedUserName2"])
                 if playlog["playedUserName3"] is not None:
                   playlog["playedUserName3"] = self.read_wtf8(playlog["playedUserName3"])
-                self.data.score.put_playlog(user_id, playlog, self.version)
+                await self.data.score.put_playlog(user_id, playlog, self.version)
 
         if "userTeamPoint" in upsert:
             team_points = upsert["userTeamPoint"]
@@ -889,7 +889,7 @@ class ChuniBase:
                 for tp in team_points:
                     if tp["teamId"] != '65535':
                         # Fetch the current team data
-                        current_team = self.data.profile.get_team_by_id(tp["teamId"])
+                        current_team = await self.data.profile.get_team_by_id(tp["teamId"])
 
                         # Calculate the new teamPoint
                         new_team_point = int(tp["teamPoint"]) + current_team["teamPoint"]
@@ -900,24 +900,24 @@ class ChuniBase:
                         }
 
                         # Update the team data
-                        self.data.profile.update_team(tp["teamId"], team_data)
+                        await self.data.profile.update_team(tp["teamId"], team_data)
             except:
                 pass # Probably a better way to catch if the team is not set yet (new profiles), but let's just pass
         if "userMapAreaList" in upsert:
             for map_area in upsert["userMapAreaList"]:
-                self.data.item.put_map_area(user_id, map_area)
+                await self.data.item.put_map_area(user_id, map_area)
 
         if "userOverPowerList" in upsert:
             for overpower in upsert["userOverPowerList"]:
-                self.data.profile.put_profile_overpower(user_id, overpower)
+                await self.data.profile.put_profile_overpower(user_id, overpower)
 
         if "userEmoneyList" in upsert:
             for emoney in upsert["userEmoneyList"]:
-                self.data.profile.put_profile_emoney(user_id, emoney)
+                await self.data.profile.put_profile_emoney(user_id, emoney)
 
         if "userLoginBonusList" in upsert:
             for login in upsert["userLoginBonusList"]:
-                self.data.item.put_login_bonus(
+                await self.data.item.put_login_bonus(
                     user_id, self.version, login["presetId"], isWatched=True
                 )
         
@@ -930,7 +930,7 @@ class ChuniBase:
     async def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
         # add tickets after they got bought, this makes sure the tickets are
         # still valid after an unsuccessful logout
-        self.data.profile.put_profile_charge(data["userId"], data["userCharge"])
+        await self.data.profile.put_profile_charge(data["userId"], data["userCharge"])
         return {"returnCode": "1"}
 
     async def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:

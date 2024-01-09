@@ -102,7 +102,7 @@ class ChuniNew(ChuniBase):
         return {"returnCode": "1"}
 
     async def handle_get_user_map_area_api_request(self, data: Dict) -> Dict:
-        user_map_areas = self.data.item.get_map_areas(data["userId"])
+        user_map_areas = await self.data.item.get_map_areas(data["userId"])
 
         map_areas = []
         for map_area in user_map_areas:
@@ -117,10 +117,10 @@ class ChuniNew(ChuniBase):
         return {"userId": data["userId"], "symbolCharInfoList": []}
 
     async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_preview(data["userId"], self.version)
+        profile = await self.data.profile.get_profile_preview(data["userId"], self.version)
         if profile is None:
             return None
-        profile_character = self.data.item.get_character(
+        profile_character = await self.data.item.get_character(
             data["userId"], profile["characterId"]
         )
 
@@ -165,7 +165,7 @@ class ChuniNew(ChuniBase):
         return data1
 
     async def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_data(data["userId"], self.version)
+        p = await self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -187,7 +187,7 @@ class ChuniNew(ChuniBase):
         """
         returns all current active banners (gachas)
         """
-        game_gachas = self.data.static.get_gachas(self.version)
+        game_gachas = await self.data.static.get_gachas(self.version)
 
         # clean the database rows
         game_gacha_list = []
@@ -217,7 +217,7 @@ class ChuniNew(ChuniBase):
         """
         returns all valid cards for a given gachaId
         """
-        game_gacha_cards = self.data.static.get_gacha_cards(data["gachaId"])
+        game_gacha_cards = await self.data.static.get_gacha_cards(data["gachaId"])
 
         game_gacha_card_list = []
         for gacha_card in game_gacha_cards:
@@ -238,7 +238,7 @@ class ChuniNew(ChuniBase):
         }
 
     async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_data(data["userId"], self.version)
+        p = await self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
@@ -263,7 +263,7 @@ class ChuniNew(ChuniBase):
         }
 
     async def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
-        user_gachas = self.data.item.get_user_gachas(data["userId"])
+        user_gachas = await self.data.item.get_user_gachas(data["userId"])
         if user_gachas is None:
             return {"userId": data["userId"], "length": 0, "userGachaList": []}
 
@@ -282,7 +282,7 @@ class ChuniNew(ChuniBase):
         }
 
     async def handle_get_user_printed_card_api_request(self, data: Dict) -> Dict:
-        user_print_list = self.data.item.get_user_print_states(
+        user_print_list = await self.data.item.get_user_print_states(
             data["userId"], has_completed=True
         )
         if user_print_list is None:
@@ -319,7 +319,7 @@ class ChuniNew(ChuniBase):
     async def handle_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
 
-        user_print_states = self.data.item.get_user_print_states(
+        user_print_states = await self.data.item.get_user_print_states(
             user_id, has_completed=False
         )
 
@@ -362,14 +362,14 @@ class ChuniNew(ChuniBase):
         # characterId should be returned
         if chara_id != -1:
             # get the
-            card = self.data.static.get_gacha_card_by_character(gacha_id, chara_id)
+            card = await self.data.static.get_gacha_card_by_character(gacha_id, chara_id)
 
             tmp = card._asdict()
             tmp.pop("id")
 
             rolled_cards.append(tmp)
         else:
-            gacha_cards = self.data.static.get_gacha_cards(gacha_id)
+            gacha_cards = await self.data.static.get_gacha_cards(gacha_id)
 
             # get the card id for each roll
             for _ in range(num_rolls):
@@ -396,7 +396,7 @@ class ChuniNew(ChuniBase):
         user_data.pop("rankUpChallengeResults")
         user_data.pop("userEmoney")
 
-        self.data.profile.put_profile_data(user_id, self.version, user_data)
+        await self.data.profile.put_profile_data(user_id, self.version, user_data)
 
         # save the user gacha
         user_gacha = upsert["userGacha"]
@@ -404,16 +404,16 @@ class ChuniNew(ChuniBase):
         user_gacha.pop("gachaId")
         user_gacha.pop("dailyGachaDate")
 
-        self.data.item.put_user_gacha(user_id, gacha_id, user_gacha)
+        await self.data.item.put_user_gacha(user_id, gacha_id, user_gacha)
 
         # save all user items
         if "userItemList" in upsert:
             for item in upsert["userItemList"]:
-                self.data.item.put_item(user_id, item)
+                await self.data.item.put_item(user_id, item)
 
         # add every gamegachaCard to database
         for card in upsert["gameGachaCardList"]:
-            self.data.item.put_user_print_state(
+            await self.data.item.put_user_print_state(
                 user_id,
                 hasCompleted=False,
                 placeId=place_id,
@@ -423,7 +423,7 @@ class ChuniNew(ChuniBase):
 
         # retrieve every game gacha card which has been added in order to get
         # the orderId for the next request
-        user_print_states = self.data.item.get_user_print_states_by_gacha(
+        user_print_states = await self.data.item.get_user_print_states_by_gacha(
             user_id, gacha_id, has_completed=False
         )
         card_print_state_list = []
@@ -465,7 +465,7 @@ class ChuniNew(ChuniBase):
         )
 
         # add the entry to the user print table with the random serialId
-        self.data.item.put_user_print_detail(user_id, serial_id, user_print_detail)
+        await self.data.item.put_user_print_detail(user_id, serial_id, user_print_detail)
 
         return {
             "returnCode": 1,
@@ -482,10 +482,10 @@ class ChuniNew(ChuniBase):
         # save all user items
         if "userItemList" in data:
             for item in data["userItemList"]:
-                self.data.item.put_item(user_id, item)
+                await self.data.item.put_item(user_id, item)
 
         # set the card print state to success and use the orderId as the key
-        self.data.item.put_user_print_state(
+        await self.data.item.put_user_print_state(
             user_id, id=upsert["orderId"], hasCompleted=True
         )
 
@@ -497,7 +497,7 @@ class ChuniNew(ChuniBase):
 
         # set the card print state to success and use the orderId as the key
         for order_id in order_ids:
-            self.data.item.put_user_print_state(user_id, id=order_id, hasCompleted=True)
+            await self.data.item.put_user_print_state(user_id, id=order_id, hasCompleted=True)
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintCancelApi"}
 
@@ -508,11 +508,11 @@ class ChuniNew(ChuniBase):
     async def handle_begin_matching_api_request(self, data: Dict) -> Dict:
         room_id = 1
         # check if there is a free matching room
-        matching_room = self.data.item.get_oldest_free_matching(self.version)
+        matching_room = await self.data.item.get_oldest_free_matching(self.version)
 
         if matching_room is None:
             # grab the latest roomId and add 1 for the new room
-            newest_matching = self.data.item.get_newest_matching(self.version)
+            newest_matching = await self.data.item.get_newest_matching(self.version)
             if newest_matching is not None:
                 room_id = newest_matching["roomId"] + 1
 
@@ -522,12 +522,12 @@ class ChuniNew(ChuniBase):
 
             # create the new room with room_id and the current user id (host)
             # user id is required for the countdown later on
-            self.data.item.put_matching(
+            await self.data.item.put_matching(
                 self.version, room_id, [new_member], user_id=new_member["userId"]
             )
 
             # get the newly created matching room
-            matching_room = self.data.item.get_matching(self.version, room_id)
+            matching_room = await self.data.item.get_matching(self.version, room_id)
         else:
             # a room already exists, so just add the new member to it
             matching_member_list = matching_room["matchingMemberInfoList"]
@@ -537,7 +537,7 @@ class ChuniNew(ChuniBase):
             matching_member_list.append(new_member)
 
             # add the updated room to the database, make sure to set isFull correctly!
-            self.data.item.put_matching(
+            await self.data.item.put_matching(
                 self.version,
                 matching_room["roomId"],
                 matching_member_list,
@@ -555,7 +555,7 @@ class ChuniNew(ChuniBase):
         return {"roomId": 1, "matchingWaitState": matching_wait}
 
     async def handle_end_matching_api_request(self, data: Dict) -> Dict:
-        matching_room = self.data.item.get_matching(self.version, data["roomId"])
+        matching_room = await self.data.item.get_matching(self.version, data["roomId"])
         members = matching_room["matchingMemberInfoList"]
 
         # only set the host user to role 1 every other to 0?
@@ -564,7 +564,7 @@ class ChuniNew(ChuniBase):
             for m in members
         ]
 
-        self.data.item.put_matching(
+        await self.data.item.put_matching(
             self.version,
             matching_room["roomId"],
             members,
@@ -585,7 +585,7 @@ class ChuniNew(ChuniBase):
     async def handle_remove_matching_member_api_request(self, data: Dict) -> Dict:
         # get all matching rooms, because Chuni only returns the userId
         # not the actual roomId
-        matching_rooms = self.data.item.get_all_matchings(self.version)
+        matching_rooms = await self.data.item.get_all_matchings(self.version)
         if matching_rooms is None:
             return {"returnCode": "1"}
 
@@ -599,10 +599,10 @@ class ChuniNew(ChuniBase):
 
             # if the last user got removed, delete the matching room
             if len(new_members) <= 0:
-                self.data.item.delete_matching(self.version, room["roomId"])
+                await self.data.item.delete_matching(self.version, room["roomId"])
             else:
                 # remove the user from the room
-                self.data.item.put_matching(
+                await self.data.item.put_matching(
                     self.version,
                     room["roomId"],
                     new_members,
@@ -615,7 +615,7 @@ class ChuniNew(ChuniBase):
     async def handle_get_matching_state_api_request(self, data: Dict) -> Dict:
         polling_interval = 1
         # get the current active room
-        matching_room = self.data.item.get_matching(self.version, data["roomId"])
+        matching_room = await self.data.item.get_matching(self.version, data["roomId"])
         members = matching_room["matchingMemberInfoList"]
         rest_sec = matching_room["restMSec"]
 
@@ -638,7 +638,7 @@ class ChuniNew(ChuniBase):
                 current_member["userName"] = self.read_wtf8(current_member["userName"])
                 members[i] = current_member
 
-        self.data.item.put_matching(
+        await self.data.item.put_matching(
             self.version,
             data["roomId"],
             members,

@@ -43,9 +43,9 @@ class WaccaLilyR(WaccaLily):
         req = HousingStartRequestV2(data)
         allnet_region_id = None
         
-        machine = self.data.arcade.get_machine(req.chipId)
+        machine = await self.data.arcade.get_machine(req.chipId)
         if machine is not None:
-            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            arcade = await self.data.arcade.get_arcade(machine["arcade"])
             allnet_region_id = arcade["region_id"]
 
         if req.appVersion.country == AllnetCountryCode.JAPAN.value:
@@ -75,28 +75,28 @@ class WaccaLilyR(WaccaLily):
         req = UserStatusCreateRequest(data)
         resp = await super().handle_user_status_create_request(data)
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210054
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210055
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210056
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210057
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210058
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210059
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210060
         )  # Added lily r
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210061
         )  # Added lily r
 

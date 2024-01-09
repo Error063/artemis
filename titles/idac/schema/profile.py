@@ -253,7 +253,7 @@ class IDACProfileData(BaseData):
         )
         self.date_time_format_short = "%Y-%m-%d"
 
-    def get_profile(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(profile).where(
             and_(
                 profile.c.user == aime_id,
@@ -261,12 +261,12 @@ class IDACProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_different_random_profiles(
+    async def get_different_random_profiles(
         self, aime_id: int, version: int, count: int = 9
     ) -> Optional[Row]:
         sql = (
@@ -281,36 +281,36 @@ class IDACProfileData(BaseData):
             .limit(count)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_profile_config(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_config(self, aime_id: int) -> Optional[Row]:
         sql = select(config).where(
             and_(
                 config.c.user == aime_id,
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_avatar(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_avatar(self, aime_id: int) -> Optional[Row]:
         sql = select(avatar).where(
             and_(
                 avatar.c.user == aime_id,
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_rank(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_rank(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(rank).where(
             and_(
                 rank.c.user == aime_id,
@@ -318,12 +318,12 @@ class IDACProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_stock(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_stock(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(stock).where(
             and_(
                 stock.c.user == aime_id,
@@ -331,12 +331,12 @@ class IDACProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_theory(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_theory(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(theory).where(
             and_(
                 theory.c.user == aime_id,
@@ -344,12 +344,12 @@ class IDACProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_profile(
+    async def put_profile(
         self, aime_id: int, version: int, profile_data: Dict
     ) -> Optional[int]:
         profile_data["user"] = aime_id
@@ -357,19 +357,19 @@ class IDACProfileData(BaseData):
 
         sql = insert(profile).values(**profile_data)
         conflict = sql.on_duplicate_key_update(**profile_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_profile: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_profile_config(self, aime_id: int, config_data: Dict) -> Optional[int]:
+    async def put_profile_config(self, aime_id: int, config_data: Dict) -> Optional[int]:
         config_data["user"] = aime_id
 
         sql = insert(config).values(**config_data)
         conflict = sql.on_duplicate_key_update(**config_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -378,12 +378,12 @@ class IDACProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_avatar(self, aime_id: int, avatar_data: Dict) -> Optional[int]:
+    async def put_profile_avatar(self, aime_id: int, avatar_data: Dict) -> Optional[int]:
         avatar_data["user"] = aime_id
 
         sql = insert(avatar).values(**avatar_data)
         conflict = sql.on_duplicate_key_update(**avatar_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -392,7 +392,7 @@ class IDACProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_rank(
+    async def put_profile_rank(
         self, aime_id: int, version: int, rank_data: Dict
     ) -> Optional[int]:
         rank_data["user"] = aime_id
@@ -400,14 +400,14 @@ class IDACProfileData(BaseData):
 
         sql = insert(rank).values(**rank_data)
         conflict = sql.on_duplicate_key_update(**rank_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_profile_rank: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_profile_stock(
+    async def put_profile_stock(
         self, aime_id: int, version: int, stock_data: Dict
     ) -> Optional[int]:
         stock_data["user"] = aime_id
@@ -415,14 +415,14 @@ class IDACProfileData(BaseData):
 
         sql = insert(stock).values(**stock_data)
         conflict = sql.on_duplicate_key_update(**stock_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_profile_stock: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_profile_theory(
+    async def put_profile_theory(
         self, aime_id: int, version: int, theory_data: Dict
     ) -> Optional[int]:
         theory_data["user"] = aime_id
@@ -430,7 +430,7 @@ class IDACProfileData(BaseData):
 
         sql = insert(theory).values(**theory_data)
         conflict = sql.on_duplicate_key_update(**theory_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(

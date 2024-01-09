@@ -92,7 +92,7 @@ class BaseData:
             message=message,
             details=json.dumps(details),
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             self.logger.error(
@@ -104,7 +104,7 @@ class BaseData:
 
     async def get_event_log(self, entries: int = 100) -> Optional[List[Dict]]:
         sql = event_log.select().limit(entries).all()
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None

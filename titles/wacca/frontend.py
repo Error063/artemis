@@ -24,7 +24,7 @@ class WaccaFrontend(FE_Base):
             )
         self.nav_name = "Wacca"
 
-    def render_GET(self, request: Request) -> bytes:
+    async def render_GET(self, request: Request) -> bytes:
         template = self.environment.get_template(
             "titles/wacca/frontend/wacca_index.jinja"
         )

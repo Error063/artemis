@@ -170,10 +170,10 @@ class AllnetServlet:
 
         self.logger.debug(f"Allnet request: {vars(req)}")
 
-        machine = self.data.arcade.get_machine(req.serial)        
+        machine = await self.data.arcade.get_machine(req.serial)        
         if machine is None and not self.config.server.allow_unregistered_serials:
             msg = f"Unrecognised serial {req.serial} attempted allnet auth from {request_ip}."
-            self.data.base.log_event(
+            await self.data.base.log_event(
                 "allnet", "ALLNET_AUTH_UNKNOWN_SERIAL", logging.WARN, msg
             )
             self.logger.warning(msg)
@@ -183,11 +183,11 @@ class AllnetServlet:
             return PlainTextResponse(urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n")
 
         if machine is not None:
-            arcade = self.data.arcade.get_arcade(machine["arcade"])
+            arcade = await self.data.arcade.get_arcade(machine["arcade"])
             if self.config.server.check_arcade_ip:
                 if arcade["ip"] and arcade["ip"] is not None and arcade["ip"] != req.ip:
                     msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip} (expected {arcade['ip']})."
-                    self.data.base.log_event(
+                    await self.data.base.log_event(
                         "allnet", "ALLNET_AUTH_BAD_IP", logging.ERROR, msg
                     )
                     self.logger.warning(msg)
@@ -198,7 +198,7 @@ class AllnetServlet:
                 
                 elif (not arcade["ip"] or arcade["ip"] is None) and self.config.server.strict_ip_checking:
                     msg = f"Serial {req.serial} attempted allnet auth from bad IP {req.ip}, but arcade {arcade['id']} has no IP set! (strict checking enabled)."
-                    self.data.base.log_event(
+                    await self.data.base.log_event(
                         "allnet", "ALLNET_AUTH_NO_SHOP_IP", logging.ERROR, msg
                     )
                     self.logger.warning(msg)
@@ -242,7 +242,7 @@ class AllnetServlet:
         if req.game_id not in TitleServlet.title_registry:
             if not self.config.server.is_develop:
                 msg = f"Unrecognised game {req.game_id} attempted allnet auth from {request_ip}."
-                self.data.base.log_event(
+                await self.data.base.log_event(
                     "allnet", "ALLNET_AUTH_UNKNOWN_GAME", logging.WARN, msg
                 )
                 self.logger.warning(msg)
@@ -269,7 +269,7 @@ class AllnetServlet:
         resp.uri, resp.host = TitleServlet.title_registry[req.game_id].get_allnet_info(req.game_id, int(int_ver), req.serial)
 
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
-        self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
+        await self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
         self.logger.info(msg)
 
         resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
@@ -335,7 +335,7 @@ class AllnetServlet:
                 resp.uri += f"|http://{self.config.server.hostname}:{self.config.server.port}/dl/ini/{req.game_id}-{req.ver.replace('.', '')}-opt.ini"
 
             self.logger.debug(f"Sending download uri {resp.uri}")
-            self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
+            await self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
 
             res_str = urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\n"
             """if is_dfi:
@@ -352,7 +352,7 @@ class AllnetServlet:
 
         if path.exists(f"{self.config.allnet.update_cfg_folder}/{req_file}"):
             self.logger.info(f"Request for DL INI file {req_file} from {Utils.get_ip_addr(request)} successful")
-            self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
+            await self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
             
             return PlainTextResponse(open(
                 f"{self.config.allnet.update_cfg_folder}/{req_file}", "r"
@@ -390,7 +390,7 @@ class AllnetServlet:
         msg = f"{rep.serial} @ {client_ip} reported {rep.rep_type.name} download state {rep.rf_state.name} for {rep.gd} v{rep.dav}:"\
               f" {rep.tdsc}/{rep.tsc} segments downloaded for working files {rep.wfl} with {rep.dfl if rep.dfl else 'none'} complete."
         
-        self.data.base.log_event("allnet", "DL_REPORT", logging.INFO, msg, dl_data)
+        await self.data.base.log_event("allnet", "DL_REPORT", logging.INFO, msg, dl_data)
         self.logger.info(msg)
 
         return PlainTextResponse("OK")
@@ -540,10 +540,10 @@ class BillingServlet:
         kc_serial_bytes = req.keychipid.encode()
         
 
-        machine = self.data.arcade.get_machine(req.keychipid)
+        machine = await self.data.arcade.get_machine(req.keychipid)
         if machine is None and not self.config.server.allow_unregistered_serials:
             msg = f"Unrecognised serial {req.keychipid} attempted billing checkin from {request_ip} for {req.gameid} v{req.gamever}."
-            self.data.base.log_event(
+            await self.data.base.log_event(
                 "allnet", "BILLING_CHECKIN_NG_SERIAL", logging.WARN, msg
             )
             self.logger.warning(msg)
@@ -555,7 +555,7 @@ class BillingServlet:
             f"{req.playcnt} billing_type {req.billingtype.name} nearfull {req.nearfull} playlimit {req.playlimit}"
         )
         self.logger.info(msg)
-        self.data.base.log_event("billing", "BILLING_CHECKIN_OK", logging.INFO, msg)
+        await self.data.base.log_event("billing", "BILLING_CHECKIN_OK", logging.INFO, msg)
         if req.traceleft > 0:
             self.logger.warn(f"{req.traceleft} unsent tracelogs")
         kc_playlimit = req.playlimit
@@ -699,7 +699,7 @@ class BillingInfo:
             self.boardid = str(data.get("boardid", None))
             self.tenpoip = str(data.get("tenpoip", None))
             self.libalibver = float(data.get("libalibver", None))
-            self.datamax = int(data.get("datamax", None))
+            self.data.max = int(data.get("datamax", None))
             self.billingtype = BillingType(int(data.get("billingtype", None)))
             self.protocolver = float(data.get("protocolver", None))
             self.operatingfix = bool(data.get("operatingfix", None))

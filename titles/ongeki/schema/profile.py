@@ -255,12 +255,12 @@ class OngekiProfileData(BaseData):
         )
         self.date_time_format_short = "%Y-%m-%d"
 
-    def get_profile_name(self, aime_id: int, version: int) -> Optional[str]:
+    async def get_profile_name(self, aime_id: int, version: int) -> Optional[str]:
         sql = select(profile.c.userName).where(
             and_(profile.c.user == aime_id, profile.c.version == version)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
 
@@ -270,19 +270,19 @@ class OngekiProfileData(BaseData):
 
         return row["userName"]
     
-    def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_preview(self, aime_id: int, version: int) -> Optional[Row]:
         sql = (
             select([profile, option])
             .join(option, profile.c.user == option.c.user)
             .filter(and_(profile.c.user == aime_id, profile.c.version == version))
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_data(self, aime_id: int, version: int) -> Optional[Row]:
+    async def get_profile_data(self, aime_id: int, version: int) -> Optional[Row]:
         sql = select(profile).where(
             and_(
                 profile.c.user == aime_id,
@@ -290,40 +290,40 @@ class OngekiProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_options(self, aime_id: int) -> Optional[Row]:
+    async def get_profile_options(self, aime_id: int) -> Optional[Row]:
         sql = select(option).where(
             and_(
                 option.c.user == aime_id,
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_recent_rating(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_recent_rating(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(recent_rating).where(recent_rating.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_profile_rating_log(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_profile_rating_log(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(rating_log).where(rating_log.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_profile_activity(
+    async def get_profile_activity(
         self, aime_id: int, kind: int = None
     ) -> Optional[List[Row]]:
         sql = select(activity).where(
@@ -333,47 +333,47 @@ class OngekiProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_kop(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_kop(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(kop).where(kop.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_rivals(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_rivals(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(rival.c.rivalUserId).where(rival.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_profile_data(self, aime_id: int, version: int, data: Dict) -> Optional[int]:
+    async def put_profile_data(self, aime_id: int, version: int, data: Dict) -> Optional[int]:
         data["user"] = aime_id
         data["version"] = version
         data.pop("accessCode")
 
         sql = insert(profile).values(**data)
         conflict = sql.on_duplicate_key_update(**data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_profile_data: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_profile_options(self, aime_id: int, options_data: Dict) -> Optional[int]:
+    async def put_profile_options(self, aime_id: int, options_data: Dict) -> Optional[int]:
         options_data["user"] = aime_id
 
         sql = insert(option).values(**options_data)
         conflict = sql.on_duplicate_key_update(**options_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -382,7 +382,7 @@ class OngekiProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_recent_rating(
+    async def put_profile_recent_rating(
         self, aime_id: int, recent_rating_data: List[Dict]
     ) -> Optional[int]:
         sql = insert(recent_rating).values(
@@ -391,7 +391,7 @@ class OngekiProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(recentRating=recent_rating_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_recent_rating: failed to update recent rating! aime_id {aime_id}"
@@ -399,12 +399,12 @@ class OngekiProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_bp_list(
+    async def put_profile_bp_list(
         self, aime_id: int, bp_base_list: List[Dict]
     ) -> Optional[int]:
         pass
 
-    def put_profile_rating_log(
+    async def put_profile_rating_log(
         self, aime_id: int, data_version: str, highest_rating: int
     ) -> Optional[int]:
         sql = insert(rating_log).values(
@@ -413,7 +413,7 @@ class OngekiProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(highestRating=highest_rating)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_rating_log: failed to update rating log! aime_id {aime_id} data_version {data_version} highest_rating {highest_rating}"
@@ -421,7 +421,7 @@ class OngekiProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_activity(
+    async def put_profile_activity(
         self,
         aime_id: int,
         kind: int,
@@ -447,7 +447,7 @@ class OngekiProfileData(BaseData):
             sortNumber=sort_num, param1=p1, param2=p2, param3=p3, param4=p4
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_activity: failed to put activity! aime_id {aime_id} kind {kind} activity_id {activity_id}"
@@ -455,7 +455,7 @@ class OngekiProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_profile_region(self, aime_id: int, region: int, date: str) -> Optional[int]:
+    async def put_profile_region(self, aime_id: int, region: int, date: str) -> Optional[int]:
         sql = insert(activity).values(
             user=aime_id, region=region, playCount=1, created=date
         )
@@ -464,7 +464,7 @@ class OngekiProfileData(BaseData):
             playCount=activity.c.playCount + 1,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_profile_region: failed to update! aime_id {aime_id} region {region}"
@@ -472,45 +472,45 @@ class OngekiProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def put_training_room(self, aime_id: int, room_detail: Dict) -> Optional[int]:
+    async def put_training_room(self, aime_id: int, room_detail: Dict) -> Optional[int]:
         room_detail["user"] = aime_id
 
         sql = insert(training_room).values(**room_detail)
         conflict = sql.on_duplicate_key_update(**room_detail)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_best_score: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_kop(self, aime_id: int, kop_data: Dict) -> Optional[int]:
+    async def put_kop(self, aime_id: int, kop_data: Dict) -> Optional[int]:
         kop_data["user"] = aime_id
 
         sql = insert(kop).values(**kop_data)
         conflict = sql.on_duplicate_key_update(**kop_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_kop: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
+    async def put_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
         sql = insert(rival).values(user=aime_id, rivalUserId=rival_id)
 
         conflict = sql.on_duplicate_key_update(rivalUserId=rival_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_rival: failed to update! aime_id: {aime_id}, rival_id: {rival_id}"
             )
             return None
         return result.lastrowid
-    def delete_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
+    async def delete_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
         sql = delete(rival).where(rival.c.user==aime_id, rival.c.rivalUserId==rival_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(f"delete_rival: failed to delete! aime_id: {aime_id}, rival_id: {rival_id}")
         else:

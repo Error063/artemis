@@ -50,7 +50,7 @@ class CardMakerReader(BaseReader):
                 ):
                     return f"{root}/{dir}"
 
-    def read(self) -> None:
+    async def read(self) -> None:
         static_datas = {
             "static_gachas.csv": "read_ongeki_gacha_csv",
             "static_gacha_cards.csv": "read_ongeki_gacha_card_csv",
@@ -66,7 +66,7 @@ class CardMakerReader(BaseReader):
             for file, func in static_datas.items():
                 if os.path.exists(f"{self.bin_dir}/MU3/{file}"):
                     read_csv = getattr(CardMakerReader, func)
-                    read_csv(self, f"{self.bin_dir}/MU3/{file}")
+                    await read_csv(self, f"{self.bin_dir}/MU3/{file}")
                 else:
                     self.logger.warning(
                         f"Couldn't find {file} file in {self.bin_dir}, skipping"
@@ -78,12 +78,12 @@ class CardMakerReader(BaseReader):
             # ONGEKI (MU3) cnnot easily access the bin data(A000.pac)
             # so only opt_dir will work for now
             for dir in data_dirs:
-                self.read_chuni_card(f"{dir}/CHU/card")
-                self.read_chuni_gacha(f"{dir}/CHU/gacha")
-                self.read_mai2_card(f"{dir}/MAI/card")
-                self.read_ongeki_gacha(f"{dir}/MU3/gacha")
+                await self.read_chuni_card(f"{dir}/CHU/card")
+                await self.read_chuni_gacha(f"{dir}/CHU/gacha")
+                await self.read_mai2_card(f"{dir}/MAI/card")
+                await self.read_ongeki_gacha(f"{dir}/MU3/gacha")
 
-    def read_chuni_card(self, base_dir: str) -> None:
+    async def read_chuni_card(self, base_dir: str) -> None:
         self.logger.info(f"Reading cards from {base_dir}...")
 
         version_ids = {
@@ -114,7 +114,7 @@ class CardMakerReader(BaseReader):
                         chain = int(troot.find("chain").text)
                         skill_name = troot.find("skillName").text
 
-                        self.chuni_data.static.put_card(
+                        await self.chuni_data.static.put_card(
                             version,
                             card_id,
                             charaName=chara_name,
@@ -131,7 +131,7 @@ class CardMakerReader(BaseReader):
 
                         self.logger.info(f"Added chuni card {card_id}")
 
-    def read_chuni_gacha(self, base_dir: str) -> None:
+    async def read_chuni_gacha(self, base_dir: str) -> None:
         self.logger.info(f"Reading gachas from {base_dir}...")
 
         version_ids = {
@@ -158,7 +158,7 @@ class CardMakerReader(BaseReader):
                             True if troot.find("ceilingType").text == "1" else False
                         )
 
-                        self.chuni_data.static.put_gacha(
+                        await self.chuni_data.static.put_gacha(
                             version,
                             gacha_id,
                             name,
@@ -181,7 +181,7 @@ class CardMakerReader(BaseReader):
                                 True if gacha_card.find("pickup").text == "1" else False
                             )
 
-                            self.chuni_data.static.put_gacha_card(
+                            await self.chuni_data.static.put_gacha_card(
                                 gacha_id,
                                 card_id,
                                 weight=weight,
@@ -193,7 +193,7 @@ class CardMakerReader(BaseReader):
                                 f"Added chuni card {card_id} to gacha {gacha_id}"
                             )
 
-    def read_mai2_card(self, base_dir: str) -> None:
+    async def read_mai2_card(self, base_dir: str) -> None:
         self.logger.info(f"Reading cards from {base_dir}...")
 
         version_ids = {
@@ -231,18 +231,18 @@ class CardMakerReader(BaseReader):
                             False if re.search(r"\d{2}/\d{2}/\d{2}", name) else enabled
                         )
 
-                        self.mai2_data.static.put_card(
+                        await self.mai2_data.static.put_card(
                             version, card_id, name, enabled=enabled
                         )
                         self.logger.info(f"Added mai2 card {card_id}")
 
-    def read_ongeki_gacha_csv(self, file_path: str) -> None:
+    async def read_ongeki_gacha_csv(self, file_path: str) -> None:
         self.logger.info(f"Reading gachas from {file_path}...")
 
         with open(file_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                self.ongeki_data.static.put_gacha(
+                await self.ongeki_data.static.put_gacha(
                     row["version"],
                     row["gachaId"],
                     row["gachaName"],
@@ -254,13 +254,13 @@ class CardMakerReader(BaseReader):
 
                 self.logger.info(f"Added ongeki gacha {row['gachaId']}")
 
-    def read_ongeki_gacha_card_csv(self, file_path: str) -> None:
+    async def read_ongeki_gacha_card_csv(self, file_path: str) -> None:
         self.logger.info(f"Reading gacha cards from {file_path}...")
 
         with open(file_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                self.ongeki_data.static.put_gacha_card(
+                await self.ongeki_data.static.put_gacha_card(
                     row["gachaId"],
                     row["cardId"],
                     rarity=row["rarity"],
@@ -271,7 +271,7 @@ class CardMakerReader(BaseReader):
 
                 self.logger.info(f"Added ongeki card {row['cardId']} to gacha")
 
-    def read_ongeki_gacha(self, base_dir: str) -> None:
+    async def read_ongeki_gacha(self, base_dir: str) -> None:
         self.logger.info(f"Reading gachas from {base_dir}...")
 
         # assuming some GachaKinds based on the GachaType
@@ -294,7 +294,7 @@ class CardMakerReader(BaseReader):
 
                         # skip already existing gachas
                         if (
-                            self.ongeki_data.static.get_gacha(
+                            await self.ongeki_data.static.get_gacha(
                                 OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY, gacha_id
                             )
                             is not None
@@ -320,7 +320,7 @@ class CardMakerReader(BaseReader):
                             is_ceiling = 1
                             max_select_point = 33
 
-                        self.ongeki_data.static.put_gacha(
+                        await self.ongeki_data.static.put_gacha(
                             version,
                             gacha_id,
                             name,

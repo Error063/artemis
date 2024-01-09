@@ -110,7 +110,7 @@ class FrontendServlet(resource.Resource):
     async def robots(cls, request: Request) -> PlainTextResponse:
         return PlainTextResponse("User-agent: *\nDisallow: /\n\nUser-agent: AdsBot-Google\nDisallow: /")
 
-    def render_GET(self, request):
+    async def render_GET(self, request):
         self.logger.debug(f"{Utils.get_ip_addr(request)} -> {request.uri.decode()}")
         template = self.environment.get_template("core/frontend/index.jinja")
         return template.render(
@@ -167,7 +167,7 @@ class FE_Gate(FE_Base):
             sesh=vars(usr_sesh),
         ).encode("utf-16")
 
-    def render_POST(self, request: Request):
+    async def render_POST(self, request: Request):
         uri = request.uri.decode()
         ip = Utils.get_ip_addr(request)
 
@@ -177,13 +177,13 @@ class FE_Gate(FE_Base):
             if passwd == b"":
                 passwd = None
 
-            uid = self.data.card.get_user_id_from_card(access_code)
-            user = self.data.user.get_user(uid)
+            uid = await self.data.card.get_user_id_from_card(access_code)
+            user = await self.data.user.get_user(uid)
             if uid is None:
                 return redirectTo(b"/gate?e=1", request)
 
             if passwd is None:
-                sesh = self.data.user.check_password(uid)
+                sesh = await self.data.user.check_password(uid)
 
                 if sesh is not None:
                     return redirectTo(
@@ -210,14 +210,14 @@ class FE_Gate(FE_Base):
             email: str = request.args[b"email"][0].decode()
             passwd: bytes = request.args[b"passwd"][0]
 
-            uid = self.data.card.get_user_id_from_card(access_code)
+            uid = await self.data.card.get_user_id_from_card(access_code)
             if uid is None:
                 return redirectTo(b"/gate?e=1", request)
 
             salt = bcrypt.gensalt()
             hashed = bcrypt.hashpw(passwd, salt)
 
-            result = self.data.user.create_user(
+            result = await self.data.user.create_user(
                 uid, username, email.lower(), hashed.decode(), 1
             )
             if result is None:
@@ -231,16 +231,16 @@ class FE_Gate(FE_Base):
         else:
             return b""
 
-    def create_user(self, request: Request):
+    async def create_user(self, request: Request):
         if b"ac" not in request.args or len(request.args[b"ac"][0].decode()) != 20:
             return redirectTo(b"/gate?e=2", request)
 
         ac = request.args[b"ac"][0].decode()
-        card = self.data.card.get_card_by_access_code(ac)
+        card = await self.data.card.get_card_by_access_code(ac)
         if card is None:
             return redirectTo(b"/gate?e=1", request)
         
-        user = self.data.user.get_user(card['user'])
+        user = await self.data.user.get_user(card['user'])
         if user is None:
             self.logger.warning(f"Card {ac} exists with no/invalid associated user ID {card['user']}")
             return redirectTo(b"/gate?e=0", request)
@@ -257,7 +257,7 @@ class FE_Gate(FE_Base):
 
 
 class FE_User(FE_Base):
-    def render_GET(self, request: Request):
+    async def render_GET(self, request: Request):
         uri = request.uri.decode()
         template = self.environment.get_template("core/frontend/user/index.jinja")
 
@@ -276,12 +276,12 @@ class FE_User(FE_Base):
         else:
             usrid = usr_sesh.userId
         
-        user = self.data.user.get_user(usrid)
+        user = await self.data.user.get_user(usrid)
         if user is None:
             return redirectTo(b"/user", request)
         
-        cards = self.data.card.get_user_cards(usrid)
-        arcades = self.data.arcade.get_arcades_managed_by_user(usrid)
+        cards = await self.data.card.get_user_cards(usrid)
+        arcades = await self.data.arcade.get_arcades_managed_by_user(usrid)
         
         card_data = []
         arcade_data = []
@@ -307,12 +307,12 @@ class FE_User(FE_Base):
             arcades=arcade_data
         ).encode("utf-16")
 
-    def render_POST(self, request: Request):
+    async def render_POST(self, request: Request):
         pass
 
 
 class FE_System(FE_Base):
-    def render_GET(self, request: Request):
+    async def render_GET(self, request: Request):
         uri = request.uri.decode()
         template = self.environment.get_template("core/frontend/sys/index.jinja")
         usrlist: List[Dict] = []
@@ -331,17 +331,17 @@ class FE_System(FE_Base):
             uname_search = uri_parse.get("usrName")
 
             if uid_search is not None:
-                u = self.data.user.get_user(uid_search[0])
+                u = await self.data.user.get_user(uid_search[0])
                 if u is not None:
                     usrlist.append(u._asdict())
 
             elif email_search is not None:
-                u = self.data.user.find_user_by_email(email_search[0])
+                u = await self.data.user.find_user_by_email(email_search[0])
                 if u is not None:
                     usrlist.append(u._asdict())
 
             elif uname_search is not None:
-                ul = self.data.user.find_user_by_username(uname_search[0])
+                ul = await self.data.user.find_user_by_username(uname_search[0])
                 for u in ul:
                     usrlist.append(u._asdict())
 
@@ -353,24 +353,24 @@ class FE_System(FE_Base):
             ac_ip_search = uri_parse.get("arcadeIp")
 
             if ac_id_search is not None:
-                u = self.data.arcade.get_arcade(ac_id_search[0])
+                u = await self.data.arcade.get_arcade(ac_id_search[0])
                 if u is not None:
                     aclist.append(u._asdict())
 
             elif ac_name_search is not None:
-                ul = self.data.arcade.get_arcade_by_name(ac_name_search[0])
+                ul = await self.data.arcade.get_arcade_by_name(ac_name_search[0])
                 if ul is not None:
                     for u in ul:
                         aclist.append(u._asdict())
 
             elif ac_user_search is not None:
-                ul = self.data.arcade.get_arcades_managed_by_user(ac_user_search[0])
+                ul = await self.data.arcade.get_arcades_managed_by_user(ac_user_search[0])
                 if ul is not None:
                     for u in ul:
                         aclist.append(u._asdict())
 
             elif ac_ip_search is not None:
-                ul = self.data.arcade.get_arcades_by_ip(ac_ip_search[0])
+                ul = await self.data.arcade.get_arcades_by_ip(ac_ip_search[0])
                 if ul is not None:
                     for u in ul:
                         aclist.append(u._asdict())
@@ -382,17 +382,17 @@ class FE_System(FE_Base):
             cab_acid_search = uri_parse.get("cabAcId")
 
             if cab_id_search is not None:
-                u = self.data.arcade.get_machine(id=cab_id_search[0])
+                u = await self.data.arcade.get_machine(id=cab_id_search[0])
                 if u is not None:
                     cablist.append(u._asdict())
 
             elif cab_serial_search is not None:
-                u = self.data.arcade.get_machine(serial=cab_serial_search[0])
+                u = await self.data.arcade.get_machine(serial=cab_serial_search[0])
                 if u is not None:
                     cablist.append(u._asdict())
 
             elif cab_acid_search is not None:
-                ul = self.data.arcade.get_arcade_machines(cab_acid_search[0])
+                ul = await self.data.arcade.get_arcade_machines(cab_acid_search[0])
                 for u in ul:
                     cablist.append(u._asdict())
 
@@ -414,12 +414,12 @@ class FE_Game(FE_Base):
             return self
         return resource.Resource.getChild(self, name, request)
 
-    def render_GET(self, request: Request) -> bytes:
+    async def render_GET(self, request: Request) -> bytes:
         return redirectTo(b"/user", request)
 
 
 class FE_Arcade(FE_Base):
-    def render_GET(self, request: Request):
+    async def render_GET(self, request: Request):
         uri = request.uri.decode()
         template = self.environment.get_template("core/frontend/arcade/index.jinja")
         managed = []
@@ -433,8 +433,8 @@ class FE_Arcade(FE_Base):
         
         if m is not None:
             arcadeid = m.group(1)
-            perms = self.data.arcade.get_manager_permissions(usr_sesh.userId, arcadeid)
-            arcade = self.data.arcade.get_arcade(arcadeid)
+            perms = await self.data.arcade.get_manager_permissions(usr_sesh.userId, arcadeid)
+            arcade = await self.data.arcade.get_arcade(arcadeid)
 
             if perms is None:
                 perms = 0
@@ -452,7 +452,7 @@ class FE_Arcade(FE_Base):
 
 
 class FE_Machine(FE_Base):
-    def render_GET(self, request: Request):
+    async def render_GET(self, request: Request):
         uri = request.uri.decode()
         template = self.environment.get_template("core/frontend/machine/index.jinja")
         
