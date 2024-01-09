@@ -23,6 +23,7 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 + Add `matching` section to `chuni.yaml`
 + Change `udpHolePunchUri` and `reflectorUri` to be STUN and TURN servers
 + Imrpove `GetGameSetting` request handling for different versions
++ Fix issue where songs would not always return all scores [#92](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/92) (Thanks Kumubou!)
 
 ### maimai DX
 + Fix user charges failing to save

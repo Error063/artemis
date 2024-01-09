@@ -659,4 +659,7 @@ class ChuniNew(ChuniBase):
             "matchingMemberInfoList": [current_member] + diff_members,
         }
 
-        return {"matchingWaitState": matching_wait}
+        return {
+            "roomId": data["roomId"],
+            "matchingWaitState": matching_wait
+        }
