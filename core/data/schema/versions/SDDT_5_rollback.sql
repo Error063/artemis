@@ -1,8 +1,8 @@
 SET FOREIGN_KEY_CHECKS=0;
 
 ALTER TABLE ongeki_user_event_point DROP COLUMN version;
-ALTER TABLE ongeki_user_event_point DROP COLUMN rank;
-ALTER TABLE ongeki_user_event_point DROP COLUMN type;
+ALTER TABLE ongeki_user_event_point DROP COLUMN `rank`;
+ALTER TABLE ongeki_user_event_point DROP COLUMN `type`;
 ALTER TABLE ongeki_user_event_point DROP COLUMN date;
 
 ALTER TABLE ongeki_user_tech_event DROP COLUMN version;
