@@ -37,13 +37,13 @@ class WaccaLily(WaccaS):
             (210003, 0),
         ]
 
-    def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
+    async def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
         resp = GetNewsResponseV3()
         return resp.make()
 
-    def handle_user_status_create_request(self, data: Dict) -> Dict:
+    async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
-        ret = super().handle_user_status_create_request(data)
+        ret = await super().handle_user_status_create_request(data)
 
         new_user = self.data.profile.get_profile(aime_id=req.aimeId)
 
@@ -64,7 +64,7 @@ class WaccaLily(WaccaS):
 
         return ret
 
-    def handle_user_status_get_request(self, data: Dict) -> Dict:
+    async def handle_user_status_get_request(self, data: Dict) -> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
 
@@ -145,7 +145,7 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_status_login_request(self, data: Dict) -> Dict:
+    async def handle_user_status_login_request(self, data: Dict) -> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV2()
         is_consec_day = True
@@ -189,7 +189,7 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
+    async def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
         req = UserStatusGetDetailRequest(data)
         if req.appVersion.minor >= 53:
             resp = UserStatusGetDetailResponseV3()
@@ -440,10 +440,10 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
+    async def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
         return UserInfogetMyroomResponseV2().make()
 
-    def handle_user_status_update_request(self, data: Dict) -> Dict:
+    async def handle_user_status_update_request(self, data: Dict) -> Dict:
         super().handle_user_status_update_request(data)
         req = UserStatusUpdateRequestV2(data)
         self.data.profile.update_profile_lastplayed(

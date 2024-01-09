@@ -20,21 +20,21 @@ class PokkenBase:
         self.data = PokkenData(core_cfg)
         self.SUPPORT_SET_NONE = 4294967295
 
-    def handle_noop(self, request: Any) -> bytes:
+    async def handle_noop(self, request: Any) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = request.type
 
         return res.SerializeToString()
 
-    def handle_ping(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_ping(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.PING
 
         return res.SerializeToString()
 
-    def handle_register_pcb(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_register_pcb(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.REGISTER_PCB
@@ -61,35 +61,35 @@ class PokkenBase:
             "logfilename": "JackalMatchingLibrary.log",
             "biwalogfilename": "./biwa.log",
         }
-        regist_pcb.bnp_baseuri = f"{self.core_cfg.title.hostname}/bna"
+        regist_pcb.bnp_baseuri = f"{self.core_cfg.server.hostname}/bna"
         regist_pcb.biwa_setting = json.dumps(biwa_setting)
 
         res.register_pcb.CopyFrom(regist_pcb)
 
         return res.SerializeToString()
 
-    def handle_save_ads(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_save_ads(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_ADS
 
         return res.SerializeToString()
 
-    def handle_save_client_log(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_save_client_log(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_CLIENT_LOG
 
         return res.SerializeToString()
 
-    def handle_check_diagnosis(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_check_diagnosis(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.CHECK_DIAGNOSIS
 
         return res.SerializeToString()
 
-    def handle_load_client_settings(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_load_client_settings(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_CLIENT_SETTINGS
@@ -112,7 +112,7 @@ class PokkenBase:
 
         return res.SerializeToString()
 
-    def handle_load_ranking(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_load_ranking(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_RANKING
@@ -126,7 +126,7 @@ class PokkenBase:
         res.load_ranking.CopyFrom(ranking)
         return res.SerializeToString()
 
-    def handle_load_user(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_load_user(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.LOAD_USER
@@ -287,13 +287,13 @@ class PokkenBase:
         res.load_user.CopyFrom(load_usr)
         return res.SerializeToString()
 
-    def handle_set_bnpassid_lock(self, data: jackal_pb2.Request) -> bytes:
+    async def handle_set_bnpassid_lock(self, data: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SET_BNPASSID_LOCK
         return res.SerializeToString()
 
-    def handle_save_user(self, request: jackal_pb2.Request) -> bytes:
+    async def handle_save_user(self, request: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_USER
@@ -394,38 +394,31 @@ class PokkenBase:
 
         return res.SerializeToString()
 
-    def handle_save_ingame_log(self, data: jackal_pb2.Request) -> bytes:
+    async def handle_save_ingame_log(self, data: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_INGAME_LOG
         return res.SerializeToString()
 
-    def handle_save_charge(self, data: jackal_pb2.Request) -> bytes:
+    async def handle_save_charge(self, data: jackal_pb2.Request) -> bytes:
         res = jackal_pb2.Response()
         res.result = 1
         res.type = jackal_pb2.MessageType.SAVE_CHARGE
         return res.SerializeToString()
 
-    def handle_matching_noop(
+    async def handle_matching_noop(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         return {}
 
-    def handle_matching_start_matching(
+    async def handle_matching_start_matching(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         return {}
 
-    def handle_matching_is_matching(
+    async def handle_matching_is_matching(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
-        """
-                "sessionId":"12345678",
-                "A":{
-                    "pcb_id": data["data"]["must"]["pcb_id"],
-                    "gip": client_ip
-                },
-        """
         return {
             "data": {
                 "sessionId":"12345678",
@@ -437,15 +430,15 @@ class PokkenBase:
             }
         }
 
-    def handle_matching_stop_matching(
+    async def handle_matching_stop_matching(
         self, data: Dict = {}, client_ip: str = "127.0.0.1"
     ) -> Dict:
         return {}
 
-    def handle_admission_noop(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+    async def handle_admission_noop(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
         return {}
     
-    def handle_admission_joinsession(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
+    async def handle_admission_joinsession(self, data: Dict, req_ip: str = "127.0.0.1") -> Dict:
         self.logger.info(f"Admission: JoinSession from {req_ip}")
         return {
             'data': {

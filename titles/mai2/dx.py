@@ -15,7 +15,7 @@ class Mai2DX(Mai2Base):
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX
 
-    def handle_get_game_setting_api_request(self, data: Dict):
+    async def handle_get_game_setting_api_request(self, data: Dict):
         return {
             "gameSetting": {
                 "isMaintenance": False,
@@ -33,7 +33,7 @@ class Mai2DX(Mai2Base):
             "isAouAccession": False,
         }
 
-    def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version)
         o = self.data.profile.get_profile_option(data["userId"], self.version)
         if p is None or o is None:
@@ -69,7 +69,7 @@ class Mai2DX(Mai2Base):
             else 0,  # New with uni+
         }
 
-    def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
+    async def handle_upload_user_playlog_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         playlog = data["userPlaylog"]
 
@@ -77,7 +77,7 @@ class Mai2DX(Mai2Base):
 
         return {"returnCode": 1, "apiName": "UploadUserPlaylogApi"}
 
-    def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         charge = data["userCharge"]
 
@@ -93,7 +93,7 @@ class Mai2DX(Mai2Base):
 
         return {"returnCode": 1, "apiName": "UpsertUserChargelogApi"}
 
-    def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         upsert = data["upsertUserAll"]
         
@@ -215,7 +215,7 @@ class Mai2DX(Mai2Base):
 
         return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
 
-    def handle_get_user_data_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_data_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_detail(data["userId"], self.version)
         if profile is None:
             return
@@ -227,7 +227,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userData": profile_dict}
 
-    def handle_get_user_extend_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_extend_api_request(self, data: Dict) -> Dict:
         extend = self.data.profile.get_profile_extend(data["userId"], self.version)
         if extend is None:
             return
@@ -239,7 +239,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userExtend": extend_dict}
 
-    def handle_get_user_option_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_option_api_request(self, data: Dict) -> Dict:
         options = self.data.profile.get_profile_option(data["userId"], self.version)
         if options is None:
             return
@@ -251,7 +251,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userOption": options_dict}
 
-    def handle_get_user_card_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_card_api_request(self, data: Dict) -> Dict:
         user_cards = self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {"userId": data["userId"], "nextIndex": 0, "userCardList": []}
@@ -285,7 +285,7 @@ class Mai2DX(Mai2Base):
             "userCardList": card_list[start_idx:end_idx],
         }
 
-    def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
         user_charges = self.data.item.get_charges(data["userId"])
         if user_charges is None:
             return {"userId": data["userId"], "length": 0, "userChargeList": []}
@@ -310,7 +310,7 @@ class Mai2DX(Mai2Base):
             "userChargeList": user_charge_list,
         }
 
-    def handle_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
         next_idx = int(data["nextIndex"] % 10000000000)
         user_item_list = self.data.item.get_items(data["userId"], kind)
@@ -338,7 +338,7 @@ class Mai2DX(Mai2Base):
             "userItemList": items,
         }
 
-    def handle_get_user_character_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = self.data.item.get_characters(data["userId"])
 
         chara_list = []
@@ -350,7 +350,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userCharacterList": chara_list}
 
-    def handle_get_user_favorite_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_favorite_api_request(self, data: Dict) -> Dict:
         favorites = self.data.item.get_favorites(data["userId"], data["itemKind"])
         if favorites is None:
             return
@@ -367,7 +367,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userFavoriteData": userFavs}
 
-    def handle_get_user_ghost_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_ghost_api_request(self, data: Dict) -> Dict:
         ghost = self.data.profile.get_profile_ghost(data["userId"], self.version)
         if ghost is None:
             return
@@ -379,7 +379,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userGhost": ghost_dict}
 
-    def handle_get_user_rating_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rating_api_request(self, data: Dict) -> Dict:
         rating = self.data.profile.get_profile_rating(data["userId"], self.version)
         if rating is None:
             return
@@ -391,7 +391,7 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "userRating": rating_dict}
 
-    def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
         """
         kind 1 is playlist, kind 2 is music list
         """
@@ -419,7 +419,7 @@ class Mai2DX(Mai2Base):
 
         return {"userActivity": {"playList": plst, "musicList": mlst}}
 
-    def handle_get_user_course_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_course_api_request(self, data: Dict) -> Dict:
         user_courses = self.data.score.get_courses(data["userId"])
         if user_courses is None:
             return {"userId": data["userId"], "nextIndex": 0, "userCourseList": []}
@@ -433,11 +433,11 @@ class Mai2DX(Mai2Base):
 
         return {"userId": data["userId"], "nextIndex": 0, "userCourseList": course_list}
 
-    def handle_get_user_portrait_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_portrait_api_request(self, data: Dict) -> Dict:
         # No support for custom pfps
         return {"length": 0, "userPortraitList": []}
 
-    def handle_get_user_friend_season_ranking_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_friend_season_ranking_api_request(self, data: Dict) -> Dict:
         friend_season_ranking = self.data.item.get_friend_season_ranking(data["userId"])
         if friend_season_ranking is None:
             return {
@@ -473,7 +473,7 @@ class Mai2DX(Mai2Base):
             "userFriendSeasonRankingList": friend_season_ranking_list,
         }
 
-    def handle_get_user_map_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_map_api_request(self, data: Dict) -> Dict:
         maps = self.data.item.get_maps(data["userId"])
         if maps is None:
             return {
@@ -506,7 +506,7 @@ class Mai2DX(Mai2Base):
             "userMapList": map_list,
         }
 
-    def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
         login_bonuses = self.data.item.get_login_bonuses(data["userId"])
         if login_bonuses is None:
             return {
@@ -539,7 +539,7 @@ class Mai2DX(Mai2Base):
             "userLoginBonusList": login_bonus_list,
         }
 
-    def handle_get_user_region_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         """
         class UserRegionList:
             regionId: int
@@ -548,7 +548,7 @@ class Mai2DX(Mai2Base):
         """
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
 
-    def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         rival_id = data["rivalId"]
 
@@ -559,7 +559,7 @@ class Mai2DX(Mai2Base):
         """
         return {"userId": user_id, "userRivalData": {}}
 
-    def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         rival_id = data["rivalId"]
         next_idx = data["nextIndex"]
@@ -577,7 +577,7 @@ class Mai2DX(Mai2Base):
         """
         return {"userId": user_id, "nextIndex": 0, "userRivalMusicList": []}
 
-    def handle_get_user_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_music_api_request(self, data: Dict) -> Dict:
         user_id = data.get("userId", 0)        
         next_index = data.get("nextIndex", 0)
         max_ct = data.get("maxCount", 50)
@@ -616,8 +616,8 @@ class Mai2DX(Mai2Base):
             "userMusicList": [{"userMusicDetailList": music_detail_list}],
         }
 
-    def handle_user_login_api_request(self, data: Dict) -> Dict:
-        ret = super().handle_user_login_api_request(data)
+    async def handle_user_login_api_request(self, data: Dict) -> Dict:
+        ret = await super().handle_user_login_api_request(data)
         if ret is None or not ret:
             return ret
         ret['loginId'] = ret.get('loginCount', 0)

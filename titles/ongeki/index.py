@@ -1,4 +1,6 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import Response
 import json
 import inflection
 import yaml
@@ -120,35 +122,28 @@ class OngekiServlet(BaseServlet):
         
         return True
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [("render_POST", "/SDDT/{version}/{endpoint}", {})]
-        )
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/SDDT/{version:int}/{endpoint:str}", self.render_POST, methods=['POST'])
+        ]
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         title_port_int = Utils.get_title_port(self.core_cfg)
-        title_port_ssl_int = Utils.get_title_port_ssl(self.core_cfg)
         proto = "https" if self.game_cfg.server.use_https and game_ver >= 120 else "http"
-
-        if proto == "https":
-            t_port = f":{title_port_ssl_int}" if title_port_ssl_int and not self.core_cfg.server.is_using_proxy else ""
-        
-        else:    
-            t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
+        t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
 
         return (
-            f"{proto}://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
-            f"{self.core_cfg.title.hostname}{t_port}/",
+            f"{proto}://{self.core_cfg.server.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"{self.core_cfg.server.hostname}{t_port}/",
         )
 
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = int(matchers['version'])
+    async def render_POST(self, request: Request) -> bytes:
+        endpoint: str = request.path_params.get('endpoint', '')
+        version: int = request.path_params.get('version', 0)
         if endpoint.lower() == "ping":
-            return zlib.compress(b'{"returnCode": 1}')
+            return Response(zlib.compress(b'{"returnCode": 1}'))
 
-        req_raw = request.content.getvalue()
+        req_raw = await request.body()
         encrtped = False
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
@@ -178,13 +173,13 @@ class OngekiServlet(BaseServlet):
                 self.logger.error(
                     f"v{version} does not support encryption or no keys entered"
                 )
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
             elif endpoint.lower() not in self.hash_table[internal_ver]:
                 self.logger.error(
                     f"No hash found for v{version} endpoint {endpoint}"
                 )
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
             endpoint = self.hash_table[internal_ver][endpoint.lower()]
 
@@ -201,7 +196,7 @@ class OngekiServlet(BaseServlet):
                 self.logger.error(
                     f"Failed to decrypt v{version} request to {endpoint} -> {e}"
                 )
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
             encrtped = True
 
@@ -213,7 +208,7 @@ class OngekiServlet(BaseServlet):
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         try:
             unzip = zlib.decompress(req_raw)
@@ -222,7 +217,7 @@ class OngekiServlet(BaseServlet):
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
@@ -235,15 +230,15 @@ class OngekiServlet(BaseServlet):
 
         if not hasattr(self.versions[internal_ver], func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
-            return zlib.compress(b'{"returnCode": 1}')
+            return Response(zlib.compress(b'{"returnCode": 1}'))
 
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data)
+            resp = await handler(req_data)
 
         except Exception as e:
             self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         if resp == None:
             resp = {"returnCode": 1}
@@ -253,7 +248,7 @@ class OngekiServlet(BaseServlet):
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
         if not encrtped or version < 120:
-            return zipped
+            return Response(zipped)
 
         padded = pad(zipped, 16)
 
@@ -263,4 +258,4 @@ class OngekiServlet(BaseServlet):
             bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
-        return crypt.encrypt(padded)
+        return Response(crypt.encrypt(padded))

@@ -1,8 +1,10 @@
 from typing import Tuple, List, Dict
-from twisted.web.http import Request
-from twisted.web import resource
-from twisted.internet import reactor
-import json, ast
+from starlette.requests import Request
+from starlette.requests import Request
+from starlette.responses import Response, JSONResponse
+from starlette.routing import Route, WebSocketRoute
+from starlette.websockets import WebSocket, WebSocketState, WebSocketDisconnect
+import ast
 from datetime import datetime
 import yaml
 import logging, coloredlogs
@@ -17,8 +19,6 @@ from .config import PokkenConfig
 from .base import PokkenBase
 from .const import PokkenConstants
 from .proto import jackal_pb2
-from .services import PokkenAdmissionFactory
-
 
 class PokkenServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -69,47 +69,73 @@ class PokkenServlet(BaseServlet):
         
         return True
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [
-                ("render_POST", "/pokken/", {}),
-                ("handle_matching", "/pokken/matching", {}),
-            ]
-        )
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/pokken/", self.render_POST, methods=['POST']),
+            Route("/pokken/matching", self.handle_matching, methods=['POST']),
+            WebSocketRoute("/pokken/admission", self.handle_admission)
+        ]
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if self.game_cfg.ports.game != 443:
-            return (
-                f"https://{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
-                f"{self.game_cfg.server.hostname}/pokken/",
-            )
         return (
-            f"https://{self.game_cfg.server.hostname}/pokken/",
-            f"{self.game_cfg.server.hostname}/pokken/",
+            f"https://{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
+            f"{self.game_cfg.server.hostname}:{self.game_cfg.ports.game}/pokken/",
         )
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
-        game_cfg = PokkenConfig()
+        if not self.game_cfg.server.enable:
+            return (False, [], [])
 
-        if path.exists(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"):
-            game_cfg.update(
-                yaml.safe_load(open(f"{cfg_dir}/{PokkenConstants.CONFIG_NAME}"))
-            )
+        return (True, PokkenConstants.GAME_CDS, PokkenConstants.NETID_PREFIX)
+    
+    async def handle_admission(self, ws: WebSocket) -> None:
+        client_ip = Utils.get_ip_addr(ws)
+        await ws.accept()
+        while True:
+            try:
+                msg: Dict = await ws.receive_json()
+            except WebSocketDisconnect as e:
+                self.logger.debug(f"Client {client_ip} disconnected - {e}")
+                break
+            except Exception as e:                
+                self.logger.error(f"Could not load JSON from message from {client_ip} - {e}")
+                if ws.client_state != WebSocketState.DISCONNECTED:                    
+                    await ws.close()
+                break
+            
+            self.logger.debug(f"Admission: Message from {client_ip}:{ws.client.port} - {msg}")
+            
+            api = msg.get("api", "noop")
+            handler = getattr(self.base, f"handle_admission_{api.lower()}")
+            resp = await handler(msg, client_ip)
+            
+            if resp is None:
+                resp = {}
 
-        if not game_cfg.server.enable:
-            return (False, "")
+            if "type" not in resp:
+                resp['type'] = "res"
+            if "data" not in resp:
+                resp['data'] = {}
+            if "api" not in resp:
+                resp['api'] = api
+            if "result" not in resp:
+                resp['result'] = 'true'
+            
+            self.logger.debug(f"Websocket response: {resp}")
+            try:
+                await ws.send_json(resp)
+            except WebSocketDisconnect as e:
+                self.logger.debug(f"Client {client_ip} disconnected - {e}")
+                break
+            except Exception as e:                
+                self.logger.error(f"Could not send JSON message to {client_ip} - {e}")
+                break
+        
+        if ws.client_state != WebSocketState.DISCONNECTED:                    
+            await ws.close()
 
-        return (True, "PKF1")
-
-    def setup(self) -> None:
-        if self.game_cfg.server.enable_matching:
-            reactor.listenTCP(
-                self.game_cfg.ports.admission, PokkenAdmissionFactory(self.core_cfg, self.game_cfg)
-            )
-
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        content = request.content.getvalue()
+    async def render_POST(self, request: Request) -> bytes:
+        content = await request.body()
         if content == b"":
             self.logger.info("Empty request")
             return b""
@@ -134,19 +160,19 @@ class PokkenServlet(BaseServlet):
 
         self.logger.info(f"{endpoint} request from {Utils.get_ip_addr(request)}")
 
-        ret = handler(pokken_request)
-        return ret
+        ret = await handler(pokken_request)
+        return Response(ret)
 
-    def handle_matching(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+    async def handle_matching(self, request: Request) -> bytes:
         if not self.game_cfg.server.enable_matching:
-            return b""
+            return Response()
         
-        content = request.content.getvalue()
+        content = await request.body()
         client_ip = Utils.get_ip_addr(request)
 
         if content is None or content == b"":
             self.logger.info("Empty matching request")
-            return json.dumps(self.base.handle_matching_noop()).encode()
+            return JSONResponse(self.base.handle_matching_noop())
 
         json_content = ast.literal_eval(
             content.decode()
@@ -166,7 +192,7 @@ class PokkenServlet(BaseServlet):
             self.logger.warning(
                 f"No handler found for message type {json_content['call']}"
             )
-            return json.dumps(self.base.handle_matching_noop()).encode()
+            return JSONResponse(self.base.handle_matching_noop())
 
         ret = handler(json_content, client_ip)
 
@@ -181,4 +207,4 @@ class PokkenServlet(BaseServlet):
 
         self.logger.debug(f"Response {ret}")
 
-        return json.dumps(ret).encode()
+        return JSONResponse(ret)

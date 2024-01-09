@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional
 from types import ModuleType
-from twisted.web.http import Request
+from starlette.requests import Request
 import logging
 import importlib
 from os import walk
@@ -34,35 +34,15 @@ class Utils:
 
     @classmethod
     def get_ip_addr(cls, req: Request) -> str:
-        return (
-            req.getAllHeaders()[b"x-forwarded-for"].decode()
-            if b"x-forwarded-for" in req.getAllHeaders()
-            else req.getClientAddress().host
-        )
+        return req.headers.get("x-forwarded-for", req.client.host)
     
     @classmethod
     def get_title_port(cls, cfg: CoreConfig):
         if cls.real_title_port is not None: return cls.real_title_port
 
-        if cfg.title.port == 0:
-            cls.real_title_port = cfg.allnet.port
-        
-        else:
-            cls.real_title_port = cfg.title.port
+        cls.real_title_port = cfg.server.proxy_port if cfg.server.is_using_proxy else cfg.server.port
         
         return cls.real_title_port
-
-    @classmethod
-    def get_title_port_ssl(cls, cfg: CoreConfig):
-        if cls.real_title_port_ssl is not None: return cls.real_title_port_ssl
-
-        if cfg.title.port_ssl == 0:
-            cls.real_title_port_ssl = 443
-        
-        else:
-            cls.real_title_port_ssl = cfg.title.port_ssl
-        
-        return cls.real_title_port_ssl
 
 def create_sega_auth_key(aime_id: int, game: str, place_id: int, keychip_id: str, b64_secret: str, exp_seconds: int = 86400, err_logger: str = 'aimedb') -> Optional[str]:
     logger = logging.getLogger(err_logger)

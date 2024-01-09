@@ -17,10 +17,10 @@ class CxbRev(CxbBase):
         super().__init__(cfg, game_cfg)
         self.version = CxbConstants.VER_CROSSBEATS_REV
 
-    def handle_data_path_list_request(self, data: Dict) -> Dict:
+    async def handle_data_path_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_putlog_request(self, data: Dict) -> Dict:
+    async def handle_data_putlog_request(self, data: Dict) -> Dict:
         if data["putlog"]["type"] == "ResultLog":
             score_data = json.loads(data["putlog"]["data"])
             userid = score_data["usid"]
@@ -45,7 +45,7 @@ class CxbRev(CxbBase):
         return {"data": True}
 
     @cached(lifetime=86400)
-    def handle_data_music_list_request(self, data: Dict) -> Dict:
+    async def handle_data_music_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(r"titles/cxb/data/rss/MusicArchiveList.csv") as music:
             lines = music.readlines()
@@ -56,7 +56,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_icon_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_icon_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ItemListIcon\r\n"
         with open(
             r"titles/cxb/data/rss/Item/ItemArchiveList_Icon.csv", encoding="utf-8"
@@ -67,7 +67,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_skin_notes_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_skin_notes_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ItemListSkinNotes\r\n"
         with open(
             r"titles/cxb/data/rss/Item/ItemArchiveList_SkinNotes.csv", encoding="utf-8"
@@ -78,7 +78,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_skin_effect_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_skin_effect_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ItemListSkinEffect\r\n"
         with open(
             r"titles/cxb/data/rss/Item/ItemArchiveList_SkinEffect.csv", encoding="utf-8"
@@ -89,7 +89,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_skin_bg_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_skin_bg_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ItemListSkinBg\r\n"
         with open(
             r"titles/cxb/data/rss/Item/ItemArchiveList_SkinBg.csv", encoding="utf-8"
@@ -100,7 +100,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_title_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_title_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ItemListTitle\r\n"
         with open(
             r"titles/cxb/data/rss/Item/ItemList_Title.csv", encoding="shift-jis"
@@ -111,7 +111,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_shop_list_music_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_music_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ShopListMusic\r\n"
         with open(
             r"titles/cxb/data/rss/Shop/ShopList_Music.csv", encoding="shift-jis"
@@ -122,7 +122,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_shop_list_icon_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_icon_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ShopListIcon\r\n"
         with open(
             r"titles/cxb/data/rss/Shop/ShopList_Icon.csv", encoding="shift-jis"
@@ -133,7 +133,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_shop_list_title_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_title_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ShopListTitle\r\n"
         with open(
             r"titles/cxb/data/rss/Shop/ShopList_Title.csv", encoding="shift-jis"
@@ -143,17 +143,17 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_shop_list_skin_hud_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_skin_hud_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_shop_list_skin_arrow_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_skin_arrow_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_shop_list_skin_hit_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_skin_hit_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_shop_list_sale_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_sale_request(self, data: Dict) -> Dict:
         ret_str = "\r\n#ShopListSale\r\n"
         with open(
             r"titles/cxb/data/rss/Shop/ShopList_Sale.csv", encoding="shift-jis"
@@ -163,11 +163,11 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_extra_stage_list_request(self, data: Dict) -> Dict:
+    async def handle_data_extra_stage_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_exxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_exxxxx_request(self, data: Dict) -> Dict:
         extra_num = int(data["dldate"]["filetype"][-4:])
         ret_str = ""
         with open(
@@ -178,14 +178,14 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_bonus_list10100_request(self, data: Dict) -> Dict:
+    async def handle_data_bonus_list10100_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_free_coupon_request(self, data: Dict) -> Dict:
+    async def handle_data_free_coupon_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_news_list_request(self, data: Dict) -> Dict:
+    async def handle_data_news_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(r"titles/cxb/data/rss/NewsList.csv", encoding="UTF-8") as news:
             lines = news.readlines()
@@ -193,11 +193,11 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_tips_request(self, data: Dict) -> Dict:
+    async def handle_data_tips_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_license_request(self, data: Dict) -> Dict:
+    async def handle_data_license_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(r"titles/cxb/data/rss/License_Offline.csv", encoding="UTF-8") as lic:
             lines = lic.readlines()
@@ -206,7 +206,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_course_list_request(self, data: Dict) -> Dict:
+    async def handle_data_course_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
             r"titles/cxb/data/rss/Course/CourseList.csv", encoding="UTF-8"
@@ -217,7 +217,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_csxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_csxxxx_request(self, data: Dict) -> Dict:
         # Removed the CSVs since the format isnt quite right
         extra_num = int(data["dldate"]["filetype"][-4:])
         ret_str = ""
@@ -230,7 +230,7 @@ class CxbRev(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_mission_list_request(self, data: Dict) -> Dict:
+    async def handle_data_mission_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
             r"titles/cxb/data/rss/MissionList.csv", encoding="shift-jis"
@@ -240,14 +240,14 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_mission_bonus_request(self, data: Dict) -> Dict:
+    async def handle_data_mission_bonus_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_unlimited_mission_request(self, data: Dict) -> Dict:
+    async def handle_data_unlimited_mission_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_event_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
             r"titles/cxb/data/rss/Event/EventArchiveList.csv", encoding="shift-jis"
@@ -257,39 +257,39 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_event_music_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_music_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_mission_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_mission_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_achievement_single_high_score_list_request(
+    async def handle_data_event_achievement_single_high_score_list_request(
         self, data: Dict
     ) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_achievement_single_accumulation_request(
+    async def handle_data_event_achievement_single_accumulation_request(
         self, data: Dict
     ) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_ranking_high_score_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_ranking_high_score_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_ranking_accumulation_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_ranking_accumulation_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_ranking_stamp_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_ranking_stamp_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_ranking_store_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_ranking_store_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_event_ranking_area_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_ranking_area_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_event_stamp_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_stamp_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
             r"titles/cxb/data/rss/Event/EventStampList.csv", encoding="shift-jis"
@@ -299,8 +299,8 @@ class CxbRev(CxbBase):
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_event_stamp_map_list_csxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_event_stamp_map_list_csxxxx_request(self, data: Dict) -> Dict:
         return {"data": "1,2,1,1,2,3,9,5,6,7,8,9,10,\r\n"}
 
-    def handle_data_server_state_request(self, data: Dict) -> Dict:
+    async def handle_data_server_state_request(self, data: Dict) -> Dict:
         return {"data": True}

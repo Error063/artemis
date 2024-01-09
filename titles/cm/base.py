@@ -29,11 +29,11 @@ class CardMakerBase:
     def _parse_int_ver(version: str) -> str:
         return version.replace(".", "")[:3]
 
-    def handle_get_game_connect_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_connect_api_request(self, data: Dict) -> Dict:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            uri = f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}"
+            uri = f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}"
         else:
-            uri = f"http://{self.core_cfg.title.hostname}"
+            uri = f"http://{self.core_cfg.server.hostname}"
 
         # grab the dict with all games version numbers from user config
         games_ver = self.game_cfg.version.version(self.version)
@@ -62,7 +62,7 @@ class CardMakerBase:
             ],
         }
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         # if reboot start/end time is not defined use the default behavior of being a few hours ago
         if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
             reboot_start = datetime.strftime(
@@ -110,11 +110,11 @@ class CardMakerBase:
             "isAou": False,
         }
 
-    def handle_get_client_bookkeeping_api_request(self, data: Dict) -> Dict:
+    async def handle_get_client_bookkeeping_api_request(self, data: Dict) -> Dict:
         return {"placeId": data["placeId"], "length": 0, "clientBookkeepingList": []}
 
-    def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
-    def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "UpsertClientBookkeepingApi"}

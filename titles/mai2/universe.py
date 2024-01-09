@@ -15,7 +15,7 @@ class Mai2Universe(Mai2SplashPlus):
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
 
-    def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_detail(data["userId"], self.version)
         if p is None:
             return {}
@@ -30,7 +30,7 @@ class Mai2Universe(Mai2SplashPlus):
             "isExistSellingCard": True,
         }
 
-    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         # user already exists, because the preview checks that already
         p = self.data.profile.get_profile_detail(data["userId"], self.version)
 
@@ -52,13 +52,13 @@ class Mai2Universe(Mai2SplashPlus):
 
         return {"userId": data["userId"], "userData": user_data}
 
-    def handle_cm_login_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_login_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1}
 
-    def handle_cm_logout_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_logout_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1}
 
-    def handle_cm_get_selling_card_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_selling_card_api_request(self, data: Dict) -> Dict:
         selling_cards = self.data.static.get_enabled_cards(self.version)
         if selling_cards is None:
             return {"length": 0, "sellingCardList": []}
@@ -88,7 +88,7 @@ class Mai2Universe(Mai2SplashPlus):
 
         return {"length": len(selling_card_list), "sellingCardList": selling_card_list}
 
-    def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
         user_cards = self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {"returnCode": 1, "length": 0, "nextIndex": 0, "userCardList": []}
@@ -124,10 +124,10 @@ class Mai2Universe(Mai2SplashPlus):
             "userCardList": card_list[start_idx:end_idx],
         }
 
-    def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
         super().handle_get_user_item_api_request(data)
 
-    def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = self.data.item.get_characters(data["userId"])
 
         chara_list = []
@@ -153,10 +153,10 @@ class Mai2Universe(Mai2SplashPlus):
             "userCharacterList": chara_list,
         }
 
-    def handle_cm_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
         return {"length": 0, "userPrintDetailList": []}
 
-    def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         upsert = data["userPrintDetail"]
 
@@ -209,12 +209,12 @@ class Mai2Universe(Mai2SplashPlus):
             "endDate": datetime.strftime(end_date, Mai2Constants.DATE_TIME_FORMAT),
         }
 
-    def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
         return {
             "returnCode": 1,
             "orderId": 0,
             "serialId": data["userPrintlog"]["serialId"],
         }
 
-    def handle_cm_upsert_buy_card_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_buy_card_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1}

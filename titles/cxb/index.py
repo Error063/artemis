@@ -1,4 +1,6 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import Response, PlainTextResponse, JSONResponse
 import traceback
 import sys
 import yaml
@@ -62,6 +64,14 @@ class CxbServlet(BaseServlet):
             CxbRevSunriseS2(core_cfg, self.game_cfg),
         ]
 
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/data", self.handle_data, methods=['POST']),
+            Route("/action", self.handle_action, methods=['POST']),
+            Route("/v2/action", self.handle_action, methods=['POST']),
+            Route("/auth", self.handle_auth, methods=['POST']),
+        ]
+
     @classmethod
     def is_game_enabled(cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str) -> bool:
         game_cfg = CxbConfig()
@@ -88,26 +98,12 @@ class CxbServlet(BaseServlet):
             t_port = f":{title_port_int}" if title_port_int and not self.core_cfg.server.is_using_proxy else ""
 
         return (
-            f"{proto}://{self.core_cfg.title.hostname}{t_port}",
+            f"{proto}://{self.core_cfg.server.hostname}{t_port}",
             "",
         )
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [
-                ("handle_data", "/data", {}),
-                ("handle_action", "/action", {}),
-                ("handle_action", "/v2/action", {}),
-                ("handle_auth", "/auth", {}),
-            ]
-        )
-
-    def preprocess(self, req: Request) -> Dict:
-        try:
-            req_bytes = req.content.getvalue()
-        except:
-            req_bytes = req.content.read() # Can we just use this one?
+    async def preprocess(self, req: Request) -> Dict:
+        req_bytes = await req.body()
         
         try:
             req_json: Dict = json.loads(req_bytes)
@@ -126,8 +122,8 @@ class CxbServlet(BaseServlet):
         
         return req_json
 
-    def handle_data(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        req_json = self.preprocess(request)
+    async def handle_data(self, request: Request) -> bytes:
+        req_json = await self.preprocess(request)
         func_to_find = "handle_data_"
         version_string = "Base"
         internal_ver = 0
@@ -135,7 +131,7 @@ class CxbServlet(BaseServlet):
         
         if req_json == {}:
             self.logger.warning(f"Empty json request to /data")
-            return b""
+            return Response()
 
         subcmd = list(req_json.keys())[0]
         if subcmd == "dldate":
@@ -145,14 +141,14 @@ class CxbServlet(BaseServlet):
                 or "filetype" not in req_json["dldate"]
             ):
                 self.logger.warning(f"Malformed dldate request: {req_json}")
-                return b""
+                return Response()
 
             filetype = req_json["dldate"]["filetype"]
             filetype_split = filetype.split("/")
 
             if len(filetype_split) < 2 or not filetype_split[0].isnumeric():
                 self.logger.warning(f"Malformed dldate request: {req_json}")
-                return b""
+                return Response()
 
             version = int(filetype_split[0])
             filename = filetype_split[len(filetype_split) - 1]
@@ -184,7 +180,7 @@ class CxbServlet(BaseServlet):
 
         if not hasattr(self.versions[internal_ver], func_to_find):
             self.logger.warn(f"{version_string} has no handler for filetype {filetype} / {func_to_find}")
-            return({"data":""})
+            return JSONResponse({"data":""})
         
         self.logger.info(f"{version_string} request for filetype {filetype}")
         self.logger.debug(req_json)
@@ -192,7 +188,7 @@ class CxbServlet(BaseServlet):
         handler = getattr(self.versions[internal_ver], func_to_find)
         
         try:
-            resp = handler(req_json)
+            resp = await handler(req_json)
 
         except Exception as e:
             self.logger.error(f"Error handling request for file {filetype} - {e}")
@@ -201,19 +197,19 @@ class CxbServlet(BaseServlet):
                 traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
                     traceback.print_exception(tp, val, tb, limit=1, file=f)
-            return ""
+            return Response()
         
         self.logger.debug(f"{version_string} Response {resp}")
-        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+        return JSONResponse(resp, ensure_ascii=False)
 
-    def handle_action(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        req_json = self.preprocess(request)
+    async def handle_action(self, request: Request) -> bytes:
+        req_json = await self.preprocess(request)
         subcmd = list(req_json.keys())[0]
         func_to_find = f"handle_action_{subcmd}_request"
         
         if not hasattr(self.versions[0], func_to_find):
             self.logger.warn(f"No handler for action {subcmd} request")
-            return ""
+            return Response()
         
         self.logger.info(f"Action {subcmd} Request")
         self.logger.debug(req_json)
@@ -221,7 +217,7 @@ class CxbServlet(BaseServlet):
         handler = getattr(self.versions[0], func_to_find)
         
         try:
-            resp = handler(req_json)
+            resp = await handler(req_json)
 
         except Exception as e:
             self.logger.error(f"Error handling action {subcmd} request - {e}")
@@ -230,19 +226,19 @@ class CxbServlet(BaseServlet):
                 traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
                     traceback.print_exception(tp, val, tb, limit=1, file=f)
-            return ""
+            return Response()
         
         self.logger.debug(f"Response {resp}")
-        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+        return JSONResponse(resp)
 
-    def handle_auth(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        req_json = self.preprocess(request)
+    async def handle_auth(self, request: Request) -> bytes:
+        req_json = await self.preprocess(request)
         subcmd = list(req_json.keys())[0]
         func_to_find = f"handle_auth_{subcmd}_request"
         
         if not hasattr(self.versions[0], func_to_find):
             self.logger.warn(f"No handler for auth {subcmd} request")
-            return ""
+            return Response()
         
         self.logger.info(f"Action {subcmd} Request")
         self.logger.debug(req_json)
@@ -250,7 +246,7 @@ class CxbServlet(BaseServlet):
         handler = getattr(self.versions[0], func_to_find)
         
         try:
-            resp = handler(req_json)
+            resp = await handler(req_json)
 
         except Exception as e:
             self.logger.error(f"Error handling auth {subcmd} request - {e}")
@@ -259,7 +255,7 @@ class CxbServlet(BaseServlet):
                 traceback.print_exception(tp, val, tb, limit=1)
                 with open("{0}/{1}.log".format(self.core_cfg.server.log_dir, "cxb"), "a") as f:
                     traceback.print_exception(tp, val, tb, limit=1, file=f)
-            return ""
+            return Response()
         
         self.logger.debug(f"Response {resp}")
-        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+        return JSONResponse(resp)

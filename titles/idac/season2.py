@@ -109,9 +109,9 @@ class IDACSeason2(IDACBase):
         ver_str = version.replace(".", "")[:3]
 
         if self.core_cfg.server.is_develop:
-            domain_api_game = f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDGT/{ver_str}/"
+            domain_api_game = f"http://{self.core_cfg.server.hostname}:{self.core_cfg.server.port}/SDGT/{ver_str}/"
         else:
-            domain_api_game = f"http://{self.core_cfg.title.hostname}/SDGT/{ver_str}/"
+            domain_api_game = f"http://{self.core_cfg.server.hostname}/SDGT/{ver_str}/"
 
         return {
             "status_code": "0",
@@ -136,10 +136,10 @@ class IDACSeason2(IDACBase):
             "server_maintenance_end_hour": 0,
             "server_maintenance_end_minutes": 0,
             "domain_api_game": domain_api_game,
-            "domain_matching": f"http://{self.core_cfg.title.hostname}:{self.game_config.server.matching}",
-            "domain_echo1": f"{self.core_cfg.title.hostname}:{self.game_config.server.echo1}",
-            "domain_echo2": f"{self.core_cfg.title.hostname}:{self.game_config.server.echo2}",
-            "domain_ping": f"{self.core_cfg.title.hostname}",
+            "domain_matching": f"http://{self.core_cfg.server.hostname}:{self.game_config.server.matching}",
+            "domain_echo1": f"{self.core_cfg.server.hostname}:{self.game_config.server.echo1}",
+            "domain_echo2": f"{self.core_cfg.server.hostname}:{self.game_config.server.echo2}",
+            "domain_ping": f"{self.core_cfg.server.hostname}",
             "battle_gift_event_master": [],
             "round_event": [
                 {

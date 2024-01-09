@@ -5,10 +5,11 @@ import string
 import logging
 import coloredlogs
 import zlib
-
+from starlette.routing import Route
+from starlette.responses import Response
+from starlette.requests import Request
 from os import path
-from typing import Tuple, List, Dict
-from twisted.web.http import Request
+from typing import List
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
@@ -18,7 +19,6 @@ from .config import CardMakerConfig
 from .const import CardMakerConstants
 from .base import CardMakerBase
 from .cm135 import CardMaker135
-
 
 class CardMakerServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -72,16 +72,15 @@ class CardMakerServlet(BaseServlet):
 
         return True
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [("render_POST", "/SDED/{version}/{endpoint}", {})]
-        )
-
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        version = int(matchers['version'])
-        endpoint = matchers['endpoint']
-        req_raw = request.content.getvalue()
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/SDED/{version:int}/{endpoint:str}", self.render_POST)
+        ]
+    
+    async def render_POST(self, request: Request) -> bytes:
+        version: int = request.path_params.get('version')
+        endpoint: str = request.path_params.get('endpoint')
+        req_raw = await request.body()
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
 
@@ -103,7 +102,7 @@ class CardMakerServlet(BaseServlet):
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
@@ -114,7 +113,7 @@ class CardMakerServlet(BaseServlet):
 
         if not hasattr(self.versions[internal_ver], func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
-            return zlib.compress(b'{"returnCode": 1}')
+            return Response(zlib.compress(b'{"returnCode": 1}'))
 
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
@@ -123,11 +122,11 @@ class CardMakerServlet(BaseServlet):
         except Exception as e:
             self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
             raise
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         if resp is None:
             resp = {"returnCode": 1}
 
         self.logger.debug(f"Response {resp}")
 
-        return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+        return Response(zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8")))

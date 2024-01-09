@@ -11,8 +11,8 @@ class Mai2UniversePlus(Mai2Universe):
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
 
-    def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
-        user_data = super().handle_cm_get_user_preview_api_request(data)
+    async def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
+        user_data = await super().handle_cm_get_user_preview_api_request(data)
 
         # hardcode lastDataVersion for CardMaker 1.35
         user_data["lastDataVersion"] = "1.25.00"

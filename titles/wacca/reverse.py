@@ -47,12 +47,12 @@ class WaccaReverse(WaccaLilyR):
             (310006, 0),
         ]
 
-    def handle_user_status_login_request(self, data: Dict) -> Dict:
-        resp = super().handle_user_status_login_request(data)
+    async def handle_user_status_login_request(self, data: Dict) -> Dict:
+        resp = await super().handle_user_status_login_request(data)
         resp["params"].append([])
         return resp
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
+    async def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
         req = UserStatusGetDetailRequest(data)
         resp = UserStatusGetDetailResponseV4()
 
@@ -305,9 +305,9 @@ class WaccaReverse(WaccaLilyR):
 
         return resp.make()
 
-    def handle_user_status_create_request(self, data: Dict) -> Dict:
+    async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
-        resp = super().handle_user_status_create_request(data)
+        resp = await super().handle_user_status_create_request(data)
 
         self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 310001

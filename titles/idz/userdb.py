@@ -5,7 +5,7 @@ import struct
 from typing import Dict, Optional, List, Type
 from twisted.web import server, resource
 from twisted.internet import reactor, endpoints
-from twisted.web.http import Request
+from starlette.requests import Request
 from routes import Mapper
 import random
 from os import walk

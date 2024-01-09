@@ -15,8 +15,8 @@ class OngekiBrightMemory(OngekiBright):
         super().__init__(core_cfg, game_cfg)
         self.version = OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        ret = super().handle_get_game_setting_api_request(data)
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+        ret = await super().handle_get_game_setting_api_request(data)
         ret["gameSetting"]["dataVersion"] = "1.35.00"
         ret["gameSetting"]["onlineDataVersion"] = "1.35.00"
         ret["gameSetting"]["maxCountCharacter"] = 50
@@ -27,7 +27,7 @@ class OngekiBrightMemory(OngekiBright):
         ret["gameSetting"]["maxCountRivalMusic"] = 300
         return ret
 
-    def handle_get_user_memory_chapter_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_memory_chapter_api_request(self, data: Dict) -> Dict:
         memories = self.data.item.get_memorychapters(data["userId"])
         if not memories:
             return {
@@ -134,5 +134,5 @@ class OngekiBrightMemory(OngekiBright):
             "userMemoryChapterList": memory_chp,
         }
 
-    def handle_get_game_music_release_state_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_music_release_state_api_request(self, data: Dict) -> Dict:
         return {"techScore": 0, "cardNum": 0}

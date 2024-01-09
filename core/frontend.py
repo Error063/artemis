@@ -2,7 +2,9 @@ import logging, coloredlogs
 from typing import Any, Dict, List
 from twisted.web import resource
 from twisted.web.util import redirectTo
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import Response, PlainTextResponse
 from logging.handlers import TimedRotatingFileHandler
 from twisted.web.server import Session
 from zope.interface import Interface, Attribute, implementer
@@ -98,8 +100,15 @@ class FrontendServlet(resource.Resource):
         self.putChild(b"game", fe_game)
 
         self.logger.info(
-            f"Ready on port {self.config.frontend.port} serving {len(fe_game.children)} games"
+            f"Ready on port {self.config.server.port} serving {len(fe_game.children)} games"
         )
+    
+    def get_routes(self) -> List[Route]:
+        return []
+    
+    @classmethod    
+    async def robots(cls, request: Request) -> PlainTextResponse:
+        return PlainTextResponse("User-agent: *\nDisallow: /\n\nUser-agent: AdsBot-Google\nDisallow: /")
 
     def render_GET(self, request):
         self.logger.debug(f"{Utils.get_ip_addr(request)} -> {request.uri.decode()}")

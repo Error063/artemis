@@ -1,8 +1,7 @@
 import datetime
-from typing import Any, List, Dict
+from typing import Dict
 import logging
-import json
-import urllib
+import urllib.parse
 from threading import Thread
 
 from core.config import CoreConfig
@@ -24,13 +23,13 @@ class DivaBase:
         dt = datetime.datetime.now()
         self.time_lut = urllib.parse.quote(dt.strftime("%Y-%m-%d %H:%M:%S:16.0"))
 
-    def handle_test_request(self, data: Dict) -> Dict:
+    async def handle_test_request(self, data: Dict) -> Dict:
         return ""
 
-    def handle_game_init_request(self, data: Dict) -> Dict:
+    async def handle_game_init_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_attend_request(self, data: Dict) -> Dict:
+    async def handle_attend_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
             "atnd_prm1": "0,1,1,0,0,0,1,0,100,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
@@ -44,7 +43,7 @@ class DivaBase:
 
         return encoded
 
-    def handle_ping_request(self, data: Dict) -> Dict:
+    async def handle_ping_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
             "ping_b_msg": f"Welcome to {self.core_cfg.server.name} network!",
@@ -89,7 +88,7 @@ class DivaBase:
 
         return encoded
 
-    def handle_pv_list_request(self, data: Dict) -> Dict:
+    async def handle_pv_list_request(self, data: Dict) -> Dict:
         pvlist = ""
         with open(r"titles/diva/data/PvList0.dat", encoding="utf-8") as shop:
             lines = shop.readlines()
@@ -126,7 +125,7 @@ class DivaBase:
 
         return response
 
-    def handle_shop_catalog_request(self, data: Dict) -> Dict:
+    async def handle_shop_catalog_request(self, data: Dict) -> Dict:
         catalog = ""
 
         shopList = self.data.static.get_enabled_shops(self.version)
@@ -164,7 +163,7 @@ class DivaBase:
 
         return response
 
-    def handle_buy_module_request(self, data: Dict) -> Dict:
+    async def handle_buy_module_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
         module = self.data.static.get_enabled_shop(self.version, int(data["mdl_id"]))
 
@@ -191,7 +190,7 @@ class DivaBase:
 
         return response
 
-    def handle_cstmz_itm_ctlg_request(self, data: Dict) -> Dict:
+    async def handle_cstmz_itm_ctlg_request(self, data: Dict) -> Dict:
         catalog = ""
 
         itemList = self.data.static.get_enabled_items(self.version)
@@ -229,7 +228,7 @@ class DivaBase:
 
         return response
 
-    def handle_buy_cstmz_itm_request(self, data: Dict) -> Dict:
+    async def handle_buy_cstmz_itm_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
         item = self.data.static.get_enabled_item(
             self.version, int(data["cstmz_itm_id"])
@@ -264,7 +263,7 @@ class DivaBase:
 
         return response
 
-    def handle_festa_info_request(self, data: Dict) -> Dict:
+    async def handle_festa_info_request(self, data: Dict) -> Dict:
         encoded = "&"
         params = {
             "fi_id": "1,2",
@@ -287,7 +286,7 @@ class DivaBase:
 
         return encoded
 
-    def handle_contest_info_request(self, data: Dict) -> Dict:
+    async def handle_contest_info_request(self, data: Dict) -> Dict:
         response = ""
 
         response += f"&ci_lut={self.time_lut}"
@@ -295,7 +294,7 @@ class DivaBase:
 
         return response
 
-    def handle_qst_inf_request(self, data: Dict) -> Dict:
+    async def handle_qst_inf_request(self, data: Dict) -> Dict:
         quest = ""
 
         questList = self.data.static.get_enabled_quests(self.version)
@@ -345,43 +344,43 @@ class DivaBase:
 
         return response
 
-    def handle_nv_ranking_request(self, data: Dict) -> Dict:
+    async def handle_nv_ranking_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_ps_ranking_request(self, data: Dict) -> Dict:
+    async def handle_ps_ranking_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_ng_word_request(self, data: Dict) -> Dict:
+    async def handle_ng_word_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_rmt_wp_list_request(self, data: Dict) -> Dict:
+    async def handle_rmt_wp_list_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_pv_def_chr_list_request(self, data: Dict) -> Dict:
+    async def handle_pv_def_chr_list_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_pv_ng_mdl_list_request(self, data: Dict) -> Dict:
+    async def handle_pv_ng_mdl_list_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_cstmz_itm_ng_mdl_lst_request(self, data: Dict) -> Dict:
+    async def handle_cstmz_itm_ng_mdl_lst_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_banner_info_request(self, data: Dict) -> Dict:
+    async def handle_banner_info_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_banner_data_request(self, data: Dict) -> Dict:
+    async def handle_banner_data_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_cm_ply_info_request(self, data: Dict) -> Dict:
+    async def handle_cm_ply_info_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_pstd_h_ctrl_request(self, data: Dict) -> Dict:
+    async def handle_pstd_h_ctrl_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_pstd_item_ng_lst_request(self, data: Dict) -> Dict:
+    async def handle_pstd_item_ng_lst_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_pre_start_request(self, data: Dict) -> str:
+    async def handle_pre_start_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["aime_id"], self.version)
         profile_shop = self.data.item.get_shop(data["aime_id"], self.version)
 
@@ -422,13 +421,13 @@ class DivaBase:
 
             return response
 
-    def handle_registration_request(self, data: Dict) -> Dict:
+    async def handle_registration_request(self, data: Dict) -> Dict:
         self.data.profile.create_profile(
             self.version, data["aime_id"], data["player_name"]
         )
         return f"&cd_adm_result=1&pd_id={data['aime_id']}"
 
-    def handle_start_request(self, data: Dict) -> Dict:
+    async def handle_start_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
         profile_shop = self.data.item.get_shop(data["pd_id"], self.version)
         if profile is None:
@@ -583,10 +582,10 @@ class DivaBase:
 
         return response
 
-    def handle_pd_unlock_request(self, data: Dict) -> Dict:
+    async def handle_pd_unlock_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_spend_credit_request(self, data: Dict) -> Dict:
+    async def handle_spend_credit_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
         if profile is None:
             return
@@ -705,7 +704,7 @@ class DivaBase:
             pd_by_pv_id.append(urllib.parse.quote(f"{song}***"))
         pd_by_pv_id.append(",")
 
-    def handle_get_pv_pd_request(self, data: Dict) -> Dict:
+    async def handle_get_pv_pd_request(self, data: Dict) -> Dict:
         song_id = data["pd_pv_id_lst"].split(",")
         pv = ""
 
@@ -732,10 +731,10 @@ class DivaBase:
 
         return response
 
-    def handle_stage_start_request(self, data: Dict) -> Dict:
+    async def handle_stage_start_request(self, data: Dict) -> Dict:
         return f""
 
-    def handle_stage_result_request(self, data: Dict) -> Dict:
+    async def handle_stage_result_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         pd_song_list = data["stg_ply_pv_id"].split(",")
@@ -914,7 +913,7 @@ class DivaBase:
 
         return response
 
-    def handle_end_request(self, data: Dict) -> Dict:
+    async def handle_end_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         self.data.profile.update_profile(
@@ -922,7 +921,7 @@ class DivaBase:
         )
         return f""
 
-    def handle_shop_exit_request(self, data: Dict) -> Dict:
+    async def handle_shop_exit_request(self, data: Dict) -> Dict:
         self.data.item.put_shop(
             data["pd_id"],
             self.version,
@@ -952,7 +951,7 @@ class DivaBase:
         response = "&shp_rslt=1"
         return response
 
-    def handle_card_procedure_request(self, data: Dict) -> str:
+    async def handle_card_procedure_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["aime_id"], self.version)
         if profile is None:
             return "&cd_adm_result=0"
@@ -972,7 +971,7 @@ class DivaBase:
 
         return response
 
-    def handle_change_name_request(self, data: Dict) -> str:
+    async def handle_change_name_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         # make sure user has enough Vocaloid Points
@@ -992,7 +991,7 @@ class DivaBase:
 
         return response
 
-    def handle_change_passwd_request(self, data: Dict) -> str:
+    async def handle_change_passwd_request(self, data: Dict) -> str:
         profile = self.data.profile.get_profile(data["pd_id"], self.version)
 
         # TODO: return correct error number instead of 0

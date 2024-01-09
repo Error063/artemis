@@ -33,7 +33,7 @@ class ChuniNew(ChuniBase):
         if self.version == ChuniConstants.VER_CHUNITHM_SUN_PLUS:
             return "215"
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         # use UTC time and convert it to JST time by adding +9
         # matching therefore starts one hour before and lasts for 8 hours
         match_start = datetime.strftime(
@@ -82,26 +82,26 @@ class ChuniNew(ChuniBase):
                 "matchErrorLimit": self.game_cfg.matching.match_error_limit,
                 "romVersion": self.game_cfg.version.version(self.version)["rom"],
                 "dataVersion": self.game_cfg.version.version(self.version)["data"],
-                "matchingUri": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
-                "matchingUriX": f"http://{self.core_cfg.title.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "matchingUri": f"http://{self.core_cfg.server.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "matchingUriX": f"http://{self.core_cfg.server.hostname}:{t_port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
                 # might be really important for online battle to connect the cabs via UDP port 50201
-                "udpHolePunchUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
-                "reflectorUri": f"http://{self.core_cfg.title.hostname}:{self.core_cfg.title.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "udpHolePunchUri": f"http://{self.core_cfg.server.hostname}:{self.core_cfg.server.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
+                "reflectorUri": f"http://{self.core_cfg.server.hostname}:{self.core_cfg.server.port}/SDHD/{self._interal_ver_to_intver()}/ChuniServlet/",
             },
             "isDumpUpload": False,
             "isAou": False,
         }
 
-    def handle_remove_token_api_request(self, data: Dict) -> Dict:
+    async def handle_remove_token_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_delete_token_api_request(self, data: Dict) -> Dict:
+    async def handle_delete_token_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_create_token_api_request(self, data: Dict) -> Dict:
+    async def handle_create_token_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_get_user_map_area_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_map_area_api_request(self, data: Dict) -> Dict:
         user_map_areas = self.data.item.get_map_areas(data["userId"])
 
         map_areas = []
@@ -113,10 +113,10 @@ class ChuniNew(ChuniBase):
 
         return {"userId": data["userId"], "userMapAreaList": map_areas}
 
-    def handle_get_user_symbol_chat_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_symbol_chat_setting_api_request(self, data: Dict) -> Dict:
         return {"userId": data["userId"], "symbolCharInfoList": []}
 
-    def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_preview(data["userId"], self.version)
         if profile is None:
             return None
@@ -164,7 +164,7 @@ class ChuniNew(ChuniBase):
         }
         return data1
 
-    def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_preview_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
@@ -177,13 +177,13 @@ class ChuniNew(ChuniBase):
             "isLogin": False,
         }
 
-    def handle_printer_login_api_request(self, data: Dict) -> Dict:
+    async def handle_printer_login_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1}
 
-    def handle_printer_logout_api_request(self, data: Dict) -> Dict:
+    async def handle_printer_logout_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1}
 
-    def handle_get_game_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_gacha_api_request(self, data: Dict) -> Dict:
         """
         returns all current active banners (gachas)
         """
@@ -213,7 +213,7 @@ class ChuniNew(ChuniBase):
             "registIdList": [],
         }
 
-    def handle_get_game_gacha_card_by_id_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_gacha_card_by_id_api_request(self, data: Dict) -> Dict:
         """
         returns all valid cards for a given gachaId
         """
@@ -237,7 +237,7 @@ class ChuniNew(ChuniBase):
             "ssrBookCalcList": [],
         }
 
-    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
@@ -262,7 +262,7 @@ class ChuniNew(ChuniBase):
             ],
         }
 
-    def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
         user_gachas = self.data.item.get_user_gachas(data["userId"])
         if user_gachas is None:
             return {"userId": data["userId"], "length": 0, "userGachaList": []}
@@ -281,7 +281,7 @@ class ChuniNew(ChuniBase):
             "userGachaList": user_gacha_list,
         }
 
-    def handle_get_user_printed_card_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_printed_card_api_request(self, data: Dict) -> Dict:
         user_print_list = self.data.item.get_user_print_states(
             data["userId"], has_completed=True
         )
@@ -316,7 +316,7 @@ class ChuniNew(ChuniBase):
             "userPrintedCardList": print_list,
         }
 
-    def handle_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_card_print_error_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
 
         user_print_states = self.data.item.get_user_print_states(
@@ -338,13 +338,13 @@ class ChuniNew(ChuniBase):
             "userCardPrintStateList": card_print_state_list,
         }
 
-    def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
         return super().handle_get_user_character_api_request(data)
 
-    def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
         return super().handle_get_user_item_api_request(data)
 
-    def handle_roll_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_roll_gacha_api_request(self, data: Dict) -> Dict:
         """
         Handle a gacha roll API request, with:
         gachaId: the gachaId where the cards should be pulled from
@@ -386,7 +386,7 @@ class ChuniNew(ChuniBase):
 
         return {"length": len(rolled_cards), "gameGachaCardList": rolled_cards}
 
-    def handle_cm_upsert_user_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_gacha_api_request(self, data: Dict) -> Dict:
         upsert = data["cmUpsertUserGacha"]
         user_id = data["userId"]
         place_id = data["placeId"]
@@ -441,7 +441,7 @@ class ChuniNew(ChuniBase):
             "userCardPrintStateList": card_print_state_list,
         }
 
-    def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
         return {
             "returnCode": 1,
             "orderId": 0,
@@ -449,7 +449,7 @@ class ChuniNew(ChuniBase):
             "apiName": "CMUpsertUserPrintlogApi",
         }
 
-    def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
         user_print_detail = data["userPrintDetail"]
         user_id = data["userId"]
 
@@ -474,7 +474,7 @@ class ChuniNew(ChuniBase):
             "apiName": "CMUpsertUserPrintApi",
         }
 
-    def handle_cm_upsert_user_print_subtract_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_subtract_api_request(self, data: Dict) -> Dict:
         upsert = data["userCardPrintState"]
         user_id = data["userId"]
         place_id = data["placeId"]
@@ -491,7 +491,7 @@ class ChuniNew(ChuniBase):
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintSubtractApi"}
 
-    def handle_cm_upsert_user_print_cancel_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_cancel_api_request(self, data: Dict) -> Dict:
         order_ids = data["orderIdList"]
         user_id = data["userId"]
 
@@ -501,11 +501,11 @@ class ChuniNew(ChuniBase):
 
         return {"returnCode": "1", "apiName": "CMUpsertUserPrintCancelApi"}
 
-    def handle_ping_request(self, data: Dict) -> Dict:
+    async def handle_ping_request(self, data: Dict) -> Dict:
         # matchmaking ping request
         return {"returnCode": "1"}
 
-    def handle_begin_matching_api_request(self, data: Dict) -> Dict:
+    async def handle_begin_matching_api_request(self, data: Dict) -> Dict:
         room_id = 1
         # check if there is a free matching room
         matching_room = self.data.item.get_oldest_free_matching(self.version)
@@ -554,7 +554,7 @@ class ChuniNew(ChuniBase):
 
         return {"roomId": 1, "matchingWaitState": matching_wait}
 
-    def handle_end_matching_api_request(self, data: Dict) -> Dict:
+    async def handle_end_matching_api_request(self, data: Dict) -> Dict:
         matching_room = self.data.item.get_matching(self.version, data["roomId"])
         members = matching_room["matchingMemberInfoList"]
 
@@ -579,10 +579,10 @@ class ChuniNew(ChuniBase):
             # no idea, maybe to differentiate between CPUs and real players?
             "matchingMemberRoleList": role_list,
             # TCP/UDP connection?
-            "reflectorUri": f"{self.core_cfg.title.hostname}",
+            "reflectorUri": f"{self.core_cfg.server.hostname}",
         }
 
-    def handle_remove_matching_member_api_request(self, data: Dict) -> Dict:
+    async def handle_remove_matching_member_api_request(self, data: Dict) -> Dict:
         # get all matching rooms, because Chuni only returns the userId
         # not the actual roomId
         matching_rooms = self.data.item.get_all_matchings(self.version)
@@ -612,7 +612,7 @@ class ChuniNew(ChuniBase):
 
         return {"returnCode": "1"}
 
-    def handle_get_matching_state_api_request(self, data: Dict) -> Dict:
+    async def handle_get_matching_state_api_request(self, data: Dict) -> Dict:
         polling_interval = 1
         # get the current active room
         matching_room = self.data.item.get_matching(self.version, data["roomId"])

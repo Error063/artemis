@@ -83,18 +83,18 @@ class WaccaBase:
         else:
             self.region_id = WaccaConstants.Region[prefecture_name]
 
-    def handle_housing_get_request(self, data: Dict) -> Dict:
+    async def handle_housing_get_request(self, data: Dict) -> Dict:
         req = BaseRequest(data)
         housing_id = 1337
         self.logger.info(f"{req.chipId} -> {housing_id}")
         resp = HousingGetResponse(housing_id)
         return resp.make()
 
-    def handle_advertise_GetRanking_request(self, data: Dict) -> Dict:
+    async def handle_advertise_GetRanking_request(self, data: Dict) -> Dict:
         req = AdvertiseGetRankingRequest(data)
         return AdvertiseGetRankingResponse().make()
 
-    def handle_housing_start_request(self, data: Dict) -> Dict:
+    async def handle_housing_start_request(self, data: Dict) -> Dict:
         req = HousingStartRequestV1(data)
         allnet_region_id = None
 
@@ -126,16 +126,16 @@ class WaccaBase:
         resp = HousingStartResponseV1(region_id)
         return resp.make()
 
-    def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
+    async def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
         resp = GetNewsResponseV1()
         return resp.make()
 
-    def handle_user_status_logout_request(self, data: Dict) -> Dict:
+    async def handle_user_status_logout_request(self, data: Dict) -> Dict:
         req = UserStatusLogoutRequest(data)
         self.logger.info(f"Log out user {req.userId} from {req.chipId}")
         return BaseResponse().make()
 
-    def handle_user_status_get_request(self, data: Dict) -> Dict:
+    async def handle_user_status_get_request(self, data: Dict) -> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV1Response()
 
@@ -181,7 +181,7 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_user_status_login_request(self, data: Dict) -> Dict:
+    async def handle_user_status_login_request(self, data: Dict) -> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV1()
         is_consec_day = True
@@ -227,7 +227,7 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_user_status_create_request(self, data: Dict) -> Dict:
+    async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
 
         profileId = self.data.profile.create_profile(
@@ -268,7 +268,7 @@ class WaccaBase:
 
         return UserStatusCreateResponseV2(profileId, req.username).make()
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
+    async def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
         req = UserStatusGetDetailRequest(data)
         resp = UserStatusGetDetailResponseV1()
 
@@ -433,7 +433,7 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_user_trial_get_request(self, data: Dict) -> Dict:
+    async def handle_user_trial_get_request(self, data: Dict) -> Dict:
         req = UserTrialGetRequest(data)
         resp = UserTrialGetResponse()
 
@@ -475,7 +475,7 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_user_trial_update_request(self, data: Dict) -> Dict:
+    async def handle_user_trial_update_request(self, data: Dict) -> Dict:
         req = UserTrialUpdateRequest(data)
 
         total_score = 0
@@ -571,7 +571,7 @@ class WaccaBase:
         )
         return BaseResponse().make()
 
-    def handle_user_sugoroku_update_request(self, data: Dict) -> Dict:
+    async def handle_user_sugoroku_update_request(self, data: Dict) -> Dict:
         ver_split = data["appVersion"].split(".")
         resp = BaseResponse()
 
@@ -603,10 +603,10 @@ class WaccaBase:
         )
         return resp.make()
 
-    def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
+    async def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
         return UserInfogetMyroomResponseV1().make()
 
-    def handle_user_music_unlock_request(self, data: Dict) -> Dict:
+    async def handle_user_music_unlock_request(self, data: Dict) -> Dict:
         req = UserMusicUnlockRequest(data)
 
         profile = self.data.profile.get_profile(req.profileId)
@@ -672,12 +672,12 @@ class WaccaBase:
 
         return UserMusicUnlockResponse(current_wp, new_tickets).make()
 
-    def handle_user_info_getRanking_request(self, data: Dict) -> Dict:
+    async def handle_user_info_getRanking_request(self, data: Dict) -> Dict:
         # total score, high score by song, cumulative socre, stage up score, other score, WP ranking
         # This likely requies calculating standings at regular intervals and caching the results
         return UserInfogetRankingResponse().make()
 
-    def handle_user_music_update_request(self, data: Dict) -> Dict:
+    async def handle_user_music_update_request(self, data: Dict) -> Dict:
         ver_split = data["appVersion"].split(".")
         if int(ver_split[0]) >= 3:
             resp = UserMusicUpdateResponseV3()
@@ -831,18 +831,18 @@ class WaccaBase:
         return resp.make()
 
     # TODO: Coop and vs data
-    def handle_user_music_updateCoop_request(self, data: Dict) -> Dict:
+    async def handle_user_music_updateCoop_request(self, data: Dict) -> Dict:
         coop_info = data["params"][4]
         return self.handle_user_music_update_request(data)
 
-    def handle_user_music_updateVersus_request(self, data: Dict) -> Dict:
+    async def handle_user_music_updateVersus_request(self, data: Dict) -> Dict:
         vs_info = data["params"][4]
         return self.handle_user_music_update_request(data)
 
-    def handle_user_music_updateTrial_request(self, data: Dict) -> Dict:
+    async def handle_user_music_updateTrial_request(self, data: Dict) -> Dict:
         return self.handle_user_music_update_request(data)
 
-    def handle_user_mission_update_request(self, data: Dict) -> Dict:
+    async def handle_user_mission_update_request(self, data: Dict) -> Dict:
         req = UserMissionUpdateRequest(data)
         page_status = req.params[1][1]
 
@@ -860,7 +860,7 @@ class WaccaBase:
 
         return BaseResponse().make()
 
-    def handle_user_goods_purchase_request(self, data: Dict) -> Dict:
+    async def handle_user_goods_purchase_request(self, data: Dict) -> Dict:
         req = UserGoodsPurchaseRequest(data)
         resp = UserGoodsPurchaseResponse()
 
@@ -905,13 +905,13 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_competition_status_login_request(self, data: Dict) -> Dict:
+    async def handle_competition_status_login_request(self, data: Dict) -> Dict:
         return BaseResponse().make()
 
-    def handle_competition_status_update_request(self, data: Dict) -> Dict:
+    async def handle_competition_status_update_request(self, data: Dict) -> Dict:
         return BaseResponse().make()
 
-    def handle_user_rating_update_request(self, data: Dict) -> Dict:
+    async def handle_user_rating_update_request(self, data: Dict) -> Dict:
         req = UserRatingUpdateRequest(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
@@ -931,7 +931,7 @@ class WaccaBase:
 
         return BaseResponse().make()
 
-    def handle_user_status_update_request(self, data: Dict) -> Dict:
+    async def handle_user_status_update_request(self, data: Dict) -> Dict:
         req = UserStatusUpdateRequestV1(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
@@ -970,7 +970,7 @@ class WaccaBase:
         )
         return BaseResponse().make()
 
-    def handle_user_info_update_request(self, data: Dict) -> Dict:
+    async def handle_user_info_update_request(self, data: Dict) -> Dict:
         req = UserInfoUpdateRequest(data)
 
         user_id = self.data.profile.profile_to_aime_user(req.profileId)
@@ -989,7 +989,7 @@ class WaccaBase:
 
         return BaseResponse().make()
 
-    def handle_user_vip_get_request(self, data: Dict) -> Dict:
+    async def handle_user_vip_get_request(self, data: Dict) -> Dict:
         req = UserVipGetRequest(data)
         resp = UserVipGetResponse()
 
@@ -1021,7 +1021,7 @@ class WaccaBase:
 
         return resp.make()
 
-    def handle_user_vip_start_request(self, data: Dict) -> Dict:
+    async def handle_user_vip_start_request(self, data: Dict) -> Dict:
         req = UserVipStartRequest(data)
 
         profile = self.data.profile.get_profile(req.profileId)

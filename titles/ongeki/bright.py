@@ -15,13 +15,13 @@ class OngekiBright(OngekiBase):
         super().__init__(core_cfg, game_cfg)
         self.version = OngekiConstants.VER_ONGEKI_BRIGHT
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        ret = super().handle_get_game_setting_api_request(data)
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+        ret = await super().handle_get_game_setting_api_request(data)
         ret["gameSetting"]["dataVersion"] = "1.30.00"
         ret["gameSetting"]["onlineDataVersion"] = "1.30.00"
         return ret
 
-    def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_data_api_request(self, data: Dict) -> Dict:
         # check for a bright profile
         p = self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
@@ -55,13 +55,13 @@ class OngekiBright(OngekiBase):
 
         return {"userId": data["userId"], "userData": user_data}
 
-    def handle_printer_login_api_request(self, data: Dict):
+    async def handle_printer_login_api_request(self, data: Dict):
         return {"returnCode": 1}
 
-    def handle_printer_logout_api_request(self, data: Dict):
+    async def handle_printer_logout_api_request(self, data: Dict):
         return {"returnCode": 1}
 
-    def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_card_api_request(self, data: Dict) -> Dict:
         user_cards = self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {}
@@ -90,7 +90,7 @@ class OngekiBright(OngekiBase):
             "userCardList": card_list[start_idx:end_idx],
         }
 
-    def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
         user_characters = self.data.item.get_characters(data["userId"])
         if user_characters is None:
             return {
@@ -124,7 +124,7 @@ class OngekiBright(OngekiBase):
             "userCharacterList": character_list[start_idx:end_idx],
         }
 
-    def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_gacha_api_request(self, data: Dict) -> Dict:
         user_gachas = self.data.item.get_user_gachas(data["userId"])
         if user_gachas is None:
             return {"userId": data["userId"], "length": 0, "userGachaList": []}
@@ -143,10 +143,10 @@ class OngekiBright(OngekiBase):
             "userGachaList": user_gacha_list,
         }
 
-    def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
         return self.handle_get_user_item_api_request(data)
 
-    def handle_cm_get_user_gacha_supply_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_get_user_gacha_supply_api_request(self, data: Dict) -> Dict:
         # not used for now? not sure what it even does
         user_gacha_supplies = self.data.item.get_user_gacha_supplies(data["userId"])
         if user_gacha_supplies is None:
@@ -160,7 +160,7 @@ class OngekiBright(OngekiBase):
             "supplyCardList": supply_list,
         }
 
-    def handle_get_game_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_gacha_api_request(self, data: Dict) -> Dict:
         """
         returns all current active banners (gachas)
         "Select Gacha" requires maxSelectPoint set and isCeiling set to 1
@@ -207,7 +207,7 @@ class OngekiBright(OngekiBase):
             "registIdList": [],
         }
 
-    def handle_roll_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_roll_gacha_api_request(self, data: Dict) -> Dict:
         """
         Handle a gacha roll API request
         """
@@ -323,7 +323,7 @@ class OngekiBright(OngekiBase):
             "gameGachaCardList": game_gacha_card_list,
         }
 
-    def handle_cm_upsert_user_gacha_api_request(self, data: Dict):
+    async def handle_cm_upsert_user_gacha_api_request(self, data: Dict):
         upsert = data["cmUpsertUserGacha"]
         user_id = data["userId"]
 
@@ -405,7 +405,7 @@ class OngekiBright(OngekiBase):
 
         return {"returnCode": 1, "apiName": "CMUpsertUserGachaApi"}
 
-    def handle_cm_upsert_user_select_gacha_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_select_gacha_api_request(self, data: Dict) -> Dict:
         upsert = data["cmUpsertUserSelectGacha"]
         user_id = data["userId"]
 
@@ -442,7 +442,7 @@ class OngekiBright(OngekiBase):
 
         return {"returnCode": 1, "apiName": "cmUpsertUserSelectGacha"}
 
-    def handle_get_game_gacha_card_by_id_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_gacha_card_by_id_api_request(self, data: Dict) -> Dict:
         game_gacha_cards = self.data.static.get_gacha_cards(data["gachaId"])
         if game_gacha_cards == []:
             # fallback to be at least able to select that gacha
@@ -522,7 +522,7 @@ class OngekiBright(OngekiBase):
             "ssrBookCalcList": [],
         }
 
-    def handle_get_game_theater_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_theater_api_request(self, data: Dict) -> Dict:
         """
         shows a banner after every print, not sure what its used for
         """
@@ -548,7 +548,7 @@ class OngekiBright(OngekiBase):
 
         return {"length": 0, "gameTheaterList": [], "registIdList": []}
 
-    def handle_cm_upsert_user_print_playlog_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_playlog_api_request(self, data: Dict) -> Dict:
         return {
             "returnCode": 1,
             "orderId": 0,
@@ -556,7 +556,7 @@ class OngekiBright(OngekiBase):
             "apiName": "CMUpsertUserPrintPlaylogApi",
         }
 
-    def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_printlog_api_request(self, data: Dict) -> Dict:
         return {
             "returnCode": 1,
             "orderId": 0,
@@ -564,7 +564,7 @@ class OngekiBright(OngekiBase):
             "apiName": "CMUpsertUserPrintlogApi",
         }
 
-    def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_print_api_request(self, data: Dict) -> Dict:
         user_print_detail = data["userPrintDetail"]
 
         # generate random serial id
@@ -589,7 +589,7 @@ class OngekiBright(OngekiBase):
             "apiName": "CMUpsertUserPrintApi",
         }
 
-    def handle_cm_upsert_user_all_api_request(self, data: Dict) -> Dict:
+    async def handle_cm_upsert_user_all_api_request(self, data: Dict) -> Dict:
         upsert = data["cmUpsertUserAll"]
         user_id = data["userId"]
 

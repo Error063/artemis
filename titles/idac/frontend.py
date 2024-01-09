@@ -3,7 +3,7 @@ import yaml
 import jinja2
 from os import path
 from twisted.web.util import redirectTo
-from twisted.web.http import Request
+from starlette.requests import Request
 from twisted.web.server import Session
 
 from core.frontend import FE_Base, IUserSession

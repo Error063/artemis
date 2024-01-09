@@ -1,6 +1,5 @@
 mypy
 wheel
-twisted
 pytz
 pyyaml
 sqlalchemy==1.4.46
@@ -12,10 +11,11 @@ inflection
 coloredlogs
 pylibmc; platform_system != "Windows"
 wacky
-Routes
 bcrypt
 jinja2
 protobuf
-autobahn
 pillow
-pyjwt
+pyjwt==2.8.0
+websockets
+starlette
+asyncio

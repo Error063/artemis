@@ -28,13 +28,13 @@ class CxbBase:
         
         return []
 
-    def handle_action_rpreq_request(self, data: Dict) -> Dict:
+    async def handle_action_rpreq_request(self, data: Dict) -> Dict:
         return {}
 
-    def handle_action_hitreq_request(self, data: Dict) -> Dict:
+    async def handle_action_hitreq_request(self, data: Dict) -> Dict:
         return {"data": []}
 
-    def handle_auth_usercheck_request(self, data: Dict) -> Dict:
+    async def handle_auth_usercheck_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_index(
             0, data["usercheck"]["authid"], self.version
         )
@@ -45,11 +45,11 @@ class CxbBase:
         self.logger.info(f"No profile for aime id {data['usercheck']['authid']}")
         return {"exist": "false", "logout": "true"}
 
-    def handle_auth_entry_request(self, data: Dict) -> Dict:
+    async def handle_auth_entry_request(self, data: Dict) -> Dict:
         self.logger.info(f"New profile for {data['entry']['authid']}")
         return {"token": data["entry"]["authid"], "uid": data["entry"]["authid"]}
 
-    def handle_auth_login_request(self, data: Dict) -> Dict:
+    async def handle_auth_login_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_index(
             0, data["login"]["authid"], self.version
         )
@@ -198,7 +198,7 @@ class CxbBase:
             ).decode("utf-8")
         )
 
-    def handle_action_loadrange_request(self, data: Dict) -> Dict:
+    async def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
         range_end = data["loadrange"]["range"][1]
         uid = data["loadrange"]["uid"]
@@ -282,7 +282,7 @@ class CxbBase:
 
         return {"index": index, "data": data1, "version": versionindex}
 
-    def handle_action_saveindex_request(self, data: Dict) -> Dict:
+    async def handle_action_saveindex_request(self, data: Dict) -> Dict:
         save_data = data["saveindex"]
 
         try:
@@ -443,7 +443,7 @@ class CxbBase:
             i += 1
         return {}
 
-    def handle_action_sprankreq_request(self, data: Dict) -> Dict:
+    async def handle_action_sprankreq_request(self, data: Dict) -> Dict:
         uid = data["sprankreq"]["uid"]
         self.logger.info(f"Get best rankings for {uid}")
         p = self.data.score.get_best_rankings(uid)
@@ -475,16 +475,16 @@ class CxbBase:
             "rankx": [1, 1, 1],
         }
 
-    def handle_action_getadv_request(self, data: Dict) -> Dict:
+    async def handle_action_getadv_request(self, data: Dict) -> Dict:
         return {"data": [{"r": "1", "i": "100300", "c": "20"}]}
 
-    def handle_action_getmsg_request(self, data: Dict) -> Dict:
+    async def handle_action_getmsg_request(self, data: Dict) -> Dict:
         return {"msgs": []}
 
-    def handle_auth_logout_request(self, data: Dict) -> Dict:
+    async def handle_auth_logout_request(self, data: Dict) -> Dict:
         return {"auth": True}
 
-    def handle_action_rankreg_request(self, data: Dict) -> Dict:
+    async def handle_action_rankreg_request(self, data: Dict) -> Dict:
         uid = data["rankreg"]["uid"]
         self.logger.info(f"Put {len(data['rankreg']['data'])} rankings for {uid}")
 
@@ -527,7 +527,7 @@ class CxbBase:
                     )
         return {}
 
-    def handle_action_addenergy_request(self, data: Dict) -> Dict:
+    async def handle_action_addenergy_request(self, data: Dict) -> Dict:
         uid = data["addenergy"]["uid"]
         self.logger.info(f"Add energy to user {uid}")
         profile = self.data.profile.get_profile_index(0, uid, self.version)
@@ -570,10 +570,10 @@ class CxbBase:
             )
         return array[0]
 
-    def handle_action_eventreq_request(self, data: Dict) -> Dict:
+    async def handle_action_eventreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"eventreq": ""}
 
-    def handle_action_stampreq_request(self, data: Dict) -> Dict:
+    async def handle_action_stampreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"stampreq": ""}

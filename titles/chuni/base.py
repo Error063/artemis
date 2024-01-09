@@ -22,7 +22,7 @@ class ChuniBase:
         self.game = ChuniConstants.GAME_CODE
         self.version = ChuniConstants.VER_CHUNITHM
 
-    def handle_game_login_api_request(self, data: Dict) -> Dict:
+    async def handle_game_login_api_request(self, data: Dict) -> Dict:
         """
         Handles the login bonus logic, required for the game because
         getUserLoginBonus gets called after getUserItem and therefore the
@@ -119,11 +119,11 @@ class ChuniBase:
 
         return {"returnCode": 1}
 
-    def handle_game_logout_api_request(self, data: Dict) -> Dict:
+    async def handle_game_logout_api_request(self, data: Dict) -> Dict:
         # self.data.base.log_event("chuni", "logout", logging.INFO, {"version": self.version, "user": data["userId"]})
         return {"returnCode": 1}
 
-    def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_charge_api_request(self, data: Dict) -> Dict:
         game_charge_list = self.data.static.get_enabled_charges(self.version)
 
         if game_charge_list is None or len(game_charge_list) == 0:
@@ -145,7 +145,7 @@ class ChuniBase:
             )
         return {"length": len(charges), "gameChargeList": charges}
 
-    def handle_get_game_event_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_event_api_request(self, data: Dict) -> Dict:
         game_events = self.data.static.get_enabled_events(self.version)
 
         if game_events is None or len(game_events) == 0:
@@ -177,10 +177,10 @@ class ChuniBase:
             "gameEventList": event_list,
         }
 
-    def handle_get_game_idlist_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_idlist_api_request(self, data: Dict) -> Dict:
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
-    def handle_get_game_message_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_message_api_request(self, data: Dict) -> Dict:
         return {
             "type": data["type"], 
             "length": 1, 
@@ -193,14 +193,14 @@ class ChuniBase:
             }]
         }
 
-    def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
         rankings = self.data.score.get_rankings(self.version)
         return {"type": data["type"], "gameRankingList": rankings}
 
-    def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
         return {"type": data["type"], "length": 0, "gameSaleList": []}
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
         # if reboot start/end time is not defined use the default behavior of being a few hours ago
         if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
             reboot_start = datetime.strftime(
@@ -240,7 +240,7 @@ class ChuniBase:
             "isDumpUpload": "false",
             "isAou": "false",
         }
-    def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
         user_activity_list = self.data.profile.get_profile_activity(
             data["userId"], data["kind"]
         )
@@ -261,7 +261,7 @@ class ChuniBase:
             "userActivityList": activity_list,
         }
 
-    def handle_get_user_character_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = self.data.item.get_characters(data["userId"])
         if characters is None:
             return {
@@ -296,7 +296,7 @@ class ChuniBase:
             "userCharacterList": character_list,
         }
 
-    def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
         user_charge_list = self.data.profile.get_profile_charge(data["userId"])
 
         charge_list = []
@@ -312,14 +312,14 @@ class ChuniBase:
             "userChargeList": charge_list,
         }
 
-    def handle_get_user_recent_player_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_recent_player_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
             "userRecentPlayerList": [], # playUserId, playUserName, playDate, friendPoint
         }
 
-    def handle_get_user_course_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_course_api_request(self, data: Dict) -> Dict:
         user_course_list = self.data.score.get_courses(data["userId"])
         if user_course_list is None:
             return {
@@ -354,7 +354,7 @@ class ChuniBase:
             "userCourseList": course_list,
         }
 
-    def handle_get_user_data_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_data_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
@@ -366,7 +366,7 @@ class ChuniBase:
 
         return {"userId": data["userId"], "userData": profile}
 
-    def handle_get_user_data_ex_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_data_ex_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_data_ex(data["userId"], self.version)
         if p is None:
             return {}
@@ -378,7 +378,7 @@ class ChuniBase:
 
         return {"userId": data["userId"], "userDataEx": profile}
 
-    def handle_get_user_duel_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_duel_api_request(self, data: Dict) -> Dict:
         user_duel_list = self.data.item.get_duels(data["userId"])
         if user_duel_list is None:
             return {}
@@ -396,7 +396,7 @@ class ChuniBase:
             "userDuelList": duel_list,
         }
 
-    def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_rival(data["rivalId"])
         if p is None:
             return {}
@@ -409,7 +409,7 @@ class ChuniBase:
             "userRivalData": userRivalData
         }
     
-    def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
         rival_id = data["rivalId"]
         next_index = int(data["nextIndex"])
         max_count = int(data["maxCount"])
@@ -462,7 +462,7 @@ class ChuniBase:
         return result
 
     
-    def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_favorite_item_api_request(self, data: Dict) -> Dict:
         user_fav_item_list = []
 
         # still needs to be implemented on WebUI
@@ -482,14 +482,14 @@ class ChuniBase:
             "userFavoriteItemList": user_fav_item_list,
         }
 
-    def handle_get_user_favorite_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_favorite_music_api_request(self, data: Dict) -> Dict:
         """
         This is handled via the webui, which we don't have right now
         """
 
         return {"userId": data["userId"], "length": 0, "userFavoriteMusicList": []}
 
-    def handle_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(int(data["nextIndex"]) / 10000000000)
         next_idx = int(int(data["nextIndex"]) % 10000000000)
         user_item_list = self.data.item.get_items(data["userId"], kind)
@@ -526,7 +526,7 @@ class ChuniBase:
             "userItemList": items,
         }
 
-    def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
         user_id = data["userId"]
         user_login_bonus = self.data.item.get_all_login_bonus(user_id, self.version)
         # ignore the loginBonus request if its disabled in config
@@ -552,7 +552,7 @@ class ChuniBase:
             "userLoginBonusList": user_login_list,
         }
 
-    def handle_get_user_map_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_map_api_request(self, data: Dict) -> Dict:
         user_map_list = self.data.item.get_maps(data["userId"])
         if user_map_list is None:
             return {}
@@ -570,7 +570,7 @@ class ChuniBase:
             "userMapList": map_list,
         }
 
-    def handle_get_user_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_music_api_request(self, data: Dict) -> Dict:
         music_detail = self.data.score.get_scores(data["userId"])
         if music_detail is None:
             return {
@@ -629,7 +629,7 @@ class ChuniBase:
             "userMusicList": song_list,  # 240
         }
 
-    def handle_get_user_option_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_option_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_option(data["userId"])
 
         option = p._asdict()
@@ -638,7 +638,7 @@ class ChuniBase:
 
         return {"userId": data["userId"], "userGameOption": option}
 
-    def handle_get_user_option_ex_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_option_ex_api_request(self, data: Dict) -> Dict:
         p = self.data.profile.get_profile_option_ex(data["userId"])
 
         option = p._asdict()
@@ -650,7 +650,7 @@ class ChuniBase:
     def read_wtf8(self, src):
         return bytes([ord(c) for c in src]).decode("utf-8")
 
-    def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
         profile = self.data.profile.get_profile_preview(data["userId"], self.version)
         if profile is None:
             return None
@@ -692,7 +692,7 @@ class ChuniBase:
             "userNameEx": profile["userName"],
         }
 
-    def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
         recent_rating_list = self.data.profile.get_profile_recent_rating(data["userId"])
         if recent_rating_list is None:
             return {
@@ -707,7 +707,7 @@ class ChuniBase:
             "userRecentRatingList": recent_rating_list["recentRating"],
         }
 
-    def handle_get_user_region_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         # TODO: Region
         return {
             "userId": data["userId"],
@@ -715,7 +715,7 @@ class ChuniBase:
             "userRegionList": [],
         }
 
-    def handle_get_user_team_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_team_api_request(self, data: Dict) -> Dict:
         # Default values
         team_id = 65535
         team_name = self.game_cfg.team.team_name
@@ -750,7 +750,7 @@ class ChuniBase:
             },
         }
     
-    def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_get_team_course_setting_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
@@ -758,7 +758,7 @@ class ChuniBase:
             "teamCourseSettingList": [],
         }
 
-    def handle_get_team_course_setting_api_request_proto(self, data: Dict) -> Dict:
+    async def handle_get_team_course_setting_api_request_proto(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 1,
@@ -782,7 +782,7 @@ class ChuniBase:
             ],
         }
 
-    def handle_get_team_course_rule_api_request(self, data: Dict) -> Dict:
+    async def handle_get_team_course_rule_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
@@ -790,7 +790,7 @@ class ChuniBase:
             "teamCourseRuleList": []
         }
 
-    def handle_get_team_course_rule_api_request_proto(self, data: Dict) -> Dict:
+    async def handle_get_team_course_rule_api_request_proto(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 1,
@@ -807,7 +807,7 @@ class ChuniBase:
             ],
         }
 
-    def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         upsert = data["upsertUserAll"]
         user_id = data["userId"]
 
@@ -927,28 +927,28 @@ class ChuniBase:
 
         return {"returnCode": "1"}
 
-    def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
         # add tickets after they got bought, this makes sure the tickets are
         # still valid after an unsuccessful logout
         self.data.profile.put_profile_charge(data["userId"], data["userCharge"])
         return {"returnCode": "1"}
 
-    def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_upsert_client_develop_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_develop_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_upsert_client_error_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_error_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
         return {"returnCode": "1"}
 
-    def handle_get_user_net_battle_data_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_net_battle_data_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "userNetBattleData": {"recentNBSelectMusicList": []},
