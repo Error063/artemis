@@ -8,6 +8,7 @@ import secrets, string
 import bcrypt
 from hashlib import sha256
 import alembic.config
+import glob
 
 from core.config import CoreConfig
 from core.data.schema import *
@@ -146,6 +147,12 @@ class Data:
             self.logger.warn("No need to migrate as you have already migrated to alembic. If you are trying to upgrade the schema, use `upgrade` instead!")
             return
         
+        self.logger.info("Upgrading to latest with legacy system")
+        if not await self.legacy_upgrade():
+            self.logger.warn("No need to migrate as you have already deleted the old schema_versions system. If you are trying to upgrade the schema, use `upgrade` instead!")
+            return
+        self.logger.info("Done")
+        
         self.logger.info("Stamp with initial revision")
         self.__alembic_cmd(
             "stamp",
@@ -157,4 +164,57 @@ class Data:
             "upgrade",
             "head",
         )
+    
+    async def legacy_upgrade(self) -> bool:
+        vers = await self.base.execute("SELECT * FROM schema_versions")
+        if vers is None:
+            self.logger.warn("Cannot legacy upgrade, schema_versions table unavailable!")
+            return False
+        
+        db_vers = {}
+        for x in vers:
+            db_vers[x['game']] = x['version']
+        
+        core_now_ver = int(db_vers['CORE']) + 1
+        while os.path.exists(f"core/data/schema/versions/CORE_{core_now_ver}_upgrade.sql"):
+            with open(f"core/data/schema/versions/CORE_{core_now_ver}_upgrade.sql", "r") as f:
+                result = await self.base.execute(f.read())
+                
+                if result is None:
+                    self.logger.error(f"Invalid upgrade script CORE_{core_now_ver}_upgrade.sql")
+                    break
+
+                result = await self.base.execute(f"UPDATE schema_versions SET version = {core_now_ver} WHERE game = 'CORE'")
+                if result is None:
+                    self.logger.error(f"Failed to update schema version for CORE to {core_now_ver}")
+                    break
+            
+            self.logger.info(f"Upgrade CORE to version {core_now_ver}")
+            core_now_ver += 1
+        
+        for _, mod in Utils.get_all_titles().items():
+            game_codes = getattr(mod, "game_codes", [])
+            for game in game_codes:
+                if game not in db_vers:
+                    self.logger.warn(f"{game} does not have an antry in schema_versions, skipping")
+                    continue
+
+                now_ver = int(db_vers[game]) + 1
+                while os.path.exists(f"core/data/schema/versions/{game}_{now_ver}_upgrade.sql"):
+                    with open(f"core/data/schema/versions/{game}_{now_ver}_upgrade.sql", "r") as f:
+                        result = await self.base.execute(f.read())
+                        
+                        if result is None:
+                            self.logger.error(f"Invalid upgrade script {game}_{now_ver}_upgrade.sql")
+                            break
+
+                        result = await self.base.execute(f"UPDATE schema_versions SET version = {now_ver} WHERE game = '{game}'")
+                        if result is None:
+                            self.logger.error(f"Failed to update schema version for {game} to {now_ver}")
+                            break
+
+                    self.logger.info(f"Upgrade {game} to version {now_ver}")
+                    now_ver += 1
+        
+        return True
 
