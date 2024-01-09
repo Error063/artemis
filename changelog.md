@@ -3,7 +3,7 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 
 ## 20240109
 ### System
-+ Removed `ADD config config` from dockerfile
++ Removed `ADD config config` from dockerfile [#83](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/83) (Thanks zaphkito!)
 
 ### Aimedb
 + Fixed an error that resulted from trying to scan a banned or locked card
