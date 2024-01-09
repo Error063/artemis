@@ -74,7 +74,7 @@ class AimedbServlette():
         self.logger.debug(f"Connection made from {writer.get_extra_info('peername')[0]}")
         while True:
             try:
-                data: bytes = await reader.read()
+                data: bytes = await reader.read(4096)
                 if len(data) == 0:
                     self.logger.debug("Connection closed")
                     return
