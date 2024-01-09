@@ -9,4 +9,3 @@ database = IDACData
 reader = IDACReader
 frontend = IDACFrontend
 game_codes = [IDACConstants.GAME_CODE]
-current_schema_version = 1

@@ -19,6 +19,7 @@ title:
   reboot_start_time: "04:00"
   reboot_end_time: "05:00"
   ssl_key: "cert/title.key"
+
 database:
   host: "localhost"
   username: "aime"
@@ -27,7 +28,7 @@ database:
   port: 3306
   protocol: "mysql"
   sha2_password: False
-  loglevel: "warn"
+  loglevel: "info"
   enable_memcached: True
   memcached_host: "localhost"
 

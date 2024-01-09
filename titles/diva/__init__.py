@@ -7,4 +7,3 @@ index = DivaServlet
 database = DivaData
 reader = DivaReader
 game_codes = [DivaConstants.GAME_CODE]
-current_schema_version = 6

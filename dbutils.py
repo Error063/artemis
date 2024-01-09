@@ -5,7 +5,8 @@ from os import mkdir, path, access, W_OK
 import yaml
 import asyncio
 
-from core import Data, CoreConfig
+from core.data import Data
+from core.config import CoreConfig
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Database utilities")
@@ -49,6 +50,11 @@ if __name__ == "__main__":
     elif args.action == "create-owner":
         loop = asyncio.get_event_loop()
         loop.run_until_complete(data.create_owner(args.email, args.access_code))
+        data.schema_upgrade(args.version)
+
+    elif args.action == "migrate":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.migrate())
 
     else:
         logging.getLogger("database").info(f"Unknown action {args.action}")
