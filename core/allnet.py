@@ -345,7 +345,7 @@ class AllnetServlet:
             return PlainTextResponse(res_str)
 
     async def handle_dlorder_ini(self, request: Request) -> bytes:
-        req_file = request.path_params.get("file", "").replace("%0A", "")
+        req_file = request.path_params.get("file", "").replace("%0A", "").replace("\n", "")
 
         if not req_file:
             return PlainTextResponse(status_code=404)
@@ -355,7 +355,7 @@ class AllnetServlet:
             await self.data.base.log_event("allnet", "DLORDER_INI_SENT", logging.INFO, f"{Utils.get_ip_addr(request)} successfully recieved {req_file}")
             
             return PlainTextResponse(open(
-                f"{self.config.allnet.update_cfg_folder}/{req_file}", "r"
+                f"{self.config.allnet.update_cfg_folder}/{req_file}", "r", encoding="utf-8"
             ).read())
 
         self.logger.info(f"DL INI File {req_file} not found")
