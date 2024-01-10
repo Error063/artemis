@@ -1,6 +1,17 @@
 {% extends "core/templates/index.jinja" %}
 {% block content %}
+<style type="text/css">
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>
 {% if sesh is defined and sesh["user_id"] > 0 %}
 <br>
 <br>
@@ -51,26 +62,24 @@
     </table>
     </div>
     <div class="modal fade" id="rival_add" tabindex="-1" aria-labelledby="card_add_label"  data-bs-theme="dark" aria-hidden="true">
-        <form id="rival" action="/game/ongeki/rival.add" method="post">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Modal title</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Note:<br>
-                        Please use the ID show next to your name in the profile page.
-                        <br>
-                        <label for="rivalUserId">ID:&nbsp;</label><input form="rival" id="rivalUserId" name="rivalUserId" maxlength="5" type="number" required> 
-                    </div>
-                    <div class="modal-footer">
-                        <input type=submit class="btn btn-primary" type="button" form="rival" value="Add">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add rival</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="rival" action="/game/ongeki/rival.add" method="post" style="outline: 0;">
+                        <label class="form-label" for="rivalUserId">Rival ID</label>
+                        <input class="form-control" aria-describedby="rivalIdHelphelp" form="rival" id="rivalUserId" name="rivalUserId" maxlength="5" type="number" required>
+                        <div id="rivalIdHelphelp" class="form-text">Please use the ID show next to your name in the profile page.</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <input type=submit class="btn btn-primary" type="button" form="rival" value="Add">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 

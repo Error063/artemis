@@ -43,14 +43,16 @@ class OngekiFrontend(FE_Base):
             usr_sesh = UserSession()
 
         self.version = usr_sesh.ongeki_version
-        if getattr(usr_sesh, "userId", 0) != 0:
+        if usr_sesh.user_id > 0:
             profile_data =self.data.profile.get_profile_data(usr_sesh.user_id, self.version)
             rival_list = await self.data.profile.get_rivals(usr_sesh.user_id)
             rival_data = {
                 "userRivalList": rival_list,
                 "userId": usr_sesh.user_id
             }
-            rival_info = OngekiBase.handle_get_user_rival_data_api_request(self, rival_data)
+
+            # Hay1tsme 01/09/2024: ??????????????????????????????????????????????????????????????
+            rival_info = await OngekiBase.handle_get_user_rival_data_api_request(self, rival_data)
 
             return Response(template.render(
                 data=self.data.profile,
