@@ -231,7 +231,7 @@ class AimedbServlette():
         be fine.
         """
         req = ADBFelicaLookupRequest(data)
-        ac = await self.data.card.to_access_code(req.idm)
+        ac = self.data.card.to_access_code(req.idm)
         self.logger.info(
             f"idm {req.idm} ipm {req.pmm} -> access_code {ac}"
         )
@@ -242,7 +242,7 @@ class AimedbServlette():
         I've never seen this used.
         """
         req = ADBFelicaLookupRequest(data)
-        ac = await self.data.card.to_access_code(req.idm)
+        ac = self.data.card.to_access_code(req.idm)
         
         if self.config.server.allow_user_registration:
             user_id = await self.data.user.create_user()
@@ -271,7 +271,7 @@ class AimedbServlette():
 
     async def handle_felica_lookup_ex(self, data: bytes, resp_code: int) -> bytes:
         req = ADBFelicaLookup2Request(data)
-        access_code = await self.data.card.to_access_code(req.idm)
+        access_code = self.data.card.to_access_code(req.idm)
         user_id = await self.data.card.get_user_id_from_card(access_code=access_code)
 
         if user_id is None:
