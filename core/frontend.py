@@ -677,16 +677,22 @@ class FE_Arcade(FE_Base):
                 sesh=vars(usr_sesh),
             ))
         
-        try:
-            sinfo = await self.data.arcade.get_arcade(shop_id)
-        except Exception as e:
-                self.logger.error(f"Failed to fetch shop info for shop {shop_id} in render_GET - {e}")
-                sinfo = None
+        sinfo = await self.data.arcade.get_arcade(shop_id)
         if not sinfo:
             return Response(template.render(
                 title=f"{self.core_config.server.name} | Arcade", 
                 sesh=vars(usr_sesh),
             ))
+        
+        cabs = await self.data.arcade.get_arcade_machines(shop_id)
+        cablst = []
+        if cabs:
+            for x in cabs:
+                cablst.append({
+                    "id": x['id'],
+                    "serial": x['serial'],
+                    "game": x['game'],
+                })
         
         return Response(template.render(
             title=f"{self.core_config.server.name} | Arcade", 
@@ -694,7 +700,7 @@ class FE_Arcade(FE_Base):
             arcade={
                 "name": sinfo['name'],
                 "id": sinfo['id'],
-                "cabs": []
+                "cabs": cablst
             }
             
         ))
