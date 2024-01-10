@@ -25,7 +25,6 @@ from .base import WaccaBase
 from .handlers.base import BaseResponse, BaseRequest
 from .handlers.helpers import Version
 
-
 class WaccaServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
@@ -97,7 +96,9 @@ class WaccaServlet(BaseServlet):
     async def render_POST(self, request: Request) -> bytes:
         def end(resp: Dict) -> bytes:
             hash = md5(json.dumps(resp, ensure_ascii=False).encode()).digest()
-            return JSONResponse(resp, headers={"X-Wacca-Hash": hash.hex()})
+            j_Resp = Response(json.dumps(resp, ensure_ascii=False))
+            j_Resp.raw_headers.append((b"X-Wacca-Hash", hash.hex().encode()))
+            return j_Resp
 
         api = request.path_params.get('api', '')
         branch = request.path_params.get('branch', '')
