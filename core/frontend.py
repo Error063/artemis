@@ -429,10 +429,10 @@ class FE_User(FE_Base):
             else:
                 status = 'Active'
             
-            idm = c['idm']
+            #idm = c['idm']
             ac = c['access_code']
 
-            if ac.startswith("5") or idm is not None:
+            if ac.startswith("5"): #or idm is not None:
                 c_type = "AmusementIC"
             elif ac.startswith("3"):
                 c_type = "Banapass"
@@ -441,10 +441,19 @@ class FE_User(FE_Base):
                 desc, _ = self.data.card.get_aime_ac_key_desc(ac)
                 if desc is not None:
                     c_type = desc
+            elif ac.startswith("0008"):
+                c_type = "Generated AIC"
             else:
                 c_type = "Unknown"
             
-            card_data.append({'access_code': ac, 'status': status, 'chip_id': None if c['chip_id'] is None else f"{c['chip_id']:X}", 'idm': idm, 'type': c_type, "memo": ""})
+            card_data.append({
+                'access_code': ac, 
+                'status': status, 
+                'chip_id': "", #None if c['chip_id'] is None else f"{c['chip_id']:X}", 
+                'idm': "", 
+                'type': c_type, 
+                "memo": ""
+            })
 
         if "e" in request.query_params:
             try:
@@ -602,8 +611,8 @@ class FE_System(FE_Base):
                     sinfo = None
                 if sinfo:
                     shoplist.append({
-                        "name": sinfo.name,
-                        "id": sinfo.allnet_id
+                        "name": sinfo['name'],
+                        "id": sinfo['id']
                     })
             
             else:
@@ -624,7 +633,7 @@ class FE_System(FE_Base):
                 netid_prefix = self.environment.globals["sn_cvt"].get(prefix, "")                
                 sn_search = netid_prefix + suffix
             
-            if re.match("^AB[D|G|L]N\d{7}$", sn_search):
+            if re.match(r"^AB[DGL]N\d{7}$", sn_search) or re.match(r"^A\d{2}[EX]\d{2}[A-Z]\d{4,8}$", sn_search):
                 cabinfo = await self.data.arcade.get_machine(sn_search)
                 if cabinfo is None: sinfo = None
                 else:
