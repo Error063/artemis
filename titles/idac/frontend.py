@@ -127,10 +127,11 @@ class IDACFrontend(FE_Base):
             ticket_data = await self.data.item.get_tickets(user_id)
             rank = await self.data.profile.get_profile_rank(user_id, self.version)
 
-            tickets = {
-                self.ticket_names[ticket["ticket_id"]]: ticket["ticket_cnt"]
-                for ticket in ticket_data
-            }
+            if ticket_data:
+                tickets = {
+                    self.ticket_names[ticket["ticket_id"]]: ticket["ticket_cnt"]
+                    for ticket in ticket_data
+                }
 
         return Response(template.render(
             title=f"{self.core_config.server.name} | {self.nav_name}",

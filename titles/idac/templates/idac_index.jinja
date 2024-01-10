@@ -4,9 +4,10 @@
 
 {% if sesh is defined and sesh["user_id"] > 0 %}
 <div class="card mb-3">
-    <div class="card-body">
+    <div class="card-body">    
+        {% if profile is defined and profile is not none %}
         <div class="card-title">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">                
                 <h3>{{ sesh["username"] }}'s Profile</h3>
                 <div class="btn-toolbar mb-2 mb-md-0">
                     <div class="btn-group me-2">
@@ -18,7 +19,6 @@
             </div>
         </div>
         <!--<h4 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h4>-->
-        {% if profile is defined and profile is not none %}
         <div class="row d-flex justify-content-center h-100">
             <div class="col col-lg-3 col-12">
                 <div class="card mb-3">
