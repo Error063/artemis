@@ -29,7 +29,7 @@ class ServerConfig:
         Port the game will listen on
         """
         return CoreConfig.get_config_field(
-            self.__config, "core", "server", "port", default=8080
+            self.__config, "core", "server", "port", default=80
         )
 
     @property
@@ -127,13 +127,13 @@ class TitleConfig:
     @property
     def reboot_start_time(self) -> str:
         return CoreConfig.get_config_field(
-            self.__config, "core", "title", "reboot_start_time", default="04:00"
+            self.__config, "core", "title", "reboot_start_time", default=""
         )
 
     @property
     def reboot_end_time(self) -> str:
         return CoreConfig.get_config_field(
-            self.__config, "core", "title", "reboot_end_time", default="05:00"
+            self.__config, "core", "title", "reboot_end_time", default=""
         )
 
 class DatabaseConfig:
@@ -207,9 +207,15 @@ class FrontendConfig:
         self.__config = parent_config
 
     @property
-    def standalone(self) -> int:
+    def enable(self) -> bool:
         return CoreConfig.get_config_field(
-            self.__config, "core", "frontend", "standalone", default=True
+            self.__config, "core", "frontend", "enable", default=False
+        )
+
+    @property
+    def port(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "frontend", "port", default=8080
         )
 
     @property
@@ -229,6 +235,18 @@ class FrontendConfig:
 class AllnetConfig:
     def __init__(self, parent_config: "CoreConfig") -> None:
         self.__config = parent_config
+
+    @property
+    def standalone(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "standalone", default=False
+        )
+    
+    @property
+    def port(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "port", default=80
+        )
 
     @property
     def loglevel(self) -> int:
@@ -257,7 +275,7 @@ class BillingConfig:
     @property
     def standalone(self) -> bool:
         return CoreConfig.get_config_field(
-            self.__config, "core", "billing", "standalone", default=True
+            self.__config, "core", "billing", "standalone", default=False
         )
 
     @property
@@ -361,6 +379,19 @@ class CoreConfig(dict):
             return logging.DEBUG
         else:
             return logging.INFO
+    
+    @classmethod
+    def loglevel_to_str(cls, level: int) -> str:
+        if level == logging.ERROR:
+            return "error"
+        elif level == logging.WARN:
+            return "warn"
+        elif level == logging.INFO:
+            return "info"
+        elif level == logging.DEBUG:
+            return "debug"
+        else:
+            return "notset"
 
     @classmethod
     def get_config_field(

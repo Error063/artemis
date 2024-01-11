@@ -123,13 +123,8 @@ class AllnetServlet:
             )
             self.logger.initialized = True
 
-        plugins = Utils.get_all_titles()
-
-        if len(plugins) == 0:
-            self.logger.error("No games detected!")
-
         self.logger.info(
-            f"Serving {len(TitleServlet.title_registry)} game codes"
+            f"Ready on port {self.config.allnet.port if self.config.allnet.standalone else self.config.server.port}"
         )
 
     async def handle_poweron(self, request: Request):
@@ -894,10 +889,30 @@ if not access(cfg.server.log_dir, W_OK):
     exit(1)
 
 billing = BillingServlet(cfg, cfg_dir)
-app = Starlette(
+app_billing = Starlette(
     cfg.server.is_develop, 
     [        
         Route("/request", billing.handle_billing_request, methods=["POST"]),
         Route("/request/", billing.handle_billing_request, methods=["POST"]),
     ]
+)
+
+allnet = AllnetServlet(cfg, cfg_dir)
+route_lst = [
+    Route("/sys/servlet/PowerOn", allnet.handle_poweron, methods=["GET", "POST"]),
+    Route("/sys/servlet/DownloadOrder", allnet.handle_dlorder, methods=["GET", "POST"]),
+    Route("/sys/servlet/LoaderStateRecorder", allnet.handle_loaderstaterecorder, methods=["GET", "POST"]),
+    Route("/sys/servlet/Alive", allnet.handle_alive, methods=["GET", "POST"]),
+    Route("/naomitest.html", allnet.handle_naomitest),
+]
+
+if cfg.allnet.allow_online_updates:
+    route_lst += [
+        Route("/report-api/Report", allnet.handle_dlorder_report, methods=["POST"]),
+        Route("/dl/ini/{file:str}", allnet.handle_dlorder_ini),
+    ]
+
+app_allnet = Starlette(
+    cfg.server.is_develop, 
+    route_lst
 )

@@ -3,15 +3,17 @@ from typing import Any, Dict, List, Union, Optional
 from starlette.requests import Request
 from starlette.routing import Route, Mount
 from starlette.responses import Response, PlainTextResponse, RedirectResponse
+from starlette.applications import Starlette
 from logging.handlers import TimedRotatingFileHandler
 import jinja2
 import bcrypt
 import re
 import jwt
+import yaml
 from base64 import b64decode
 from enum import Enum
-from urllib import parse
 from datetime import datetime, timezone
+from os import path, environ, mkdir, W_OK, access
 
 from core import CoreConfig, Utils
 from core.data import Data
@@ -726,3 +728,20 @@ class FE_Machine(FE_Base):
             sesh=vars(usr_sesh),
             arcade={}
         ))
+
+cfg_dir = environ.get("DIANA_CFG_DIR", "config")
+cfg: CoreConfig = CoreConfig()
+if path.exists(f"{cfg_dir}/core.yaml"):
+    cfg.update(yaml.safe_load(open(f"{cfg_dir}/core.yaml")))
+
+if not path.exists(cfg.server.log_dir):
+    mkdir(cfg.server.log_dir)
+
+if not access(cfg.server.log_dir, W_OK):
+    print(
+        f"Log directory {cfg.server.log_dir} NOT writable, please check permissions"
+    )
+    exit(1)
+
+fe = FrontendServlet(cfg, cfg_dir)
+app = Starlette(cfg.server.is_develop, fe.get_routes(), on_startup=[fe.startup])

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import yaml
-from os import path, mkdir, access, W_OK, environ
+from os import path, environ
 import uvicorn
 import logging
 import asyncio
@@ -33,31 +33,53 @@ async def launch_main(cfg: CoreConfig, ssl: bool) -> None:
 
 async def launch_billing(cfg: CoreConfig) -> None:
     server_cfg = uvicorn.Config(
-            "core.allnet:app", 
-            host=cfg.server.listen_address, 
-            port=cfg.billing.port, 
-            reload=cfg.server.is_develop,
-            log_level="info" if cfg.server.is_develop else "critical",
-            ssl_version=3,
-            ssl_certfile=cfg.billing.ssl_cert,
-            ssl_keyfile=cfg.billing.ssl_key
-        )
+        "core.allnet:app_billing", 
+        host=cfg.server.listen_address, 
+        port=cfg.billing.port, 
+        reload=cfg.server.is_develop,
+        log_level="info" if cfg.server.is_develop else "critical",
+        ssl_version=3,
+        ssl_certfile=cfg.billing.ssl_cert,
+        ssl_keyfile=cfg.billing.ssl_key
+    )
     server = uvicorn.Server(server_cfg)
-    if cfg.billing.standalone:
-        await server.serve()
-    else:
-        while True:
-            pass
+    await server.serve()
+
+async def launch_frontend(cfg: CoreConfig) -> None:
+    server_cfg = uvicorn.Config(
+        "core.frontend:app", 
+        host=cfg.server.listen_address, 
+        port=cfg.frontend.port, 
+        reload=cfg.server.is_develop,
+        log_level="info" if cfg.server.is_develop else "critical",
+    )
+    server = uvicorn.Server(server_cfg)
+    await server.serve()
+
+async def launch_allnet(cfg: CoreConfig) -> None:
+    server_cfg = uvicorn.Config(
+        "core.allnet:app_allnet", 
+        host=cfg.server.listen_address, 
+        port=cfg.allnet.port, 
+        reload=cfg.server.is_develop,
+        log_level="info" if cfg.server.is_develop else "critical",
+    )
+    server = uvicorn.Server(server_cfg)
+    await server.serve()
 
 
 async def launcher(cfg: CoreConfig, ssl: bool) -> None:
     AimedbServlette(cfg).start()
+    task_list = [asyncio.create_task(launch_main(cfg, ssl))]
+    if cfg.billing.standalone:
+        task_list.append(asyncio.create_task(launch_billing(cfg)))
+    if cfg.frontend.enable:
+        task_list.append(asyncio.create_task(launch_frontend(cfg)))
+    if cfg.allnet.standalone:
+        task_list.append(asyncio.create_task(launch_allnet(cfg)))
+    
     done, pending = await asyncio.wait(
-        [            
-            asyncio.create_task(launch_main(cfg, ssl)),
-            asyncio.create_task(launch_billing(cfg)),
-
-        ],
+        task_list,
         return_when=asyncio.FIRST_COMPLETED,
     )
     

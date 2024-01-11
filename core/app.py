@@ -52,21 +52,17 @@ logger.info(f"Artemis starting in {'develop' if cfg.server.is_develop else 'prod
 
 title = TitleServlet(cfg, cfg_dir) # This has to be loaded first to load plugins
 mucha = MuchaServlet(cfg, cfg_dir)
-allnet = AllnetServlet(cfg, cfg_dir)
 
 route_lst: List[Route] = [
     # Allnet
-    Route("/sys/servlet/PowerOn", allnet.handle_poweron, methods=["GET", "POST"]),
-    Route("/sys/servlet/DownloadOrder", allnet.handle_dlorder, methods=["GET", "POST"]),
-    Route("/sys/servlet/LoaderStateRecorder", allnet.handle_loaderstaterecorder, methods=["GET", "POST"]),
-    Route("/sys/servlet/Alive", allnet.handle_alive, methods=["GET", "POST"]),
-    Route("/report-api/Report", allnet.handle_dlorder_report, methods=["POST"]),
-    Route("/dl/ini/{file:str}", allnet.handle_dlorder_ini),
-    Route("/naomitest.html", allnet.handle_naomitest),
+    
     # Mucha
     Route("/mucha_front/boardauth.do", mucha.handle_boardauth, methods=["POST"]),
     Route("/mucha_front/updatacheck.do", mucha.handle_updatecheck, methods=["POST"]),
     Route("/mucha_front/downloadstate.do", mucha.handle_dlstate, methods=["POST"]),
+    # General
+    Route("/", dummy_rt),
+    Route("/robots.txt", FrontendServlet.robots)
 ]
 
 if not cfg.billing.standalone:
@@ -76,14 +72,21 @@ if not cfg.billing.standalone:
         Route("/request/", billing.handle_billing_request, methods=["POST"]),
     ]
 
-if not cfg.frontend.standalone and cfg.frontend.secret:
-    frontend = FrontendServlet(cfg, cfg_dir)
-    route_lst += frontend.get_routes()
-else:
-    if not cfg.frontend.secret:
-        logger.error("Frontend secret not specified, cannot start frontend!")
-    route_lst.append(Route("/", dummy_rt))
-    route_lst.append(Route("/robots.txt", FrontendServlet.robots))
+if not cfg.allnet.standalone:
+    allnet = AllnetServlet(cfg, cfg_dir)
+    route_lst += [
+        Route("/sys/servlet/PowerOn", allnet.handle_poweron, methods=["GET", "POST"]),
+        Route("/sys/servlet/DownloadOrder", allnet.handle_dlorder, methods=["GET", "POST"]),
+        Route("/sys/servlet/LoaderStateRecorder", allnet.handle_loaderstaterecorder, methods=["GET", "POST"]),
+        Route("/sys/servlet/Alive", allnet.handle_alive, methods=["GET", "POST"]),
+        Route("/naomitest.html", allnet.handle_naomitest),
+    ]
+    
+    if cfg.allnet.allow_online_updates:
+        route_lst += [
+            Route("/report-api/Report", allnet.handle_dlorder_report, methods=["POST"]),
+            Route("/dl/ini/{file:str}", allnet.handle_dlorder_ini),
+        ]
 
 for code, game in title.title_registry.items():
     route_lst += game.get_routes()

@@ -1,7 +1,7 @@
 server:
   listen_address: "127.0.0.1"  
   hostname: "localhost"  
-  port: 8080
+  port: 80
   ssl_key: "cert/title.key"
   ssl_cert: "cert/title.crt"
   allow_user_registration: True
@@ -34,10 +34,13 @@ database:
 
 frontend:
   standalone: True
+  port: 8080
   loglevel: "info"
   secret: ""
 
 allnet:
+  standalone: False
+  port: 80
   loglevel: "info"
   allow_online_updates: False
   update_cfg_folder: ""
