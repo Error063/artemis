@@ -48,6 +48,7 @@
 - `ssl_cert`: Location of the ssl server certificate for the billing server. Ignored if `standalone` is `False`.  Must match the CA distributed to users or the billing server will not connect. Default `cert/server.pem`
 - `signing_key`: Location of the RSA Private key used to sign billing requests. Must match the public key distributed to users or the billing server will not connect. Default `cert/billing.key`
 ## Aimedb
+- `enable`: Weather or not aimedb should run. Default `True`
 - `loglevel`: Logging level for the aimedb server. Default `info`
 - `port`: Port the aimedb server should listen for connections on. Games are hardcoded to ask for port `22345` so only change if you have a proxy redirecting properly. Default `22345`
 - `key`: Key to encrypt/decrypt aimedb requests and responses. MUST be set or the server will not start. If set incorrectly, your server will not properly handle aimedb requests. Default `""`
