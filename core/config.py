@@ -315,6 +315,12 @@ class AimedbConfig:
         self.__config = parent_config
 
     @property
+    def enable(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "aimedb", "enable", default=True
+        )
+
+    @property
     def loglevel(self) -> int:
         return CoreConfig.str_to_loglevel(
             CoreConfig.get_config_field(

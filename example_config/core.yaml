@@ -54,6 +54,7 @@ billing:
   signing_key: "cert/billing.key"
 
 aimedb:
+  enable: True
   loglevel: "info"
   port: 22345
   key: ""

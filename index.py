@@ -69,14 +69,16 @@ async def launch_allnet(cfg: CoreConfig) -> None:
 
 
 async def launcher(cfg: CoreConfig, ssl: bool) -> None:
-    AimedbServlette(cfg).start()
     task_list = [asyncio.create_task(launch_main(cfg, ssl))]
+    
     if cfg.billing.standalone:
         task_list.append(asyncio.create_task(launch_billing(cfg)))
     if cfg.frontend.enable:
         task_list.append(asyncio.create_task(launch_frontend(cfg)))
     if cfg.allnet.standalone:
         task_list.append(asyncio.create_task(launch_allnet(cfg)))
+    if cfg.aimedb.enable:
+        AimedbServlette(cfg).start()
     
     done, pending = await asyncio.wait(
         task_list,
