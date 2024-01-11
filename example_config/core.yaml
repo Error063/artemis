@@ -33,7 +33,7 @@ database:
   memcached_host: "localhost"
 
 frontend:
-  standalone: True
+  enable: True
   port: 8080
   loglevel: "info"
   secret: ""
