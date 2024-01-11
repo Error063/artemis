@@ -275,7 +275,7 @@ class BillingConfig:
     @property
     def standalone(self) -> bool:
         return CoreConfig.get_config_field(
-            self.__config, "core", "billing", "standalone", default=False
+            self.__config, "core", "billing", "standalone", default=True
         )
 
     @property
