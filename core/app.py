@@ -54,8 +54,6 @@ title = TitleServlet(cfg, cfg_dir) # This has to be loaded first to load plugins
 mucha = MuchaServlet(cfg, cfg_dir)
 
 route_lst: List[Route] = [
-    # Allnet
-    
     # Mucha
     Route("/mucha_front/boardauth.do", mucha.handle_boardauth, methods=["POST"]),
     Route("/mucha_front/updatacheck.do", mucha.handle_updatecheck, methods=["POST"]),

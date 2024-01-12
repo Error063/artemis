@@ -123,9 +123,8 @@ class AllnetServlet:
             )
             self.logger.initialized = True
 
-        self.logger.info(
-            f"Ready on port {self.config.allnet.port if self.config.allnet.standalone else self.config.server.port}"
-        )
+    def startup(self) -> None:
+        self.logger.info(f"Ready on port {self.config.allnet.port if self.config.allnet.standalone else self.config.server.port}")
 
     async def handle_poweron(self, request: Request):
         request_ip = Utils.get_ip_addr(request)
@@ -471,6 +470,9 @@ class BillingServlet:
             )
             self.logger.initialized = True
     
+    def startup(self) -> None:
+        self.logger.info(f"Ready on port {self.config.billing.port if self.config.billing.standalone else self.config.server.port}")
+
     def billing_req_to_dict(self, data: bytes):
         """
         Parses an billing request string into a python dictionary
@@ -894,7 +896,8 @@ app_billing = Starlette(
     [        
         Route("/request", billing.handle_billing_request, methods=["POST"]),
         Route("/request/", billing.handle_billing_request, methods=["POST"]),
-    ]
+    ],
+    on_startup=[billing.startup]
 )
 
 allnet = AllnetServlet(cfg, cfg_dir)
@@ -914,5 +917,6 @@ if cfg.allnet.allow_online_updates:
 
 app_allnet = Starlette(
     cfg.server.is_develop, 
-    route_lst
+    route_lst,
+    on_startup=[allnet.startup]
 )

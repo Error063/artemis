@@ -144,7 +144,7 @@ class FrontendServlet():
             Route("/robots.txt", self.robots)
         ]
     
-    def startup(self) -> None:        
+    def startup(self) -> None:
         self.config.update({
             "frontend": {
                 "standalone": True, 

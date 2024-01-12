@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--email", "-e", type=str, help="Email for the new user")
     parser.add_argument("--access_code", "-a", type=str, help="Access code for new/transfer user", default="00000000000000000000")
     parser.add_argument("--message", "-m", type=str, help="Revision message")
-    parser.add_argument("action", type=str, help="create, upgrade, create-owner")
+    parser.add_argument("action", type=str, help="create, upgrade, create-owner, migrate, create-revision")
     args = parser.parse_args()
 
     cfg = CoreConfig()
