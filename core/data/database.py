@@ -172,7 +172,8 @@ class Data:
             return False
         
         db_vers = {}
-        for x in vers:
+        vers_list = vers.fetchall()
+        for x in vers_list:
             db_vers[x['game']] = x['version']
         
         core_now_ver = int(db_vers['CORE']) + 1
