@@ -42,7 +42,7 @@ class SaoBase:
         resp = SaoGetMaintResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c12a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c12a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/give_free_ticket
         req = SaoGiveFreeTicketRequest(header, request)
         self.logger.info(f"Give {req.give_num} free tickets (id {req.ticket_id}) to user {req.user_id}")
