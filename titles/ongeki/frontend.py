@@ -64,7 +64,7 @@ class OngekiFrontend(FE_Base):
                 version_list=self.version_list,
                 version=self.version,
                 sesh=vars(usr_sesh)
-            ))
+            ), media_type="text/html; charset=utf-16")
         else:
             return RedirectResponse("/gate/", 303)
     

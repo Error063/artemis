@@ -141,4 +141,4 @@ class IDACFrontend(FE_Base):
             rank=rank,
             sesh=vars(usr_sesh),
             active_page="idac",
-        ))
+        ), media_type="text/html; charset=utf-16")

@@ -180,7 +180,7 @@ class FE_Base():
             title=self.core_config.server.name,
             game_list=self.environment.globals["game_list"],
             sesh=vars(sesh) if sesh is not None else vars(UserSession()),
-        ))
+        ), media_type="text/html; charset=utf-16")
         
         if sesh is None:
             resp.delete_cookie("DIANA_SESH")
@@ -281,7 +281,7 @@ class FE_Gate(FE_Base):
             title=f"{self.core_config.server.name} | Login Gate",
             error=err,
             sesh=vars(UserSession()),
-        ))
+        ), media_type="text/html; charset=utf-16")
         resp.delete_cookie("DIANA_SESH")
         return resp
     
@@ -392,7 +392,7 @@ class FE_Gate(FE_Base):
             title=f"{self.core_config.server.name} | Create User",
             code=ac,
             sesh={"user_id": 0, "permissions": 0},
-        ))
+        ), media_type="text/html; charset=utf-16")
 
 class FE_User(FE_Base):
     async def render_GET(self, request: Request):
@@ -483,7 +483,7 @@ class FE_User(FE_Base):
             success=succ,
             username=user['username'],
             arcades=arcade_data
-        ))
+        ), media_type="text/html; charset=utf-16")
     
     async def render_logout(self, request: Request):
         resp = RedirectResponse("/gate/", 303)
@@ -557,7 +557,7 @@ class FE_System(FE_Base):
             title=f"{self.core_config.server.name} | System", 
             sesh=vars(usr_sesh), 
             usrlist=[],
-        ))
+        ), media_type="text/html; charset=utf-16")
         
     async def lookup_user(self, request: Request):
         template = self.environment.get_template("core/templates/sys/index.jinja")
@@ -590,7 +590,7 @@ class FE_System(FE_Base):
             sesh=vars(usr_sesh), 
             usrlist=usrlist,
             shoplist=[],
-        ))
+        ), media_type="text/html; charset=utf-16")
 
     async def lookup_shop(self, request: Request):
         shoplist = []
@@ -624,7 +624,7 @@ class FE_System(FE_Base):
                     usrlist=[],
                     shoplist=shoplist,
                     error=4
-                ))
+                ), media_type="text/html; charset=utf-16")
         
         if sn_search:
             sn_search = sn_search.upper().replace("-", "").strip()
@@ -653,7 +653,7 @@ class FE_System(FE_Base):
                     usrlist=[],
                     shoplist=shoplist,
                     error=10
-                ))
+                ), media_type="text/html; charset=utf-16")
             
         
         return Response(template.render(
@@ -661,7 +661,7 @@ class FE_System(FE_Base):
             sesh=vars(usr_sesh), 
             usrlist=[],
             shoplist=shoplist,
-        ))
+        ), media_type="text/html; charset=utf-16")
 
 class FE_Arcade(FE_Base):
     async def render_GET(self, request: Request):
@@ -677,14 +677,14 @@ class FE_Arcade(FE_Base):
             return Response(template.render(
                 title=f"{self.core_config.server.name} | Arcade", 
                 sesh=vars(usr_sesh),
-            ))
+            ), media_type="text/html; charset=utf-16")
         
         sinfo = await self.data.arcade.get_arcade(shop_id)
         if not sinfo:
             return Response(template.render(
                 title=f"{self.core_config.server.name} | Arcade", 
                 sesh=vars(usr_sesh),
-            ))
+            ), media_type="text/html; charset=utf-16")
         
         cabs = await self.data.arcade.get_arcade_machines(shop_id)
         cablst = []
@@ -705,7 +705,7 @@ class FE_Arcade(FE_Base):
                 "cabs": cablst
             }
             
-        ))
+        ), media_type="text/html; charset=utf-16")
 
 class FE_Machine(FE_Base):
     async def render_GET(self, request: Request):
@@ -721,13 +721,13 @@ class FE_Machine(FE_Base):
             return Response(template.render(
                 title=f"{self.core_config.server.name} | Machine", 
                 sesh=vars(usr_sesh),
-            ))
+            ), media_type="text/html; charset=utf-16")
         
         return Response(template.render(
             title=f"{self.core_config.server.name} | Machine", 
             sesh=vars(usr_sesh),
             arcade={}
-        ))
+        ), media_type="text/html; charset=utf-16")
 
 cfg_dir = environ.get("DIANA_CFG_DIR", "config")
 cfg: CoreConfig = CoreConfig()
