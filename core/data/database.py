@@ -219,3 +219,13 @@ class Data:
         
         return True
 
+    async def create_revision(self, message: str) -> None:
+        if not message:
+            self.logger.info("Message is required for create-revision")
+            return
+        
+        self.__alembic_cmd(
+            "revision",
+            "-m",
+            message,
+        )
