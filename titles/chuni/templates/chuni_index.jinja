@@ -1,0 +1,43 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+<h1>Chunithm</h1>
+{% if profile is defined and profile is not none and profile.id > 0 %}
+<script type="text/javascript">
+function toggle_new_name_form() {
+  let frm = document.getElementById("new_name_form");
+  let btn = document.getElementById("btn_toggle_form");
+
+  if (frm.style['display'] != "") {
+    frm.style['display'] = "";
+    frm.style['max-height'] = "";
+    btn.innerText = "Cancel";
+  } else {
+    frm.style['display'] = "none";
+    frm.style['max-height'] = "0px";
+    btn.innerText = "Edit";
+  }
+}
+</script>
+<h3>Profile for {{ profile.userName }}&nbsp;<button onclick="toggle_new_name_form()" class="btn btn-secondary" id="btn_toggle_form">Edit</button></h3>
+{% if error is defined %}
+{% include "core/templates/widgets/err_banner.jinja" %}
+{% endif %}
+{% if success is defined and success == 1 %}
+<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
+Update successful
+</div>
+{% endif %}
+<form style="max-width: 33%; display: none; max-height: 0px;" action="/game/chuni/update.name" method="post" id="new_name_form">
+  <div class="mb-3">
+    <label for="new_name" class="form-label">New Trainer Name</label>
+    <input type="text" class="form-control" id="new_name" name="new_name" aria-describedby="new_name_help" maxlength="14">
+    <div id="new_name_help" class="form-text">Must be 14 characters or less</div>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% elif sesh is defined and sesh is not none and sesh.user_id > 0 %}
+No profile information found for this account.
+{% else %}
+Login to view profile information.
+{% endif %}
+{% endblock content %}

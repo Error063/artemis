@@ -395,6 +395,17 @@ team = Table(
 
 
 class ChuniProfileData(BaseData):
+    async def update_name(self, user_id: int, new_name: str) -> bool:
+        sql = profile.update(profile.c.user == user_id).values(
+            userName=new_name
+        )
+        result = await self.execute(sql)
+
+        if result is None:
+            self.logger.warning(f"Failed to set user {user_id} name to {new_name}")
+            return False
+        return True
+
     async def put_profile_data(
         self, aime_id: int, version: int, profile_data: Dict
     ) -> Optional[int]:
