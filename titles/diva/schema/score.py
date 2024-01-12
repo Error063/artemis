@@ -57,7 +57,7 @@ playlog = Table(
 
 
 class DivaScoreData(BaseData):
-    def put_best_score(
+    async def put_best_score(
         self,
         user_id: int,
         game_version: int,
@@ -109,7 +109,7 @@ class DivaScoreData(BaseData):
             max_combo=max_combo,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert best score! profile: {user_id}, song: {song_id}"
@@ -118,7 +118,7 @@ class DivaScoreData(BaseData):
 
         return result.lastrowid
 
-    def put_playlog(
+    async def put_playlog(
         self,
         user_id: int,
         game_version: int,
@@ -157,7 +157,7 @@ class DivaScoreData(BaseData):
             max_combo=max_combo,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_id}, chart: {difficulty}"
@@ -166,7 +166,7 @@ class DivaScoreData(BaseData):
 
         return result.lastrowid
 
-    def get_best_user_score(
+    async def get_best_user_score(
         self, user_id: int, pv_id: int, difficulty: int, edition: int
     ) -> Optional[Row]:
         sql = score.select(
@@ -178,12 +178,12 @@ class DivaScoreData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_top3_scores(
+    async def get_top3_scores(
         self, pv_id: int, difficulty: int, edition: int
     ) -> Optional[List[Row]]:
         sql = (
@@ -198,12 +198,12 @@ class DivaScoreData(BaseData):
             .limit(3)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_global_ranking(
+    async def get_global_ranking(
         self, user_id: int, pv_id: int, difficulty: int, edition: int
     ) -> Optional[List[Row]]:
         # get the subquery max score of a user with pv_id, difficulty and
@@ -227,15 +227,15 @@ class DivaScoreData(BaseData):
             score.c.edition == edition,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
+    async def get_best_scores(self, user_id: int) -> Optional[List[Row]]:
         sql = score.select(score.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

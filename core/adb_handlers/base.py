@@ -102,7 +102,7 @@ class ADBHeader:
         magic, protocol_ver, cmd, length, status, game_id, store_id, keychip_id = struct.unpack_from("<5H6sI12s", data)
         head = cls(magic, protocol_ver, cmd, length, status, game_id, store_id, keychip_id)
         
-        if head.length != len(data):
+        if head.length > len(data):
             raise ADBHeaderException(f"Length is incorrect! Expect {head.length}, got {len(data)}")
         
         return head

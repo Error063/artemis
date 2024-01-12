@@ -339,147 +339,147 @@ print_detail = Table(
 )
 
 class OngekiItemData(BaseData):
-    def put_card(self, aime_id: int, card_data: Dict) -> Optional[int]:
+    async def put_card(self, aime_id: int, card_data: Dict) -> Optional[int]:
         card_data["user"] = aime_id
 
         sql = insert(card).values(**card_data)
         conflict = sql.on_duplicate_key_update(**card_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_card: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_cards(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_cards(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(card).where(card.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_character(self, aime_id: int, character_data: Dict) -> Optional[int]:
+    async def put_character(self, aime_id: int, character_data: Dict) -> Optional[int]:
         character_data["user"] = aime_id
 
         sql = insert(character).values(**character_data)
         conflict = sql.on_duplicate_key_update(**character_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_character: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_characters(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_characters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(character).where(character.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_deck(self, aime_id: int, deck_data: Dict) -> Optional[int]:
+    async def put_deck(self, aime_id: int, deck_data: Dict) -> Optional[int]:
         deck_data["user"] = aime_id
 
         sql = insert(deck).values(**deck_data)
         conflict = sql.on_duplicate_key_update(**deck_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_deck: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_deck(self, aime_id: int, deck_id: int) -> Optional[Dict]:
+    async def get_deck(self, aime_id: int, deck_id: int) -> Optional[Dict]:
         sql = select(deck).where(and_(deck.c.user == aime_id, deck.c.deckId == deck_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_decks(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_decks(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(deck).where(deck.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_boss(self, aime_id: int, boss_data: Dict) -> Optional[int]:
+    async def put_boss(self, aime_id: int, boss_data: Dict) -> Optional[int]:
         boss_data["user"] = aime_id
 
         sql = insert(boss).values(**boss_data)
         conflict = sql.on_duplicate_key_update(**boss_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_boss: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_story(self, aime_id: int, story_data: Dict) -> Optional[int]:
+    async def put_story(self, aime_id: int, story_data: Dict) -> Optional[int]:
         story_data["user"] = aime_id
 
         sql = insert(story).values(**story_data)
         conflict = sql.on_duplicate_key_update(**story_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_story: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_stories(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_stories(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(story).where(story.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_chapter(self, aime_id: int, chapter_data: Dict) -> Optional[int]:
+    async def put_chapter(self, aime_id: int, chapter_data: Dict) -> Optional[int]:
         chapter_data["user"] = aime_id
 
         sql = insert(chapter).values(**chapter_data)
         conflict = sql.on_duplicate_key_update(**chapter_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_chapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_chapters(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_chapters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(chapter).where(chapter.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_item(self, aime_id: int, item_data: Dict) -> Optional[int]:
+    async def put_item(self, aime_id: int, item_data: Dict) -> Optional[int]:
         item_data["user"] = aime_id
 
         sql = insert(item).values(**item_data)
         conflict = sql.on_duplicate_key_update(**item_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_item(self, aime_id: int, item_id: int, item_kind: int) -> Optional[Dict]:
+    async def get_item(self, aime_id: int, item_id: int, item_kind: int) -> Optional[Dict]:
         sql = select(item).where(and_(item.c.user == aime_id, item.c.itemId == item_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_items(self, aime_id: int, item_kind: int = None) -> Optional[List[Dict]]:
+    async def get_items(self, aime_id: int, item_kind: int = None) -> Optional[List[Dict]]:
         if item_kind is None:
             sql = select(item).where(item.c.user == aime_id)
         else:
@@ -487,73 +487,73 @@ class OngekiItemData(BaseData):
                 and_(item.c.user == aime_id, item.c.itemKind == item_kind)
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_music_item(self, aime_id: int, music_item_data: Dict) -> Optional[int]:
+    async def put_music_item(self, aime_id: int, music_item_data: Dict) -> Optional[int]:
         music_item_data["user"] = aime_id
 
         sql = insert(music_item).values(**music_item_data)
         conflict = sql.on_duplicate_key_update(**music_item_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_music_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_music_items(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_music_items(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(music_item).where(music_item.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_login_bonus(self, aime_id: int, login_bonus_data: Dict) -> Optional[int]:
+    async def put_login_bonus(self, aime_id: int, login_bonus_data: Dict) -> Optional[int]:
         login_bonus_data["user"] = aime_id
 
         sql = insert(login_bonus).values(**login_bonus_data)
         conflict = sql.on_duplicate_key_update(**login_bonus_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_login_bonus: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_login_bonuses(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_login_bonuses(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(login_bonus).where(login_bonus.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_mission_point(self, aime_id: int, version: int, mission_point_data: Dict) -> Optional[int]:
+    async def put_mission_point(self, aime_id: int, version: int, mission_point_data: Dict) -> Optional[int]:
         mission_point_data["version"] = version
         mission_point_data["user"] = aime_id
 
         sql = insert(mission_point).values(**mission_point_data)
         conflict = sql.on_duplicate_key_update(**mission_point_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_mission_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_mission_points(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+    async def get_mission_points(self, version: int, aime_id: int) -> Optional[List[Dict]]:
         sql = select(mission_point).where(and_(mission_point.c.user == aime_id, mission_point.c.version == version))
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_event_point(self, aime_id: int, version: int, event_point_data: Dict) -> Optional[int]:
+    async def put_event_point(self, aime_id: int, version: int, event_point_data: Dict) -> Optional[int]:
         # We update only the newest (type: 1) entry, in official spec game watches for both latest(type:1) and previous (type:2) entries to give an additional info how many ranks has player moved up or down
         # This fully featured is on TODO list, at the moment we just update the tables as data comes and give out rank as request comes
         event_point_data["user"] = aime_id
@@ -564,95 +564,95 @@ class OngekiItemData(BaseData):
 
         sql = insert(event_point).values(**event_point_data)
         conflict = sql.on_duplicate_key_update(**event_point_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_event_point: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_event_points(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_event_points(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(event_point).where(event_point.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_scenerio(self, aime_id: int, scenerio_data: Dict) -> Optional[int]:
+    async def put_scenerio(self, aime_id: int, scenerio_data: Dict) -> Optional[int]:
         scenerio_data["user"] = aime_id
 
         sql = insert(scenerio).values(**scenerio_data)
         conflict = sql.on_duplicate_key_update(**scenerio_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_scenerio: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_scenerios(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_scenerios(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(scenerio).where(scenerio.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_trade_item(self, aime_id: int, trade_item_data: Dict) -> Optional[int]:
+    async def put_trade_item(self, aime_id: int, trade_item_data: Dict) -> Optional[int]:
         trade_item_data["user"] = aime_id
 
         sql = insert(trade_item).values(**trade_item_data)
         conflict = sql.on_duplicate_key_update(**trade_item_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_trade_item: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_trade_items(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_trade_items(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(trade_item).where(trade_item.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_event_music(self, aime_id: int, event_music_data: Dict) -> Optional[int]:
+    async def put_event_music(self, aime_id: int, event_music_data: Dict) -> Optional[int]:
         event_music_data["user"] = aime_id
 
         sql = insert(event_music).values(**event_music_data)
         conflict = sql.on_duplicate_key_update(**event_music_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_event_music: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_event_music(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_event_music(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(event_music).where(event_music.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_tech_event(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
+    async def put_tech_event(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
         tech_event_data["version"] = version
 
         sql = insert(tech_event).values(**tech_event_data)
         conflict = sql.on_duplicate_key_update(**tech_event_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_tech_event: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_tech_event_ranking(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
+    async def put_tech_event_ranking(self, aime_id: int, version: int, tech_event_data: Dict) -> Optional[int]:
         tech_event_data["user"] = aime_id
         tech_event_data["version"] = version
         tech_event_data.pop("isRankingRewarded")
@@ -662,87 +662,87 @@ class OngekiItemData(BaseData):
 
         sql = insert(tech_ranking).values(**tech_event_data)
         conflict = sql.on_duplicate_key_update(**tech_event_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_tech_event_ranking: Failed to update ranking! aime_id {aime_id}")
             return None
         return result.lastrowid
 
-    def get_tech_event(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+    async def get_tech_event(self, version: int, aime_id: int) -> Optional[List[Dict]]:
         sql = select(tech_event).where(and_(tech_event.c.user == aime_id, tech_event.c.version == version))
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def get_bosses(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_bosses(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(boss).where(boss.c.user == aime_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_memorychapter(
+    async def put_memorychapter(
         self, aime_id: int, memorychapter_data: Dict
     ) -> Optional[int]:
         memorychapter_data["user"] = aime_id
 
         sql = insert(memorychapter).values(**memorychapter_data)
         conflict = sql.on_duplicate_key_update(**memorychapter_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_memorychapter: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_memorychapters(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_memorychapters(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(memorychapter).where(memorychapter.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_user_gacha(self, aime_id: int, gacha_id: int) -> Optional[Row]:
+    async def get_user_gacha(self, aime_id: int, gacha_id: int) -> Optional[Row]:
         sql = gacha.select(and_(gacha.c.user == aime_id, gacha.c.gachaId == gacha_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_user_gachas(self, aime_id: int) -> Optional[List[Row]]:
         sql = gacha.select(gacha.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_user_gacha_supplies(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_user_gacha_supplies(self, aime_id: int) -> Optional[List[Row]]:
         sql = gacha_supply.select(gacha_supply.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_user_gacha(self, aime_id: int, gacha_id: int, **data) -> Optional[int]:
+    async def put_user_gacha(self, aime_id: int, gacha_id: int, **data) -> Optional[int]:
         sql = insert(gacha).values(user=aime_id, gachaId=gacha_id, **data)
 
         conflict = sql.on_duplicate_key_update(user=aime_id, gachaId=gacha_id, **data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(f"put_user_gacha: Failed to insert! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_user_print_detail(
+    async def put_user_print_detail(
         self, aime_id: int, serial_id: str, user_print_data: Dict
     ) -> Optional[int]:
         sql = insert(print_detail).values(
@@ -750,7 +750,7 @@ class OngekiItemData(BaseData):
         )
 
         conflict = sql.on_duplicate_key_update(user=aime_id, **user_print_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warning(
@@ -760,18 +760,18 @@ class OngekiItemData(BaseData):
         return result.lastrowid
 
 
-    def get_ranking_event_ranks(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+    async def get_ranking_event_ranks(self, version: int, aime_id: int) -> Optional[List[Dict]]:
         # Calculates player rank on GameRequest from server, and sends it back, official spec would rank players in maintenance period, on TODO list
         sql = select(event_point.c.id, event_point.c.user, event_point.c.eventId, event_point.c.type, func.row_number().over(partition_by=event_point.c.eventId, order_by=event_point.c.point.desc()).label('rank'), event_point.c.date, event_point.c.point).where(event_point.c.version == version)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(f"failed to rank aime_id: {aime_id} ranking event positions")
             return None
         return result.fetchall()
 
-    def get_tech_event_ranking(self, version: int, aime_id: int) -> Optional[List[Dict]]:
+    async def get_tech_event_ranking(self, version: int, aime_id: int) -> Optional[List[Dict]]:
         sql = select(tech_ranking.c.id, tech_ranking.c.user, tech_ranking.c.date, tech_ranking.c.eventId, func.row_number().over(partition_by=tech_ranking.c.eventId, order_by=[tech_ranking.c.totalTechScore.desc(),tech_ranking.c.totalPlatinumScore.desc()]).label('rank'), tech_ranking.c.totalTechScore, tech_ranking.c.totalPlatinumScore).where(tech_ranking.c.version == version)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"aime_id: {aime_id} has no tech ranking ranks")
             return None

@@ -25,10 +25,10 @@ customize = Table(
 
 
 class DivaCustomizeItemData(BaseData):
-    def put_customize_item(self, aime_id: int, version: int, item_id: int) -> None:
+    async def put_customize_item(self, aime_id: int, version: int, item_id: int) -> None:
         sql = insert(customize).values(version=version, user=aime_id, item_id=item_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert diva profile customize item! aime id: {aime_id} item: {item_id}"
@@ -36,7 +36,7 @@ class DivaCustomizeItemData(BaseData):
             return None
         return result.lastrowid
 
-    def get_customize_items(self, aime_id: int, version: int) -> Optional[List[Dict]]:
+    async def get_customize_items(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and an aime id, return all the customize items, not used directly
         """
@@ -44,12 +44,12 @@ class DivaCustomizeItemData(BaseData):
             and_(customize.c.version == version, customize.c.user == aime_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_customize_items_have_string(self, aime_id: int, version: int) -> str:
+    async def get_customize_items_have_string(self, aime_id: int, version: int) -> str:
         """
         Given a game version and an aime id, return the cstmz_itm_have hex string
         required for diva directly

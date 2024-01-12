@@ -1,4 +1,6 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
+from starlette.routing import Route
 import yaml
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
@@ -51,17 +53,16 @@ class DivaServlet(BaseServlet):
             level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
         )
 
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [("render_POST", "/DivaServlet/", {})]
-        )
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/DivaServlet/", self.render_POST, methods=['POST'])
+        ]
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/DivaServlet/", self.core_cfg.title.hostname)
+            return (f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/DivaServlet/", self.core_cfg.server.hostname)
 
-        return (f"http://{self.core_cfg.title.hostname}/DivaServlet/", self.core_cfg.title.hostname)
+        return (f"http://{self.core_cfg.server.hostname}/DivaServlet/", self.core_cfg.server.hostname)
 
     @classmethod
     def is_game_enabled(
@@ -78,9 +79,9 @@ class DivaServlet(BaseServlet):
 
         return True
 
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        req_raw = request.content.getvalue()
-        url_header = request.getAllHeaders()
+    async def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
+        req_raw = await request.body()
+        url_header = request.headers
 
         # Ping Dispatch
         if "THIS_STRING_SEPARATES" in str(url_header):
@@ -103,9 +104,7 @@ class DivaServlet(BaseServlet):
             self.logger.debug(
                 f"Response cmd={bin_req_data['cmd']}&req_id={bin_req_data['req_id']}&stat=ok{resp}"
             )
-            return f"cmd={bin_req_data['cmd']}&req_id={bin_req_data['req_id']}&stat=ok{resp}".encode(
-                "utf-8"
-            )
+            return PlainTextResponse(f"cmd={bin_req_data['cmd']}&req_id={bin_req_data['req_id']}&stat=ok{resp}")
 
         # Main Dispatch
         json_string = json.dumps(
@@ -122,7 +121,7 @@ class DivaServlet(BaseServlet):
             )  # Decompressing the gzip
         except zlib.error as e:
             self.logger.error(f"Failed to defalte! {e} -> {gz_string}")
-            return "stat=0"
+            return PlainTextResponse("stat=0")
 
         req_kvp = urllib.parse.unquote(url_data)
         req_data = {}
@@ -141,27 +140,18 @@ class DivaServlet(BaseServlet):
         # Load the requests
         try:
             handler = getattr(self.base, func_to_find)
-            resp = handler(req_data)
+            resp = await handler(req_data)
 
         except AttributeError as e:
             self.logger.warning(f"Unhandled {req_data['cmd']} request {e}")
-            return f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok".encode(
-                "utf-8"
-            )
+            return PlainTextResponse(f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok")
 
         except Exception as e:
             self.logger.error(f"Error handling method {func_to_find} {e}")
-            return f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok".encode(
-                "utf-8"
-            )
+            return PlainTextResponse(f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok")
 
-        request.responseHeaders.addRawHeader(b"content-type", b"text/plain")
         self.logger.debug(
             f"Response cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok{resp}"
         )
 
-        return (
-            f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok{resp}".encode(
-                "utf-8"
-            )
-        )
+        return PlainTextResponse(f"cmd={req_data['cmd']}&req_id={req_data['req_id']}&stat=ok{resp}")

@@ -6,5 +6,4 @@ from .frontend import PokkenFrontend
 index = PokkenServlet
 database = PokkenData
 game_codes = [PokkenConstants.GAME_CODE]
-current_schema_version = 1
 frontend = PokkenFrontend

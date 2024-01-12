@@ -1,13 +1,11 @@
-from typing import Optional, Dict, List
-from os import walk, path
-import urllib
+from typing import Optional
+from os import path
 import csv
 
 from read import BaseReader
 from core.config import CoreConfig
 from titles.cxb.database import CxbData
 from titles.cxb.const import CxbConstants
-
 
 class CxbReader(BaseReader):
     def __init__(
@@ -29,17 +27,14 @@ class CxbReader(BaseReader):
             self.logger.error(f"Invalid project cxb version {version}")
             exit(1)
 
-    def read(self) -> None:
-        pull_bin_ram = True
+    async def read(self) -> None:
+        if path.exists(self.bin_dir):
+            await self.read_csv(self.bin_dir)
+        
+        else:
+            self.logger.warn(f"{self.bin_dir} does not exist, nothing to import")
 
-        if not path.exists(f"{self.bin_dir}"):
-            self.logger.warning(f"Couldn't find csv file in {self.bin_dir}, skipping")
-            pull_bin_ram = False
-
-        if pull_bin_ram:
-            self.read_csv(f"{self.bin_dir}")
-
-    def read_csv(self, bin_dir: str) -> None:
+    async def read_csv(self, bin_dir: str) -> None:
         self.logger.info(f"Read csv from {bin_dir}")
 
         try:
@@ -55,7 +50,7 @@ class CxbReader(BaseReader):
 
                     if not "N/A" in row["standard"]:
                         self.logger.info(f"Added song {song_id} chart 0")
-                        self.data.static.put_music(
+                        await self.data.static.put_music(
                             self.version,
                             song_id,
                             index,
@@ -71,7 +66,7 @@ class CxbReader(BaseReader):
                         )
                     if not "N/A" in row["hard"]:
                         self.logger.info(f"Added song {song_id} chart 1")
-                        self.data.static.put_music(
+                        await self.data.static.put_music(
                             self.version,
                             song_id,
                             index,
@@ -83,7 +78,7 @@ class CxbReader(BaseReader):
                         )
                     if not "N/A" in row["master"]:
                         self.logger.info(f"Added song {song_id} chart 2")
-                        self.data.static.put_music(
+                        await self.data.static.put_music(
                             self.version,
                             song_id,
                             index,
@@ -97,7 +92,7 @@ class CxbReader(BaseReader):
                         )
                     if not "N/A" in row["unlimited"]:
                         self.logger.info(f"Added song {song_id} chart 3")
-                        self.data.static.put_music(
+                        await self.data.static.put_music(
                             self.version,
                             song_id,
                             index,
@@ -113,7 +108,7 @@ class CxbReader(BaseReader):
                         )
                     if not "N/A" in row["easy"]:
                         self.logger.info(f"Added song {song_id} chart 4")
-                        self.data.static.put_music(
+                        await self.data.static.put_music(
                             self.version,
                             song_id,
                             index,

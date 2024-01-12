@@ -7,4 +7,3 @@ index = SaoServlet
 database = SaoData
 reader = SaoReader
 game_codes = [SaoConstants.GAME_CODE]
-current_schema_version = 1

@@ -72,7 +72,7 @@ cards = Table(
 
 
 class Mai2StaticData(BaseData):
-    def put_game_event(
+    async def put_game_event(
         self, version: int, type: int, event_id: int, name: str
     ) -> Optional[int]:
         sql = insert(event).values(
@@ -84,46 +84,46 @@ class Mai2StaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(eventId=event_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"put_game_event: Failed to insert event! event_id {event_id} type {type} name {name}"
             )
         return result.lastrowid
 
-    def get_game_events(self, version: int) -> Optional[List[Row]]:
+    async def get_game_events(self, version: int) -> Optional[List[Row]]:
         sql = event.select(event.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_enabled_events(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_events(self, version: int) -> Optional[List[Row]]:
         sql = select(event).where(
             and_(event.c.version == version, event.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def toggle_game_event(
+    async def toggle_game_event(
         self, version: int, event_id: int, toggle: bool
     ) -> Optional[List]:
         sql = event.update(
             and_(event.c.version == version, event.c.eventId == event_id)
         ).values(enabled=int(toggle))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(
                 f"toggle_game_event: Failed to update event! event_id {event_id} toggle {toggle}"
             )
         return result.last_updated_params()
 
-    def put_game_music(
+    async def put_game_music(
         self,
         version: int,
         song_id: int,
@@ -159,13 +159,13 @@ class Mai2StaticData(BaseData):
             noteDesigner=note_designer,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert song {song_id} chart {chart_id}")
             return None
         return result.lastrowid
 
-    def put_game_ticket(
+    async def put_game_ticket(
         self,
         version: int,
         ticket_id: int,
@@ -185,13 +185,13 @@ class Mai2StaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(price=ticket_price)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert charge {ticket_id} type {ticket_type}")
             return None
         return result.lastrowid
 
-    def get_enabled_tickets(
+    async def get_enabled_tickets(
         self, version: int, kind: int = None
     ) -> Optional[List[Row]]:
         if kind is not None:
@@ -207,12 +207,12 @@ class Mai2StaticData(BaseData):
                 and_(ticket.c.version == version, ticket.c.enabled == True)
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_music_chart(
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -223,28 +223,28 @@ class Mai2StaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_card(self, version: int, card_id: int, card_name: str, **card_data) -> int:
+    async def put_card(self, version: int, card_id: int, card_name: str, **card_data) -> int:
         sql = insert(cards).values(
             version=version, cardId=card_id, cardName=card_name, **card_data
         )
 
         conflict = sql.on_duplicate_key_update(**card_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert card {card_id}")
             return None
         return result.lastrowid
 
-    def get_enabled_cards(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_cards(self, version: int) -> Optional[List[Row]]:
         sql = cards.select(and_(cards.c.version == version, cards.c.enabled == True))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

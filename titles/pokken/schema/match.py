@@ -39,14 +39,14 @@ class PokkenMatchData(BaseData):
     Match logs
     """
 
-    def save_match(self, user_id: int, match_data: Dict) -> Optional[int]:
+    async def save_match(self, user_id: int, match_data: Dict) -> Optional[int]:
         pass
 
-    def get_match(self, match_id: int) -> Optional[Row]:
+    async def get_match(self, match_id: int) -> Optional[Row]:
         pass
 
-    def get_matches_by_user(self, user_id: int) -> Optional[List[Row]]:
+    async def get_matches_by_user(self, user_id: int) -> Optional[List[Row]]:
         pass
 
-    def get_matches(self, limit: int = 20) -> Optional[List[Row]]:
+    async def get_matches(self, limit: int = 20) -> Optional[List[Row]]:
         pass

@@ -1,7 +1,6 @@
 import logging
 import socket
 
-from twisted.internet.protocol import DatagramProtocol
 from socketserver import BaseRequestHandler, TCPServer
 from typing import Tuple
 
@@ -10,19 +9,14 @@ from titles.idac.config import IDACConfig
 from titles.idac.database import IDACData
 
 
-class IDACEchoUDP(DatagramProtocol):
-    def __init__(self, cfg: CoreConfig, game_cfg: IDACConfig, port: int) -> None:
-        super().__init__()
-        self.port = port
-        self.core_config = cfg
-        self.game_config = game_cfg
-        self.logger = logging.getLogger("idac")
+class IDACEchoUDP:
+    def connection_made(self, transport):
+        self.transport = transport
 
-    def datagramReceived(self, data, addr):
-        self.logger.info(
-            f"UDP Ping from from {addr[0]}:{addr[1]} -> {self.port} - {data.hex()}"
-        )
-        self.transport.write(data, addr)
+    def datagram_received(self, data, addr):
+        logging.getLogger('idz').debug(f'Received echo from {addr}')
+        self.transport.sendto(data, addr)
+
 
 
 class IDACEchoTCP(BaseRequestHandler):

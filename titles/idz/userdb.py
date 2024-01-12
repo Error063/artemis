@@ -1,15 +1,9 @@
-from twisted.internet.protocol import Factory, Protocol
-import logging, coloredlogs
+import logging
 from Crypto.Cipher import AES
 import struct
 from typing import Dict, Optional, List, Type
-from twisted.web import server, resource
-from twisted.internet import reactor, endpoints
-from twisted.web.http import Request
-from routes import Mapper
 import random
-from os import walk
-import importlib
+import asyncio
 
 from core.config import CoreConfig
 from .database import IDZData
@@ -28,7 +22,7 @@ class IDZKey:
         self.hashN = hashN
 
 
-class IDZUserDBProtocol(Protocol):
+class IDZUserDB:
     def __init__(
         self,
         core_cfg: CoreConfig,
@@ -45,6 +39,10 @@ class IDZUserDBProtocol(Protocol):
         self.version = None
         self.version_internal = None
         self.skip_next = False
+    
+    def start(self) -> None:
+        self.logger.info(f"Start on port {self.config.aimedb.port}")
+        asyncio.create_task(asyncio.start_server(self.connection_cb, self.config.server.listen_address, self.config.aimedb.port))
 
     def append_padding(self, data: bytes):
         """Appends 0s to the end of the data until it's at the correct size"""
@@ -52,43 +50,54 @@ class IDZUserDBProtocol(Protocol):
         padding_size = length[0] - len(data)
         data += bytes(padding_size)
         return data
+    
+    async def connection_cb(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        self.logger.debug(f"Connection made from {writer.get_extra_info('peername')[0]}")
+        while True:
+            try:
+                base = 0
 
-    def connectionMade(self) -> None:
-        self.logger.debug(f"{self.transport.getPeer().host} Connected")
-        base = 0
+                for i in range(len(self.static_key) - 1):
+                    shift = 8 * i
+                    byte = self.static_key[i]
 
-        for i in range(len(self.static_key) - 1):
-            shift = 8 * i
-            byte = self.static_key[i]
+                    base |= byte << shift
 
-            base |= byte << shift
+                rsa_key = random.choice(self.rsa_keys)
+                key_enc: int = pow(base, rsa_key.e, rsa_key.N)
+                result = (
+                    key_enc.to_bytes(0x40, "little")
+                    + struct.pack("<I", 0x01020304)
+                    + rsa_key.hashN.to_bytes(4, "little")
+                )
 
-        rsa_key = random.choice(self.rsa_keys)
-        key_enc: int = pow(base, rsa_key.e, rsa_key.N)
-        result = (
-            key_enc.to_bytes(0x40, "little")
-            + struct.pack("<I", 0x01020304)
-            + rsa_key.hashN.to_bytes(4, "little")
-        )
+                self.logger.debug(f"Send handshake {result.hex()}")
 
-        self.logger.debug(f"Send handshake {result.hex()}")
+                writer.write(result)
+                await writer.drain()
 
-        self.transport.write(result)
+                data: bytes = await reader.read(4096)
+                if len(data) == 0:
+                    self.logger.debug("Connection closed")
+                    return
+                
+                await self.data.Received(data, reader, writer)
+                await writer.drain()
+            
+            except ConnectionResetError as e:
+                self.logger.debug("Connection reset, disconnecting")
+                return
 
-    def connectionLost(self, reason) -> None:
-        self.logger.debug(
-            f"{self.transport.getPeer().host} Disconnected - {reason.value}"
-        )
-
-    def dataReceived(self, data: bytes) -> None:
+    def dataReceived(self, data: bytes, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         self.logger.debug(f"Receive data {data.hex()}")
+        client_ip = writer.get_extra_info('peername')[0]
         crypt = AES.new(self.static_key, AES.MODE_ECB)
         
         try:
             data_dec = crypt.decrypt(data)
         
         except Exception as e:
-            self.logger.error(f"Failed to decrypt UserDB request from {self.transport.getPeer().host} because {e} - {data.hex()}")
+            self.logger.error(f"Failed to decrypt UserDB request from {client_ip} because {e} - {data.hex()}")
         
         self.logger.debug(f"Decrypt data {data_dec.hex()}")
 
@@ -99,7 +108,7 @@ class IDZUserDBProtocol(Protocol):
             self.logger.info(f"Userdb serverbox request {data_dec.hex()}")
             self.skip_next = True
 
-            self.transport.write(b"\x00")
+            writer.write(b"\x00")
             return
 
         elif magic == 0x01020304:
@@ -119,21 +128,21 @@ class IDZUserDBProtocol(Protocol):
                 self.version_internal = None
 
             self.logger.debug(
-                f"Userdb v{self.version} handshake response from {self.transport.getPeer().host}"
+                f"Userdb v{self.version} handshake response from {client_ip}"
             )
             return
 
         elif self.skip_next:
             self.skip_next = False
-            self.transport.write(b"\x00")
+            writer.write(b"\x00")
             return
 
         elif self.version is None:
             # We didn't get a handshake before, and this isn't one now, so we're up the creek
             self.logger.info(
-                f"Bad UserDB request from from {self.transport.getPeer().host}"
+                f"Bad UserDB request from from {client_ip}"
             )
-            self.transport.write(b"\x00")
+            writer.write(b"\x00")
             return
 
         cmd = struct.unpack_from("<H", data_dec, 0)[0]
@@ -147,7 +156,7 @@ class IDZUserDBProtocol(Protocol):
 
         handler = handler_cls(self.core_config, self.game_config, self.version_internal)
         self.logger.info(
-            f"Userdb v{self.version} {handler.name} request from {self.transport.getPeer().host}"
+            f"Userdb v{self.version} {handler.name} request from {client_ip}"
         )
         response = handler.handle(data_dec)
 
@@ -156,46 +165,4 @@ class IDZUserDBProtocol(Protocol):
         crypt = AES.new(self.static_key, AES.MODE_ECB)
         response_enc = crypt.encrypt(response)
 
-        self.transport.write(response_enc)
-
-
-class IDZUserDBFactory(Factory):
-    protocol = IDZUserDBProtocol
-
-    def __init__(
-        self,
-        cfg: CoreConfig,
-        game_cfg: IDZConfig,
-        keys: List[IDZKey],
-        handlers: List[Dict],
-    ) -> None:
-        self.core_config = cfg
-        self.game_config = game_cfg
-        self.keys = keys
-        self.handlers = handlers
-
-    def buildProtocol(self, addr):
-        return IDZUserDBProtocol(
-            self.core_config, self.game_config, self.keys, self.handlers
-        )
-
-
-class IDZUserDBWeb(resource.Resource):
-    def __init__(self, core_cfg: CoreConfig, game_cfg: IDZConfig):
-        super().__init__()
-        self.isLeaf = True
-        self.core_config = core_cfg
-        self.game_config = game_cfg
-        self.logger = logging.getLogger("idz")
-
-    def render_POST(self, request: Request) -> bytes:
-        self.logger.info(
-            f"IDZUserDBWeb POST from {request.getClientAddress().host} to {request.uri} with data {request.content.getvalue()}"
-        )
-        return b""
-
-    def render_GET(self, request: Request) -> bytes:
-        self.logger.info(
-            f"IDZUserDBWeb GET from {request.getClientAddress().host} to {request.uri}"
-        )
-        return b""
+        writer.write(response_enc)

@@ -28,7 +28,7 @@ class ChuniReader(BaseReader):
             self.logger.error(f"Invalid chunithm version {version}")
             exit(1)
 
-    def read(self) -> None:
+    async def read(self) -> None:
         data_dirs = []
         if self.bin_dir is not None:
             data_dirs += self.get_data_directories(self.bin_dir)
@@ -38,13 +38,13 @@ class ChuniReader(BaseReader):
 
         for dir in data_dirs:
             self.logger.info(f"Read from {dir}")
-            self.read_events(f"{dir}/event")
-            self.read_music(f"{dir}/music")
-            self.read_charges(f"{dir}/chargeItem")
-            self.read_avatar(f"{dir}/avatarAccessory")
-            self.read_login_bonus(f"{dir}/")
+            await self.read_events(f"{dir}/event")
+            await self.read_music(f"{dir}/music")
+            await self.read_charges(f"{dir}/chargeItem")
+            await self.read_avatar(f"{dir}/avatarAccessory")
+            await self.read_login_bonus(f"{dir}/")
 
-    def read_login_bonus(self, root_dir: str) -> None:
+    async def read_login_bonus(self, root_dir: str) -> None:
         for root, dirs, files in walk(f"{root_dir}loginBonusPreset"):
             for dir in dirs:
                 if path.exists(f"{root}/{dir}/LoginBonusPreset.xml"):
@@ -60,7 +60,7 @@ class ChuniReader(BaseReader):
                         True if xml_root.find("disableFlag").text == "false" else False
                     )
 
-                    result = self.data.static.put_login_bonus_preset(
+                    result = await self.data.static.put_login_bonus_preset(
                         self.version, id, name, is_enabled
                     )
 
@@ -98,7 +98,7 @@ class ChuniReader(BaseReader):
                                     bonus_root.find("loginBonusCategoryType").text
                                 )
 
-                                result = self.data.static.put_login_bonus(
+                                result = await self.data.static.put_login_bonus(
                                     self.version,
                                     id,
                                     bonus_id,
@@ -117,7 +117,7 @@ class ChuniReader(BaseReader):
                                         f"Failed to insert login bonus {bonus_id}"
                                     )
 
-    def read_events(self, evt_dir: str) -> None:
+    async def read_events(self, evt_dir: str) -> None:
         for root, dirs, files in walk(evt_dir):
             for dir in dirs:
                 if path.exists(f"{root}/{dir}/Event.xml"):
@@ -132,7 +132,7 @@ class ChuniReader(BaseReader):
                     for substances in xml_root.findall("substances"):
                         event_type = substances.find("type").text
 
-                    result = self.data.static.put_event(
+                    result = await self.data.static.put_event(
                         self.version, id, event_type, name
                     )
                     if result is not None:
@@ -140,7 +140,7 @@ class ChuniReader(BaseReader):
                     else:
                         self.logger.warning(f"Failed to insert event {id}")
 
-    def read_music(self, music_dir: str) -> None:
+    async def read_music(self, music_dir: str) -> None:
         for root, dirs, files in walk(music_dir):
             for dir in dirs:
                 if path.exists(f"{root}/{dir}/Music.xml"):
@@ -185,7 +185,7 @@ class ChuniReader(BaseReader):
                                     )
                                     we_chara = None
 
-                                result = self.data.static.put_music(
+                                result = await self.data.static.put_music(
                                     self.version,
                                     song_id,
                                     chart_id,
@@ -206,7 +206,7 @@ class ChuniReader(BaseReader):
                                         f"Failed to insert music {song_id} chart {chart_id}"
                                     )
 
-    def read_charges(self, charge_dir: str) -> None:
+    async def read_charges(self, charge_dir: str) -> None:
         for root, dirs, files in walk(charge_dir):
             for dir in dirs:
                 if path.exists(f"{root}/{dir}/ChargeItem.xml"):
@@ -222,7 +222,7 @@ class ChuniReader(BaseReader):
                     consumeType = xml_root.find("consumeType").text
                     sellingAppeal = bool(xml_root.find("sellingAppeal").text)
 
-                    result = self.data.static.put_charge(
+                    result = await self.data.static.put_charge(
                         self.version,
                         id,
                         name,
@@ -236,7 +236,7 @@ class ChuniReader(BaseReader):
                     else:
                         self.logger.warning(f"Failed to insert charge {id}")
 
-    def read_avatar(self, avatar_dir: str) -> None:
+    async def read_avatar(self, avatar_dir: str) -> None:
         for root, dirs, files in walk(avatar_dir):
             for dir in dirs:
                 if path.exists(f"{root}/{dir}/AvatarAccessory.xml"):
@@ -254,7 +254,7 @@ class ChuniReader(BaseReader):
                     for texture in xml_root.findall("texture"):
                         texturePath = texture.find("path").text
 
-                    result = self.data.static.put_avatar(
+                    result = await self.data.static.put_avatar(
                         self.version, id, name, category, iconPath, texturePath
                     )
 

@@ -29,7 +29,7 @@ music = Table(
 
 
 class CxbStaticData(BaseData):
-    def put_music(
+    async def put_music(
         self,
         version: int,
         mcode: str,
@@ -55,12 +55,12 @@ class CxbStaticData(BaseData):
             title=title, artist=artist, category=category, level=level
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_music(
+    async def get_music(
         self, version: int, song_id: Optional[int] = None
     ) -> Optional[List[Row]]:
         if song_id is None:
@@ -73,12 +73,12 @@ class CxbStaticData(BaseData):
                 )
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_music_chart(
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -89,7 +89,7 @@ class CxbStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

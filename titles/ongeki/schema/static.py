@@ -188,26 +188,26 @@ game_point = Table(
 )
 
 class OngekiStaticData(BaseData):
-    def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
+    async def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
         sql = insert(cards).values(version=version, cardId=card_id, **card_data)
 
         conflict = sql.on_duplicate_key_update(**card_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert card! card_id {card_id}")
             return None
         return result.lastrowid
 
-    def get_card(self, version: int, card_id: int) -> Optional[Dict]:
+    async def get_card(self, version: int, card_id: int) -> Optional[Dict]:
         sql = cards.select(and_(cards.c.version <= version, cards.c.cardId == card_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_card_by_card_number(self, version: int, card_number: str) -> Optional[Dict]:
+    async def get_card_by_card_number(self, version: int, card_number: str) -> Optional[Dict]:
         if not card_number.startswith("[O.N.G.E.K.I.]"):
             card_number = f"[O.N.G.E.K.I.]{card_number}"
 
@@ -215,36 +215,36 @@ class OngekiStaticData(BaseData):
             and_(cards.c.version <= version, cards.c.cardNumber == card_number)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_card_by_name(self, version: int, name: str) -> Optional[Dict]:
+    async def get_card_by_name(self, version: int, name: str) -> Optional[Dict]:
         sql = cards.select(and_(cards.c.version <= version, cards.c.name == name))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_cards(self, version: int) -> Optional[List[Dict]]:
+    async def get_cards(self, version: int) -> Optional[List[Dict]]:
         sql = cards.select(cards.c.version <= version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_cards_by_rarity(self, version: int, rarity: int) -> Optional[List[Dict]]:
+    async def get_cards_by_rarity(self, version: int, rarity: int) -> Optional[List[Dict]]:
         sql = cards.select(and_(cards.c.version <= version, cards.c.rarity == rarity))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_gacha(
+    async def put_gacha(
         self,
         version: int,
         gacha_id: int,
@@ -268,33 +268,33 @@ class OngekiStaticData(BaseData):
             **gacha_data,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert gacha! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
-    def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
+    async def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
         sql = gachas.select(
             and_(gachas.c.version <= version, gachas.c.gachaId == gacha_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_gachas(self, version: int) -> Optional[List[Dict]]:
+    async def get_gachas(self, version: int) -> Optional[List[Dict]]:
         sql = gachas.select(gachas.c.version == version).order_by(
             gachas.c.gachaId.asc()
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_gacha_card(
+    async def put_gacha_card(
         self, gacha_id: int, card_id: int, **gacha_card
     ) -> Optional[int]:
         sql = insert(gacha_cards).values(gachaId=gacha_id, cardId=card_id, **gacha_card)
@@ -303,21 +303,21 @@ class OngekiStaticData(BaseData):
             gachaId=gacha_id, cardId=card_id, **gacha_card
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert gacha card! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
-    def get_gacha_cards(self, gacha_id: int) -> Optional[List[Dict]]:
+    async def get_gacha_cards(self, gacha_id: int) -> Optional[List[Dict]]:
         sql = gacha_cards.select(gacha_cards.c.gachaId == gacha_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_event(
+    async def put_event(
         self, version: int, event_id: int, event_type: int, event_name: str
     ) -> Optional[int]:
         sql = insert(events).values(
@@ -332,41 +332,41 @@ class OngekiStaticData(BaseData):
             name=event_name,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert event! event_id {event_id}")
             return None
         return result.lastrowid
 
-    def get_event(self, version: int, event_id: int) -> Optional[List[Dict]]:
+    async def get_event(self, version: int, event_id: int) -> Optional[List[Dict]]:
         sql = select(events).where(
             and_(events.c.version == version, events.c.eventId == event_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_events(self, version: int) -> Optional[List[Dict]]:
+    async def get_events(self, version: int) -> Optional[List[Dict]]:
         sql = select(events).where(events.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_enabled_events(self, version: int) -> Optional[List[Dict]]:
+    async def get_enabled_events(self, version: int) -> Optional[List[Dict]]:
         sql = select(events).where(
             and_(events.c.version == version, events.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_chart(
+    async def put_chart(
         self,
         version: int,
         song_id: int,
@@ -393,7 +393,7 @@ class OngekiStaticData(BaseData):
             level=level,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(
                 f"Failed to insert chart! song_id: {song_id}, chart_id: {chart_id}"
@@ -401,15 +401,15 @@ class OngekiStaticData(BaseData):
             return None
         return result.lastrowid
 
-    def get_chart(
+    async def get_chart(
         self, version: int, song_id: int, chart_id: int = None
     ) -> Optional[List[Dict]]:
         pass
 
-    def get_music(self, version: int) -> Optional[List[Dict]]:
+    async def get_music(self, version: int) -> Optional[List[Dict]]:
         pass
 
-    def get_music_chart(
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -420,19 +420,19 @@ class OngekiStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_ranking_list(self, version: int) -> Optional[List[Dict]]:
+    async def get_ranking_list(self, version: int) -> Optional[List[Dict]]:
         sql = select(music_ranking.c.musicId.label('id'), music_ranking.c.point, music_ranking.c.userName).where(music_ranking.c.version == version)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_reward(self, version: int, rewardId: int, rewardname: str, itemKind: int, itemId: int) -> Optional[int]:
+    async def put_reward(self, version: int, rewardId: int, rewardname: str, itemKind: int, itemId: int) -> Optional[int]:
         sql = insert(rewards).values(
                 version=version,
                 rewardId=rewardId,
@@ -443,70 +443,70 @@ class OngekiStaticData(BaseData):
         conflict = sql.on_duplicate_key_update(
                 rewardname=rewardname,
                 )
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert reward! reward_id: {rewardId}")
             return None
         return result.lastrowid
 
-    def get_reward_list(self, version: int) -> Optional[List[Dict]]:
+    async def get_reward_list(self, version: int) -> Optional[List[Dict]]:
         sql = select(rewards).where(rewards.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to load reward list")
             return None
         return result.fetchall()
 
-    def get_present_list(self, version: int) -> Optional[List[Dict]]:
+    async def get_present_list(self, version: int) -> Optional[List[Dict]]:
         sql = select(present).where(present.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to load present list")
             return None
         return result.fetchall()
 
-    def get_tech_music(self, version: int) -> Optional[List[Dict]]:
+    async def get_tech_music(self, version: int) -> Optional[List[Dict]]:
         sql = select(tech_music).where(tech_music.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
 
         if result is None:
             return None
         return result.fetchall()
 
-    def put_client_testmode_data(self, region_id: int, client_testmode_data: Dict) -> Optional[List[Dict]]:
+    async def put_client_testmode_data(self, region_id: int, client_testmode_data: Dict) -> Optional[List[Dict]]:
         sql = insert(client_testmode).values(regionId=region_id, **client_testmode_data)
         conflict = sql.on_duplicate_key_update(regionId=region_id, **client_testmode_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"region_id: {region_id} Failed to update ClientTestMode data"),
             return None
         return result.lastrowid
 
-    def put_client_setting_data(self, machine_id: int, client_setting_data: Dict) -> Optional[List[Dict]]:
+    async def put_client_setting_data(self, machine_id: int, client_setting_data: Dict) -> Optional[List[Dict]]:
         sql = machine.update(machine.c.id == machine_id).values(data=client_setting_data)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"machine_id: {machine_id} Failed to update ClientSetting data"),
             return None
         return result.lastrowid
 
-    def put_static_game_point_defaults(self) -> Optional[List[Dict]]:
+    async def put_static_game_point_defaults(self) -> Optional[List[Dict]]:
         game_point_defaults = [{"type": 0, "cost": 100},{"type": 1, "cost": 230},{"type": 2, "cost": 370},{"type": 3, "cost": 120},{"type": 4, "cost": 240},{"type": 5, "cost": 360}]
         sql = insert(game_point).values(game_point_defaults)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to insert default GP table!")
             return None
         return result.lastrowid
 
-    def get_static_game_point(self) -> Optional[List[Dict]]:
+    async def get_static_game_point(self) -> Optional[List[Dict]]:
         sql = select(game_point.c.type, game_point.c.cost, game_point.c.startDate, game_point.c.endDate)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

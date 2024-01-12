@@ -1,4 +1,4 @@
-# vim: set fileencoding=utf-8
+#!/usr/bin/env python3
 import argparse
 import re
 import os
@@ -6,6 +6,7 @@ import yaml
 from os import path
 import logging
 import coloredlogs
+import asyncio
 
 from logging.handlers import TimedRotatingFileHandler
 from typing import List, Optional
@@ -38,6 +39,9 @@ class BaseReader:
                     ret.append(f"{root}/{dir}")
 
         return ret
+    
+    async def read(self) -> None:
+        pass
 
 
 if __name__ == "__main__":
@@ -136,6 +140,8 @@ if __name__ == "__main__":
     for dir, mod in titles.items():
         if args.game in mod.game_codes:
             handler = mod.reader(config, args.version, bin_arg, opt_arg, args.extra)
-            handler.read()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(handler.read())
+            
 
     logger.info("Done")

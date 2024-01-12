@@ -1,19 +1,20 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.responses import Response, PlainTextResponse
+from starlette.routing import Route
 import yaml
 import logging
 import coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from os import path
 from typing import Tuple, List, Dict
-from twisted.internet import reactor, endpoints
-from twisted.web import server, resource
 import importlib
+import asyncio
 
 from core.config import CoreConfig
 from core.title import BaseServlet
 from .config import IDZConfig
 from .const import IDZConstants
-from .userdb import IDZUserDBFactory, IDZKey
+from .userdb import IDZUserDB, IDZKey
 from .echo import IDZEcho
 
 
@@ -83,16 +84,15 @@ class IDZServlet(BaseServlet):
 
         return True
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return[
-            [("render_GET", "/idz/news/{endpoint:.*?}", {}),
-             ("render_GET", "/idz/error", {})],
-            []
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/idz/news/{endpoint:str}", self.render_GET),
+            Route("/idz/error", self.render_GET)
         ]
     
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         hostname = (
-            self.core_cfg.title.hostname
+            self.core_cfg.server.hostname
             if not self.game_cfg.server.hostname
             else self.game_cfg.server.hostname
         )
@@ -135,38 +135,36 @@ class IDZServlet(BaseServlet):
 
             except AttributeError as e:
                 continue
-
-        endpoints.serverFromString(
-            reactor,
-            f"tcp:{self.game_cfg.ports.userdb}:interface={self.core_cfg.server.listen_address}",
-        ).listen(
-            IDZUserDBFactory(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        
+        loop = asyncio.get_running_loop()
+        IDZUserDB(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.echo)
+            )
         )
-
-        reactor.listenUDP(
-            self.game_cfg.ports.echo, IDZEcho(self.core_cfg, self.game_cfg)
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.match)
+            )
         )
-        reactor.listenUDP(
-            self.game_cfg.ports.echo + 1, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.match, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.userdb + 1, IDZEcho(self.core_cfg, self.game_cfg)
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.userdb + 1)
+            )
         )
 
         self.logger.info(f"UserDB Listening on port {self.game_cfg.ports.userdb}")
 
-    def render_GET(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        url_path = matchers['endpoint']
+    async def render_GET(self, request: Request) -> bytes:
+        url_path = request.path_params.get('endpoint', '')
+        if not url_path:
+            return Response()
+
         self.logger.info(f"IDZ GET request: {url_path}")
-        request.responseHeaders.setRawHeaders(
-            "Content-Type", [b"text/plain; charset=utf-8"]
-        )
-        request.responseHeaders.setRawHeaders(
-            "Last-Modified", [b"Sun, 23 Apr 2023 05:33:20 GMT"]
-        )
 
         news = (
             self.game_cfg.server.news
@@ -176,4 +174,4 @@ class IDZServlet(BaseServlet):
         news += "\r\n"
         news = "1979/01/01 00:00:00 2099/12/31 23:59:59 " + news
 
-        return news.encode()
+        return PlainTextResponse(news, media_type="text/plain; charset=utf-8", headers={"Last-Modified": "Sun, 23 Apr 2023 05:33:20 GMT"})

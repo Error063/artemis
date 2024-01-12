@@ -11,8 +11,8 @@ class OngekiSummerPlus(OngekiBase):
         super().__init__(core_cfg, game_cfg)
         self.version = OngekiConstants.VER_ONGEKI_SUMMER_PLUS
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        ret = super().handle_get_game_setting_api_request(data)
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+        ret = await super().handle_get_game_setting_api_request(data)
         ret["gameSetting"]["dataVersion"] = "1.15.00"
         ret["gameSetting"]["onlineDataVersion"] = "1.15.00"
         return ret

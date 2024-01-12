@@ -7,4 +7,3 @@ index = ChuniServlet
 database = ChuniData
 reader = ChuniReader
 game_codes = [ChuniConstants.GAME_CODE, ChuniConstants.GAME_CODE_NEW, ChuniConstants.GAME_CODE_INT]
-current_schema_version = 5

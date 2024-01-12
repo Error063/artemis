@@ -1,8 +1,7 @@
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from twisted.web import resource
-from twisted.web.http import Request
+from starlette.requests import Request
 from datetime import datetime
 from Crypto.Cipher import Blowfish
 import pytz
@@ -12,7 +11,7 @@ from .utils import Utils
 from .title import TitleServlet
 
 class MuchaServlet:
-    mucha_registry: List[str] = []
+    mucha_registry: Dict[str, str] = {}
     def __init__(self, cfg: CoreConfig, cfg_dir: str) -> None:
         self.config = cfg
         self.config_dir = cfg_dir
@@ -39,11 +38,12 @@ class MuchaServlet:
 
         for _, mod in TitleServlet.title_registry.items():
             if hasattr(mod, "get_mucha_info"):
-                enabled, game_cd = mod.get_mucha_info(
+                enabled, game_cds, netid_prefixes = mod.get_mucha_info(
                     self.config, self.config_dir
                 )
                 if enabled:
-                    self.mucha_registry.append(game_cd)
+                    for x in range(len(game_cds)):
+                        self.mucha_registry[game_cds[x]] = netid_prefixes[x]
 
         self.logger.info(f"Serving {len(self.mucha_registry)} games")
 
@@ -75,7 +75,7 @@ class MuchaServlet:
         self.logger.debug(f"Decrypt SN to {sn_decrypt.hex()}")
 
         resp = MuchaAuthResponse(
-            f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}"
+            f"{self.config.server.hostname}{':' + str(self.config.server.port) if self.config.server.is_develop else ''}"
         )
 
         self.logger.debug(f"Mucha response {vars(resp)}")
@@ -100,7 +100,7 @@ class MuchaServlet:
             self.logger.warning(f"Unknown gameCd {req.gameCd}")
             return b"RESULTS=000"
 
-        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.mucha.hostname}{':' + str(self.config.allnet.port) if self.config.server.is_develop else ''}")
+        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.server.hostname}{':' + str(self.config.server.port) if self.config.server.is_develop else ''}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 

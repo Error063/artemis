@@ -32,12 +32,12 @@ class SaoBase:
         self.logger.warning(f"Failed to find csv file {file}.csv")
         return ret
 
-    def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
+    async def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
         self.logger.info(f"Using Generic handler")
         resp_thing = SaoNoopResponse(header.cmd + 1)
         return resp_thing.make()
 
-    def handle_c122(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c122(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_maintenance_info
         resp = SaoGetMaintResponse(header.cmd +1)
         return resp.make()
@@ -50,32 +50,32 @@ class SaoBase:
         return resp.make()
 
 
-    def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/ac_cabinet_boot_notification
         resp = SaoCommonAcCabinetBootNotificationResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c100(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c100(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_app_versions
         resp = SaoCommonGetAppVersionsRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c102(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c102(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/master_data_version_check
         resp = SaoMasterDataVersionCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c10a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c10a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/paying_play_start
         resp = SaoCommonPayingPlayStartRequest(header.cmd +1)
         return resp.make()
 
-    def handle_ca02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_ca02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest_multi_play_room/get_quest_scene_multi_play_photon_server
         resp = SaoGetQuestSceneMultiPlayPhotonServerResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c11e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c11e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_auth_card_data
         req = SaoGetAuthCardDataRequest(header, request)
 
@@ -128,12 +128,12 @@ class SaoBase:
         resp = SaoGetAuthCardDataResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c40c(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c40c(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_ac_login_bonus
         resp = SaoHomeCheckAcLoginBonusResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c104(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c104(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/login
         req = SaoCommonLoginRequest(header, request)
 
@@ -143,17 +143,17 @@ class SaoBase:
         resp = SaoCommonLoginResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c404(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_comeback_event
         resp = SaoCheckComebackEventRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c000(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c000(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #ticket/ticket
         resp = SaoTicketResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c500(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c500(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #user_info/get_user_basic_data
         req = SaoGetUserBasicDataRequest(header, request)
 
@@ -162,7 +162,7 @@ class SaoBase:
         resp = SaoGetUserBasicDataResponse(header.cmd +1, profile_data)
         return resp.make()
         
-    def handle_c600(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c600(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_hero_log_user_data_list
         req = SaoGetHeroLogUserDataListRequest(header, request)
 
@@ -171,7 +171,7 @@ class SaoBase:
         resp = SaoGetHeroLogUserDataListResponse(header.cmd +1, hero_data)
         return resp.make()
     
-    def handle_c602(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c602(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_equipment_user_data_list
         req = SaoGetEquipmentUserDataListRequest(header, request)
     
@@ -180,7 +180,7 @@ class SaoBase:
         resp = SaoGetEquipmentUserDataListResponse(header.cmd +1, equipment_data)
         return resp.make()
         
-    def handle_c604(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_item_user_data_list
         req = SaoGetItemUserDataListRequest(header, request)
 
@@ -189,21 +189,21 @@ class SaoBase:
         resp = SaoGetItemUserDataListResponse(header.cmd +1, item_data)
         return resp.make()
         
-    def handle_c606(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_support_log_user_data_list
         supportIdsData = self.game_data.static.get_support_log_ids(0, True)
         
         resp = SaoGetSupportLogUserDataListResponse(header.cmd +1, supportIdsData)
         return resp.make()
     
-    def handle_c800(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c800(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_title_user_data_list
         titleIdsData = self.game_data.static.get_title_ids(0, True)
         
         resp = SaoGetTitleUserDataListResponse(header.cmd +1, titleIdsData)
         return resp.make()
         
-    def handle_c608(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c608(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_episode_append_data_list
         req = SaoGetEpisodeAppendDataListRequest(header, request)
 
@@ -212,7 +212,7 @@ class SaoBase:
         resp = SaoGetEpisodeAppendDataListResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c804(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c804(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_party_data_list
         req = SaoGetPartyDataListRequest(header, request)
 
@@ -224,17 +224,17 @@ class SaoBase:
         resp = SaoGetPartyDataListResponse(header.cmd +1, hero1_data, hero2_data, hero3_data)
         return resp.make()
 
-    def handle_c902(self, header: SaoRequestHeader, request: bytes) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
+    async def handle_c902(self, header: SaoRequestHeader, request: bytes) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
         #quest/get_quest_scene_prev_scan_profile_card
         resp = SaoGetQuestScenePrevScanProfileCardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c124(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c124(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_resource_path_info
         resp = SaoGetResourcePathInfoResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c900(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c900(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/get_quest_scene_user_data_list // QuestScene.csv
         req = SaoGetQuestSceneUserDataListRequest(header, request)
 
@@ -243,22 +243,22 @@ class SaoBase:
         resp = SaoGetQuestSceneUserDataListResponse(header.cmd +1, quest_data)
         return resp.make()
 
-    def handle_c400(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c400(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_yui_medal_get_condition
         resp = SaoCheckYuiMedalGetConditionResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c402(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c402(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/get_yui_medal_bonus_user_data
         resp = SaoGetYuiMedalBonusUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c40a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c40a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_profile_card_used_reward
         resp = SaoCheckProfileCardUsedRewardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c814(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c814(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_hero_log
         req = SaoSynthesizeEnhancementHeroLogRequest(header, request)
 
@@ -332,7 +332,7 @@ class SaoBase:
         resp = SaoSynthesizeEnhancementHeroLogResponse(header.cmd +1, synthesize_hero_log_data)
         return resp.make()
 
-    def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_equipment
         req_data = SaoSynthesizeEnhancementEquipmentRequest(header, request)
         synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
@@ -394,7 +394,7 @@ class SaoBase:
         resp = SaoSynthesizeEnhancementEquipmentResponse(header.cmd +1, synthesize_equipment_data)
         return resp.make()
 
-    def handle_c806(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c806(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/change_party
         req_data = SaoChangePartyRequest(header, request)
         party_hero_list = []
@@ -429,7 +429,7 @@ class SaoBase:
         resp = SaoNoopResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c904(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c904(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_start
         req_data = SaoEpisodePlayStartRequest(header, request)
 
@@ -447,7 +447,7 @@ class SaoBase:
         resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c908(self, header: SaoRequestHeader, request: bytes) -> bytes: # Level calculation missing for the profile and heroes
+    async def handle_c908(self, header: SaoRequestHeader, request: bytes) -> bytes: # Level calculation missing for the profile and heroes
         #quest/episode_play_end
 
         req_data = SaoEpisodePlayEndRequest(header, request)
@@ -607,7 +607,7 @@ class SaoBase:
         resp = SaoEpisodePlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_start
         req_data = SaoTrialTowerPlayStartRequest(header, request)
 
@@ -626,7 +626,7 @@ class SaoBase:
         resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c918(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c918(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_end
         req_data = SaoTrialTowerPlayEndRequest(header, request)
 
@@ -807,7 +807,7 @@ class SaoBase:
         resp = SaoTrialTowerPlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_end_unanalyzed_log_fixed
 
         req = SaoEpisodePlayEndUnanalyzedLogFixedRequest(header, request)
@@ -817,7 +817,7 @@ class SaoBase:
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
+    async def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
         #quest/trial_tower_play_end_unanalyzed_log_fixed
         req = TrialTowerPlayEndUnanalyzedLogFixed(header, request)
 
@@ -826,58 +826,58 @@ class SaoBase:
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_cd00(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd00(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_basic_data
         resp = SaoGetDefragMatchBasicDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_ranking_user_data
         resp = SaoGetDefragMatchRankingUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd04(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd04(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_point_ranking_list
         resp = SaoGetDefragMatchLeaguePointRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd06(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd06(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_score_ranking_list
         resp = SaoGetDefragMatchLeagueScoreRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_d404(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #other/bnid_serial_code_check
         resp = SaoBnidSerialCodeCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c306(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c306(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #card/scan_qr_quest_profile_card
         resp = SaoScanQrQuestProfileCardResponse(header.cmd +1)
         return resp.make()
     
-    def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # shop/get_shop_resource_sales_data_list
         # TODO: Get user shop data
         req = GetShopResourceSalesDataListRequest(header, request)
         resp = GetShopResourceSalesDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_d100(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d100(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # shop/get_yui_medal_shop_user_data_list
         # TODO: Get user shop data
         req = GetYuiMedalShopUserDataListRequest(header, request)
         resp = GetYuiMedalShopUserDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_cf0e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cf0e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # gasha/get_gasha_medal_shop_user_data_list
         # TODO: Get user shop data
         req = GetGashaMedalShopUserDataListRequest(header, request)
         resp = GetGashaMedalShopUserDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_d5da(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5da(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_yui_medal_shops
         req = GetMYuiMedalShopDataRequest(header, request)
         resp = GetMYuiMedalShopDataResponse(header.cmd + 1)
@@ -905,7 +905,7 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shops")
         return resp.make()
     
-    def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_yui_medal_shop_items
         req = GetMYuiMedalShopItemsRequest(header, request)
         resp = GetMYuiMedalShopItemsResponse(header.cmd + 1)
@@ -935,7 +935,7 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shop Items")
         return resp.make()
     
-    def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shops
         req = GetMGashaMedalShopsRequest(header, request)
         resp = GetMGashaMedalShopsResponse(header.cmd + 1)
@@ -950,11 +950,11 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Gasha Medal Shops")
         return resp.make()
     
-    def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shop_items
         return SaoNoopResponse(header.cmd + 1).make()
     
-    def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
         req = GetMResEarnCampaignShopsRequest(header, request)
         resp = GetMResEarnCampaignShopsResponse(header.cmd + 1)
@@ -976,6 +976,6 @@ class SaoBase:
         #self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
         return SaoNoopResponse(header.cmd + 1).make()
     
-    def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shop_items
         return SaoNoopResponse(header.cmd + 1).make()

@@ -138,36 +138,36 @@ pokemon_data = Table(
 
 
 class PokkenProfileData(BaseData):
-    def touch_profile(self, user_id: int) -> Optional[int]:
+    async def touch_profile(self, user_id: int) -> Optional[int]:
         sql = select([profile.c.id]).where(profile.c.user == user_id)
         
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()['id']
 
-    def create_profile(self, user_id: int) -> Optional[int]:
+    async def create_profile(self, user_id: int) -> Optional[int]:
         sql = insert(profile).values(user=user_id)
         conflict = sql.on_duplicate_key_update(user=user_id)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"Failed to create pokken profile for user {user_id}!")
             return None
         return result.lastrowid
 
-    def set_profile_name(self, user_id: int, new_name: str, gender: Union[int, None] = None) -> None:
+    async def set_profile_name(self, user_id: int, new_name: str, gender: Union[int, None] = None) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
             trainer_name=new_name,
             avatar_gender=gender if gender is not None else profile.c.avatar_gender
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"Failed to update pokken profile name for user {user_id}!"
             )
 
-    def put_extra(
+    async def put_extra(
         self, 
         user_id: int, 
         extra_counter: int,
@@ -190,44 +190,44 @@ class PokkenProfileData(BaseData):
             last_play_event_id=last_evt
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(f"Failed to put extra data for user {user_id}")
 
-    def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: List) -> None:
+    async def update_profile_tutorial_flags(self, user_id: int, tutorial_flags: List) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
             tutorial_progress_flag=tutorial_flags,
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"Failed to update pokken profile tutorial flags for user {user_id}!"
             )
 
-    def update_profile_achievement_flags(self, user_id: int, achievement_flags: List) -> None:
+    async def update_profile_achievement_flags(self, user_id: int, achievement_flags: List) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
             achievement_flag=achievement_flags,
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"Failed to update pokken profile achievement flags for user {user_id}!"
             )
 
-    def update_profile_event(self, user_id: int, event_state: List, event_flags: List[int], event_param: List[int], last_evt: int = None) -> None:
+    async def update_profile_event(self, user_id: int, event_state: List, event_flags: List[int], event_param: List[int], last_evt: int = None) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
             event_state=event_state,
             event_achievement_flag=event_flags,
             event_achievement_param=event_param,
             last_play_event_id=last_evt if last_evt is not None else profile.c.last_play_event_id,
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"Failed to update pokken profile event state for user {user_id}!"
             )
 
-    def add_profile_points(
+    async def add_profile_points(
         self, user_id: int, rank_pts: int, money: int, score_pts: int, grade_max: int
     ) -> None:
         sql = update(profile).where(profile.c.user == user_id).values(
@@ -237,14 +237,14 @@ class PokkenProfileData(BaseData):
             grade_max_num = grade_max
         )
 
-    def get_profile(self, user_id: int) -> Optional[Row]:
+    async def get_profile(self, user_id: int) -> Optional[Row]:
         sql = profile.select(profile.c.user == user_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_pokemon(
+    async def put_pokemon(
         self,
         user_id: int,
         pokemon_id: int,
@@ -281,13 +281,13 @@ class PokkenProfileData(BaseData):
             bp_point_sp=pokemon_data.c.bp_point_sp + sp,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert pokemon ID {pokemon_id} for user {user_id}")
             return None
         return result.lastrowid
 
-    def add_pokemon_xp(
+    async def add_pokemon_xp(
         self,
         user_id: int,
         pokemon_id: int,
@@ -297,25 +297,25 @@ class PokkenProfileData(BaseData):
             pokemon_exp=coalesce(pokemon_data.c.pokemon_exp, 0) + xp
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to add {xp} XP to pokemon ID {pokemon_id} for user {user_id}")
 
-    def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
+    async def get_pokemon_data(self, user_id: int, pokemon_id: int) -> Optional[Row]:
         sql = pokemon_data.select(and_(pokemon_data.c.user == user_id, pokemon_data.c.char_id == pokemon_id))
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
+    async def get_all_pokemon_data(self, user_id: int) -> Optional[List[Row]]:
         sql = pokemon_data.select(pokemon_data.c.user == user_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_pokemon_battle_result(
+    async def put_pokemon_battle_result(
         self, user_id: int, pokemon_id: int, match_type: PokkenConstants.BATTLE_TYPE, match_result: PokkenConstants.BATTLE_RESULT
     ) -> None:
         """
@@ -336,11 +336,11 @@ class PokkenProfileData(BaseData):
             win_vs_wan=coalesce(pokemon_data.c.win_vs_wan, 0) + 1 if match_type==PokkenConstants.BATTLE_TYPE.WAN and match_result==PokkenConstants.BATTLE_RESULT.WIN else coalesce(pokemon_data.c.win_vs_wan, 0),
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to record match stats for user {user_id}'s pokemon {pokemon_id} (type {match_type.name} | result {match_result.name})")
 
-    def put_stats(
+    async def put_stats(
         self,
         user_id: int,
         exkos: int,
@@ -362,11 +362,11 @@ class PokkenProfileData(BaseData):
             continue_num=continues,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to update stats for user {user_id}")
 
-    def update_support_team(self, user_id: int, support_id: int, support1: int = None, support2: int = None) -> None:
+    async def update_support_team(self, user_id: int, support_id: int, support1: int = None, support2: int = None) -> None:
         sql = update(profile).where(profile.c.user==user_id).values(
             support_set_1_1=support1 if support_id == 1 else profile.c.support_set_1_1,
             support_set_1_2=support2 if support_id == 1 else profile.c.support_set_1_2,
@@ -376,6 +376,6 @@ class PokkenProfileData(BaseData):
             support_set_3_2=support2 if support_id == 3 else profile.c.support_set_3_2,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warning(f"Failed to update support team {support_id} for user {user_id}")

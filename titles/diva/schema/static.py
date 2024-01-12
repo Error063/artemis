@@ -83,7 +83,7 @@ items = Table(
 
 
 class DivaStaticData(BaseData):
-    def put_quests(
+    async def put_quests(
         self,
         version: int,
         questId: int,
@@ -111,22 +111,22 @@ class DivaStaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(name=name)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_enabled_quests(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_quests(self, version: int) -> Optional[List[Row]]:
         sql = select(quests).where(
             and_(quests.c.version == version, quests.c.quest_enable == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_shop(
+    async def put_shop(
         self,
         version: int,
         shopId: int,
@@ -150,12 +150,12 @@ class DivaStaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(name=name)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_enabled_shop(self, version: int, shopId: int) -> Optional[Row]:
+    async def get_enabled_shop(self, version: int, shopId: int) -> Optional[Row]:
         sql = select(shop).where(
             and_(
                 shop.c.version == version,
@@ -164,22 +164,22 @@ class DivaStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_enabled_shops(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_shops(self, version: int) -> Optional[List[Row]]:
         sql = select(shop).where(
             and_(shop.c.version == version, shop.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_items(
+    async def put_items(
         self,
         version: int,
         itemId: int,
@@ -203,12 +203,12 @@ class DivaStaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(name=name)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_enabled_item(self, version: int, itemId: int) -> Optional[Row]:
+    async def get_enabled_item(self, version: int, itemId: int) -> Optional[Row]:
         sql = select(items).where(
             and_(
                 items.c.version == version,
@@ -217,22 +217,22 @@ class DivaStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_enabled_items(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_items(self, version: int) -> Optional[List[Row]]:
         sql = select(items).where(
             and_(items.c.version == version, items.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_music(
+    async def put_music(
         self,
         version: int,
         song: int,
@@ -271,12 +271,12 @@ class DivaStaticData(BaseData):
             date=date,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_music(
+    async def get_music(
         self, version: int, song_id: Optional[int] = None
     ) -> Optional[List[Row]]:
         if song_id is None:
@@ -289,12 +289,12 @@ class DivaStaticData(BaseData):
                 )
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_music_chart(
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -305,7 +305,7 @@ class DivaStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
