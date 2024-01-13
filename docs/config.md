@@ -8,7 +8,7 @@
 - `allow_user_registration`: Allows users to register in-game via the AimeDB `register` function. Disable to be able to control who can use cards on your server. Default `True`
 - `allow_unregistered_serials`: Allows games that do not have registered keychips to connect and authenticate. Disable to restrict who can connect to your server. Recomended to disable for production setups. Default `True`
 - `name`: Name for the server, used by some games in their default MOTDs. Default `ARTEMiS`
-- `is_develop`: Flags that the server is a development instance without a proxy standing in front of it. Setting to `False` tells the server not to listen for SSL, because the proxy should be handling all SSL-related things, among other things. Default `True`
+- `is_develop`: Flags that the server is a development instance, and enables some useful development features. Disable for production setups. Default `True`.
 - `is_using_proxy`: Flags that you'll be using some other software, such as nginx, to proxy requests, and to send `proxy_port` or `proxy_port_ssl` to games instead of `port`. Default `False`
 - `proxy_port`: Which port your front-facing proxy will be listening on. Ignored if `is_using_proxy` is `False` or if set to `0`. Default `0`
 - `proxy_port`: Which port your front-facing proxy will be listening for ssl connections on. Ignored if `is_using_proxy` is `False` or if set to `0`. Default `0`
