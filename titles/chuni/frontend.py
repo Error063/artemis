@@ -44,7 +44,7 @@ class ChuniFrontend(FE_Base):
             title=f"{self.core_config.server.name} | {self.nav_name}",
             game_list=self.environment.globals["game_list"],
             sesh=vars(usr_sesh)
-        ), media_type="text/html; charset=utf-16")
+        ), media_type="text/html; charset=utf-8")
 
     async def update_name(self, request: Request) -> bytes:
         usr_sesh = self.validate_session(request)

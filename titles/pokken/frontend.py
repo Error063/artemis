@@ -74,7 +74,7 @@ class PokkenFrontend(FE_Base):
             profile=pf,
             error=err,
             success=succ
-        ), media_type="text/html; charset=utf-16")
+        ), media_type="text/html; charset=utf-8")
     
     async def change_name(self, request: Request) -> RedirectResponse:
         usr_sesh = self.validate_session(request)
