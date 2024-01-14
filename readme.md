@@ -43,7 +43,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
 - mysql/mariadb server
 
 ## Setup guides
-Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md), [ubuntu](docs/INSTALL_UBUNTU.md) or [docker](docs/INSTALL_DOCKER.md) to setup and run the server.
+Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md), [linux (Debian 12 or Rasperry Pi OS recomended, but anything works)](docs/INSTALL_LINUX.md) or [docker](docs/INSTALL_DOCKER.md) to setup and run the server.
 
 ## Game specific information
 Read [Games specific info](docs/game_specific_info.md) for all supported games, importer settings, configuration option and database upgrades.
