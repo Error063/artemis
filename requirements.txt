@@ -20,3 +20,4 @@ websockets
 starlette
 asyncio
 uvicorn
+alembic
