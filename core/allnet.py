@@ -696,7 +696,7 @@ class BillingInfo:
             self.boardid = str(data.get("boardid", None))
             self.tenpoip = str(data.get("tenpoip", None))
             self.libalibver = float(data.get("libalibver", None))
-            self.data.max = int(data.get("datamax", None))
+            self.datamax = int(data.get("datamax", None))
             self.billingtype = BillingType(int(data.get("billingtype", None)))
             self.protocolver = float(data.get("protocolver", None))
             self.operatingfix = bool(data.get("operatingfix", None))
