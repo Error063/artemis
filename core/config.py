@@ -321,6 +321,12 @@ class AimedbConfig:
         )
 
     @property
+    def listen_address(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "aimedb", "listen_address", default=""
+        )
+
+    @property
     def loglevel(self) -> int:
         return CoreConfig.str_to_loglevel(
             CoreConfig.get_config_field(

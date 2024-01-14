@@ -55,6 +55,7 @@ billing:
 
 aimedb:
   enable: True
+  listen_address: ""
   loglevel: "info"
   port: 22345
   key: ""

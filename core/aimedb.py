@@ -66,7 +66,8 @@ class AimedbServlette():
     
     def start(self) -> None:
         self.logger.info(f"Start on port {self.config.aimedb.port}")
-        asyncio.create_task(asyncio.start_server(self.dataReceived, self.config.server.listen_address, self.config.aimedb.port))
+        addr = self.config.aimedb.listen_address if self.config.aimedb.listen_address else self.config.server.listen_address
+        asyncio.create_task(asyncio.start_server(self.dataReceived, addr, self.config.aimedb.port))
     
     async def dataReceived(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         self.logger.debug(f"Connection made from {writer.get_extra_info('peername')[0]}")
