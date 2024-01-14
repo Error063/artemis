@@ -13,9 +13,13 @@ Step 1 is to edit your artemis configuration. Some recomended changes:
 - `allow_unregistered_serials` -> `False`
 ### `billing`
 - `standalone` -> `False`
+### `allnet`
+- `standalone` -> `False`
 ### `frontend`
 - `enable` -> `True` if you want the frontend
-- `port` -> `8080` if you're using the default nginx config
+- `port` -> `8090` if you're using the default nginx config, otherwise whatever port your proxy will be sending requests to
+### `aimedb`
+- `listen_address` -> `0.0.0.0` unless you're proxying aimedb requests (not recomended at this time), in which case, leave this option unchanged
 
 If you plan to serve artemis behind a VPN, these additional settings are also recomended
 - `check_arcade_ip` -> `True`
