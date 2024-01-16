@@ -74,7 +74,7 @@ class CardMakerServlet(BaseServlet):
     
     def get_routes(self) -> List[Route]:
         return [
-            Route("/SDED/{version:int}/{endpoint:str}", self.render_POST)
+            Route("/SDED/{version:int}/{endpoint:str}", self.render_POST, methods=['POST'])
         ]
     
     async def render_POST(self, request: Request) -> bytes:
