@@ -117,7 +117,7 @@ class CardMakerServlet(BaseServlet):
 
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data)
+            resp = await handler(req_data)
 
         except Exception as e:
             self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
