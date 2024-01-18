@@ -4,24 +4,54 @@ A network service emulator for games running SEGA'S ALL.NET service, and similar
 # Supported games
 Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
 
-+ CHUNITHM
-    + All versions up to SUN PLUS
++ CHUNITHM JP
+    + AIR
+    + AIR PLUS
+    + AMAZON
+    + AMAZON PLUS
+    + CRYSTAL
+    + CRYSTAL PLUS
+    + PARADISE
+    + PARADISE LOST
+    + NEW
+    + NEW PLUS
+    + SUN
+    + SUN PLUS
+
++ CHUNITHM INTL
+    + SUPERSTAR
+    + NEW
+    + NEW PLUS
+    + SUN
+    + SUN PLUS
 
 + crossbeats REV.
-    + All versions + omnimix
+    + Crossbeats REV.
+    + Crossbeats REV. SUNRiSE S1
+    + Crossbeats REV. SUNRiSE S2 + omnimix
 
 + maimai DX
-    + All versions up to FESTiVAL PLUS
+    + Splash
+    + Splash Plus
+    + Universe
+    + Universe PLUS
+    + FESTiVAL
+    + FESTiVAL PLUS
 
 + Hatsune Miku: Project DIVA Arcade
-    + All versions
+    + Future Tone Arcade - All versions
 
 + Card Maker
     + 1.30
     + 1.35
 
 + O.N.G.E.K.I.
-    + All versions up to bright MEMORY
+    + SUMMER
+    + SUMMER PLUS
+    + R.E.D.
+    + R.E.D. PLUS
+    + bright
+    + bright MEMORY
 
 + WACCA
     + Lily R
@@ -30,8 +60,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + POKKÉN TOURNAMENT
     + Final Online
 
-+ Sword Art Online Arcade (partial support)
-    + Final
++ Sword Art Online Arcade
+    + Final (Single player only)
 
 + Initial D THE ARCADE
     + Season 2

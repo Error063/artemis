@@ -1,6 +1,10 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240118
+### System
++ Added game version names to the readme
+
 ## 20240109
 ### System
 + Removed `ADD config config` from dockerfile [#83](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/83) (Thanks zaphkito!)
