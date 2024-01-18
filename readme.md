@@ -43,8 +43,8 @@ Games listed below have been tested and confirmed working. Only game versions ol
 + maimai DX
     + Splash
     + Splash Plus
-    + Universe
-    + Universe PLUS
+    + UNiVERSE
+    + UNiVERSE PLUS
     + FESTiVAL
     + FESTiVAL PLUS
 
