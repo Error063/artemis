@@ -4,6 +4,17 @@ A network service emulator for games running SEGA'S ALL.NET service, and similar
 # Supported games
 Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
 
++ Card Maker
+    + 1.30
+    + 1.35
+
++ CHUNITHM INTL
+    + SUPERSTAR
+    + NEW
+    + NEW PLUS
+    + SUN
+    + SUN PLUS
+
 + CHUNITHM JP
     + AIR
     + AIR PLUS
@@ -18,17 +29,16 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + SUN
     + SUN PLUS
 
-+ CHUNITHM INTL
-    + SUPERSTAR
-    + NEW
-    + NEW PLUS
-    + SUN
-    + SUN PLUS
-
 + crossbeats REV.
     + Crossbeats REV.
     + Crossbeats REV. SUNRiSE S1
     + Crossbeats REV. SUNRiSE S2 + omnimix
+
++ Hatsune Miku: Project DIVA Arcade
+    + Future Tone Arcade - All versions
+
++ Initial D THE ARCADE
+    + Season 2
 
 + maimai DX
     + Splash
@@ -38,13 +48,6 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + FESTiVAL
     + FESTiVAL PLUS
 
-+ Hatsune Miku: Project DIVA Arcade
-    + Future Tone Arcade - All versions
-
-+ Card Maker
-    + 1.30
-    + 1.35
-
 + O.N.G.E.K.I.
     + SUMMER
     + SUMMER PLUS
@@ -53,18 +56,15 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + bright
     + bright MEMORY
 
-+ WACCA
-    + Lily R
-    + Reverse
-
 + POKKÉN TOURNAMENT
     + Final Online
 
 + Sword Art Online Arcade
     + Final (Single player only)
 
-+ Initial D THE ARCADE
-    + Season 2
++ WACCA
+    + Lily R
+    + Reverse
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)
