@@ -93,8 +93,7 @@ class MuchaServlet:
             f"{self.config.server.hostname}{':' + str(self.config.server.port) if not self.config.server.is_using_proxy else ''}"
         )
 
-        #netid = minfo.get('netid_prefix', "ABxN") + sn_decrypt[5:]
-        netid = minfo.get('netid_prefix', "ABxN") + "3190001"
+        netid = minfo.get('netid_prefix', "ABxN") + sn_decrypt[5:]
 
         cab = await self.data.arcade.get_machine(netid)
         if cab:
