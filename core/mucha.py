@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from starlette.requests import Request
+from starlette.responses import PlainTextResponse
 from datetime import datetime
 from Crypto.Cipher import Blowfish
 import pytz
@@ -9,9 +10,11 @@ import pytz
 from .config import CoreConfig
 from .utils import Utils
 from .title import TitleServlet
+from .data import Data
+from .const import *
 
 class MuchaServlet:
-    mucha_registry: Dict[str, str] = {}
+    mucha_registry: Dict[str, Dict[str, str]] = {}
     def __init__(self, cfg: CoreConfig, cfg_dir: str) -> None:
         self.config = cfg
         self.config_dir = cfg_dir
@@ -35,94 +38,150 @@ class MuchaServlet:
 
         self.logger.setLevel(cfg.mucha.loglevel)
         coloredlogs.install(level=cfg.mucha.loglevel, logger=self.logger, fmt=log_fmt_str)
+        
+        self.data = Data(cfg)
 
         for _, mod in TitleServlet.title_registry.items():
-            if hasattr(mod, "get_mucha_info"):
-                enabled, game_cds, netid_prefixes = mod.get_mucha_info(
-                    self.config, self.config_dir
-                )
-                if enabled:
-                    for x in range(len(game_cds)):
-                        self.mucha_registry[game_cds[x]] = netid_prefixes[x]
+            enabled, game_cds, netids = mod.get_mucha_info(self.config, self.config_dir)
+            print(game_cds)
+            if enabled:
+                for x in range(len(game_cds)):
+                    self.mucha_registry[game_cds[x]] = { "netid_prefix": netids[x] }
 
         self.logger.info(f"Serving {len(self.mucha_registry)} games")
 
     async def handle_boardauth(self, request: Request) -> bytes:
-        req_raw = await request.body()
-        req_dict = self.mucha_preprocess(req_raw)
+        bod = await request.body()
+        req_dict = self.mucha_preprocess(bod)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha boardauth request {req_raw}"
+                f"Error processing mucha request {bod}"
             )
-            return b""
+            return PlainTextResponse("RESULTS=000")
 
         req = MuchaAuthRequest(req_dict)
-        self.logger.info(f"Boardauth request from {client_ip} for {req.gameVer}")        
         self.logger.debug(f"Mucha request {vars(req)}")
+        
+        if not req.gameCd or not req.gameVer or not req.sendDate or not req.countryCd or not req.serialNum:
+            self.logger.warn(f"Missing required fields - {vars(req)}")
+            return PlainTextResponse("RESULTS=000")
 
-        if req.gameCd not in self.mucha_registry:
-            self.logger.warning(f"Unknown gameCd {req.gameCd}")
-            return b"RESULTS=000"
+        minfo = self.mucha_registry.get(req.gameCd, {})
 
-        # TODO: Decrypt S/N
+        if not minfo:
+            self.logger.warning(f"Unknown gameCd {req.gameCd} from {client_ip}")
+            return PlainTextResponse("RESULTS=000")
+
         b_key = b""
         for x in range(8):
             b_key += req.sendDate[(x - 1) & 7].encode()
+        
+        b_iv = b_key # what the fuck namco
 
-        cipher = Blowfish.new(b_key, Blowfish.MODE_ECB)
-        sn_decrypt = cipher.decrypt(bytes.fromhex(req.serialNum))
-        self.logger.debug(f"Decrypt SN to {sn_decrypt.hex()}")
+        cipher = Blowfish.new(b_key, Blowfish.MODE_CBC, b_iv)
+        try:
+            sn_decrypt = cipher.decrypt(bytes.fromhex(req.serialNum))[:12].decode()
+        except Exception as e:
+            self.logger.error(f"Decrypt SN {req.serialNum} failed! - {e}")
+            return PlainTextResponse("RESULTS=000")
+
+        self.logger.info(f"Boardauth request from {sn_decrypt} ({client_ip}) for {req.gameVer}")
 
         resp = MuchaAuthResponse(
-            f"{self.config.server.hostname}{':' + str(self.config.server.port) if self.config.server.is_develop else ''}"
+            f"{self.config.server.hostname}{':' + str(self.config.server.port) if not self.config.server.is_using_proxy else ''}"
         )
+
+        #netid = minfo.get('netid_prefix', "ABxN") + sn_decrypt[5:]
+        netid = minfo.get('netid_prefix', "ABxN") + "3190001"
+
+        cab = await self.data.arcade.get_machine(netid)
+        if cab:
+            arcade = await self.data.arcade.get_arcade(cab['id'])
+            if not arcade:
+                self.logger.error(f"Failed to get arcade with id {cab['id']}")
+                return PlainTextResponse("RESULTS=000")
+
+            resp.AREA_0 = arcade["region_id"] or AllnetJapanRegionId.AICHI.name
+            resp.AREA_0_EN = arcade["region_id"] or AllnetJapanRegionId.AICHI.name
+            resp.AREA_FULL_0 = arcade["region_id"] or AllnetJapanRegionId.AICHI.name
+            resp.AREA_FULL_0_EN = arcade["region_id"] or AllnetJapanRegionId.AICHI.name
+            
+            resp.AREA_1 = arcade["country"] or cab['country'] or AllnetCountryCode.JAPAN.value
+            resp.AREA_1_EN = arcade["country"] or cab['country'] or AllnetCountryCode.JAPAN.value
+            resp.AREA_FULL_1 = arcade["country"] or cab['country'] or AllnetCountryCode.JAPAN.value
+            resp.AREA_FULL_1_EN = arcade["country"] or cab['country'] or AllnetCountryCode.JAPAN.value
+
+            resp.AREA_2 = arcade["city"] if arcade["city"] else ""
+            resp.AREA_2_EN = arcade["city"] if arcade["city"] else ""
+            resp.AREA_FULL_2 = arcade["city"] if arcade["city"] else ""
+            resp.AREA_FULL_2_EN = arcade["city"] if arcade["city"] else ""
+
+            resp.AREA_3 = ""
+            resp.AREA_3_EN = ""
+            resp.AREA_FULL_3 = ""
+            resp.AREA_FULL_3_EN = ""
+
+            resp.PREFECTURE_ID = arcade['region_id']
+            resp.COUNTRY_CD = arcade['country'] or cab['country'] or AllnetCountryCode.JAPAN.value
+            resp.PLACE_ID = req.placeId if req.placeId else f"{arcade['country'] or cab['country'] or AllnetCountryCode.JAPAN.value}{arcade['id']:04X}"
+            resp.SHOP_NAME = arcade['name']
+            resp.SHOP_NAME_EN = arcade['name']
+            resp.SHOP_NICKNAME = arcade['nickname']
+            resp.SHOP_NICKNAME_EN = arcade['nickname']
+
+        elif self.config.server.allow_unregistered_serials:
+            self.logger.info(f"Allow unknown serial {netid} ({sn_decrypt}) to auth")
+        
+        else:
+            self.logger.warn(f'Auth failed for NetID {netid}')
+            return PlainTextResponse("RESULTS=000")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
-        return self.mucha_postprocess(vars(resp))
+        return PlainTextResponse(self.mucha_postprocess(vars(resp)))
 
     async def handle_updatecheck(self, request: Request) -> bytes:
-        req_raw = await request.body()
-        req_dict = self.mucha_preprocess(req_raw)
+        bod = await request.body()
+        req_dict = self.mucha_preprocess(bod)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha updatecheck request {req_raw}"
+                f"Error processing mucha request {bod}"
             )
-            return b""
+            return PlainTextResponse("RESULTS=000")
 
         req = MuchaUpdateRequest(req_dict)
-        self.logger.info(f"Updatecheck request from {client_ip} for {req.gameVer}")        
+        self.logger.info(f"Updatecheck request from {req.serialNum} ({client_ip}) for {req.gameVer}")        
         self.logger.debug(f"Mucha request {vars(req)}")
 
         if req.gameCd not in self.mucha_registry:
             self.logger.warning(f"Unknown gameCd {req.gameCd}")
-            return b"RESULTS=000"
+            return PlainTextResponse("RESULTS=000")
 
-        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.server.hostname}{':' + str(self.config.server.port) if self.config.server.is_develop else ''}")
+        resp = MuchaUpdateResponse(req.gameVer, f"{self.config.server.hostname}{':' + str(self.config.server.port) if not self.config.server.is_using_proxy else ''}")
 
         self.logger.debug(f"Mucha response {vars(resp)}")
 
-        return self.mucha_postprocess(vars(resp))
+        return PlainTextResponse(self.mucha_postprocess(vars(resp)))
 
     async def handle_dlstate(self, request: Request) -> bytes:
-        req_raw = await request.body()
-        req_dict = self.mucha_preprocess(req_raw)
+        bod = await request.body()
+        req_dict = self.mucha_preprocess(bod)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha dlstate request {req_raw}"
+                f"Error processing mucha request {bod}"
             )
-            return b""
+            return PlainTextResponse("RESULTS=000")
         
         req = MuchaDownloadStateRequest(req_dict)
-        self.logger.info(f"DownloadState request from {client_ip} for {req.gameCd} -> {req.updateVer}")        
+        self.logger.info(f"DownloadState request from {req.serialNum} ({client_ip}) for {req.gameCd} -> {req.updateVer}")        
         self.logger.debug(f"request {vars(req)}")
-        return b"RESULTS=001"
+        return PlainTextResponse("RESULTS=001")
 
     def mucha_preprocess(self, data: bytes) -> Optional[Dict]:
         try:
