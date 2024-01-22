@@ -439,10 +439,7 @@ class FE_User(FE_Base):
             elif ac.startswith("3"):
                 c_type = "Banapass"
             elif ac.startswith("010"):                
-                c_type = "Unknown Aime"
-                desc, _ = self.data.card.get_aime_ac_key_desc(ac)
-                if desc is not None:
-                    c_type = desc
+                c_type = "Aime" # TODO: Aime verification
             elif ac.startswith("0008"):
                 c_type = "Generated AIC"
             else:

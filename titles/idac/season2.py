@@ -450,7 +450,7 @@ class IDACSeason2(IDACBase):
         is_new_player = 0
 
         # check that the user_id from access_code matches the user_id
-        if user_id == self.data.card.get_user_id_from_card(access_code):
+        if user_id == await self.data.card.get_user_id_from_card(access_code):
             lock_result = 1
 
             # check if an IDAC profile already exists
