@@ -47,7 +47,7 @@ class MuchaServlet:
 
         self.logger.info(f"Serving {len(self.mucha_registry)} games")
 
-    def handle_boardauth(self, request: Request, _: Dict) -> bytes:
+    def handle_boardauth(self, request: Request) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         client_ip = Utils.get_ip_addr(request)
 
@@ -82,7 +82,7 @@ class MuchaServlet:
 
         return self.mucha_postprocess(vars(resp))
 
-    def handle_updatecheck(self, request: Request, _: Dict) -> bytes:
+    def handle_updatecheck(self, request: Request) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         client_ip = Utils.get_ip_addr(request)
 
@@ -106,7 +106,7 @@ class MuchaServlet:
 
         return self.mucha_postprocess(vars(resp))
 
-    def handle_dlstate(self, request: Request, _: Dict) -> bytes:
+    def handle_dlstate(self, request: Request) -> bytes:
         req_dict = self.mucha_preprocess(request.content.getvalue())
         client_ip = Utils.get_ip_addr(request)
 
