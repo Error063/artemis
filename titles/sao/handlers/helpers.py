@@ -915,3 +915,76 @@ class GashaMedalShop(BaseHelper):
         ret += encode_str(fmt_dt(self.sales_start_date))
         ret += encode_str(fmt_dt(self.sales_end_date))
         return ret
+
+class QuestHierarchyProgressDegreesRankingData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.rank = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.trial_tower_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+
+        user_id = decode_str(data, offset + self._sz)
+        self.user_id = user_id[0]
+        self._sz += user_id[1]
+
+        nick_name = decode_str(data, offset + self._sz)
+        self.nick_name = nick_name[0]
+        self._sz += nick_name[1]
+
+        self.setting_title_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.favorite_hero_log_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.favorite_hero_log_awakening_stage = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+        self.favorite_support_log_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.favorite_support_log_awakening_stage = decode_short(data, offset + self._sz)
+        self._sz += SHORT_OFF
+
+        clear_time = decode_str(data, offset + self._sz)
+        self.clear_time = clear_time[0]
+        self._sz += clear_time[1]
+    
+    @classmethod
+    def from_args(cls) -> "QuestHierarchyProgressDegreesRankingData":
+        ret = cls(b"\x00" * 36, 0)
+        return ret
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.rank)
+        ret += encode_int(self.trial_tower_id)
+        ret += encode_str(self.user_id)
+        ret += encode_str(self.nick_name)
+        ret += encode_int(self.setting_title_id)
+        ret += encode_int(self.favorite_hero_log_id)
+        ret += encode_short(self.favorite_hero_log_awakening_stage)
+        ret += encode_int(self.favorite_support_log_id)
+        ret += encode_short(self.favorite_support_log_awakening_stage)
+        ret += encode_str(self.clear_time)
+        return ret
+
+class PopularHeroLogRankingData(BaseHelper):
+    def __init__(self, data: bytes, offset: int) -> None:
+        super().__init__(data, offset)
+        self.rank = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.hero_log_id = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+        self.used_num = decode_int(data, offset + self._sz)
+        self._sz += INT_OFF
+    
+    @classmethod
+    def from_args(cls, ranking: int, hero_id: int, used_num: int) -> "PopularHeroLogRankingData":
+        ret = cls(b"\x00" * 12, 0)
+        cls.ranking = ranking
+        cls.hero_log_id = hero_id
+        cls.used_num = used_num
+        return ret
+    
+    def make(self) -> bytes:
+        ret = encode_int(self.rank)
+        ret += encode_int(self.hero_log_id)
+        ret += encode_int(self.used_num)
+        return ret

@@ -48,7 +48,6 @@ class SaoBase:
         resp = SaoGiveFreeTicketResponse(header.cmd +1)
         return resp.make()
 
-
     async def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/ac_cabinet_boot_notification
         resp = SaoCommonAcCabinetBootNotificationResponse(header.cmd +1)
@@ -978,3 +977,18 @@ class SaoBase:
     async def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shop_items
         return SaoNoopResponse(header.cmd + 1).make()
+    
+    async def handle_c108(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # common/logout_ticket_unpurchased
+        req = SaoLogoutTicketUnpurchasedRequest(header, request)
+        return SaoLogoutTicketUnpurchasedResponse(header.cmd + 1).make()
+    
+    async def handle_cb02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # quest_ranking/get_quest_hierarchy_progress_degrees_ranking_list
+        req = SaoGetQuestHierarchyProgressDegreesRankingListRequest(header, request)
+        return SaoGetQuestHierarchyProgressDegreesRankingListResponse(header.cmd + 1).make()
+    
+    async def handle_cb04(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # quest_ranking/get_quest_popular_hero_log_ranking_list
+        req = SaoGetQuestPopularHeroLogRankingListRequest(header, request)
+        return SaoGetQuestPopularHeroLogRankingListResponse(header.cmd + 1).make()

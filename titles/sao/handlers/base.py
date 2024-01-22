@@ -3252,3 +3252,73 @@ class SaoGiveFreeTicketResponse(SaoBaseResponse):
     def make(self) -> bytes:
         ret = encode_byte(self.result)
         return super().make() + ret
+
+class SaoLogoutTicketUnpurchasedRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        self.ticket_id, new_off = decode_str(data, off)
+        off += new_off
+        
+        self.user_id, new_off = decode_str(data, off)
+        off += new_off
+        
+        self.cabinet_type = decode_byte(data, off)
+        off += BYTE_OFF
+
+class SaoLogoutTicketUnpurchasedResponse(SaoBaseResponse):
+    def __init__(self, cmd_id: int) -> None:
+        super().__init__(cmd_id)
+        self.result = 1 # byte
+    
+    def make(self) -> bytes:
+        ret = encode_byte(self.result)
+        return super().make() + ret
+
+class SaoGetQuestHierarchyProgressDegreesRankingListRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        self.store_id, new_off = decode_str(data, off)
+        off += new_off
+        
+        self.get_rank_start_num = decode_short(data, off)
+        off += SHORT_OFF
+        
+        self.get_rank_end_num = decode_short(data, off)
+        off += SHORT_OFF
+
+class SaoGetQuestHierarchyProgressDegreesRankingListResponse(SaoBaseResponse):
+    def __init__(self, cmd_id: int) -> None:
+        super().__init__(cmd_id)
+        self.result = 1 # byte
+        self.quest_hierarchy_progress_degrees_ranking_data_list: List[QuestHierarchyProgressDegreesRankingData] = []
+    
+    def make(self) -> bytes:
+        ret = encode_byte(self.result)
+        ret += encode_arr_cls(self.quest_hierarchy_progress_degrees_ranking_data_list)
+        return super().make() + ret
+
+class SaoGetQuestPopularHeroLogRankingListRequest(SaoBaseRequest):
+    def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
+        super().__init__(header, data)
+        off = 0
+        self.store_id, new_off = decode_str(data, off)
+        off += new_off
+        
+        self.get_rank_start_num = decode_short(data, off)
+        off += SHORT_OFF
+        
+        self.get_rank_end_num = decode_short(data, off)
+        off += SHORT_OFF
+
+class SaoGetQuestPopularHeroLogRankingListResponse(SaoBaseResponse):
+    def __init__(self, cmd_id: int) -> None:
+        super().__init__(cmd_id)
+        self.result = 1 # byte
+        self.quest_popular_hero_log_ranking_data_list: List[PopularHeroLogRankingData] = []
+    
+    def make(self) -> bytes:
+        ret = encode_byte(self.result)
+        ret += encode_arr_cls(self.quest_popular_hero_log_ranking_data_list)
+        return super().make() + ret
