@@ -47,15 +47,16 @@ class MuchaServlet:
 
         self.logger.info(f"Serving {len(self.mucha_registry)} games")
 
-    def handle_boardauth(self, request: Request) -> bytes:
-        req_dict = self.mucha_preprocess(request.content.getvalue())
+    async def handle_boardauth(self, request: Request) -> bytes:
+        req_raw = await request.body()
+        req_dict = self.mucha_preprocess(req_raw)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha request {request.content.getvalue()}"
+                f"Error processing mucha boardauth request {req_raw}"
             )
-            return b"RESULTS=000"
+            return b""
 
         req = MuchaAuthRequest(req_dict)
         self.logger.info(f"Boardauth request from {client_ip} for {req.gameVer}")        
@@ -82,15 +83,16 @@ class MuchaServlet:
 
         return self.mucha_postprocess(vars(resp))
 
-    def handle_updatecheck(self, request: Request) -> bytes:
-        req_dict = self.mucha_preprocess(request.content.getvalue())
+    async def handle_updatecheck(self, request: Request) -> bytes:
+        req_raw = await request.body()
+        req_dict = self.mucha_preprocess(req_raw)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha request {request.content.getvalue()}"
+                f"Error processing mucha updatecheck request {req_raw}"
             )
-            return b"RESULTS=000"
+            return b""
 
         req = MuchaUpdateRequest(req_dict)
         self.logger.info(f"Updatecheck request from {client_ip} for {req.gameVer}")        
@@ -106,13 +108,14 @@ class MuchaServlet:
 
         return self.mucha_postprocess(vars(resp))
 
-    def handle_dlstate(self, request: Request) -> bytes:
-        req_dict = self.mucha_preprocess(request.content.getvalue())
+    async def handle_dlstate(self, request: Request) -> bytes:
+        req_raw = await request.body()
+        req_dict = self.mucha_preprocess(req_raw)
         client_ip = Utils.get_ip_addr(request)
 
         if req_dict is None:
             self.logger.error(
-                f"Error processing mucha request {request.content.getvalue()}"
+                f"Error processing mucha dlstate request {req_raw}"
             )
             return b""
         
