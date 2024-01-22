@@ -263,7 +263,13 @@ class AllnetServlet:
 
         
         int_ver = req.ver.replace(".", "")
-        resp.uri, resp.host = TitleServlet.title_registry[req.game_id].get_allnet_info(req.game_id, int(int_ver), req.serial)
+        try:
+            resp.uri, resp.host = TitleServlet.title_registry[req.game_id].get_allnet_info(req.game_id, int(int_ver), req.serial)
+        except Exception as e:
+            self.logger.error(f"Error running get_allnet_info for {req.game_id} - {e}")
+            resp.stat = ALLNET_STAT.bad_game.value
+            resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+            return PlainTextResponse(urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n")
 
         msg = f"{req.serial} authenticated from {request_ip}: {req.game_id} v{req.ver}"
         await self.data.base.log_event("allnet", "ALLNET_AUTH_SUCCESS", logging.INFO, msg)
