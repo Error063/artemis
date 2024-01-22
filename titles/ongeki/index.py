@@ -139,8 +139,8 @@ class OngekiServlet(BaseServlet):
             t_port = f":{title_port_int}" if title_port_int != 80 else ""
 
         return (
-            f"{proto}://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
-            f"{self.core_cfg.title.hostname}{t_port}/",
+            f"{proto}://{self.core_cfg.server.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"{self.core_cfg.server.hostname}{t_port}/",
         )
 
 

@@ -87,7 +87,7 @@ class SaoServlet(BaseServlet):
             proto = "https"
             port = f":{port_ssl}" if port_ssl != 443 else ""
 
-        return (f"{proto}://{self.core_cfg.title.hostname}{port}/", "")
+        return (f"{proto}://{self.core_cfg.server.hostname}{port}/", "")
 
 
     def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
