@@ -94,6 +94,7 @@ class DLI_STATUS(Enum):
             return cls.UNKNOWN
 
 class AllnetServlet:
+    allnet_registry: Dict[str, Any] = {}
     def __init__(self, core_cfg: CoreConfig, cfg_folder: str):
         self.config = core_cfg
         self.config_folder = cfg_folder
@@ -125,6 +126,8 @@ class AllnetServlet:
 
     def startup(self) -> None:
         self.logger.info(f"Ready on port {self.config.allnet.port if self.config.allnet.standalone else self.config.server.port}")
+        if not TitleServlet.title_registry:
+            TitleServlet(self.config, self.config_folder)
 
     async def handle_poweron(self, request: Request):
         request_ip = Utils.get_ip_addr(request)
