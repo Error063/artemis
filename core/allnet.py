@@ -212,7 +212,7 @@ class AllnetServlet:
                 country = AllnetCountryCode.JAPAN.value
 
             resp.country = country
-            resp.place_id = arcade["id"]
+            resp.place_id = f"{arcade['id']:04X}"
             resp.allnet_id = machine["id"]
             resp.name = arcade["name"] if arcade["name"] is not None else ""
             resp.nickname = arcade["nickname"] if arcade["nickname"] is not None else ""
