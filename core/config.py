@@ -81,7 +81,7 @@ class ServerConfig:
         is_using_proxy is True and this value is non-zero
         """
         return CoreConfig.get_config_field(
-            self.__config, "core", "title", "proxy_port", default=0
+            self.__config, "core", "server", "proxy_port", default=0
         )
 
     @property
@@ -91,7 +91,7 @@ class ServerConfig:
         instead of 'port' if is_using_proxy is True and this value is non-zero
         """
         return CoreConfig.get_config_field(
-            self.__config, "core", "title", "proxy_port_ssl", default=0
+            self.__config, "core", "server", "proxy_port_ssl", default=0
         )
 
     @property
