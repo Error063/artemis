@@ -16,7 +16,7 @@ class SaoRequestHeader:
         self.game_id: int = collection[4]
         self.version_id: int = collection[5]
         self.hash: str = collection[6]
-        self.data._len: str = collection[7]
+        self.data_len: str = collection[7]
 
 class SaoBaseRequest:
     def __init__(self, header: SaoRequestHeader, data: bytes) -> None:
@@ -118,7 +118,7 @@ class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
         super().__init__(cmd)
         self.result = 1
         self.update_flag = 0
-        self.data._version = 100
+        self.data_version = 100
     
     def make(self) -> bytes:
         # create a resp struct
@@ -131,7 +131,7 @@ class SaoMasterDataVersionCheckResponse(SaoBaseResponse):
         resp_data = resp_struct.build(dict(
             result=self.result,
             update_flag=self.update_flag,
-            data_version=self.data._version,
+            data_version=self.data_version,
         ))
 
         self.length = len(resp_data)
@@ -145,7 +145,7 @@ class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
     def __init__(self, cmd) -> None:
         super().__init__(cmd)
         self.result = 1
-        self.data._list_size = 1 # Number of arrays
+        self.data_list_size = 1 # Number of arrays
 
         self.version_app_id = 1
         self.applying_start_date = "20230520193000"
@@ -163,7 +163,7 @@ class SaoCommonGetAppVersionsRequest(SaoBaseResponse):
 
         resp_data = resp_struct.build(dict(
             result=self.result,
-            data_list_size=self.data._list_size,
+            data_list_size=self.data_list_size,
 
             version_app_id=self.version_app_id,
             applying_start_date_size=len(self.applying_start_date) * 2,
@@ -2121,7 +2121,7 @@ class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
     def __init__(self, cmd) -> None:
         super().__init__(cmd)
         self.result = 1
-        self.data._size = 1 # number of arrays
+        self.data_size = 1 # number of arrays
 
         self.elapsed_days = 1
         self.loop_num = 1
@@ -2144,7 +2144,7 @@ class SaoGetYuiMedalBonusUserDataResponse(SaoBaseResponse):
 
         resp_data = resp_struct.build(dict(
             result=self.result,
-            data_size=self.data._size,
+            data_size=self.data_size,
 
             elapsed_days=self.elapsed_days,
             loop_num=self.loop_num,
@@ -3150,11 +3150,11 @@ class GetGashaMedalShopUserDataListResponse(SaoBaseResponse):
     def __init__(self, cmd_id: int) -> None:
         super().__init__(cmd_id)
         self.result = 1 # byte
-        self.data._list: List[GashaMedalShopUserData] = []
+        self.data_list: List[GashaMedalShopUserData] = []
 
     def make(self) -> bytes:
         ret = encode_byte(self.result)
-        ret += encode_arr_cls(self.data._list)
+        ret += encode_arr_cls(self.data_list)
         
         self.header.length = len(ret)
         return super().make() + ret
@@ -3168,11 +3168,11 @@ class GetMYuiMedalShopDataResponse(SaoBaseResponse):
     def __init__(self, cmd_id: int) -> None:
         super().__init__(cmd_id)
         self.result = 1 # byte
-        self.data._list: List[YuiMedalShopData] = []
+        self.data_list: List[YuiMedalShopData] = []
 
     def make(self) -> bytes:
         ret = encode_byte(self.result)
-        ret += encode_arr_cls(self.data._list)
+        ret += encode_arr_cls(self.data_list)
         
         self.header.length = len(ret)
         return super().make() + ret
@@ -3186,11 +3186,11 @@ class GetMYuiMedalShopItemsResponse(SaoBaseResponse):
     def __init__(self, cmd_id: int) -> None:
         super().__init__(cmd_id)
         self.result = 1 # byte
-        self.data._list: List[YuiMedalShopItemData] = []
+        self.data_list: List[YuiMedalShopItemData] = []
 
     def make(self) -> bytes:
         ret = encode_byte(self.result)
-        ret += encode_arr_cls(self.data._list)
+        ret += encode_arr_cls(self.data_list)
         
         self.header.length = len(ret)
         return super().make() + ret
@@ -3204,11 +3204,11 @@ class GetMGashaMedalShopsResponse(SaoBaseResponse):
     def __init__(self, cmd_id: int) -> None:
         super().__init__(cmd_id)
         self.result = 1 # byte
-        self.data._list: List[GashaMedalShop] = []
+        self.data_list: List[GashaMedalShop] = []
 
     def make(self) -> bytes:
         ret = encode_byte(self.result)
-        ret += encode_arr_cls(self.data._list)
+        ret += encode_arr_cls(self.data_list)
         
         self.header.length = len(ret)
         return super().make() + ret
@@ -3222,11 +3222,11 @@ class GetMResEarnCampaignShopsResponse(SaoBaseResponse):
     def __init__(self, cmd_id: int) -> None:
         super().__init__(cmd_id)
         self.result = 1 # byte
-        self.data._list: List[ResEarnCampaignShop] = []
+        self.data_list: List[ResEarnCampaignShop] = []
 
     def make(self) -> bytes:
         ret = encode_byte(self.result)
-        ret += encode_arr_cls(self.data._list)
+        ret += encode_arr_cls(self.data_list)
         
         self.header.length = len(ret)
         return super().make() + ret
