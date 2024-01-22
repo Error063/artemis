@@ -43,7 +43,6 @@ class MuchaServlet:
 
         for _, mod in TitleServlet.title_registry.items():
             enabled, game_cds, netids = mod.get_mucha_info(self.config, self.config_dir)
-            print(game_cds)
             if enabled:
                 for x in range(len(game_cds)):
                     self.mucha_registry[game_cds[x]] = { "netid_prefix": netids[x] }
