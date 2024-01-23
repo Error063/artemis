@@ -41,8 +41,8 @@ class IDZUserDB:
         self.skip_next = False
     
     def start(self) -> None:
-        self.logger.info(f"Start on port {self.config.aimedb.port}")
-        asyncio.create_task(asyncio.start_server(self.connection_cb, self.config.server.listen_address, self.config.aimedb.port))
+        self.logger.info(f"Start on port {self.game_config.ports.userdb}")
+        asyncio.create_task(asyncio.start_server(self.connection_cb, self.core_config.server.listen_address, self.game_config.ports.userdb))
 
     def append_padding(self, data: bytes):
         """Appends 0s to the end of the data until it's at the correct size"""
@@ -81,7 +81,7 @@ class IDZUserDB:
                     self.logger.debug("Connection closed")
                     return
                 
-                await self.data.Received(data, reader, writer)
+                await self.dataReceived(data, reader, writer)
                 await writer.drain()
             
             except ConnectionResetError as e:

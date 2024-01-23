@@ -137,7 +137,7 @@ class IDZServlet(BaseServlet):
                 continue
         
         loop = asyncio.get_running_loop()
-        IDZUserDB(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        IDZUserDB(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map).start()
         asyncio.create_task(
             loop.create_datagram_endpoint(
                 lambda: IDZEcho(),
@@ -157,7 +157,6 @@ class IDZServlet(BaseServlet):
             )
         )
 
-        self.logger.info(f"UserDB Listening on port {self.game_cfg.ports.userdb}")
 
     async def render_GET(self, request: Request) -> bytes:
         url_path = request.path_params.get('endpoint', '')
