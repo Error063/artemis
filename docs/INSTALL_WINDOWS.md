@@ -3,7 +3,7 @@ This gude assumes a fresh install of Windows 10. Please be aware that due to the
 
 ## Install prerequisits
 ### Python
-- Python versions from 3.7 to 3.11 work with artemis. We recomend 3.11
+- Python versions from 3.8 to 3.11 work with artemis. We recomend 3.11
     - https://www.python.org/ftp/python/3.11.7/python-3.11.7-amd64.exe
 - Install using whatever options best suit your environment, making sure that the python executable is on path, such that you can open CMD and type `python --version` and see the version of python you have installed.
 - If you already have a working version of python involved, skip this step
@@ -45,7 +45,7 @@ GRANT Alter,Create,Delete,Drop,Index,Insert,References,Select,Update ON aime.* T
 - If you create it via a GUI, make sure you grant all the above permissions.
 
 ## Create a venv
-- Python virtual environments are a good way to manage packages and make dealing with pyhton and pip easier
+- Python virtual environments are a good way to manage packages and make dealing with python and pip easier
 - `python -m pip venv venv`
 - `venv\Scripts\activate.bat` to activate the venv whenever you need to insteract with artemis
 - All the rest of the steps assume you're venv is activated
