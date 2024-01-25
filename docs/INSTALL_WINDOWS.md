@@ -12,7 +12,7 @@ This guide assumes a fresh install of Windows 10. Please be aware that due to th
 - It is always recommended to use MariaDB over MySQL because Oracle is a terrible company.
 - While the latest release of v10 is recommended, as it is an LTS release, v11 should work fine.
     - https://ftp.osuosl.org/pub/mariadb//mariadb-10.11.6/winx64-packages/mariadb-10.11.6-winx64.msi
-- REMEMBER YOUR ROOT PASSWORD SO YOU CAN LOG IN INF FUTURE STEPS.
+- REMEMBER YOUR ROOT PASSWORD SO YOU CAN LOG IN IN FUTURE STEPS.
 
 ### Git
 - While technically optional, it is strongly recommended to obtain ARTEMiS via git clone instead of just downloading it.
