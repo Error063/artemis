@@ -1,6 +1,10 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240202
+### SAO
++ Added reader assets and edited the game specific documentation
+
 ## 20240118
 ### System
 + Added game version names to the readme

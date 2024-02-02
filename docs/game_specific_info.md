@@ -594,7 +594,7 @@ Below is a list of VIP rewards. Currently, VIP is not implemented, and thus thes
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --game SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+python read.py --game SDEW --version 0 --binfolder /titles/sao/data/
 ```
 
 The importer for SAO will import all items, heroes, support skills and titles data.
