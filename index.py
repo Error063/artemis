@@ -40,7 +40,8 @@ async def launch_billing(cfg: CoreConfig) -> None:
         log_level="info" if cfg.server.is_develop else "critical",
         ssl_version=3,
         ssl_certfile=cfg.billing.ssl_cert,
-        ssl_keyfile=cfg.billing.ssl_key
+        ssl_keyfile=cfg.billing.ssl_key,
+        ssl_ciphers="DEFAULT:!aNULL:!eNULL:!MD5:!3DES:!DES:!RC4:!IDEA:!SEED:!aDSS:!SRP:!PSK",
     )
     server = uvicorn.Server(server_cfg)
     await server.serve()
