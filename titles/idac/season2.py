@@ -1392,7 +1392,8 @@ class IDACSeason2(IDACBase):
         # get the use_count and story_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)
+        used_car = used_car._asdict()
 
         # increase the use_count and story_use_count of the used car
         used_car["use_count"] += 1
@@ -1564,7 +1565,8 @@ class IDACSeason2(IDACBase):
         # get the use_count and story_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.get("car_mileage")
-        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)
+        used_car = used_car._asdict()
 
         # increase the use_count and story_use_count of the used car
         used_car["use_count"] += 1
@@ -2230,7 +2232,8 @@ class IDACSeason2(IDACBase):
         # get the use_count and theory_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.get("car_mileage")
-        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)
+        used_car = used_car._asdict()
 
         # increase the use_count and theory_use_count of the used car
         used_car["use_count"] += 1
@@ -2347,7 +2350,8 @@ class IDACSeason2(IDACBase):
         # get the use_count and net_vs_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)
+        used_car = used_car._asdict()
 
         # increase the use_count and net_vs_use_count of the used car
         used_car["use_count"] += 1
@@ -2444,7 +2448,8 @@ class IDACSeason2(IDACBase):
         # get the use_count and net_vs_use_count of the used car
         style_car_id = data.get("style_car_id")
         car_mileage = data.pop("car_mileage")
-        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)._asdict()
+        used_car = await self.data.item.get_car(user_id, self.version, style_car_id)
+        used_car = used_car._asdict()
 
         # increase the use_count and net_vs_use_count of the used car
         used_car["use_count"] += 1
