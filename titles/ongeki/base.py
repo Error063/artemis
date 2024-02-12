@@ -497,7 +497,7 @@ class OngekiBase:
         }
 
     async def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        song_list = self.util_generate_music_list(data["userId"])
+        song_list = await self.util_generate_music_list(data["userId"])
         max_ct = data["maxCount"]
         next_idx = data["nextIndex"]
         start_idx = next_idx
