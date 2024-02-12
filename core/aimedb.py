@@ -192,7 +192,8 @@ class AimedbServlette():
             f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
         
-        await self.data.card.update_card_last_login(req.access_code)
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(req.access_code)
         return ret
 
     async def handle_lookup_ex(self, data: bytes, resp_code: int) -> ADBBaseResponse:
@@ -222,7 +223,8 @@ class AimedbServlette():
                 self.logger.debug(f"Generated auth token {auth_key}")
                 ret.auth_key = auth_key_full
 
-        await self.data.card.update_card_last_login(req.access_code)
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(req.access_code)
         return ret
 
     async def handle_felica_lookup(self, data: bytes, resp_code: int) -> bytes:
@@ -271,6 +273,8 @@ class AimedbServlette():
                 f"Registration blocked!: access code {ac} (IDm: {req.idm} PMm: {req.pmm})"
             )
 
+        if user_id > 0:
+            await self.data.card.update_card_last_login(ac)
         return ADBFelicaLookupResponse.from_req(req.head, ac)
 
     async def handle_felica_lookup_ex(self, data: bytes, resp_code: int) -> bytes:
@@ -295,8 +299,8 @@ class AimedbServlette():
                 self.logger.debug(f"Generated auth token {auth_key}")
                 resp.auth_key = auth_key_full
         
-        
-        await self.data.card.update_card_last_login(access_code)
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(access_code)
         return resp
 
     async def handle_campaign_clear(self, data: bytes, resp_code: int) -> ADBBaseResponse:
@@ -337,6 +341,9 @@ class AimedbServlette():
         resp = ADBLookupResponse.from_req(req.head, user_id)
         if resp.user_id <= 0:
             resp.head.status = ADBStatus.BAN_SYS # Closest we can get to a "You cannot register"
+
+        else:
+            await self.data.card.update_card_last_login(req.access_code)
 
         return resp
 
