@@ -74,6 +74,7 @@ class CardData(BaseData):
         if card["is_banned"]:
             return True
         return False
+    
     async def get_card_locked(self, access_code: str) -> Optional[bool]:
         """
         Given a 20 digit access code as a string, check if the card is locked
@@ -112,6 +113,15 @@ class CardData(BaseData):
             return None
         return result.lastrowid
 
+    async def update_card_last_login(self, access_code: str) -> None:
+        sql = aime_card.update(aime_card.c.access_code == access_code).values(
+            last_login_date=func.now()
+        )
+        
+        result = await self.execute(sql)
+        if result is None:
+            self.logger.warn(f"Failed to update last login time for {access_code}")
+    
     def to_access_code(self, luid: str) -> str:
         """
         Given a felica cards internal 16 hex character luid, convert it to a 0-padded 20 digit access code as a string

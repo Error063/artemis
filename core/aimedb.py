@@ -191,6 +191,8 @@ class AimedbServlette():
         self.logger.info(
             f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
+        
+        await self.data.card.update_card_last_login(req.access_code)
         return ret
 
     async def handle_lookup_ex(self, data: bytes, resp_code: int) -> ADBBaseResponse:
@@ -220,6 +222,7 @@ class AimedbServlette():
                 self.logger.debug(f"Generated auth token {auth_key}")
                 ret.auth_key = auth_key_full
 
+        await self.data.card.update_card_last_login(req.access_code)
         return ret
 
     async def handle_felica_lookup(self, data: bytes, resp_code: int) -> bytes:
@@ -291,7 +294,9 @@ class AimedbServlette():
                 auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len)
                 self.logger.debug(f"Generated auth token {auth_key}")
                 resp.auth_key = auth_key_full
-
+        
+        
+        await self.data.card.update_card_last_login(access_code)
         return resp
 
     async def handle_campaign_clear(self, data: bytes, resp_code: int) -> ADBBaseResponse:
