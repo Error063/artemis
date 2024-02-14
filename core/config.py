@@ -173,7 +173,7 @@ class DatabaseConfig:
     @property
     def protocol(self) -> str:
         return CoreConfig.get_config_field(
-            self.__config, "core", "database", "type", default="mysql"
+            self.__config, "core", "database", "protocol", default="mysql"
         )
 
     @property
