@@ -229,7 +229,7 @@ class MuchaAuthResponse:
         self.RESULTS = "001"
         self.AUTH_INTERVAL = "86400"
         self.SERVER_TIME = datetime.strftime(datetime.now(), "%Y%m%d%H%M")
-        self.UTC_SERVER_TIME = datetime.strftime(datetime.now(pytz.UTC), "%Y%m%d%H%M")
+        self.SERVER_TIME_UTC = datetime.strftime(datetime.now(pytz.UTC), "%Y%m%d%H%M")
 
         self.CHARGE_URL = f"https://{mucha_url}/charge/"
         self.FILE_URL = f"https://{mucha_url}/file/"
