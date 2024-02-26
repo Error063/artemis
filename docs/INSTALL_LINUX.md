@@ -41,6 +41,22 @@ quit
 ```
 We have now set up our new user, `aime`, created a database called `aime` and given our user all the permissions it needs on every table of that database.
 
+### Configure memcached
+Under the file /etc/memcached.conf, please make sure the following parameters are set:
+
+```
+# Start with a cap of 64 megs of memory. It's reasonable, and the daemon default
+# Note that the daemon will grow to this size, but does not start out holding this much
+# memory
+
+-I 128m
+-m 1024
+```
+
+** This is mandatory to avoid memcached overload caused by Crossbeats or by massive profiles
+
+Restart memcached using:  sudo systemctl restart memcached
+
 ## Getting ARTEMiS
 ### Clone from gitea
 use `git clone https://gitea.tendokyu.moe/Hay1tsme/artemis.git` to pull down ARTEMiS into a folder called `artemis` created at wherever your current working directory is. `cd` into `artemis`.
