@@ -1,6 +1,11 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240226
+### CXB
++ Fixing paths for rev.py
++ Changed encoding for handle_data_item_list_icon_request
+
 ## 20240202
 ### SAO
 + Added reader assets and edited the game specific documentation
