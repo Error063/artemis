@@ -444,7 +444,7 @@ class WaccaLily(WaccaS):
         return UserInfogetMyroomResponseV2().make()
 
     async def handle_user_status_update_request(self, data: Dict) -> Dict:
-        super().handle_user_status_update_request(data)
+        await super().handle_user_status_update_request(data)
         req = UserStatusUpdateRequestV2(data)
         await self.data.profile.update_profile_lastplayed(
             req.profileId,
