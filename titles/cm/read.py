@@ -59,10 +59,10 @@ class CardMakerReader(BaseReader):
         if self.bin_dir is not None:
             data_dir = self._get_card_maker_directory(self.bin_dir)
 
-            self.read_chuni_card(f"{data_dir}/CHU/Data/A000/card")
-            self.read_chuni_gacha(f"{data_dir}/CHU/Data/A000/gacha")
+            await self.read_chuni_card(f"{data_dir}/CHU/Data/A000/card")
+            await self.read_chuni_gacha(f"{data_dir}/CHU/Data/A000/gacha")
 
-            self.read_mai2_card(f"{data_dir}/MAI/Data/A000/card")
+            await self.read_mai2_card(f"{data_dir}/MAI/Data/A000/card")
             for file, func in static_datas.items():
                 if os.path.exists(f"{self.bin_dir}/MU3/{file}"):
                     read_csv = getattr(CardMakerReader, func)
