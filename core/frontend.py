@@ -310,7 +310,7 @@ class FE_Gate(FE_Base):
             sesh = await self.data.user.check_password(uid)
 
             if sesh is not None:
-                return RedirectResponse(f"/gate/create?ac={access_code}")
+                return RedirectResponse(f"/gate/create?ac={access_code}", 303)
             
             return RedirectResponse("/gate/?e=1", 303)
 
@@ -334,10 +334,11 @@ class FE_Gate(FE_Base):
 
     async def render_create(self, request: Request):
         ip = Utils.get_ip_addr(request)
-        access_code: str = request.query_params.get("access_code", "")
-        username: str = request.query_params.get("username", "")
-        email: str = request.query_params.get("email", "")
-        passwd: bytes = request.query_params.get("passwd", "").encode()
+        frm = await request.form()
+        access_code: str = frm.get("access_code", "")
+        username: str = frm.get("username", "")
+        email: str = frm.get("email", "")
+        passwd: bytes = frm.get("passwd", "").encode()
 
         if not access_code or not username or not email or not passwd:
             return RedirectResponse("/gate/?e=1", 303)
@@ -365,13 +366,13 @@ class FE_Gate(FE_Base):
         
         usr_sesh = self.encode_session(sesh)
         self.logger.debug(f"Created session with JWT {usr_sesh}")
-        resp = RedirectResponse("/user", 303)
+        resp = RedirectResponse("/user/", 303)
         resp.set_cookie("DIANA_SESH", usr_sesh)
 
         return resp
 
     async def render_create_get(self, request: Request):
-        ac = request.query_params.get(b"ac", [b""])[0].decode()
+        ac = request.query_params.get("ac", "")
         if len(ac) != 20:
             return RedirectResponse("/gate/?e=2", 303)
 

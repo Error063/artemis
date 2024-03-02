@@ -51,7 +51,6 @@ if __name__ == "__main__":
     elif args.action == "create-owner":
         loop = asyncio.get_event_loop()
         loop.run_until_complete(data.create_owner(args.email, args.access_code))
-        data.schema_upgrade(args.version)
 
     elif args.action == "migrate":
         loop = asyncio.get_event_loop()

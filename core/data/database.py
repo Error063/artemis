@@ -127,7 +127,7 @@ class Data:
         )
         hash = bcrypt.hashpw(pw.encode(), bcrypt.gensalt())
 
-        user_id = await self.user.create_user("sysowner", email, hash.decode(), 255)
+        user_id = await self.user.create_user(username="sysowner", email=email, password=hash.decode(), permission=255)
         if user_id is None:
             self.logger.error(f"Failed to create owner with email {email}")
             return
