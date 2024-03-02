@@ -285,31 +285,6 @@ class Mai2DX(Mai2Base):
             "userCardList": card_list[start_idx:end_idx],
         }
 
-    async def handle_get_user_charge_api_request(self, data: Dict) -> Dict:
-        user_charges = await self.data.item.get_charges(data["userId"])
-        if user_charges is None:
-            return {"userId": data["userId"], "length": 0, "userChargeList": []}
-
-        user_charge_list = []
-        for charge in user_charges:
-            tmp = charge._asdict()
-            tmp.pop("id")
-            tmp.pop("user")
-            tmp["purchaseDate"] = datetime.strftime(
-                tmp["purchaseDate"], Mai2Constants.DATE_TIME_FORMAT
-            )
-            tmp["validDate"] = datetime.strftime(
-                tmp["validDate"], Mai2Constants.DATE_TIME_FORMAT
-            )
-
-            user_charge_list.append(tmp)
-
-        return {
-            "userId": data["userId"],
-            "length": len(user_charge_list),
-            "userChargeList": user_charge_list,
-        }
-
     async def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = int(data["nextIndex"] / 10000000000)
         next_idx = int(data["nextIndex"] % 10000000000)
