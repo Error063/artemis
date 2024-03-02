@@ -1671,7 +1671,7 @@ class IDACSeason2(IDACBase):
 
         return {
             "status_code": "0",
-            "special_mode_data": self._generate_special_data(user_id),
+            "special_mode_data": await self._generate_special_data(user_id),
             "car_use_count": [],
             "maker_use_count": [],
         }
