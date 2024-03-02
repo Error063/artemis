@@ -144,7 +144,7 @@ class OngekiBright(OngekiBase):
         }
 
     async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
-        return self.handle_get_user_item_api_request(data)
+        return await self.handle_get_user_item_api_request(data)
 
     async def handle_cm_get_user_gacha_supply_api_request(self, data: Dict) -> Dict:
         # not used for now? not sure what it even does

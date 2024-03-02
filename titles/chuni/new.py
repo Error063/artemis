@@ -339,10 +339,10 @@ class ChuniNew(ChuniBase):
         }
 
     async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
-        return super().handle_get_user_character_api_request(data)
+        return await super().handle_get_user_character_api_request(data)
 
     async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
-        return super().handle_get_user_item_api_request(data)
+        return await super().handle_get_user_item_api_request(data)
 
     async def handle_roll_gacha_api_request(self, data: Dict) -> Dict:
         """

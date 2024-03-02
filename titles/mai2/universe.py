@@ -125,7 +125,7 @@ class Mai2Universe(Mai2SplashPlus):
         }
 
     async def handle_cm_get_user_item_api_request(self, data: Dict) -> Dict:
-        super().handle_get_user_item_api_request(data)
+        await super().handle_get_user_item_api_request(data)
 
     async def handle_cm_get_user_character_api_request(self, data: Dict) -> Dict:
         characters = await self.data.item.get_characters(data["userId"])
