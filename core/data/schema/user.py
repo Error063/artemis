@@ -108,3 +108,15 @@ class UserData(BaseData):
         if result is None:
             return False
         return result.fetchall()
+
+    async def change_password(self, user_id: int, new_passwd: str) -> bool:
+        sql = aime_user.update(aime_user.c.id == user_id).values(password = new_passwd)
+
+        result = await self.execute(sql)
+        return result is not None
+
+    async def change_username(self, user_id: int, new_name: str) -> bool:
+        sql = aime_user.update(aime_user.c.id == user_id).values(username = new_name)
+
+        result = await self.execute(sql)
+        return result is not None
