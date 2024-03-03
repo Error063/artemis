@@ -458,7 +458,7 @@ class SaoItemData(BaseData):
                 end_sessions.c.user == user_id,
             )
         ).order_by(
-            end_sessions.c.play_date.asc()
+            end_sessions.c.play_date.desc()
         )
 
         result = await self.execute(sql)

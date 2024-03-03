@@ -1,6 +1,11 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240302
+### SAO
++ Fixing new profile creation with right heroes and start VP
++ Fix to the Unanalyzed Log responses returning the wrong rewards
+
 ## 20240226
 ### CXB
 + Fixing paths for rev.py

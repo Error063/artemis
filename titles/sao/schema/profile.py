@@ -24,7 +24,7 @@ profile = Table(
     Column("rank_num", Integer, server_default="1"),
     Column("rank_exp", Integer, server_default="0"),
     Column("own_col", Integer, server_default="0"),
-    Column("own_vp", Integer, server_default="0"),
+    Column("own_vp", Integer, server_default="300"),
     Column("own_yui_medal", Integer, server_default="0"),
     Column("setting_title_id", Integer, server_default="20005"),
 )

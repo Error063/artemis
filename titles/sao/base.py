@@ -90,13 +90,15 @@ class SaoBase:
 
             # Create profile with 3 basic heroes
             profile_id = await self.data.profile.create_profile(user_id)
-            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
-            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
-            await self.data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
+            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 201000000, 0, 1002, 1003, 1014, 30001, 30310)
+            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 202000000, 0, 3001, 3002, 3004, 30007, 3011)
+            await self.data.item.put_hero_log(user_id, 105000010, 1, 0, 209000000, 0, 10005, 10002, 10004, 30006, 10003)
+            await self.data.item.put_hero_log(user_id, 101000110, 1, 0, 201000000, 101000110, 2002, 2001, 2014, 0, 0)
             await self.data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
-            await self.data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
-            await self.data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
-            await self.data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 201000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 202000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 209000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 101000110, 1, 200, 0, 0, 0)
             await self.data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
 
             # Force the tutorial stage to be completed due to potential crash in-game
@@ -109,13 +111,15 @@ class SaoBase:
 
         if user_id and not profile_data:
             profile_id = await self.data.profile.create_profile(user_id)
-            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
-            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
-            await self.data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
+            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 201000000, 0, 1002, 1003, 1014, 30001, 30310)
+            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 202000000, 0, 3001, 3002, 3004, 30007, 3011)
+            await self.data.item.put_hero_log(user_id, 105000010, 1, 0, 209000000, 0, 10005, 10002, 10004, 30006, 10003)
+            await self.data.item.put_hero_log(user_id, 101000110, 1, 0, 201000000, 101000110, 2002, 2001, 2014, 0, 0)
             await self.data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
-            await self.data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
-            await self.data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
-            await self.data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 201000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 202000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 209000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 101000110, 1, 200, 0, 0, 0)
             await self.data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
 
             # Force the tutorial stage to be completed due to potential crash in-game
