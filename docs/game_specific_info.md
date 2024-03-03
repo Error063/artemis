@@ -621,15 +621,18 @@ python dbutils.py --game SDEW upgrade
 ### Notes
 - Defrag Match will crash at loading
 - Co-Op Online is not supported
-- Shop is not functionnal
+- Shop is displayed but cannot purchase heroes or items
 - Player title is currently static and cannot be changed in-game
 - QR Card Scanning currently only load a static hero
-
-**Network hashing in GssSite.dll must be disabled**
+- Ex-quests progression not supported yet
+- Daily Missions not implemented
+- EX TOWER 1,2 & 3 are not yet supported
+- Quest continues isn't supported
+- Daily Yui coin not yet fixed
 
 ### Credits for SAO support:
 
-- Midorica - Limited Network Support
+- Midorica - Network Support
 - Dniel97 - Helping with network base
 - tungnotpunk - Source
 

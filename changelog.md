@@ -5,6 +5,7 @@ Documenting updates to ARTEMiS, to be updated every time the master branch is pu
 ### SAO
 + Fixing new profile creation with right heroes and start VP
 + Fix to the Unanalyzed Log responses returning the wrong rewards
++ Documentation revised
 
 ## 20240226
 ### CXB
