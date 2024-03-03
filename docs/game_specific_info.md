@@ -627,7 +627,6 @@ python dbutils.py --game SDEW upgrade
 - Ex-quests progression not supported yet
 - Daily Missions not implemented
 - EX TOWER 1,2 & 3 are not yet supported
-- Quest continues isn't supported
 - Daily Yui coin not yet fixed
 
 ### Credits for SAO support:
