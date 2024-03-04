@@ -48,6 +48,12 @@ if __name__ == "__main__":
     elif args.action == "upgrade":
         data.schema_upgrade(args.version)
 
+    elif args.action == "downgrade":
+        if not args.version:
+            logging.getLogger("database").error(f"Version argument required for downgrade")
+            exit(1)
+        data.schema_downgrade(args.version)
+
     elif args.action == "create-owner":
         loop = asyncio.get_event_loop()
         loop.run_until_complete(data.create_owner(args.email, args.access_code))

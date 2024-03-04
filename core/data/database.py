@@ -118,7 +118,13 @@ class Data:
     def schema_upgrade(self, ver: str = None):
         self.__alembic_cmd(
             "upgrade",
-            "head",
+            "head" if not ver else ver,
+        )
+
+    def schema_downgrade(self, ver: str):
+        self.__alembic_cmd(
+            "downgrade",
+            ver,
         )
 
     async def create_owner(self, email: Optional[str] = None, code: Optional[str] = "00000000000000000000") -> None:
