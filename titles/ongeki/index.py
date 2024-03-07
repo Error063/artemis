@@ -143,7 +143,6 @@ class OngekiServlet(BaseServlet):
             f"{self.core_cfg.server.hostname}{t_port}/",
         )
 
-
     async def render_POST(self, request: Request) -> bytes:
         endpoint: str = request.path_params.get('endpoint', '')
         version: int = request.path_params.get('version', 0)
@@ -169,7 +168,7 @@ class OngekiServlet(BaseServlet):
             internal_ver = OngekiConstants.VER_ONGEKI_RED_PLUS
         elif version >= 130 and version < 135:  # Bright
             internal_ver = OngekiConstants.VER_ONGEKI_BRIGHT
-        elif version >= 135 and version < 140:  # Bright Memory
+        elif version >= 135 and version < 145:  # Bright Memory
             internal_ver = OngekiConstants.VER_ONGEKI_BRIGHT_MEMORY
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
