@@ -1,4 +1,6 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import Response
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 import zlib
@@ -11,29 +13,31 @@ from Crypto.Util.Padding import pad
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Hash import SHA1
 from os import path
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 
 from core import CoreConfig, Utils
-from titles.chuni.config import ChuniConfig
-from titles.chuni.const import ChuniConstants
-from titles.chuni.base import ChuniBase
-from titles.chuni.plus import ChuniPlus
-from titles.chuni.air import ChuniAir
-from titles.chuni.airplus import ChuniAirPlus
-from titles.chuni.star import ChuniStar
-from titles.chuni.starplus import ChuniStarPlus
-from titles.chuni.amazon import ChuniAmazon
-from titles.chuni.amazonplus import ChuniAmazonPlus
-from titles.chuni.crystal import ChuniCrystal
-from titles.chuni.crystalplus import ChuniCrystalPlus
-from titles.chuni.paradise import ChuniParadise
-from titles.chuni.new import ChuniNew
-from titles.chuni.newplus import ChuniNewPlus
+from core.title import BaseServlet
+from .config import ChuniConfig
+from .const import ChuniConstants
+from .base import ChuniBase
+from .plus import ChuniPlus
+from .air import ChuniAir
+from .airplus import ChuniAirPlus
+from .star import ChuniStar
+from .starplus import ChuniStarPlus
+from .amazon import ChuniAmazon
+from .amazonplus import ChuniAmazonPlus
+from .crystal import ChuniCrystal
+from .crystalplus import ChuniCrystalPlus
+from .paradise import ChuniParadise
+from .new import ChuniNew
+from .newplus import ChuniNewPlus
+from .sun import ChuniSun
+from .sunplus import ChuniSunPlus
 
-
-class ChuniServlet:
+class ChuniServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = ChuniConfig()
         self.hash_table: Dict[Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
@@ -55,6 +59,8 @@ class ChuniServlet:
             ChuniParadise,
             ChuniNew,
             ChuniNewPlus,
+            ChuniSun,
+            ChuniSunPlus,
         ]
 
         self.logger = logging.getLogger("chuni")
@@ -96,24 +102,33 @@ class ChuniServlet:
             ]
             for method in method_list:
                 method_fixed = inflection.camelize(method)[6:-7]
+                # number of iterations was changed to 70 in SUN and then to 36
+                if version == ChuniConstants.VER_CHUNITHM_SUN_PLUS:
+                    iter_count = 36
+                elif version == ChuniConstants.VER_CHUNITHM_SUN:
+                    iter_count = 70
+                else:
+                    iter_count = 44
+                    
                 hash = PBKDF2(
                     method_fixed,
                     bytes.fromhex(keys[2]),
                     128,
-                    count=44,
+                    count=iter_count,
                     hmac_hash_module=SHA1,
                 )
 
-                self.hash_table[version][hash.hex()] = method_fixed
+                hashed_name = hash.hex()[:32] # truncate unused bytes like the game does
+                self.hash_table[version][hashed_name] = method_fixed
 
                 self.logger.debug(
                     f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}"
                 )
 
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = ChuniConfig()
         if path.exists(f"{cfg_dir}/{ChuniConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -121,74 +136,98 @@ class ChuniServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
-        if core_cfg.server.is_develop:
-            return (
-                True,
-                f"http://{core_cfg.title.hostname}:{core_cfg.title.port}/{game_code}/$v/",
-                "",
-            )
+        return True
 
-        return (True, f"http://{core_cfg.title.hostname}/{game_code}/$v/", "")
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
+            return (f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", self.core_cfg.server.hostname)
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        if url_path.lower() == "ping":
-            return zlib.compress(b'{"returnCode": "1"}')
+        return (f"http://{self.core_cfg.server.hostname}/{game_code}/{game_ver}/", self.core_cfg.server.hostname)
 
-        req_raw = request.content.getvalue()
-        url_split = url_path.split("/")
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/{game:str}/{version:int}/ChuniServlet/{endpoint:str}", self.render_POST, methods=['POST']),
+            Route("/{game:str}/{version:int}/ChuniServlet/MatchingServer/{endpoint:str}", self.render_POST, methods=['POST']),
+        ]
+
+    async def render_POST(self, request: Request) -> bytes:
+        endpoint: str = request.path_params.get('endpoint')
+        version: int = request.path_params.get('version')
+        game_code: str = request.path_params.get('game')
+
+        if endpoint.lower() == "ping":
+            return Response(zlib.compress(b'{"returnCode": "1"}'))
+
+        req_raw = await request.body()
+
         encrtped = False
         internal_ver = 0
-        endpoint = url_split[len(url_split) - 1]
         client_ip = Utils.get_ip_addr(request)
 
-        if version < 105:  # 1.0
-            internal_ver = ChuniConstants.VER_CHUNITHM
-        elif version >= 105 and version < 110:  # Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_PLUS
-        elif version >= 110 and version < 115:  # Air
-            internal_ver = ChuniConstants.VER_CHUNITHM_AIR
-        elif version >= 115 and version < 120:  # Air Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_AIR_PLUS
-        elif version >= 120 and version < 125:  # Star
-            internal_ver = ChuniConstants.VER_CHUNITHM_STAR
-        elif version >= 125 and version < 130:  # Star Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_STAR_PLUS
-        elif version >= 130 and version < 135:  # Amazon
-            internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON
-        elif version >= 135 and version < 140:  # Amazon Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON_PLUS
-        elif version >= 140 and version < 145:  # Crystal
-            internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL
-        elif version >= 145 and version < 150:  # Crystal Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
-        elif version >= 150 and version < 200:  # Paradise
-            internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE
-        elif version >= 200 and version < 205:  # New
-            internal_ver = ChuniConstants.VER_CHUNITHM_NEW
-        elif version >= 205 and version < 210:  # New Plus
-            internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+        if game_code == "SDHD" or game_code == "SDBT": # JP
+          if version < 105:  # 1.0
+              internal_ver = ChuniConstants.VER_CHUNITHM
+          elif version >= 105 and version < 110:  # PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_PLUS
+          elif version >= 110 and version < 115:  # AIR
+              internal_ver = ChuniConstants.VER_CHUNITHM_AIR
+          elif version >= 115 and version < 120:  # AIR PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_AIR_PLUS
+          elif version >= 120 and version < 125:  # STAR
+              internal_ver = ChuniConstants.VER_CHUNITHM_STAR
+          elif version >= 125 and version < 130:  # STAR PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_STAR_PLUS
+          elif version >= 130 and version < 135:  # AMAZON
+              internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON
+          elif version >= 135 and version < 140:  # AMAZON PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_AMAZON_PLUS
+          elif version >= 140 and version < 145:  # CRYSTAL
+              internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL
+          elif version >= 145 and version < 150:  # CRYSTAL PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_CRYSTAL_PLUS
+          elif version >= 150 and version < 200:  # PARADISE
+              internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE
+          elif version >= 200 and version < 205:  # NEW!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW
+          elif version >= 205 and version < 210:  # NEW PLUS!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+          elif version >= 210 and version < 215:  # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN
+          elif version >= 215: # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN_PLUS
+        elif game_code == "SDGS": # Int
+          if version < 110: # SUPERSTAR
+              internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE # FIXME: Not sure what was intended to go here? was just "PARADISE"
+          elif version >= 110 and version < 115: # NEW
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW
+          elif version >= 115 and version < 120: # NEW PLUS!!
+              internal_ver = ChuniConstants.VER_CHUNITHM_NEW_PLUS
+          elif version >= 120 and version < 125: # SUN
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN
+          elif version >= 125: # SUN PLUS
+              internal_ver = ChuniConstants.VER_CHUNITHM_SUN_PLUS
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
             # doing encrypted. The likelyhood of false positives is low but
             # technically not 0
             if internal_ver < ChuniConstants.VER_CHUNITHM_NEW:
-                endpoint = request.getHeader("User-Agent").split("#")[0]
+                endpoint = request.headers.get("User-Agent").split("#")[0]
 
             else:
                 if internal_ver not in self.hash_table:
                     self.logger.error(
                         f"v{version} does not support encryption or no keys entered"
                     )
-                    return zlib.compress(b'{"stat": "0"}')
+                    return Response(zlib.compress(b'{"stat": "0"}'))
 
                 elif endpoint.lower() not in self.hash_table[internal_ver]:
                     self.logger.error(
                         f"No hash found for v{version} endpoint {endpoint}"
                     )
-                    return zlib.compress(b'{"stat": "0"}')
+                    return Response(zlib.compress(b'{"stat": "0"}'))
 
                 endpoint = self.hash_table[internal_ver][endpoint.lower()]
 
@@ -205,7 +244,7 @@ class ChuniServlet:
                 self.logger.error(
                     f"Failed to decrypt v{version} request to {endpoint} -> {e}"
                 )
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
             encrtped = True
 
@@ -217,7 +256,7 @@ class ChuniServlet:
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         try:
             unzip = zlib.decompress(req_raw)
@@ -226,13 +265,14 @@ class ChuniServlet:
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return b""
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
+        endpoint = endpoint.replace("C3Exp", "") if game_code == "SDGS" else endpoint
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
@@ -243,11 +283,11 @@ class ChuniServlet:
         else:
             try:
                 handler = getattr(handler_cls, func_to_find)
-                resp = handler(req_data)
+                resp = await handler(req_data)
 
             except Exception as e:
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
         if resp == None:
             resp = {"returnCode": 1}
@@ -257,7 +297,7 @@ class ChuniServlet:
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
         if not encrtped:
-            return zipped
+            return Response(zipped)
 
         padded = pad(zipped, 16)
 
@@ -267,4 +307,4 @@ class ChuniServlet:
             bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
-        return crypt.encrypt(padded)
+        return Response(crypt.encrypt(padded))

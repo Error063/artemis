@@ -2,15 +2,15 @@ import logging
 import json
 from decimal import Decimal
 from base64 import b64encode
-from typing import Any, Dict
-from hashlib import md5
-from datetime import datetime
+from typing import Any, Dict, List
+from os import path
 
 from core.config import CoreConfig
-from titles.cxb.config import CxbConfig
-from titles.cxb.const import CxbConstants
-from titles.cxb.database import CxbData
+from .config import CxbConfig
+from .const import CxbConstants
+from .database import CxbData
 
+from threading import Thread
 
 class CxbBase:
     def __init__(self, cfg: CoreConfig, game_cfg: CxbConfig) -> None:
@@ -21,14 +21,21 @@ class CxbBase:
         self.logger = logging.getLogger("cxb")
         self.version = CxbConstants.VER_CROSSBEATS_REV
 
-    def handle_action_rpreq_request(self, data: Dict) -> Dict:
+    def _get_data_contents(self, folder: str, filetype: str, encoding: str = None, subfolder: str = "") -> List[str]:
+        if path.exists(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv"):
+            with open(f"titles/cxb/data/{folder}/{subfolder}{filetype}.csv", encoding=encoding) as f:
+                return f.readlines()
+        
+        return []
+
+    async def handle_action_rpreq_request(self, data: Dict) -> Dict:
         return {}
 
-    def handle_action_hitreq_request(self, data: Dict) -> Dict:
+    async def handle_action_hitreq_request(self, data: Dict) -> Dict:
         return {"data": []}
 
-    def handle_auth_usercheck_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_index(
+    async def handle_auth_usercheck_request(self, data: Dict) -> Dict:
+        profile = await self.data.profile.get_profile_index(
             0, data["usercheck"]["authid"], self.version
         )
         if profile is not None:
@@ -38,12 +45,12 @@ class CxbBase:
         self.logger.info(f"No profile for aime id {data['usercheck']['authid']}")
         return {"exist": "false", "logout": "true"}
 
-    def handle_auth_entry_request(self, data: Dict) -> Dict:
+    async def handle_auth_entry_request(self, data: Dict) -> Dict:
         self.logger.info(f"New profile for {data['entry']['authid']}")
         return {"token": data["entry"]["authid"], "uid": data["entry"]["authid"]}
 
-    def handle_auth_login_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_index(
+    async def handle_auth_login_request(self, data: Dict) -> Dict:
+        profile = await self.data.profile.get_profile_index(
             0, data["login"]["authid"], self.version
         )
 
@@ -51,17 +58,154 @@ class CxbBase:
             self.logger.info(f"Login user {data['login']['authid']}")
             return {"token": data["login"]["authid"], "uid": data["login"]["authid"]}
 
-        self.logger.warn(f"User {data['login']['authid']} does not have a profile")
+        self.logger.warning(f"User {data['login']['authid']} does not have a profile")
         return {}
 
-    def handle_action_loadrange_request(self, data: Dict) -> Dict:
+    def task_generateCoupon(index, data1):
+        # Coupons
+        for i in range(500, 510):
+            index.append(str(i))
+            couponid = int(i) - 500
+            dataValue = [
+                {
+                    "couponId": str(couponid),
+                    "couponNum": "1",
+                    "couponLog": [],
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateShopListTitle(index, data1):
+        # ShopList_Title
+        for i in range(200000, 201451):
+            index.append(str(i))
+            shopid = int(i) - 200000
+            dataValue = [
+                {
+                    "shopId": shopid,
+                    "shopState": "2",
+                    "isDisable": "t",
+                    "isDeleted": "f",
+                    "isSpecialFlag": "f",
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateShopListIcon(index, data1):
+        # ShopList_Icon
+        for i in range(202000, 202264):
+            index.append(str(i))
+            shopid = int(i) - 200000
+            dataValue = [
+                {
+                    "shopId": shopid,
+                    "shopState": "2",
+                    "isDisable": "t",
+                    "isDeleted": "f",
+                    "isSpecialFlag": "f",
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateStories(index, data1):
+        # Stories
+        for i in range(900000, 900003):
+            index.append(str(i))
+            storyid = int(i) - 900000
+            dataValue = [
+                {
+                    "storyId": storyid,
+                    "unlockState1": ["t"] * 10,
+                    "unlockState2": ["t"] * 10,
+                    "unlockState3": ["t"] * 10,
+                    "unlockState4": ["t"] * 10,
+                    "unlockState5": ["t"] * 10,
+                    "unlockState6": ["t"] * 10,
+                    "unlockState7": ["t"] * 10,
+                    "unlockState8": ["t"] * 10,
+                    "unlockState9": ["t"] * 10,
+                    "unlockState10": ["t"] * 10,
+                    "unlockState11": ["t"] * 10,
+                    "unlockState12": ["t"] * 10,
+                    "unlockState13": ["t"] * 10,
+                    "unlockState14": ["t"] * 10,
+                    "unlockState15": ["t"] * 10,
+                    "unlockState16": ["t"] * 10,
+                }
+            ]
+            data1.append(
+                b64encode(
+                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
+                ).decode("utf-8")
+            )
+
+    def task_generateScoreData(song, index, data1):
+        song_data = song["data"]
+        songCode = []
+
+        songCode.append(
+            {
+                "mcode": song_data["mcode"],
+                "musicState": song_data["musicState"],
+                "playCount": song_data["playCount"],
+                "totalScore": song_data["totalScore"],
+                "highScore": song_data["highScore"],
+                "everHighScore": song_data["everHighScore"]
+                if "everHighScore" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "clearRate": song_data["clearRate"],
+                "rankPoint": song_data["rankPoint"],
+                "normalCR": song_data["normalCR"]
+                if "normalCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "survivalCR": song_data["survivalCR"]
+                if "survivalCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "ultimateCR": song_data["ultimateCR"]
+                if "ultimateCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "nohopeCR": song_data["nohopeCR"]
+                if "nohopeCR" in song_data
+                else ["0", "0", "0", "0", "0"],
+                "combo": song_data["combo"],
+                "coupleUserId": song_data["coupleUserId"],
+                "difficulty": song_data["difficulty"],
+                "isFullCombo": song_data["isFullCombo"],
+                "clearGaugeType": song_data["clearGaugeType"],
+                "fieldType": song_data["fieldType"],
+                "gameType": song_data["gameType"],
+                "grade": song_data["grade"],
+                "unlockState": song_data["unlockState"],
+                "extraState": song_data["extraState"],
+            }
+        )
+        index.append(song_data["index"])
+        data1.append(
+            b64encode(
+                bytes(json.dumps(songCode[0], separators=(",", ":")), "utf-8")
+            ).decode("utf-8")
+        )
+
+    async def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
         range_end = data["loadrange"]["range"][1]
         uid = data["loadrange"]["uid"]
 
         self.logger.info(f"Load data for {uid}")
-        profile = self.data.profile.get_profile(uid, self.version)
-        songs = self.data.score.get_best_scores(uid)
+        profile = await self.data.profile.get_profile(uid, self.version)
+        songs = await self.data.score.get_best_scores(uid)
 
         data1 = []
         index = []
@@ -107,157 +251,45 @@ class CxbBase:
         900000 = Stories
         """
 
-        # Coupons
-        for i in range(500, 510):
-            index.append(str(i))
-            couponid = int(i) - 500
-            dataValue = [
-                {
-                    "couponId": str(couponid),
-                    "couponNum": "1",
-                    "couponLog": [],
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        # Async threads to generate the response
+        thread_Coupon = Thread(target=CxbBase.task_generateCoupon(index, data1))
+        thread_ShopListTitle = Thread(target=CxbBase.task_generateShopListTitle(index, data1))
+        thread_ShopListIcon = Thread(target=CxbBase.task_generateShopListIcon(index, data1))
+        thread_Stories = Thread(target=CxbBase.task_generateStories(index, data1))
 
-        # ShopList_Title
-        for i in range(200000, 201451):
-            index.append(str(i))
-            shopid = int(i) - 200000
-            dataValue = [
-                {
-                    "shopId": shopid,
-                    "shopState": "2",
-                    "isDisable": "t",
-                    "isDeleted": "f",
-                    "isSpecialFlag": "f",
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        thread_Coupon.start()
+        thread_ShopListTitle.start()
+        thread_ShopListIcon.start()
+        thread_Stories.start()
 
-        # ShopList_Icon
-        for i in range(202000, 202264):
-            index.append(str(i))
-            shopid = int(i) - 200000
-            dataValue = [
-                {
-                    "shopId": shopid,
-                    "shopState": "2",
-                    "isDisable": "t",
-                    "isDeleted": "f",
-                    "isSpecialFlag": "f",
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
-
-        # Stories
-        for i in range(900000, 900003):
-            index.append(str(i))
-            storyid = int(i) - 900000
-            dataValue = [
-                {
-                    "storyId": storyid,
-                    "unlockState1": ["t"] * 10,
-                    "unlockState2": ["t"] * 10,
-                    "unlockState3": ["t"] * 10,
-                    "unlockState4": ["t"] * 10,
-                    "unlockState5": ["t"] * 10,
-                    "unlockState6": ["t"] * 10,
-                    "unlockState7": ["t"] * 10,
-                    "unlockState8": ["t"] * 10,
-                    "unlockState9": ["t"] * 10,
-                    "unlockState10": ["t"] * 10,
-                    "unlockState11": ["t"] * 10,
-                    "unlockState12": ["t"] * 10,
-                    "unlockState13": ["t"] * 10,
-                    "unlockState14": ["t"] * 10,
-                    "unlockState15": ["t"] * 10,
-                    "unlockState16": ["t"] * 10,
-                }
-            ]
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(dataValue[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        thread_Coupon.join()
+        thread_ShopListTitle.join()
+        thread_ShopListIcon.join()
+        thread_Stories.join()
 
         for song in songs:
-            song_data = song["data"]
-            songCode = []
+            thread_ScoreData = Thread(target=CxbBase.task_generateScoreData(song, index, data1))
+            thread_ScoreData.start()
 
-            songCode.append(
-                {
-                    "mcode": song_data["mcode"],
-                    "musicState": song_data["musicState"],
-                    "playCount": song_data["playCount"],
-                    "totalScore": song_data["totalScore"],
-                    "highScore": song_data["highScore"],
-                    "everHighScore": song_data["everHighScore"]
-                    if "everHighScore" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "clearRate": song_data["clearRate"],
-                    "rankPoint": song_data["rankPoint"],
-                    "normalCR": song_data["normalCR"]
-                    if "normalCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "survivalCR": song_data["survivalCR"]
-                    if "survivalCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "ultimateCR": song_data["ultimateCR"]
-                    if "ultimateCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "nohopeCR": song_data["nohopeCR"]
-                    if "nohopeCR" in song_data
-                    else ["0", "0", "0", "0", "0"],
-                    "combo": song_data["combo"],
-                    "coupleUserId": song_data["coupleUserId"],
-                    "difficulty": song_data["difficulty"],
-                    "isFullCombo": song_data["isFullCombo"],
-                    "clearGaugeType": song_data["clearGaugeType"],
-                    "fieldType": song_data["fieldType"],
-                    "gameType": song_data["gameType"],
-                    "grade": song_data["grade"],
-                    "unlockState": song_data["unlockState"],
-                    "extraState": song_data["extraState"],
-                }
-            )
-            index.append(song_data["index"])
-            data1.append(
-                b64encode(
-                    bytes(json.dumps(songCode[0], separators=(",", ":")), "utf-8")
-                ).decode("utf-8")
-            )
+        v_profile = await self.data.profile.get_profile_index(0, uid, self.version)
+        v_profile_data = v_profile["data"]
 
-        for v in index:
-            try:
-                v_profile = self.data.profile.get_profile_index(0, uid, self.version)
-                v_profile_data = v_profile["data"]
+        for _, data in enumerate(profile):
+            if v_profile_data:
                 versionindex.append(int(v_profile_data["appVersion"]))
-            except:
+            else:
                 versionindex.append("10400")
 
         return {"index": index, "data": data1, "version": versionindex}
 
-    def handle_action_saveindex_request(self, data: Dict) -> Dict:
+    async def handle_action_saveindex_request(self, data: Dict) -> Dict:
         save_data = data["saveindex"]
 
         try:
             # REV Omnimix Version Fetcher
             gameversion = data["saveindex"]["data"][0][2]
             self.logger.warning(f"Game Version is {gameversion}")
-        except:
+        except Exception:
             pass
 
         if "10205" in gameversion:
@@ -268,11 +300,11 @@ class CxbBase:
 
             for value in data["saveindex"]["data"]:
                 if "playedUserId" in value[1]:
-                    self.data.profile.put_profile(
+                    await self.data.profile.put_profile(
                         data["saveindex"]["uid"], self.version, value[0], value[1]
                     )
                 if "mcode" not in value[1]:
-                    self.data.profile.put_profile(
+                    await self.data.profile.put_profile(
                         data["saveindex"]["uid"], self.version, value[0], value[1]
                     )
                 if "shopId" in value:
@@ -303,7 +335,7 @@ class CxbBase:
                             "index": value[0],
                         }
                     )
-                    self.data.score.put_best_score(
+                    await self.data.score.put_best_score(
                         data["saveindex"]["uid"],
                         song_json["mcode"],
                         self.version,
@@ -319,7 +351,7 @@ class CxbBase:
         # Sunrise
         try:
             profileIndex = save_data["index"].index("0")
-        except:
+        except Exception:
             return {"data": ""}  # Maybe
 
         profile = json.loads(save_data["data"][profileIndex])
@@ -328,32 +360,32 @@ class CxbBase:
 
         for index, value in enumerate(data["saveindex"]["data"]):
             if int(data["saveindex"]["index"][index]) == 101:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if (
                 int(data["saveindex"]["index"][index]) >= 700000
                 and int(data["saveindex"]["index"][index]) <= 701000
             ):
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if (
                 int(data["saveindex"]["index"][index]) >= 500
                 and int(data["saveindex"]["index"][index]) <= 510
             ):
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if "playedUserId" in value:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId,
                     self.version,
                     data["saveindex"]["index"][index],
                     json.loads(value),
                 )
             if "mcode" not in value and "normalCR" not in value:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId,
                     self.version,
                     data["saveindex"]["index"][index],
@@ -405,18 +437,18 @@ class CxbBase:
                 }
             )
 
-            self.data.score.put_best_score(
+            await self.data.score.put_best_score(
                 aimeId, data1["mcode"], self.version, indexSongList[i], songCode[0]
             )
             i += 1
         return {}
 
-    def handle_action_sprankreq_request(self, data: Dict) -> Dict:
+    async def handle_action_sprankreq_request(self, data: Dict) -> Dict:
         uid = data["sprankreq"]["uid"]
         self.logger.info(f"Get best rankings for {uid}")
-        p = self.data.score.get_best_rankings(uid)
+        p = await self.data.score.get_best_rankings(uid)
 
-        rankList: list[Dict[str, Any]] = []
+        rankList: List[Dict[str, Any]] = []
 
         for rank in p:
             if rank["song_id"] is not None:
@@ -443,16 +475,16 @@ class CxbBase:
             "rankx": [1, 1, 1],
         }
 
-    def handle_action_getadv_request(self, data: Dict) -> Dict:
+    async def handle_action_getadv_request(self, data: Dict) -> Dict:
         return {"data": [{"r": "1", "i": "100300", "c": "20"}]}
 
-    def handle_action_getmsg_request(self, data: Dict) -> Dict:
+    async def handle_action_getmsg_request(self, data: Dict) -> Dict:
         return {"msgs": []}
 
-    def handle_auth_logout_request(self, data: Dict) -> Dict:
+    async def handle_auth_logout_request(self, data: Dict) -> Dict:
         return {"auth": True}
 
-    def handle_action_rankreg_request(self, data: Dict) -> Dict:
+    async def handle_action_rankreg_request(self, data: Dict) -> Dict:
         uid = data["rankreg"]["uid"]
         self.logger.info(f"Put {len(data['rankreg']['data'])} rankings for {uid}")
 
@@ -460,15 +492,15 @@ class CxbBase:
             # REV S2
             if "clear" in rid:
                 try:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=int(rid["sc"][1]),
                         score=int(rid["sc"][0]),
                         clear=rid["clear"],
                     )
-                except:
-                    self.data.score.put_ranking(
+                except Exception:
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=0,
@@ -478,15 +510,15 @@ class CxbBase:
             # REV
             else:
                 try:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=int(rid["sc"][1]),
                         score=int(rid["sc"][0]),
                         clear=0,
                     )
-                except:
-                    self.data.score.put_ranking(
+                except Exception:
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=0,
@@ -495,16 +527,15 @@ class CxbBase:
                     )
         return {}
 
-    def handle_action_addenergy_request(self, data: Dict) -> Dict:
+    async def handle_action_addenergy_request(self, data: Dict) -> Dict:
         uid = data["addenergy"]["uid"]
         self.logger.info(f"Add energy to user {uid}")
-        profile = self.data.profile.get_profile_index(0, uid, self.version)
+        profile = await self.data.profile.get_profile_index(0, uid, self.version)
         data1 = profile["data"]
-        p = self.data.item.get_energy(uid)
-        energy = p["energy"]
+        p = await self.data.item.get_energy(uid)
 
         if not p:
-            self.data.item.put_energy(uid, 5)
+            await self.data.item.put_energy(uid, 5)
 
             return {
                 "class": data1["myClass"],
@@ -514,9 +545,10 @@ class CxbBase:
             }
 
         array = []
+        energy = p["energy"]
 
         newenergy = int(energy) + 5
-        self.data.item.put_energy(uid, newenergy)
+        await self.data.item.put_energy(uid, newenergy)
 
         if int(energy) <= 995:
             array.append(
@@ -538,10 +570,10 @@ class CxbBase:
             )
         return array[0]
 
-    def handle_action_eventreq_request(self, data: Dict) -> Dict:
+    async def handle_action_eventreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"eventreq": ""}
 
-    def handle_action_stampreq_request(self, data: Dict) -> Dict:
+    async def handle_action_stampreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"stampreq": ""}

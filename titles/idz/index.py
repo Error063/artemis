@@ -1,25 +1,26 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.responses import Response, PlainTextResponse
+from starlette.routing import Route
 import yaml
 import logging
 import coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 from os import path
-from typing import Tuple, List
-from twisted.internet import reactor, endpoints
-from twisted.web import server, resource
+from typing import Tuple, List, Dict
 import importlib
+import asyncio
 
 from core.config import CoreConfig
+from core.title import BaseServlet
 from .config import IDZConfig
 from .const import IDZConstants
-from .userdb import IDZUserDBFactory, IDZUserDBWeb, IDZKey
+from .userdb import IDZUserDB, IDZKey
 from .echo import IDZEcho
-from .handlers import IDZHandlerLoadConfigB
 
 
-class IDZServlet:
+class IDZServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
-        self.core_cfg = core_cfg
+        super().__init__(core_cfg, cfg_dir)
         self.game_cfg = IDZConfig()
         if path.exists(f"{cfg_dir}/{IDZConstants.CONFIG_NAME}"):
             self.game_cfg.update(
@@ -65,9 +66,9 @@ class IDZServlet:
         return hash_
 
     @classmethod
-    def get_allnet_info(
+    def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
-    ) -> Tuple[bool, str, str]:
+    ) -> bool:
         game_cfg = IDZConfig()
         if path.exists(f"{cfg_dir}/{IDZConstants.CONFIG_NAME}"):
             game_cfg.update(
@@ -75,21 +76,29 @@ class IDZServlet:
             )
 
         if not game_cfg.server.enable:
-            return (False, "", "")
+            return False
 
         if len(game_cfg.rsa_keys) <= 0 or not game_cfg.server.aes_key:
             logging.getLogger("idz").error("IDZ: No RSA/AES  keys! IDZ cannot start")
-            return (False, "", "")
+            return False
 
+        return True
+    
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/idz/news/{endpoint:str}", self.render_GET),
+            Route("/idz/error", self.render_GET)
+        ]
+    
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         hostname = (
-            core_cfg.title.hostname
-            if not game_cfg.server.hostname
-            else game_cfg.server.hostname
+            self.core_cfg.server.hostname
+            if not self.game_cfg.server.hostname
+            else self.game_cfg.server.hostname
         )
         return (
-            True,
             f"",
-            f"{hostname}:{game_cfg.ports.userdb}",
+            f"{hostname}:{self.game_cfg.ports.userdb}",
         )
 
     def setup(self):
@@ -126,42 +135,35 @@ class IDZServlet:
 
             except AttributeError as e:
                 continue
-
-        endpoints.serverFromString(
-            reactor,
-            f"tcp:{self.game_cfg.ports.userdb}:interface={self.core_cfg.server.listen_address}",
-        ).listen(
-            IDZUserDBFactory(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map)
+        
+        loop = asyncio.get_running_loop()
+        IDZUserDB(self.core_cfg, self.game_cfg, self.rsa_keys, handler_map).start()
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.echo)
+            )
+        )
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.match)
+            )
+        )
+        asyncio.create_task(
+            loop.create_datagram_endpoint(
+                lambda: IDZEcho(),
+                local_addr=(self.core_cfg.server.listen_address, self.game_cfg.ports.userdb + 1)
+            )
         )
 
-        reactor.listenUDP(
-            self.game_cfg.ports.echo, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.echo + 1, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.match, IDZEcho(self.core_cfg, self.game_cfg)
-        )
-        reactor.listenUDP(
-            self.game_cfg.ports.userdb + 1, IDZEcho(self.core_cfg, self.game_cfg)
-        )
 
-        self.logger.info(f"UserDB Listening on port {self.game_cfg.ports.userdb}")
+    async def render_GET(self, request: Request) -> bytes:
+        url_path = request.path_params.get('endpoint', '')
+        if not url_path:
+            return Response()
 
-    def render_POST(self, request: Request, version: int, url_path: str) -> bytes:
-        req_raw = request.content.getvalue()
-        self.logger.info(f"IDZ POST request: {url_path} - {req_raw}")
-        return b""
-
-    def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
         self.logger.info(f"IDZ GET request: {url_path}")
-        request.responseHeaders.setRawHeaders(
-            "Content-Type", [b"text/plain; charset=utf-8"]
-        )
-        request.responseHeaders.setRawHeaders(
-            "Last-Modified", [b"Sun, 23 Apr 2023 05:33:20 GMT"]
-        )
 
         news = (
             self.game_cfg.server.news
@@ -171,4 +173,4 @@ class IDZServlet:
         news += "\r\n"
         news = "1979/01/01 00:00:00 2099/12/31 23:59:59 " + news
 
-        return news.encode()
+        return PlainTextResponse(news, media_type="text/plain; charset=utf-8", headers={"Last-Modified": "Sun, 23 Apr 2023 05:33:20 GMT"})

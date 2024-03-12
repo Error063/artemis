@@ -4,6 +4,7 @@ import json
 import logging
 from enum import Enum
 
+import pytz
 from core.config import CoreConfig
 from core.data.cache import cached
 from titles.ongeki.const import OngekiConstants
@@ -102,13 +103,31 @@ class OngekiBase:
         self.game = OngekiConstants.GAME_CODE
         self.version = OngekiConstants.VER_ONGEKI
 
-    def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
-        reboot_start = date.strftime(
-            datetime.now() + timedelta(hours=3), self.date_time_format
-        )
-        reboot_end = date.strftime(
-            datetime.now() + timedelta(hours=4), self.date_time_format
-        )
+    async def handle_get_game_setting_api_request(self, data: Dict) -> Dict:
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_cfg.title.reboot_start_time == "" or self.core_cfg.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_cfg.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_cfg.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
+
         return {
             "gameSetting": {
                 "dataVersion": "1.00.00",
@@ -129,7 +148,7 @@ class OngekiBase:
             "isAou": "true",
         }
 
-    def handle_get_game_idlist_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_idlist_api_request(self, data: Dict) -> Dict:
         """
         Gets lists of song IDs, either disabled songs or recomended songs depending on type?
         """
@@ -137,101 +156,147 @@ class OngekiBase:
         # id - int
         return {"type": data["type"], "length": 0, "gameIdlistList": []}
 
-    def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameRankingList": []}
+    async def handle_get_game_ranking_api_request(self, data: Dict) -> Dict:
+        game_ranking_list = await self.data.static.get_ranking_list(self.version)
+        
+        ranking_list = []
+        for music in game_ranking_list:
+            tmp = music._asdict()
+            ranking_list.append(tmp)
 
-    def handle_get_game_point_api_request(self, data: Dict) -> Dict:
-        """
-        Sets the GP ammount for A and B sets for 1 - 3 crdits
-        """
+        if ranking_list is None:
+            return {"length": 0, "gameRankingList": []}
         return {
-            "length": 6,
-            "gamePointList": [
-                {
-                    "type": 0,
-                    "cost": 100,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 1,
-                    "cost": 200,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 2,
-                    "cost": 300,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 3,
-                    "cost": 120,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 4,
-                    "cost": 240,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-                {
-                    "type": 5,
-                    "cost": 360,
-                    "startDate": "2000-01-01 05:00:00.0",
-                    "endDate": "2099-01-01 05:00:00.0",
-                },
-            ],
+            "type": data["type"],
+            "gameRankingList": ranking_list,
         }
 
-    def handle_game_login_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_point_api_request(self, data: Dict) -> Dict:
+        get_game_point = await self.data.static.get_static_game_point()
+        game_point = []
+
+        if not get_game_point:
+            self.logger.info(f"GP table is empty, inserting defaults")
+            await self.data.static.put_static_game_point_defaults()
+            get_game_point = await self.data.static.get_static_game_point()
+            for gp in get_game_point:
+                tmp = gp._asdict()
+                game_point.append(tmp)
+            return {
+                "length": len(game_point),
+                "gamePointList": game_point,
+                }
+        for gp in get_game_point:
+            tmp = gp._asdict()
+            game_point.append(tmp)
+        return {
+            "length": len(game_point),
+            "gamePointList": game_point,
+        }
+        
+    async def handle_game_login_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "gameLogin"}
 
-    def handle_game_logout_api_request(self, data: Dict) -> Dict:
+    async def handle_game_logout_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "gameLogout"}
 
-    def handle_extend_lock_time_api_request(self, data: Dict) -> Dict:
+    async def handle_extend_lock_time_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "ExtendLockTimeApi"}
 
-    def handle_get_game_reward_api_request(self, data: Dict) -> Dict:
-        # TODO: reward list
-        return {"length": 0, "gameRewardList": []}
+    async def handle_get_game_reward_api_request(self, data: Dict) -> Dict:
+        get_game_rewards = await self.data.static.get_reward_list(self.version)
 
-    def handle_get_game_present_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gamePresentList": []}
+        reward_list = []
+        for reward in get_game_rewards:
+            tmp = reward._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            tmp.pop("rewardname")
+            reward_list.append(tmp)
 
-    def handle_get_game_message_api_request(self, data: Dict) -> Dict:
+        if reward_list is None:
+            return {"length": 0, "gameRewardList": []}
+        return {
+            "length": len(reward_list),
+            "gameRewardList": reward_list,
+        }
+
+    async def handle_get_game_present_api_request(self, data: Dict) -> Dict:
+        get_present = await self.data.static.get_present_list(self.version)
+
+        present_list = []
+        for present in get_present:
+            tmp = present._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            present_list.append(tmp)
+
+        if present_list is None:
+            return {"length": 0, "gamePresentList": []}
+        return {
+            "length": len(present_list),
+            "gamePresentList": present_list,
+        }
+
+    async def handle_get_game_message_api_request(self, data: Dict) -> Dict:
         return {"length": 0, "gameMessageList": []}
 
-    def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
+    async def handle_get_game_sale_api_request(self, data: Dict) -> Dict:
         return {"length": 0, "gameSaleList": []}
 
-    def handle_get_game_tech_music_api_request(self, data: Dict) -> Dict:
-        return {"length": 0, "gameTechMusicList": []}
+    async def handle_get_game_tech_music_api_request(self, data: Dict) -> Dict:
+        music_list = await self.data.static.get_tech_music(self.version)
 
-    def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+        prep_music_list = []
+        for music in music_list:
+            tmp = music._asdict()
+            tmp.pop("id")
+            tmp.pop("version")
+            prep_music_list.append(tmp)
+
+        if prep_music_list is None:
+            return {"length": 0, "gameTechMusicList": []}
+
+        return {
+            "length": len(prep_music_list),
+            "gameTechMusicList": prep_music_list,
+        }
+
+    async def handle_upsert_client_setting_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
+
+        client_id = data["clientId"]
+        client_setting_data = data["clientSetting"]
+        cab = await self.data.arcade.get_machine(client_id)
+        if cab is not None:
+            await self.data.static.put_client_setting_data(cab['id'], client_setting_data)
         return {"returnCode": 1, "apiName": "UpsertClientSettingApi"}
 
-    def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_testmode_api_request(self, data: Dict) -> Dict:
+        if self.core_cfg.server.is_develop:
+            return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
+
+        region_id = data["regionId"]
+        client_testmode_data = data["clientTestmode"]
+        await self.data.static.put_client_testmode_data(region_id, client_testmode_data)
         return {"returnCode": 1, "apiName": "UpsertClientTestmodeApi"}
 
-    def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_bookkeeping_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "upsertClientBookkeeping"}
 
-    def handle_upsert_client_develop_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_develop_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "upsertClientDevelop"}
 
-    def handle_upsert_client_error_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_client_error_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "upsertClientError"}
 
-    def handle_upsert_user_gplog_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_gplog_api_request(self, data: Dict) -> Dict:
         user = data["userId"]
         if user >= 200000000000000:  # Account for guest play
             user = None
 
-        self.data.log.put_gp_log(
+        await self.data.log.put_gp_log(
             user,
             data["usedCredit"],
             data["placeName"],
@@ -244,11 +309,18 @@ class OngekiBase:
 
         return {"returnCode": 1, "apiName": "UpsertUserGplogApi"}
 
-    def handle_extend_lock_time_api_request(self, data: Dict) -> Dict:
+    async def handle_extend_lock_time_api_request(self, data: Dict) -> Dict:
         return {"returnCode": 1, "apiName": "ExtendLockTimeApi"}
 
-    def handle_get_game_event_api_request(self, data: Dict) -> Dict:
-        evts = self.data.static.get_enabled_events(self.version)
+    async def handle_get_game_event_api_request(self, data: Dict) -> Dict:
+        evts = await self.data.static.get_enabled_events(self.version)
+
+        if evts is None:
+            return {
+            "type": data["type"],
+            "length": 0,
+            "gameEventList": [],
+        } 
 
         evt_list = []
         for event in evts:
@@ -256,19 +328,22 @@ class OngekiBase:
                 {
                     "type": event["type"],
                     "id": event["eventId"],
-                    "startDate": "2017-12-05 07:00:00.0",
-                    "endDate": "2099-12-31 00:00:00.0",
+                    # actually use the startDate from the import so it
+                    # properly shows all the events when new ones are imported
+                    "startDate": datetime.strftime(event["startDate"], "%Y-%m-%d %H:%M:%S.0"),
+                    #"endDate": "2099-12-31 00:00:00.0",
+                    "endDate": datetime.strftime(event["endDate"], "%Y-%m-%d %H:%M:%S.0"),
                 }
             )
-
+        
         return {
             "type": data["type"],
             "length": len(evt_list),
             "gameEventList": evt_list,
         }
 
-    def handle_get_game_id_list_api_request(self, data: Dict) -> Dict:
-        game_idlist: list[str, Any] = []  # 1 to 230 & 8000 to 8050
+    async def handle_get_game_id_list_api_request(self, data: Dict) -> Dict:
+        game_idlist: List[str, Any] = []  # 1 to 230 & 8000 to 8050
 
         if data["type"] == 1:
             for i in range(1, 231):
@@ -287,11 +362,11 @@ class OngekiBase:
                 "gameIdlistList": game_idlist,
             }
 
-    def handle_get_user_region_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_region_api_request(self, data: Dict) -> Dict:
         return {"userId": data["userId"], "length": 0, "userRegionList": []}
 
-    def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_preview(data["userId"], self.version)
+    async def handle_get_user_preview_api_request(self, data: Dict) -> Dict:
+        profile = await self.data.profile.get_profile_preview(data["userId"], self.version)
 
         if profile is None:
             return {
@@ -342,12 +417,12 @@ class OngekiBase:
             "isWarningConfirmed": True,
         }
 
-    def handle_get_user_tech_count_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_tech_count_api_request(self, data: Dict) -> Dict:
         """
         Gets the number of AB and ABPs a player has per-difficulty (7, 7+, 8, etc)
         The game sends this in upsert so we don't have to calculate it all out thankfully
         """
-        utcl = self.data.score.get_tech_count(data["userId"])
+        utcl = await self.data.score.get_tech_count(data["userId"])
         userTechCountList = []
 
         for tc in utcl:
@@ -361,8 +436,8 @@ class OngekiBase:
             "userTechCountList": userTechCountList,
         }
 
-    def handle_get_user_tech_event_api_request(self, data: Dict) -> Dict:
-        user_tech_event_list = self.data.item.get_tech_event(data["userId"])
+    async def handle_get_user_tech_event_api_request(self, data: Dict) -> Dict:
+        user_tech_event_list = await self.data.item.get_tech_event(self.version, data["userId"])
         if user_tech_event_list is None:
             return {}
 
@@ -371,6 +446,7 @@ class OngekiBase:
             tmp = evt._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("version")
             tech_evt.append(tmp)
 
         return {
@@ -379,16 +455,25 @@ class OngekiBase:
             "userTechEventList": tech_evt,
         }
 
-    def handle_get_user_tech_event_ranking_api_request(self, data: Dict) -> Dict:
-        # user_event_ranking_list = self.data.item.get_tech_event_ranking(data["userId"])
-        # if user_event_ranking_list is None: return {}
+    async def handle_get_user_tech_event_ranking_api_request(self, data: Dict) -> Dict:
+        user_tech_event_ranks = await self.data.item.get_tech_event_ranking(self.version, data["userId"])
+        if user_tech_event_ranks is None: 
+            return {
+            "userId": data["userId"],
+            "length": 0,
+            "userTechEventRankingList": [],
+        }
 
+        # collect the whole table and clear other players, to preserve proper ranking
         evt_ranking = []
-        # for evt in user_event_ranking_list:
-        #    tmp = evt._asdict()
-        #    tmp.pop("id")
-        #    tmp.pop("user")
-        #    evt_ranking.append(tmp)
+        for evt in user_tech_event_ranks:
+            tmp = evt._asdict()
+            if tmp["user"] != data["userId"]:
+                tmp.clear()
+            else:
+                tmp.pop("id")
+                tmp.pop("user")
+                evt_ranking.append(tmp)
 
         return {
             "userId": data["userId"],
@@ -396,8 +481,8 @@ class OngekiBase:
             "userTechEventRankingList": evt_ranking,
         }
 
-    def handle_get_user_kop_api_request(self, data: Dict) -> Dict:
-        kop_list = self.data.profile.get_kop(data["userId"])
+    async def handle_get_user_kop_api_request(self, data: Dict) -> Dict:
+        kop_list = await self.data.profile.get_kop(data["userId"])
         if kop_list is None:
             return {}
 
@@ -411,8 +496,8 @@ class OngekiBase:
             "userKopList": kop_list,
         }
 
-    def handle_get_user_music_api_request(self, data: Dict) -> Dict:
-        song_list = self.util_generate_music_list(data["userId"])
+    async def handle_get_user_music_api_request(self, data: Dict) -> Dict:
+        song_list = await self.util_generate_music_list(data["userId"])
         max_ct = data["maxCount"]
         next_idx = data["nextIndex"]
         start_idx = next_idx
@@ -431,9 +516,9 @@ class OngekiBase:
             "userMusicList": song_list[start_idx:end_idx],
         }
 
-    def handle_get_user_item_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_item_api_request(self, data: Dict) -> Dict:
         kind = data["nextIndex"] / 10000000000
-        p = self.data.item.get_items(data["userId"], kind)
+        p = await self.data.item.get_items(data["userId"], kind)
 
         if p is None:
             return {
@@ -443,7 +528,7 @@ class OngekiBase:
                 "userItemList": [],
             }
 
-        items: list[Dict[str, Any]] = []
+        items: List[Dict[str, Any]] = []
         for i in range(data["nextIndex"] % 10000000000, len(p)):
             if len(items) > data["maxCount"]:
                 break
@@ -467,8 +552,8 @@ class OngekiBase:
             "userItemList": items,
         }
 
-    def handle_get_user_option_api_request(self, data: Dict) -> Dict:
-        o = self.data.profile.get_profile_options(data["userId"])
+    async def handle_get_user_option_api_request(self, data: Dict) -> Dict:
+        o = await self.data.profile.get_profile_options(data["userId"])
         if o is None:
             return {}
 
@@ -481,12 +566,12 @@ class OngekiBase:
 
         return {"userId": data["userId"], "userOption": user_opts}
 
-    def handle_get_user_data_api_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile_data(data["userId"], self.version)
+    async def handle_get_user_data_api_request(self, data: Dict) -> Dict:
+        p = await self.data.profile.get_profile_data(data["userId"], self.version)
         if p is None:
             return {}
 
-        cards = self.data.card.get_user_cards(data["userId"])
+        cards = await self.data.card.get_user_cards(data["userId"])
         if cards is None or len(cards) == 0:
             # This should never happen
             self.logger.error(
@@ -509,25 +594,31 @@ class OngekiBase:
 
         return {"userId": data["userId"], "userData": user_data}
 
-    def handle_get_user_event_ranking_api_request(self, data: Dict) -> Dict:
-        # user_event_ranking_list = self.data.item.get_event_ranking(data["userId"])
-        # if user_event_ranking_list is None: return {}
+    async def handle_get_user_event_ranking_api_request(self, data: Dict) -> Dict:
+        user_event_ranking_list = await self.data.item.get_ranking_event_ranks(self.version, data["userId"])
+        if user_event_ranking_list is None:
+            return {}
 
-        evt_ranking = []
-        # for evt in user_event_ranking_list:
-        #    tmp = evt._asdict()
-        #    tmp.pop("id")
-        #    tmp.pop("user")
-        #    evt_ranking.append(tmp)
+        # We collect the whole ranking table, and clear out any not needed data, this way we preserve the proper ranking 
+        # In official spec this should be done server side, in maintenance period
+        prep_event_ranking = []
+        for evt in user_event_ranking_list:
+            tmp = evt._asdict()
+            if tmp["user"] != data["userId"]:
+                tmp.clear()
+            else:
+                tmp.pop("id")
+                tmp.pop("user")
+                prep_event_ranking.append(tmp)
 
         return {
             "userId": data["userId"],
-            "length": len(evt_ranking),
-            "userEventRankingList": evt_ranking,
+            "length": len(prep_event_ranking),
+            "userEventRankingList": prep_event_ranking,
         }
 
-    def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
-        user_login_bonus_list = self.data.item.get_login_bonuses(data["userId"])
+    async def handle_get_user_login_bonus_api_request(self, data: Dict) -> Dict:
+        user_login_bonus_list = await self.data.item.get_login_bonuses(data["userId"])
         if user_login_bonus_list is None:
             return {}
 
@@ -544,8 +635,8 @@ class OngekiBase:
             "userLoginBonusList": login_bonuses,
         }
 
-    def handle_get_user_bp_base_request(self, data: Dict) -> Dict:
-        p = self.data.profile.get_profile(
+    async def handle_get_user_bp_base_request(self, data: Dict) -> Dict:
+        p = await self.data.profile.get_profile(
             self.game, self.version, user_id=data["userId"]
         )
         if p is None:
@@ -557,10 +648,14 @@ class OngekiBase:
             "userBpBaseList": profile["userBpBaseList"],
         }
 
-    def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
-        recent_rating = self.data.profile.get_profile_recent_rating(data["userId"])
+    async def handle_get_user_recent_rating_api_request(self, data: Dict) -> Dict:
+        recent_rating = await self.data.profile.get_profile_recent_rating(data["userId"])
         if recent_rating is None:
-            return {}
+            return {
+                "userId": data["userId"],
+                "length": 0,
+                "userRecentRatingList": [],
+            }
 
         userRecentRatingList = recent_rating["recentRating"]
 
@@ -570,8 +665,8 @@ class OngekiBase:
             "userRecentRatingList": userRecentRatingList,
         }
 
-    def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
-        activity = self.data.profile.get_profile_activity(data["userId"], data["kind"])
+    async def handle_get_user_activity_api_request(self, data: Dict) -> Dict:
+        activity = await self.data.profile.get_profile_activity(data["userId"], data["kind"])
         if activity is None:
             return {}
 
@@ -597,8 +692,8 @@ class OngekiBase:
             "userActivityList": user_activity,
         }
 
-    def handle_get_user_story_api_request(self, data: Dict) -> Dict:
-        user_stories = self.data.item.get_stories(data["userId"])
+    async def handle_get_user_story_api_request(self, data: Dict) -> Dict:
+        user_stories = await self.data.item.get_stories(data["userId"])
         if user_stories is None:
             return {}
 
@@ -615,8 +710,8 @@ class OngekiBase:
             "userStoryList": story_list,
         }
 
-    def handle_get_user_chapter_api_request(self, data: Dict) -> Dict:
-        user_chapters = self.data.item.get_chapters(data["userId"])
+    async def handle_get_user_chapter_api_request(self, data: Dict) -> Dict:
+        user_chapters = await self.data.item.get_chapters(data["userId"])
         if user_chapters is None:
             return {}
 
@@ -633,15 +728,15 @@ class OngekiBase:
             "userChapterList": chapter_list,
         }
 
-    def handle_get_user_training_room_by_key_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_training_room_by_key_api_request(self, data: Dict) -> Dict:
         return {
             "userId": data["userId"],
             "length": 0,
             "userTrainingRoomList": [],
         }
 
-    def handle_get_user_character_api_request(self, data: Dict) -> Dict:
-        user_characters = self.data.item.get_characters(data["userId"])
+    async def handle_get_user_character_api_request(self, data: Dict) -> Dict:
+        user_characters = await self.data.item.get_characters(data["userId"])
         if user_characters is None:
             return {}
 
@@ -658,8 +753,8 @@ class OngekiBase:
             "userCharacterList": character_list,
         }
 
-    def handle_get_user_card_api_request(self, data: Dict) -> Dict:
-        user_cards = self.data.item.get_cards(data["userId"])
+    async def handle_get_user_card_api_request(self, data: Dict) -> Dict:
+        user_cards = await self.data.item.get_cards(data["userId"])
         if user_cards is None:
             return {}
 
@@ -676,9 +771,9 @@ class OngekiBase:
             "userCardList": card_list,
         }
 
-    def handle_get_user_deck_by_key_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_deck_by_key_api_request(self, data: Dict) -> Dict:
         # Auth key doesn't matter, it just wants all the decks
-        decks = self.data.item.get_decks(data["userId"])
+        decks = await self.data.item.get_decks(data["userId"])
         if decks is None:
             return {}
 
@@ -695,8 +790,8 @@ class OngekiBase:
             "userDeckList": deck_list,
         }
 
-    def handle_get_user_trade_item_api_request(self, data: Dict) -> Dict:
-        user_trade_items = self.data.item.get_trade_items(data["userId"])
+    async def handle_get_user_trade_item_api_request(self, data: Dict) -> Dict:
+        user_trade_items = await self.data.item.get_trade_items(data["userId"])
         if user_trade_items is None:
             return {}
 
@@ -713,8 +808,8 @@ class OngekiBase:
             "userTradeItemList": trade_item_list,
         }
 
-    def handle_get_user_scenario_api_request(self, data: Dict) -> Dict:
-        user_scenerio = self.data.item.get_scenerios(data["userId"])
+    async def handle_get_user_scenario_api_request(self, data: Dict) -> Dict:
+        user_scenerio = await self.data.item.get_scenerios(data["userId"])
         if user_scenerio is None:
             return {}
 
@@ -731,8 +826,8 @@ class OngekiBase:
             "userScenarioList": scenerio_list,
         }
 
-    def handle_get_user_ratinglog_api_request(self, data: Dict) -> Dict:
-        rating_log = self.data.profile.get_profile_rating_log(data["userId"])
+    async def handle_get_user_ratinglog_api_request(self, data: Dict) -> Dict:
+        rating_log = await self.data.profile.get_profile_rating_log(data["userId"])
         if rating_log is None:
             return {}
 
@@ -749,8 +844,8 @@ class OngekiBase:
             "userRatinglogList": userRatinglogList,
         }
 
-    def handle_get_user_mission_point_api_request(self, data: Dict) -> Dict:
-        user_mission_point_list = self.data.item.get_mission_points(data["userId"])
+    async def handle_get_user_mission_point_api_request(self, data: Dict) -> Dict:
+        user_mission_point_list = await self.data.item.get_mission_points(self.version, data["userId"])
         if user_mission_point_list is None:
             return {}
 
@@ -759,7 +854,9 @@ class OngekiBase:
             tmp = evt_music._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            tmp.pop("version")
             mission_point_list.append(tmp)
+
 
         return {
             "userId": data["userId"],
@@ -767,8 +864,8 @@ class OngekiBase:
             "userMissionPointList": mission_point_list,
         }
 
-    def handle_get_user_event_point_api_request(self, data: Dict) -> Dict:
-        user_event_point_list = self.data.item.get_event_points(data["userId"])
+    async def handle_get_user_event_point_api_request(self, data: Dict) -> Dict:
+        user_event_point_list = await self.data.item.get_event_points(data["userId"])
         if user_event_point_list is None:
             return {}
 
@@ -777,6 +874,10 @@ class OngekiBase:
             tmp = evt_music._asdict()
             tmp.pop("id")
             tmp.pop("user")
+            # pop other stuff event_point doesn't want
+            tmp.pop("rank")
+            tmp.pop("type")
+            tmp.pop("date")
             event_point_list.append(tmp)
 
         return {
@@ -785,8 +886,8 @@ class OngekiBase:
             "userEventPointList": event_point_list,
         }
 
-    def handle_get_user_music_item_api_request(self, data: Dict) -> Dict:
-        user_music_item_list = self.data.item.get_music_items(data["userId"])
+    async def handle_get_user_music_item_api_request(self, data: Dict) -> Dict:
+        user_music_item_list = await self.data.item.get_music_items(data["userId"])
         if user_music_item_list is None:
             return {}
 
@@ -803,8 +904,8 @@ class OngekiBase:
             "userMusicItemList": music_item_list,
         }
 
-    def handle_get_user_event_music_api_request(self, data: Dict) -> Dict:
-        user_evt_music_list = self.data.item.get_event_music(data["userId"])
+    async def handle_get_user_event_music_api_request(self, data: Dict) -> Dict:
+        user_evt_music_list = await self.data.item.get_event_music(data["userId"])
         if user_evt_music_list is None:
             return {}
 
@@ -821,8 +922,8 @@ class OngekiBase:
             "userEventMusicList": evt_music_list,
         }
 
-    def handle_get_user_boss_api_request(self, data: Dict) -> Dict:
-        p = self.data.item.get_bosses(data["userId"])
+    async def handle_get_user_boss_api_request(self, data: Dict) -> Dict:
+        p = await self.data.item.get_bosses(data["userId"])
         if p is None:
             return {}
 
@@ -839,27 +940,27 @@ class OngekiBase:
             "userBossList": boss_list,
         }
 
-    def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
+    async def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         upsert = data["upsertUserAll"]
         user_id = data["userId"]
 
         # The isNew fields are new as of Red and up. We just won't use them for now.
 
         if "userData" in upsert and len(upsert["userData"]) > 0:
-            self.data.profile.put_profile_data(
+            await self.data.profile.put_profile_data(
                 user_id, self.version, upsert["userData"][0]
             )
 
         if "userOption" in upsert and len(upsert["userOption"]) > 0:
-            self.data.profile.put_profile_options(user_id, upsert["userOption"][0])
+            await self.data.profile.put_profile_options(user_id, upsert["userOption"][0])
 
         if "userPlaylogList" in upsert:
             for playlog in upsert["userPlaylogList"]:
-                self.data.score.put_playlog(user_id, playlog)
+                await self.data.score.put_playlog(user_id, playlog)
 
         if "userActivityList" in upsert:
             for act in upsert["userActivityList"]:
-                self.data.profile.put_profile_activity(
+                await self.data.profile.put_profile_activity(
                     user_id,
                     act["kind"],
                     act["id"],
@@ -871,141 +972,147 @@ class OngekiBase:
                 )
 
         if "userRecentRatingList" in upsert:
-            self.data.profile.put_profile_recent_rating(
+            await self.data.profile.put_profile_recent_rating(
                 user_id, upsert["userRecentRatingList"]
             )
 
         if "userBpBaseList" in upsert:
-            self.data.profile.put_profile_bp_list(user_id, upsert["userBpBaseList"])
+            await self.data.profile.put_profile_bp_list(user_id, upsert["userBpBaseList"])
 
         if "userMusicDetailList" in upsert:
             for x in upsert["userMusicDetailList"]:
-                self.data.score.put_best_score(user_id, x)
+                await self.data.score.put_best_score(user_id, x)
 
         if "userCharacterList" in upsert:
             for x in upsert["userCharacterList"]:
-                self.data.item.put_character(user_id, x)
+                await self.data.item.put_character(user_id, x)
 
         if "userCardList" in upsert:
             for x in upsert["userCardList"]:
-                self.data.item.put_card(user_id, x)
+                await self.data.item.put_card(user_id, x)
 
         if "userDeckList" in upsert:
             for x in upsert["userDeckList"]:
-                self.data.item.put_deck(user_id, x)
+                await self.data.item.put_deck(user_id, x)
 
         if "userTrainingRoomList" in upsert:
             for x in upsert["userTrainingRoomList"]:
-                self.data.profile.put_training_room(user_id, x)
+                await self.data.profile.put_training_room(user_id, x)
 
         if "userStoryList" in upsert:
             for x in upsert["userStoryList"]:
-                self.data.item.put_story(user_id, x)
+                await self.data.item.put_story(user_id, x)
 
         if "userChapterList" in upsert:
             for x in upsert["userChapterList"]:
-                self.data.item.put_chapter(user_id, x)
+                await self.data.item.put_chapter(user_id, x)
 
         if "userMemoryChapterList" in upsert:
             for x in upsert["userMemoryChapterList"]:
-                self.data.item.put_memorychapter(user_id, x)
+                await self.data.item.put_memorychapter(user_id, x)
 
         if "userItemList" in upsert:
             for x in upsert["userItemList"]:
-                self.data.item.put_item(user_id, x)
+                await self.data.item.put_item(user_id, x)
 
         if "userMusicItemList" in upsert:
             for x in upsert["userMusicItemList"]:
-                self.data.item.put_music_item(user_id, x)
+                await self.data.item.put_music_item(user_id, x)
 
         if "userLoginBonusList" in upsert:
             for x in upsert["userLoginBonusList"]:
-                self.data.item.put_login_bonus(user_id, x)
+                await self.data.item.put_login_bonus(user_id, x)
 
         if "userEventPointList" in upsert:
             for x in upsert["userEventPointList"]:
-                self.data.item.put_event_point(user_id, x)
+                await self.data.item.put_event_point(user_id, self.version, x)
 
         if "userMissionPointList" in upsert:
             for x in upsert["userMissionPointList"]:
-                self.data.item.put_mission_point(user_id, x)
+                await self.data.item.put_mission_point(user_id, self.version, x)
 
         if "userRatinglogList" in upsert:
             for x in upsert["userRatinglogList"]:
-                self.data.profile.put_profile_rating_log(
+                await self.data.profile.put_profile_rating_log(
                     user_id, x["dataVersion"], x["highestRating"]
                 )
 
         if "userBossList" in upsert:
             for x in upsert["userBossList"]:
-                self.data.item.put_boss(user_id, x)
+                await self.data.item.put_boss(user_id, x)
 
         if "userTechCountList" in upsert:
             for x in upsert["userTechCountList"]:
-                self.data.score.put_tech_count(user_id, x)
+                await self.data.score.put_tech_count(user_id, x)
 
         if "userScenerioList" in upsert:
             for x in upsert["userScenerioList"]:
-                self.data.item.put_scenerio(user_id, x)
+                await self.data.item.put_scenerio(user_id, x)
 
         if "userTradeItemList" in upsert:
             for x in upsert["userTradeItemList"]:
-                self.data.item.put_trade_item(user_id, x)
+                await self.data.item.put_trade_item(user_id, x)
 
         if "userEventMusicList" in upsert:
             for x in upsert["userEventMusicList"]:
-                self.data.item.put_event_music(user_id, x)
+                await self.data.item.put_event_music(user_id, x)
 
         if "userTechEventList" in upsert:
             for x in upsert["userTechEventList"]:
-                self.data.item.put_tech_event(user_id, x)
+                await self.data.item.put_tech_event(user_id, self.version, x)
+
+                # This should be updated once a day in maintenance window, but for time being we will push the update on each upsert
+                await self.data.item.put_tech_event_ranking(user_id, self.version, x)
 
         if "userKopList" in upsert:
             for x in upsert["userKopList"]:
-                self.data.profile.put_kop(user_id, x)
+                await self.data.profile.put_kop(user_id, x)
 
         return {"returnCode": 1, "apiName": "upsertUserAll"}
 
-    def handle_get_user_rival_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_api_request(self, data: Dict) -> Dict:
         """
         Added in Bright
         """
-        rival_list = self.data.profile.get_rivals(data["userId"])
-        if rival_list is None or len(rival_list) < 1:
+
+        rival_list = []
+        user_rivals = await self.data.profile.get_rivals(data["userId"])
+        for rival in user_rivals:
+            tmp = {}
+            tmp["rivalUserId"] = rival[0]
+            rival_list.append(tmp)
+
+        if user_rivals is None or len(rival_list) < 1:
             return {
                 "userId": data["userId"],
                 "length": 0,
                 "userRivalList": [],
             }
-
         return {
             "userId": data["userId"],
             "length": len(rival_list),
-            "userRivalList": rival_list._asdict(),
+            "userRivalList": rival_list,
         }
 
-    def handle_get_user_rival_data_api_reqiest(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_data_api_request(self, data: Dict) -> Dict:
         """
         Added in Bright
         """
         rivals = []
-
         for rival in data["userRivalList"]:
-            name = self.data.profile.get_profile_name(
+            name = await self.data.profile.get_profile_name(
                 rival["rivalUserId"], self.version
             )
             if name is None:
                 continue
-
-            rivals.append({"rivalUserId": rival["rival"], "rivalUserName": name})
-
+            rivals.append({"rivalUserId": rival["rivalUserId"], "rivalUserName": name})
         return {
             "userId": data["userId"],
             "length": len(rivals),
             "userRivalDataList": rivals,
         }
 
-    def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
+    async def handle_get_user_rival_music_api_request(self, data: Dict) -> Dict:
         """
         Added in Bright
         """
@@ -1019,7 +1126,6 @@ class OngekiBase:
         for song in music["userMusicList"]:
             song["userRivalMusicDetailList"] = song["userMusicDetailList"]
             song.pop("userMusicDetailList")
-
         return {
             "userId": data["userId"],
             "rivalUserId": rival_id,
@@ -1029,8 +1135,8 @@ class OngekiBase:
         }
 
     @cached(2)
-    def util_generate_music_list(self, user_id: int) -> List:
-        music_detail = self.data.score.get_best_scores(user_id)
+    async def util_generate_music_list(self, user_id: int) -> List:
+        music_detail = await self.data.score.get_best_scores(user_id)
         song_list = []
 
         for md in music_detail:

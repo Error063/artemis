@@ -19,12 +19,12 @@ energy = Table(
 
 
 class CxbItemData(BaseData):
-    def put_energy(self, user_id: int, rev_energy: int) -> Optional[int]:
+    async def put_energy(self, user_id: int, rev_energy: int) -> Optional[int]:
         sql = insert(energy).values(user=user_id, energy=rev_energy)
 
         conflict = sql.on_duplicate_key_update(energy=rev_energy)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert item! user: {user_id}, energy: {rev_energy}"
@@ -33,10 +33,10 @@ class CxbItemData(BaseData):
 
         return result.lastrowid
 
-    def get_energy(self, user_id: int) -> Optional[Dict]:
+    async def get_energy(self, user_id: int) -> Optional[Dict]:
         sql = energy.select(and_(energy.c.user == user_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

@@ -1,6 +1,7 @@
 class ChuniConstants:
     GAME_CODE = "SDBT"
     GAME_CODE_NEW = "SDHD"
+    GAME_CODE_INT = "SDGS"
 
     CONFIG_NAME = "chuni.yaml"
 
@@ -17,21 +18,24 @@ class ChuniConstants:
     VER_CHUNITHM_PARADISE = 10
     VER_CHUNITHM_NEW = 11
     VER_CHUNITHM_NEW_PLUS = 12
-
+    VER_CHUNITHM_SUN = 13
+    VER_CHUNITHM_SUN_PLUS = 14
     VERSION_NAMES = [
-        "Chunithm",
-        "Chunithm+",
-        "Chunithm Air",
-        "Chunithm Air+",
-        "Chunithm Star",
-        "Chunithm Star+",
-        "Chunithm Amazon",
-        "Chunithm Amazon+",
-        "Chunithm Crystal",
-        "Chunithm Crystal+",
-        "Chunithm Paradise",
-        "Chunithm New!!",
-        "Chunithm New!!+",
+        "CHUNITHM",
+        "CHUNITHM PLUS",
+        "CHUNITHM AIR",
+        "CHUNITHM AIR PLUS",
+        "CHUNITHM STAR",
+        "CHUNITHM STAR  PLUS",
+        "CHUNITHM AMAZON",
+        "CHUNITHM AMAZON PLUS",
+        "CHUNITHM CRYSTAL",
+        "CHUNITHM CRYSTAL PLUS",
+        "CHUNITHM PARADISE",
+        "CHUNITHM NEW!!",
+        "CHUNITHM NEW PLUS!!",
+        "CHUNITHM SUN",
+        "CHUNITHM SUN PLUS"
     ]
 
     @classmethod

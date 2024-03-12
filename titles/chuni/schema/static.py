@@ -1,11 +1,19 @@
 from typing import Dict, List, Optional
-from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    Table,
+    Column,
+    UniqueConstraint,
+    PrimaryKeyConstraint,
+    and_,
+)
 from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON, Float
 from sqlalchemy.engine.base import Connection
 from sqlalchemy.engine import Row
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.sql import func, select
 from sqlalchemy.dialects.mysql import insert
+from datetime import datetime
 
 from core.data.schema import BaseData, metadata
 
@@ -17,6 +25,7 @@ events = Table(
     Column("eventId", Integer),
     Column("type", Integer),
     Column("name", String(255)),
+    Column("startDate", TIMESTAMP, server_default=func.now()),
     Column("enabled", Boolean, server_default="1"),
     UniqueConstraint("version", "eventId", name="chuni_static_events_uk"),
     mysql_charset="utf8mb4",
@@ -125,11 +134,13 @@ gacha_cards = Table(
 login_bonus_preset = Table(
     "chuni_static_login_bonus_preset",
     metadata,
-    Column("id", Integer, primary_key=True, nullable=False),
+    Column("presetId", Integer, nullable=False),
     Column("version", Integer, nullable=False),
     Column("presetName", String(255), nullable=False),
     Column("isEnabled", Boolean, server_default="1"),
-    UniqueConstraint("version", "id", name="chuni_static_login_bonus_preset_uk"),
+    PrimaryKeyConstraint(
+        "presetId", "version", name="chuni_static_login_bonus_preset_pk"
+    ),
     mysql_charset="utf8mb4",
 )
 
@@ -138,15 +149,7 @@ login_bonus = Table(
     metadata,
     Column("id", Integer, primary_key=True, nullable=False),
     Column("version", Integer, nullable=False),
-    Column(
-        "presetId",
-        ForeignKey(
-            "chuni_static_login_bonus_preset.id",
-            ondelete="cascade",
-            onupdate="cascade",
-        ),
-        nullable=False,
-    ),
+    Column("presetId", Integer, nullable=False),
     Column("loginBonusId", Integer, nullable=False),
     Column("loginBonusName", String(255), nullable=False),
     Column("presentId", Integer, nullable=False),
@@ -157,12 +160,22 @@ login_bonus = Table(
     UniqueConstraint(
         "version", "presetId", "loginBonusId", name="chuni_static_login_bonus_uk"
     ),
+    ForeignKeyConstraint(
+        ["presetId", "version"],
+        [
+            "chuni_static_login_bonus_preset.presetId",
+            "chuni_static_login_bonus_preset.version",
+        ],
+        onupdate="CASCADE",
+        ondelete="CASCADE",
+        name="chuni_static_login_bonus_ibfk_1",
+    ),
     mysql_charset="utf8mb4",
 )
 
 
 class ChuniStaticData(BaseData):
-    def put_login_bonus(
+    async def put_login_bonus(
         self,
         version: int,
         preset_id: int,
@@ -194,12 +207,12 @@ class ChuniStaticData(BaseData):
             loginBonusCategoryType=login_bonus_category_type,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_login_bonus(
+    async def get_login_bonus(
         self,
         version: int,
         preset_id: int,
@@ -211,12 +224,12 @@ class ChuniStaticData(BaseData):
             )
         ).order_by(login_bonus.c.needLoginDayCount.desc())
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_login_bonus_by_required_days(
+    async def get_login_bonus_by_required_days(
         self, version: int, preset_id: int, need_login_day_count: int
     ) -> Optional[Row]:
         sql = login_bonus.select(
@@ -227,16 +240,16 @@ class ChuniStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_login_bonus_preset(
+    async def put_login_bonus_preset(
         self, version: int, preset_id: int, preset_name: str, is_enabled: bool
     ) -> Optional[int]:
         sql = insert(login_bonus_preset).values(
-            id=preset_id,
+            presetId=preset_id,
             version=version,
             presetName=preset_name,
             isEnabled=is_enabled,
@@ -246,12 +259,12 @@ class ChuniStaticData(BaseData):
             presetName=preset_name, isEnabled=is_enabled
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_login_bonus_presets(
+    async def get_login_bonus_presets(
         self, version: int, is_enabled: bool = True
     ) -> Optional[List[Row]]:
         sql = login_bonus_preset.select(
@@ -261,12 +274,12 @@ class ChuniStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_event(
+    async def put_event(
         self, version: int, event_id: int, type: int, name: str
     ) -> Optional[int]:
         sql = insert(events).values(
@@ -275,62 +288,62 @@ class ChuniStaticData(BaseData):
 
         conflict = sql.on_duplicate_key_update(name=name)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def update_event(
+    async def update_event(
         self, version: int, event_id: int, enabled: bool
     ) -> Optional[bool]:
         sql = events.update(
             and_(events.c.version == version, events.c.eventId == event_id)
         ).values(enabled=enabled)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_event: failed to update event! version: {version}, event_id: {event_id}, enabled: {enabled}"
             )
             return None
 
         event = self.get_event(version, event_id)
         if event is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_event: failed to fetch event {event_id} after updating"
             )
             return None
         return event["enabled"]
 
-    def get_event(self, version: int, event_id: int) -> Optional[Row]:
+    async def get_event(self, version: int, event_id: int) -> Optional[Row]:
         sql = select(events).where(
             and_(events.c.version == version, events.c.eventId == event_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_enabled_events(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_events(self, version: int) -> Optional[List[Row]]:
         sql = select(events).where(
             and_(events.c.version == version, events.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_events(self, version: int) -> Optional[List[Row]]:
+    async def get_events(self, version: int) -> Optional[List[Row]]:
         sql = select(events).where(events.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_music(
+    async def put_music(
         self,
         version: int,
         song_id: int,
@@ -363,12 +376,12 @@ class ChuniStaticData(BaseData):
             worldsEndTag=we_tag,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def put_charge(
+    async def put_charge(
         self,
         version: int,
         charge_id: int,
@@ -393,30 +406,38 @@ class ChuniStaticData(BaseData):
             sellingAppeal=selling_appeal,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_enabled_charges(self, version: int) -> Optional[List[Row]]:
+    async def get_enabled_charges(self, version: int) -> Optional[List[Row]]:
         sql = select(charge).where(
             and_(charge.c.version == version, charge.c.enabled == True)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_charges(self, version: int) -> Optional[List[Row]]:
+    async def get_charges(self, version: int) -> Optional[List[Row]]:
         sql = select(charge).where(charge.c.version == version)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_music_chart(
+    async def get_music(self, version: int) -> Optional[List[Row]]:
+        sql = music.select(music.c.version <= version)
+
+        result = await self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchall()
+
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -427,12 +448,21 @@ class ChuniStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_avatar(
+    async def get_song(self, music_id: int) -> Optional[Row]:
+        sql = music.select(music.c.id == music_id)
+
+        result = await self.execute(sql)
+        if result is None:
+            return None
+        return result.fetchone()
+
+
+    async def put_avatar(
         self,
         version: int,
         avatarAccessoryId: int,
@@ -457,12 +487,12 @@ class ChuniStaticData(BaseData):
             texturePath=texturePath,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             return None
         return result.lastrowid
 
-    def put_gacha(
+    async def put_gacha(
         self,
         version: int,
         gacha_id: int,
@@ -483,33 +513,33 @@ class ChuniStaticData(BaseData):
             **gacha_data,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
-    def get_gachas(self, version: int) -> Optional[List[Dict]]:
+    async def get_gachas(self, version: int) -> Optional[List[Dict]]:
         sql = gachas.select(gachas.c.version <= version).order_by(
             gachas.c.gachaId.asc()
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
+    async def get_gacha(self, version: int, gacha_id: int) -> Optional[Dict]:
         sql = gachas.select(
             and_(gachas.c.version <= version, gachas.c.gachaId == gacha_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_gacha_card(
+    async def put_gacha_card(
         self, gacha_id: int, card_id: int, **gacha_card
     ) -> Optional[int]:
         sql = insert(gacha_cards).values(gachaId=gacha_id, cardId=card_id, **gacha_card)
@@ -518,21 +548,21 @@ class ChuniStaticData(BaseData):
             gachaId=gacha_id, cardId=card_id, **gacha_card
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert gacha card! gacha_id {gacha_id}")
+            self.logger.warning(f"Failed to insert gacha card! gacha_id {gacha_id}")
             return None
         return result.lastrowid
 
-    def get_gacha_cards(self, gacha_id: int) -> Optional[List[Dict]]:
+    async def get_gacha_cards(self, gacha_id: int) -> Optional[List[Dict]]:
         sql = gacha_cards.select(gacha_cards.c.gachaId == gacha_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_gacha_card_by_character(
+    async def get_gacha_card_by_character(
         self, gacha_id: int, chara_id: int
     ) -> Optional[Dict]:
         sql_sub = (
@@ -544,26 +574,26 @@ class ChuniStaticData(BaseData):
             and_(gacha_cards.c.gachaId == gacha_id, gacha_cards.c.cardId == sql_sub)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
+    async def put_card(self, version: int, card_id: int, **card_data) -> Optional[int]:
         sql = insert(cards).values(version=version, cardId=card_id, **card_data)
 
         conflict = sql.on_duplicate_key_update(**card_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert card! card_id {card_id}")
+            self.logger.warning(f"Failed to insert card! card_id {card_id}")
             return None
         return result.lastrowid
 
-    def get_card(self, version: int, card_id: int) -> Optional[Dict]:
+    async def get_card(self, version: int, card_id: int) -> Optional[Dict]:
         sql = cards.select(and_(cards.c.version <= version, cards.c.cardId == card_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

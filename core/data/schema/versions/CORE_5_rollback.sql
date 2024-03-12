@@ -1,0 +1,1 @@
+ALTER TABLE arcade DROP COLUMN 'ip';

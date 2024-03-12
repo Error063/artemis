@@ -58,7 +58,7 @@ ranking = Table(
 
 
 class CxbScoreData(BaseData):
-    def put_best_score(
+    async def put_best_score(
         self,
         user_id: int,
         song_mcode: str,
@@ -79,7 +79,7 @@ class CxbScoreData(BaseData):
 
         conflict = sql.on_duplicate_key_update(data=sql.inserted.data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert best score! profile: {user_id}, song: {song_mcode}, data: {data}"
@@ -88,7 +88,7 @@ class CxbScoreData(BaseData):
 
         return result.lastrowid
 
-    def put_playlog(
+    async def put_playlog(
         self,
         user_id: int,
         song_mcode: str,
@@ -125,7 +125,7 @@ class CxbScoreData(BaseData):
             combo=combo,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert playlog! profile: {user_id}, song: {song_mcode}, chart: {chart_id}"
@@ -134,7 +134,7 @@ class CxbScoreData(BaseData):
 
         return result.lastrowid
 
-    def put_ranking(
+    async def put_ranking(
         self, user_id: int, rev_id: int, song_id: int, score: int, clear: int
     ) -> Optional[int]:
         """
@@ -151,7 +151,7 @@ class CxbScoreData(BaseData):
 
         conflict = sql.on_duplicate_key_update(score=score)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert ranking log! profile: {user_id}, score: {score}, clear: {clear}"
@@ -160,28 +160,28 @@ class CxbScoreData(BaseData):
 
         return result.lastrowid
 
-    def get_best_score(self, user_id: int, song_mcode: int) -> Optional[Dict]:
+    async def get_best_score(self, user_id: int, song_mcode: int) -> Optional[Dict]:
         sql = score.select(
             and_(score.c.user == user_id, score.c.song_mcode == song_mcode)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_best_scores(self, user_id: int) -> Optional[Dict]:
+    async def get_best_scores(self, user_id: int) -> Optional[Dict]:
         sql = score.select(score.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_best_rankings(self, user_id: int) -> Optional[List[Dict]]:
+    async def get_best_rankings(self, user_id: int) -> Optional[List[Dict]]:
         sql = ranking.select(ranking.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

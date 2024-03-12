@@ -28,34 +28,34 @@ class DivaReader(BaseReader):
             self.logger.error(f"Invalid project diva version {version}")
             exit(1)
 
-    def read(self) -> None:
+    async def read(self) -> None:
         pull_bin_ram = True
         pull_bin_rom = True
         pull_opt_rom = True
 
         if not path.exists(f"{self.bin_dir}/ram"):
-            self.logger.warn(f"Couldn't find ram folder in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find ram folder in {self.bin_dir}, skipping")
             pull_bin_ram = False
 
         if not path.exists(f"{self.bin_dir}/rom"):
-            self.logger.warn(f"Couldn't find rom folder in {self.bin_dir}, skipping")
+            self.logger.warning(f"Couldn't find rom folder in {self.bin_dir}, skipping")
             pull_bin_rom = False
 
         if self.opt_dir is not None:
             opt_dirs = self.get_data_directories(self.opt_dir)
         else:
             pull_opt_rom = False
-            self.logger.warn("No option directory specified, skipping")
+            self.logger.warning("No option directory specified, skipping")
 
         if pull_bin_ram:
-            self.read_ram(f"{self.bin_dir}/ram")
+            await self.read_ram(f"{self.bin_dir}/ram")
         if pull_bin_rom:
-            self.read_rom(f"{self.bin_dir}/rom")
+            await self.read_rom(f"{self.bin_dir}/rom")
         if pull_opt_rom:
             for dir in opt_dirs:
-                self.read_rom(f"{dir}/rom")
+                await self.read_rom(f"{dir}/rom")
 
-    def read_ram(self, ram_root_dir: str) -> None:
+    async def read_ram(self, ram_root_dir: str) -> None:
         self.logger.info(f"Read RAM from {ram_root_dir}")
 
         if path.exists(f"{ram_root_dir}/databank"):
@@ -91,7 +91,7 @@ class DivaReader(BaseReader):
                                             f"Added shop item {split[x+0]}"
                                         )
 
-                                        self.data.static.put_shop(
+                                        await self.data.static.put_shop(
                                             self.version,
                                             split[x + 0],
                                             split[x + 2],
@@ -109,7 +109,7 @@ class DivaReader(BaseReader):
                                     for x in range(0, len(split), 7):
                                         self.logger.info(f"Added item {split[x+0]}")
 
-                                        self.data.static.put_items(
+                                        await self.data.static.put_items(
                                             self.version,
                                             split[x + 0],
                                             split[x + 2],
@@ -123,7 +123,7 @@ class DivaReader(BaseReader):
                                 elif file.startswith("QuestInfo") and len(split) >= 9:
                                     self.logger.info(f"Added quest {split[0]}")
 
-                                    self.data.static.put_quests(
+                                    await self.data.static.put_quests(
                                         self.version,
                                         split[0],
                                         split[6],
@@ -139,9 +139,9 @@ class DivaReader(BaseReader):
                                 else:
                                     continue
         else:
-            self.logger.warn(f"Databank folder not found in {ram_root_dir}, skipping")
+            self.logger.warning(f"Databank folder not found in {ram_root_dir}, skipping")
 
-    def read_rom(self, rom_root_dir: str) -> None:
+    async def read_rom(self, rom_root_dir: str) -> None:
         self.logger.info(f"Read ROM from {rom_root_dir}")
         pv_list: Dict[str, Dict] = {}
 
@@ -150,7 +150,7 @@ class DivaReader(BaseReader):
         elif path.exists(f"{rom_root_dir}/pv_db.txt"):
             file_path = f"{rom_root_dir}/pv_db.txt"
         else:
-            self.logger.warn(
+            self.logger.warning(
                 f"Cannot find pv_db.txt or mdata_pv_db.txt in {rom_root_dir}, skipping"
             )
             return
@@ -199,7 +199,7 @@ class DivaReader(BaseReader):
                 diff = pv_data["difficulty"]["easy"]["0"]["level"].split("_")
                 self.logger.info(f"Added song {song_id} chart 0")
 
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     0,
@@ -220,7 +220,7 @@ class DivaReader(BaseReader):
                 diff = pv_data["difficulty"]["normal"]["0"]["level"].split("_")
                 self.logger.info(f"Added song {song_id} chart 1")
 
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     1,
@@ -238,7 +238,7 @@ class DivaReader(BaseReader):
                 diff = pv_data["difficulty"]["hard"]["0"]["level"].split("_")
                 self.logger.info(f"Added song {song_id} chart 2")
 
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     2,
@@ -257,7 +257,7 @@ class DivaReader(BaseReader):
                     diff = pv_data["difficulty"]["extreme"]["0"]["level"].split("_")
                     self.logger.info(f"Added song {song_id} chart 3")
 
-                    self.data.static.put_music(
+                    await self.data.static.put_music(
                         self.version,
                         song_id,
                         3,
@@ -275,7 +275,7 @@ class DivaReader(BaseReader):
                     diff = pv_data["difficulty"]["extreme"]["1"]["level"].split("_")
                     self.logger.info(f"Added song {song_id} chart 4")
 
-                    self.data.static.put_music(
+                    await self.data.static.put_music(
                         self.version,
                         song_id,
                         4,

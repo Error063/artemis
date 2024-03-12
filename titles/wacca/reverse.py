@@ -47,32 +47,32 @@ class WaccaReverse(WaccaLilyR):
             (310006, 0),
         ]
 
-    def handle_user_status_login_request(self, data: Dict) -> Dict:
-        resp = super().handle_user_status_login_request(data)
+    async def handle_user_status_login_request(self, data: Dict) -> Dict:
+        resp = await super().handle_user_status_login_request(data)
         resp["params"].append([])
         return resp
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
+    async def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
         req = UserStatusGetDetailRequest(data)
         resp = UserStatusGetDetailResponseV4()
 
-        profile = self.data.profile.get_profile(req.userId)
+        profile = await self.data.profile.get_profile(req.userId)
         if profile is None:
-            self.logger.warn(f"Unknown profile {req.userId}")
+            self.logger.warning(f"Unknown profile {req.userId}")
             return resp.make()
 
         self.logger.info(f"Get detail for profile {req.userId}")
         user_id = profile["user"]
 
-        profile_scores = self.data.score.get_best_scores(user_id)
-        profile_items = self.data.item.get_items(user_id)
-        profile_song_unlocks = self.data.item.get_song_unlocks(user_id)
-        profile_options = self.data.profile.get_options(user_id)
-        profile_favorites = self.data.profile.get_favorite_songs(user_id)
-        profile_gates = self.data.profile.get_gates(user_id)
-        profile_bingo = self.data.profile.get_bingo(user_id)
-        profile_trophies = self.data.item.get_trophies(user_id)
-        profile_tickets = self.data.item.get_tickets(user_id)
+        profile_scores = await self.data.score.get_best_scores(user_id)
+        profile_items = await self.data.item.get_items(user_id)
+        profile_song_unlocks = await self.data.item.get_song_unlocks(user_id)
+        profile_options = await self.data.profile.get_options(user_id)
+        profile_favorites = await self.data.profile.get_favorite_songs(user_id)
+        profile_gates = await self.data.profile.get_gates(user_id)
+        profile_bingo = await self.data.profile.get_bingo(user_id)
+        profile_trophies = await self.data.item.get_trophies(user_id)
+        profile_tickets = await self.data.item.get_tickets(user_id)
 
         if profile["gate_tutorial_flags"] is not None:
             for x in profile["gate_tutorial_flags"]:
@@ -289,7 +289,7 @@ class WaccaReverse(WaccaLilyR):
                         elif item["type"] == WaccaConstants.ITEM_TYPES["note_sound"]:
                             resp.userItems.noteSounds.append(itm_send)
 
-                except:
+                except Exception:
                     self.logger.error(
                         f"{__name__} Failed to load item {item['item_id']} for user {profile['user']}"
                     )
@@ -305,15 +305,22 @@ class WaccaReverse(WaccaLilyR):
 
         return resp.make()
 
-    def handle_user_status_create_request(self, data: Dict) -> Dict:
+    async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
-        resp = super().handle_user_status_create_request(data)
+        resp = await super().handle_user_status_create_request(data)
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 310001
         )  # Added reverse
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 310002
+        )  # Added reverse
+        
+        await self.data.item.put_item(
+            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312000
+        )  # Added reverse
+        await self.data.item.put_item(
+            req.aimeId, WaccaConstants.ITEM_TYPES["touch_effect"], 312001
         )  # Added reverse
 
         return resp

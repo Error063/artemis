@@ -5,22 +5,23 @@ services:
     build: .
     volumes:
       - ./aime:/app/aime
+      - ./configs/config:/app/config
 
     environment:
       CFG_DEV: 1
       CFG_CORE_SERVER_HOSTNAME: 0.0.0.0
       CFG_CORE_DATABASE_HOST: ma.db
       CFG_CORE_MEMCACHED_HOSTNAME: ma.memcached
-      CFG_CORE_AIMEDB_KEY: keyhere
+      CFG_CORE_AIMEDB_KEY: <INSERT AIMEDB KEY HERE>
       CFG_CHUNI_SERVER_LOGLEVEL: debug
 
     ports:
-    - "80:80"
-    - "8443:8443"
-    - "22345:22345"
+      - "80:80"
+      - "8443:8443"
+      - "22345:22345"
 
-    - "8080:8080"
-    - "8090:8090"
+      - "8080:8080"
+      - "8090:8090"
 
     depends_on:
       db:
@@ -28,21 +29,29 @@ services:
 
   db:
     hostname: ma.db
-    image: mysql:8.0.31-debian
+    image: yobasystems/alpine-mariadb:10.11.5
     environment:
       MYSQL_DATABASE: aime
       MYSQL_USER: aime
       MYSQL_PASSWORD: aime
       MYSQL_ROOT_PASSWORD: AimeRootPassword
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_general_ci
+    ##Note: expose port 3306 to allow read.py importer into database, comment out when not needed
+    #ports:
+    #  - "3306:3306"
+    ##Note: uncomment to allow mysql to create a persistent database, leave commented if you want to rebuild database from scratch often
+    #volumes:
+    #  - ./AimeDB:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pAimeRootPassword"]
       timeout: 5s
       retries: 5
 
-
   memcached:
     hostname: ma.memcached
-    image: memcached:1.6.17-bullseye
+    image: memcached:1.6.22-alpine3.18
+    command: [ "memcached", "-m", "1024", "-I", "128m" ]
 
   phpmyadmin:
     hostname: ma.phpmyadmin
@@ -53,5 +62,5 @@ services:
       PMA_PASSWORD: AimeRootPassword
       APACHE_PORT: 8080
     ports:
-    - "8080:8080"
+    - "9090:8080"
 

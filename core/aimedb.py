@@ -1,297 +1,369 @@
-from twisted.internet.protocol import Factory, Protocol
 import logging, coloredlogs
 from Crypto.Cipher import AES
-import struct
-from typing import Dict, Any
+from typing import Dict, Tuple, Callable, Union, Optional
+import asyncio
 from logging.handlers import TimedRotatingFileHandler
 
 from core.config import CoreConfig
+from core.utils import create_sega_auth_key
 from core.data import Data
+from .adb_handlers import *
 
-
-class AimedbProtocol(Protocol):
-    AIMEDB_RESPONSE_CODES = {
-        "felica_lookup": 0x03,
-        "lookup": 0x06,
-        "log": 0x0A,
-        "campaign": 0x0C,
-        "touch": 0x0E,
-        "lookup2": 0x10,
-        "felica_lookup2": 0x12,
-        "log2": 0x14,
-        "hello": 0x65,
-    }
-
-    request_list: Dict[int, Any] = {}
-
-    def __init__(self, core_cfg: CoreConfig) -> None:
-        self.logger = logging.getLogger("aimedb")
-        self.config = core_cfg
+class AimedbServlette():
+    request_list: Dict[int, Tuple[Callable[[bytes, int], Union[ADBBaseResponse, bytes]], int, str]] = {}
+    def __init__(self, core_cfg: CoreConfig) -> None:        
+        self.config = core_cfg        
         self.data = Data(core_cfg)
-        if core_cfg.aimedb.key == "":
+
+        self.logger = logging.getLogger("aimedb")
+        if not hasattr(self.logger, "initted"):
+            log_fmt_str = "[%(asctime)s] Aimedb | %(levelname)s | %(message)s"
+            log_fmt = logging.Formatter(log_fmt_str)
+
+            fileHandler = TimedRotatingFileHandler(
+                "{0}/{1}.log".format(self.config.server.log_dir, "aimedb"),
+                when="d",
+                backupCount=10,
+            )
+            fileHandler.setFormatter(log_fmt)
+
+            consoleHandler = logging.StreamHandler()
+            consoleHandler.setFormatter(log_fmt)
+
+            self.logger.addHandler(fileHandler)
+            self.logger.addHandler(consoleHandler)
+
+            self.logger.setLevel(self.config.aimedb.loglevel)
+            coloredlogs.install(
+                level=core_cfg.aimedb.loglevel, logger=self.logger, fmt=log_fmt_str
+            )
+            self.logger.initted = True
+
+        if not core_cfg.aimedb.key:
             self.logger.error("!!!KEY NOT SET!!!")
             exit(1)
 
-        self.request_list[0x01] = self.handle_felica_lookup
-        self.request_list[0x04] = self.handle_lookup
-        self.request_list[0x05] = self.handle_register
-        self.request_list[0x09] = self.handle_log
-        self.request_list[0x0B] = self.handle_campaign
-        self.request_list[0x0D] = self.handle_touch
-        self.request_list[0x0F] = self.handle_lookup2
-        self.request_list[0x11] = self.handle_felica_lookup2
-        self.request_list[0x13] = self.handle_log2
-        self.request_list[0x64] = self.handle_hello
+        self.register_handler(0x01, 0x03, self.handle_felica_lookup, 'felica_lookup')
+        self.register_handler(0x02, 0x03, self.handle_felica_register, 'felica_register')
 
-    def append_padding(self, data: bytes):
-        """Appends 0s to the end of the data until it's at the correct size"""
-        length = struct.unpack_from("<H", data, 6)
-        padding_size = length[0] - len(data)
-        data += bytes(padding_size)
-        return data
+        self.register_handler(0x04, 0x06, self.handle_lookup, 'lookup')
+        self.register_handler(0x05, 0x06, self.handle_register, 'register')
 
-    def connectionMade(self) -> None:
-        self.logger.debug(f"{self.transport.getPeer().host} Connected")
+        self.register_handler(0x07, 0x08, self.handle_status_log, 'status_log')
+        self.register_handler(0x09, 0x0A, self.handle_log, 'aime_log')       
 
-    def connectionLost(self, reason) -> None:
-        self.logger.debug(
-            f"{self.transport.getPeer().host} Disconnected - {reason.value}"
-        )
+        self.register_handler(0x0B, 0x0C, self.handle_campaign, 'campaign')
+        self.register_handler(0x0D, 0x0E, self.handle_campaign_clear, 'campaign_clear')
 
-    def dataReceived(self, data: bytes) -> None:
+        self.register_handler(0x0F, 0x10, self.handle_lookup_ex, 'lookup_ex')
+        self.register_handler(0x11, 0x12, self.handle_felica_lookup_ex, 'felica_lookup_ex')
+
+        self.register_handler(0x13, 0x14, self.handle_log_ex, 'aime_log_ex')
+        self.register_handler(0x64, 0x65, self.handle_hello, 'hello')
+
+    def register_handler(self, cmd: int, resp:int, handler: Callable[[bytes, int], Union[ADBBaseResponse, bytes]], name: str) -> None:
+        self.request_list[cmd] = (handler, resp, name)
+    
+    def start(self) -> None:
+        self.logger.info(f"Start on port {self.config.aimedb.port}")
+        addr = self.config.aimedb.listen_address if self.config.aimedb.listen_address else self.config.server.listen_address
+        asyncio.create_task(asyncio.start_server(self.dataReceived, addr, self.config.aimedb.port))
+    
+    async def dataReceived(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        self.logger.debug(f"Connection made from {writer.get_extra_info('peername')[0]}")
+        while True:
+            try:
+                data: bytes = await reader.read(4096)
+                if len(data) == 0:
+                    self.logger.debug("Connection closed")
+                    return
+                await self.process_data(data, reader, writer)
+                await writer.drain()
+            except ConnectionResetError as e:
+                self.logger.debug("Connection reset, disconnecting")
+                return
+
+    async def process_data(self, data: bytes, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> Optional[bytes]:
+        addr = writer.get_extra_info('peername')[0]
         cipher = AES.new(self.config.aimedb.key.encode(), AES.MODE_ECB)
 
         try:
             decrypted = cipher.decrypt(data)
-        except:
-            self.logger.error(f"Failed to decrypt {data.hex()}")
-            return None
-
-        self.logger.debug(f"{self.transport.getPeer().host} wrote {decrypted.hex()}")
-
-        if not decrypted[1] == 0xA1 and not decrypted[0] == 0x3E:
-            self.logger.error(f"Bad magic")
-            return None
-
-        req_code = decrypted[4]
-
-        if req_code == 0x66:
-            self.logger.info(f"goodbye from {self.transport.getPeer().host}")
-            self.transport.loseConnection()
+        
+        except Exception as e:
+            self.logger.error(f"Failed to decrypt {data.hex()} because {e}")
             return
 
+        self.logger.debug(f"{addr} wrote {decrypted.hex()}")
+
         try:
-            resp = self.request_list[req_code](decrypted)
-            encrypted = cipher.encrypt(resp)
-            self.logger.debug(f"Response {resp.hex()}")
-            self.transport.write(encrypted)
+            head = ADBHeader.from_data(decrypted)
+        
+        except ADBHeaderException as e:
+            self.logger.error(f"Error parsing ADB header: {e}")
+            try:    
+                encrypted = cipher.encrypt(ADBBaseResponse().make())
+                writer.write(encrypted)
+                await writer.drain()
+                return
 
-        except KeyError:
-            self.logger.error(f"Unknown command code {hex(req_code)}")
-            return None
+            except Exception as e:
+                self.logger.error(f"Failed to encrypt default response because {e}")
+            
+            return
 
-        except ValueError as e:
-            self.logger.error(f"Failed to encrypt {resp.hex()} because {e}")
-            return None
+        if head.keychip_id == "ABCD1234567" or head.store_id == 0xfff0:
+            self.logger.warning(f"Request from uninitialized AMLib: {vars(head)}")
 
-    def handle_campaign(self, data: bytes) -> bytes:
-        self.logger.info(f"campaign from {self.transport.getPeer().host}")
-        ret = struct.pack(
-            "<5H",
-            0xA13E,
-            0x3087,
-            self.AIMEDB_RESPONSE_CODES["campaign"],
-            0x0200,
-            0x0001,
-        )
-        return self.append_padding(ret)
+        if head.cmd == 0x66:
+            self.logger.info("Goodbye")
+            writer.close()
+            return
 
-    def handle_hello(self, data: bytes) -> bytes:
-        self.logger.info(f"hello from {self.transport.getPeer().host}")
-        ret = struct.pack(
-            "<5H", 0xA13E, 0x3087, self.AIMEDB_RESPONSE_CODES["hello"], 0x0020, 0x0001
-        )
-        return self.append_padding(ret)
+        handler, resp_code, name = self.request_list.get(head.cmd, (self.handle_default, None, 'default'))
 
-    def handle_lookup(self, data: bytes) -> bytes:
-        luid = data[0x20:0x2A].hex()
-        user_id = self.data.card.get_user_id_from_card(access_code=luid)
+        if resp_code is None:
+            self.logger.warning(f"No handler for cmd {hex(head.cmd)}")
+        
+        elif resp_code > 0:
+            self.logger.info(f"{name} from {head.keychip_id} ({head.game_id}) @ {addr}")
+        
+        resp = await handler(decrypted, resp_code)
 
-        if user_id is None:
-            user_id = -1
+        if type(resp) == ADBBaseResponse or issubclass(type(resp), ADBBaseResponse):
+            resp_bytes = resp.make()
 
-        self.logger.info(
-            f"lookup from {self.transport.getPeer().host}: luid {luid} -> user_id {user_id}"
-        )
-
-        ret = struct.pack(
-            "<5H", 0xA13E, 0x3087, self.AIMEDB_RESPONSE_CODES["lookup"], 0x0130, 0x0001
-        )
-        ret += bytes(0x20 - len(ret))
-
-        if user_id is None:
-            ret += struct.pack("<iH", -1, 0)
+        elif type(resp) == bytes:
+            resp_bytes = resp
+        
+        elif resp is None: # Nothing to send, probably a goodbye
+            self.logger.warn(f"None return by handler for {name}")
+            return
+        
         else:
-            ret += struct.pack("<l", user_id)
-        return self.append_padding(ret)
+            self.logger.error(f"Unsupported type returned by ADB handler for {name}: {type(resp)}")
+            raise TypeError(f"Unsupported type returned by ADB handler for {name}: {type(resp)}")
 
-    def handle_lookup2(self, data: bytes) -> bytes:
-        self.logger.info(f"lookup2")
+        try:
+            encrypted = cipher.encrypt(resp_bytes)
+            self.logger.debug(f"Response {resp_bytes.hex()}")
+            writer.write(encrypted)
 
-        ret = bytearray(self.handle_lookup(data))
-        ret[4] = self.AIMEDB_RESPONSE_CODES["lookup2"]
+        except Exception as e:
+            self.logger.error(f"Failed to encrypt {resp_bytes.hex()} because {e}")
+    
+    async def handle_default(self, data: bytes, resp_code: int, length: int = 0x20) -> ADBBaseResponse:
+        req = ADBHeader.from_data(data)
+        return ADBBaseResponse(resp_code, length, 1, req.game_id, req.store_id, req.keychip_id, req.protocol_ver)
 
-        return bytes(ret)
+    async def handle_hello(self, data: bytes, resp_code: int) -> ADBBaseResponse:
+        return await self.handle_default(data, resp_code)
 
-    def handle_felica_lookup(self, data: bytes) -> bytes:
-        idm = data[0x20:0x28].hex()
-        pmm = data[0x28:0x30].hex()
-        access_code = self.data.card.to_access_code(idm)
+    async def handle_campaign(self, data: bytes, resp_code: int) -> ADBBaseResponse:
+        h = ADBHeader.from_data(data)
+        if h.protocol_ver >= 0x3030:
+            req = h
+            resp = ADBCampaignResponse.from_req(req)
+
+        else:
+            req = ADBOldCampaignRequest(data)
+            
+            self.logger.info(f"Legacy campaign request for campaign {req.campaign_id} (protocol version {hex(h.protocol_ver)})")
+            resp = ADBOldCampaignResponse.from_req(req.head)
+        
+        # We don't currently support campaigns
+        return resp
+
+    async def handle_lookup(self, data: bytes, resp_code: int) -> ADBBaseResponse:
+        req = ADBLookupRequest(data)
+        user_id = await self.data.card.get_user_id_from_card(req.access_code)
+        is_banned = await self.data.card.get_card_banned(req.access_code)
+        is_locked = await self.data.card.get_card_locked(req.access_code)
+        
+        ret = ADBLookupResponse.from_req(req.head, user_id)
+        if is_banned and is_locked:
+            ret.head.status = ADBStatus.BAN_SYS_USER
+        elif is_banned:
+            ret.head.status = ADBStatus.BAN_SYS
+        elif is_locked:
+            ret.head.status = ADBStatus.LOCK_USER
+        
         self.logger.info(
-            f"felica_lookup from {self.transport.getPeer().host}: idm {idm} pmm {pmm} -> access_code {access_code}"
+            f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
+        
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(req.access_code)
+        return ret
 
-        ret = struct.pack(
-            "<5H",
-            0xA13E,
-            0x3087,
-            self.AIMEDB_RESPONSE_CODES["felica_lookup"],
-            0x0030,
-            0x0001,
-        )
-        ret += bytes(26)
-        ret += bytes.fromhex(access_code)
+    async def handle_lookup_ex(self, data: bytes, resp_code: int) -> ADBBaseResponse:
+        req = ADBLookupRequest(data)
+        user_id = await self.data.card.get_user_id_from_card(req.access_code)
 
-        return self.append_padding(ret)
+        is_banned = await self.data.card.get_card_banned(req.access_code)
+        is_locked = await self.data.card.get_card_locked(req.access_code)
 
-    def handle_felica_lookup2(self, data: bytes) -> bytes:
-        idm = data[0x30:0x38].hex()
-        pmm = data[0x38:0x40].hex()
-        access_code = self.data.card.to_access_code(idm)
-        user_id = self.data.card.get_user_id_from_card(access_code=access_code)
-
-        if user_id is None:
-            user_id = -1
+        ret = ADBLookupExResponse.from_req(req.head, user_id)
+        if is_banned and is_locked:
+            ret.head.status = ADBStatus.BAN_SYS_USER
+        elif is_banned:
+            ret.head.status = ADBStatus.BAN_SYS
+        elif is_locked:
+            ret.head.status = ADBStatus.LOCK_USER
 
         self.logger.info(
-            f"felica_lookup2 from {self.transport.getPeer().host}: idm {idm} ipm {pmm} -> access_code {access_code} user_id {user_id}"
+            f"access_code {req.access_code} -> user_id {ret.user_id}"
         )
 
-        ret = struct.pack(
-            "<5H",
-            0xA13E,
-            0x3087,
-            self.AIMEDB_RESPONSE_CODES["felica_lookup2"],
-            0x0140,
-            0x0001,
+        if user_id and user_id > 0 and self.config.aimedb.id_secret:
+            auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, req.head.keychip_id, self.config.aimedb.id_secret, self.config.aimedb.id_lifetime_seconds)
+            if auth_key is not None:
+                auth_key_extra_len = 256 - len(auth_key)
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len)
+                self.logger.debug(f"Generated auth token {auth_key}")
+                ret.auth_key = auth_key_full
+
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(req.access_code)
+        return ret
+
+    async def handle_felica_lookup(self, data: bytes, resp_code: int) -> bytes:
+        """
+        On official, I think a card has to be registered for this to actually work, but 
+        I'm making the executive decision to not implement that and just kick back our
+        faux generated access code. The real felica IDm -> access code conversion is done
+        on the ADB server, which we do not and will not ever have access to. Because we can
+        assure that all IDms will be unique, this basic 0-padded hex -> int conversion will
+        be fine.
+        """
+        req = ADBFelicaLookupRequest(data)
+        ac = self.data.card.to_access_code(req.idm)
+        self.logger.info(
+            f"idm {req.idm} ipm {req.pmm} -> access_code {ac}"
         )
-        ret += bytes(22)
-        ret += struct.pack("<lq", user_id, -1)  # first -1 is ext_id, 3rd is access code
-        ret += bytes.fromhex(access_code)
-        ret += struct.pack("<l", 1)
+        return ADBFelicaLookupResponse.from_req(req.head, ac)
 
-        return self.append_padding(ret)
-
-    def handle_touch(self, data: bytes) -> bytes:
-        self.logger.info(f"touch from {self.transport.getPeer().host}")
-        ret = struct.pack(
-            "<5H", 0xA13E, 0x3087, self.AIMEDB_RESPONSE_CODES["touch"], 0x0050, 0x0001
-        )
-        ret += bytes(5)
-        ret += struct.pack("<3H", 0x6F, 0, 1)
-
-        return self.append_padding(ret)
-
-    def handle_register(self, data: bytes) -> bytes:
-        luid = data[0x20:0x2A].hex()
+    async def handle_felica_register(self, data: bytes, resp_code: int) -> bytes:
+        """
+        I've never seen this used.
+        """
+        req = ADBFelicaLookupRequest(data)
+        ac = self.data.card.to_access_code(req.idm)
+        
         if self.config.server.allow_user_registration:
-            user_id = self.data.user.create_user()
+            user_id = await self.data.user.create_user()
 
             if user_id is None:
-                user_id = -1
                 self.logger.error("Failed to register user!")
+                user_id = -1
 
             else:
-                card_id = self.data.card.create_card(user_id, luid)
+                card_id = await self.data.card.create_card(user_id, ac)
 
                 if card_id is None:
-                    user_id = -1
                     self.logger.error("Failed to register card!")
+                    user_id = -1
 
             self.logger.info(
-                f"register from {self.transport.getPeer().host}: luid {luid} -> user_id {user_id}"
+                f"Register access code {ac} (IDm: {req.idm} PMm: {req.pmm}) -> user_id {user_id}"
             )
 
         else:
             self.logger.info(
-                f"register from {self.transport.getPeer().host} blocked!: luid {luid}"
+                f"Registration blocked!: access code {ac} (IDm: {req.idm} PMm: {req.pmm})"
             )
+
+        if user_id > 0:
+            await self.data.card.update_card_last_login(ac)
+        return ADBFelicaLookupResponse.from_req(req.head, ac)
+
+    async def handle_felica_lookup_ex(self, data: bytes, resp_code: int) -> bytes:
+        req = ADBFelicaLookup2Request(data)
+        access_code = self.data.card.to_access_code(req.idm)
+        user_id = await self.data.card.get_user_id_from_card(access_code=access_code)
+
+        if user_id is None:
             user_id = -1
 
-        ret = struct.pack(
-            "<5H",
-            0xA13E,
-            0x3087,
-            self.AIMEDB_RESPONSE_CODES["lookup"],
-            0x0030,
-            0x0001 if user_id > -1 else 0,
-        )
-        ret += bytes(0x20 - len(ret))
-        ret += struct.pack("<l", user_id)
-
-        return self.append_padding(ret)
-
-    def handle_log(self, data: bytes) -> bytes:
-        # TODO: Save aimedb logs
-        self.logger.info(f"log from {self.transport.getPeer().host}")
-        ret = struct.pack(
-            "<5H", 0xA13E, 0x3087, self.AIMEDB_RESPONSE_CODES["log"], 0x0020, 0x0001
-        )
-        return self.append_padding(ret)
-
-    def handle_log2(self, data: bytes) -> bytes:
-        self.logger.info(f"log2 from {self.transport.getPeer().host}")
-        ret = struct.pack(
-            "<5H", 0xA13E, 0x3087, self.AIMEDB_RESPONSE_CODES["log2"], 0x0040, 0x0001
-        )
-        ret += bytes(22)
-        ret += struct.pack("H", 1)
-
-        return self.append_padding(ret)
-
-
-class AimedbFactory(Factory):
-    protocol = AimedbProtocol
-
-    def __init__(self, cfg: CoreConfig) -> None:
-        self.config = cfg
-        log_fmt_str = "[%(asctime)s] Aimedb | %(levelname)s | %(message)s"
-        log_fmt = logging.Formatter(log_fmt_str)
-        self.logger = logging.getLogger("aimedb")
-
-        fileHandler = TimedRotatingFileHandler(
-            "{0}/{1}.log".format(self.config.server.log_dir, "aimedb"),
-            when="d",
-            backupCount=10,
-        )
-        fileHandler.setFormatter(log_fmt)
-
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(log_fmt)
-
-        self.logger.addHandler(fileHandler)
-        self.logger.addHandler(consoleHandler)
-
-        self.logger.setLevel(self.config.aimedb.loglevel)
-        coloredlogs.install(
-            level=cfg.aimedb.loglevel, logger=self.logger, fmt=log_fmt_str
+        self.logger.info(
+            f"idm {req.idm} ipm {req.pmm} -> access_code {access_code} user_id {user_id}"
         )
 
-        if self.config.aimedb.key == "":
-            self.logger.error("Please set 'key' field in your config file.")
-            exit(1)
+        resp = ADBFelicaLookup2Response.from_req(req.head, user_id, access_code)
 
-        self.logger.info(f"Ready on port {self.config.aimedb.port}")
+        if user_id and user_id > 0 and self.config.aimedb.id_secret:
+            auth_key = create_sega_auth_key(user_id, req.head.game_id, req.head.store_id, req.head.keychip_id, self.config.aimedb.id_secret, self.config.aimedb.id_lifetime_seconds)
+            if auth_key is not None:
+                auth_key_extra_len = 256 - len(auth_key)
+                auth_key_full = auth_key.encode() + (b"\0" * auth_key_extra_len)
+                self.logger.debug(f"Generated auth token {auth_key}")
+                resp.auth_key = auth_key_full
+        
+        if user_id and user_id > 0:
+            await self.data.card.update_card_last_login(access_code)
+        return resp
 
-    def buildProtocol(self, addr):
-        return AimedbProtocol(self.config)
+    async def handle_campaign_clear(self, data: bytes, resp_code: int) -> ADBBaseResponse:
+        req = ADBCampaignClearRequest(data)
+
+        resp = ADBCampaignClearResponse.from_req(req.head)
+
+        # We don't support campaign stuff
+        return resp
+
+    async def handle_register(self, data: bytes, resp_code: int) -> bytes:
+        req = ADBLookupRequest(data)
+        user_id = -1
+
+        if self.config.server.allow_user_registration:
+            user_id = await self.data.user.create_user()
+
+            if user_id is None:
+                self.logger.error("Failed to register user!")
+                user_id = -1
+
+            else:
+                card_id = await self.data.card.create_card(user_id, req.access_code)
+
+                if card_id is None:
+                    self.logger.error("Failed to register card!")
+                    user_id = -1
+
+            self.logger.info(
+                f"Register access code {req.access_code} -> user_id {user_id}"
+            )
+
+        else:
+            self.logger.info(
+                f"Registration blocked!: access code {req.access_code}"
+            )
+
+        resp = ADBLookupResponse.from_req(req.head, user_id)
+        if resp.user_id <= 0:
+            resp.head.status = ADBStatus.BAN_SYS # Closest we can get to a "You cannot register"
+
+        else:
+            await self.data.card.update_card_last_login(req.access_code)
+
+        return resp
+
+    # TODO: Save these in some capacity, as deemed relevant
+    async def handle_status_log(self, data: bytes, resp_code: int) -> bytes:
+        req = ADBStatusLogRequest(data)
+        self.logger.info(f"User {req.aime_id} logged {req.status.name} event")
+        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
+
+    async def handle_log(self, data: bytes, resp_code: int) -> bytes:
+        req = ADBLogRequest(data)
+        self.logger.info(f"User {req.aime_id} logged {req.status.name} event, credit_ct: {req.credit_ct} bet_ct: {req.bet_ct} won_ct: {req.won_ct}")
+        return ADBBaseResponse(resp_code, 0x20, 1, req.head.game_id, req.head.store_id, req.head.keychip_id, req.head.protocol_ver)
+
+    async def handle_log_ex(self, data: bytes, resp_code: int) -> bytes:
+        req = ADBLogExRequest(data)
+        strs = []
+        self.logger.info(f"Recieved {req.num_logs} or {len(req.logs)} logs")
+        
+        for x in range(req.num_logs):
+            self.logger.debug(f"User {req.logs[x].aime_id} logged {req.logs[x].status.name} event, credit_ct: {req.logs[x].credit_ct} bet_ct: {req.logs[x].bet_ct} won_ct: {req.logs[x].won_ct}")
+        return ADBLogExResponse.from_req(req.head)
+

@@ -19,6 +19,12 @@ class ChuniServerConfig:
                 self.__config, "chuni", "server", "loglevel", default="info"
             )
         )
+        
+    @property
+    def news_msg(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "server", "news_msg", default=""
+        )
 
 
 class ChuniTeamConfig:
@@ -29,6 +35,11 @@ class ChuniTeamConfig:
     def team_name(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "chuni", "team", "name", default=""
+        )
+    @property
+    def rank_scale(self) -> str:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "team", "rank_scale", default="False"
         )
 
 
@@ -78,6 +89,27 @@ class ChuniCryptoConfig:
             self.__config, "chuni", "crypto", "encrypted_only", default=False
         )
 
+class ChuniMatchingConfig:
+    def __init__(self, parent_config: "ChuniConfig") -> None:
+        self.__config = parent_config
+    
+    @property
+    def enable(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "enable", default=False
+        )
+    
+    @property
+    def match_time_limit(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "match_time_limit", default=60
+        )
+    
+    @property
+    def match_error_limit(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "match_error_limit", default=9999
+        )
 
 class ChuniConfig(dict):
     def __init__(self) -> None:
@@ -86,3 +118,4 @@ class ChuniConfig(dict):
         self.mods = ChuniModsConfig(self)
         self.version = ChuniVersionConfig(self)
         self.crypto = ChuniCryptoConfig(self)
+        self.matching = ChuniMatchingConfig(self)

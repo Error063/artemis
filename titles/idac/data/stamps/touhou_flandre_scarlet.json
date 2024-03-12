@@ -1,0 +1,297 @@
+{
+    "m_stamp_event_id": 25,
+    "stamp_event_nm": "フランドール・スカーレットスタンプ",
+    "start_dt": "2023-10-01",
+    "end_dt": "2029-01-01",
+    "play_bonus": 1,
+    "daily_bonus": 2,
+    "weekly_bonus": 4,
+    "add_bonus": [
+        {
+            "bonus_category": 0,
+            "bonus_play_num": 0,
+            "bonus_stamp_num": 0,
+            "bonus_daily_flag": 0
+        }
+    ],
+    "sheet_design": 5,
+    "sheet_stamp": 0,
+    "sheet_set": [
+        {
+            "sheet_no": 1,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4383,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "悪魔の妹"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4401,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "ネオン(フランドール)獲得"
+                }
+            ]
+        },
+        {
+            "sheet_no": 2,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 12,
+                    "reward_type_a": 966,
+                    "reward_category_b": 12,
+                    "reward_type_b": 969,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "フランドールのナイトキャップ"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 21,
+                    "reward_type_a": 494,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "おまたせ"
+                }
+            ]
+        },
+        {
+            "sheet_no": 3,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4395,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "バイナルEX(フランドール)獲得"
+                }
+            ]
+        },
+        {
+            "sheet_no": 4,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 15,
+                    "reward_type_a": 462,
+                    "reward_category_b": 15,
+                    "reward_type_b": 465,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "吸血鬼の服（フランドール）"
+                }
+            ]
+        },
+        {
+            "sheet_no": 5,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 6,
+                    "reward_type_a": 62,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "スペシャル（フランドール・スカーレット）"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4386,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "禁忌「クランベリートラップ」"
+                }
+            ]
+        },
+        {
+            "sheet_no": 6,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 21,
+                    "reward_type_a": 495,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "・・ここは私の家よ？"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 7,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4404,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "ネオンDX(フランドール)獲得"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 8,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4398,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "バイナルDX(フランドール)獲得"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 9,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                },
+                {
+                    "reward_setting_masu": 15,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 10,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4389,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "ＱＥＤ「４９５年の波紋」"
+                }
+            ]
+        },
+        {
+            "sheet_no": 11,
+            "loop_flag": 1,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×１"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×１"
+                }
+            ]
+        }
+    ],
+    "weekday_bonus": 0,
+    "weekend_bonus": 0,
+    "sheet_prohibitfreeplaystampcount": false
+}

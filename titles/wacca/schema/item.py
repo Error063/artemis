@@ -75,16 +75,16 @@ trophy = Table(
 
 
 class WaccaItemData(BaseData):
-    def get_song_unlocks(self, user_id: int) -> Optional[List[Row]]:
+    async def get_song_unlocks(self, user_id: int) -> Optional[List[Row]]:
         sql = song_unlock.select(song_unlock.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
 
         return result.fetchall()
 
-    def unlock_song(self, user_id: int, song_id: int, difficulty: int) -> Optional[int]:
+    async def unlock_song(self, user_id: int, song_id: int, difficulty: int) -> Optional[int]:
         sql = insert(song_unlock).values(
             user=user_id, song_id=song_id, highest_difficulty=difficulty
         )
@@ -99,7 +99,7 @@ class WaccaItemData(BaseData):
             )
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to unlock song! user: {user_id}, song_id: {song_id}, difficulty: {difficulty}"
@@ -108,7 +108,7 @@ class WaccaItemData(BaseData):
 
         return result.lastrowid
 
-    def put_item(self, user_id: int, item_type: int, item_id: int) -> Optional[int]:
+    async def put_item(self, user_id: int, item_type: int, item_id: int) -> Optional[int]:
         sql = insert(item).values(
             user=user_id,
             item_id=item_id,
@@ -117,7 +117,7 @@ class WaccaItemData(BaseData):
 
         conflict = sql.on_duplicate_key_update(use_count=item.c.use_count + 1)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert item! user: {user_id}, item_id: {item_id}, item_type: {item_type}"
@@ -126,7 +126,7 @@ class WaccaItemData(BaseData):
 
         return result.lastrowid
 
-    def get_items(
+    async def get_items(
         self, user_id: int, item_type: int = None, item_id: int = None
     ) -> Optional[List[Row]]:
         """
@@ -140,23 +140,23 @@ class WaccaItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_tickets(self, user_id: int) -> Optional[List[Row]]:
+    async def get_tickets(self, user_id: int) -> Optional[List[Row]]:
         sql = select(ticket).where(ticket.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def add_ticket(self, user_id: int, ticket_id: int) -> None:
+    async def add_ticket(self, user_id: int, ticket_id: int) -> None:
         sql = insert(ticket).values(user=user_id, ticket_id=ticket_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"add_ticket: Failed to insert wacca ticket! user_id: {user_id} ticket_id {ticket_id}"
@@ -164,15 +164,15 @@ class WaccaItemData(BaseData):
             return None
         return result.lastrowid
 
-    def spend_ticket(self, id: int) -> None:
+    async def spend_ticket(self, id: int) -> None:
         sql = delete(ticket).where(ticket.c.id == id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
-            self.logger.warn(f"Failed to delete ticket id {id}")
+            self.logger.warning(f"Failed to delete ticket id {id}")
             return None
 
-    def get_trophies(self, user_id: int, season: int = None) -> Optional[List[Row]]:
+    async def get_trophies(self, user_id: int, season: int = None) -> Optional[List[Row]]:
         if season is None:
             sql = select(trophy).where(trophy.c.user == user_id)
         else:
@@ -180,12 +180,12 @@ class WaccaItemData(BaseData):
                 and_(trophy.c.user == user_id, trophy.c.season == season)
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def update_trophy(
+    async def update_trophy(
         self, user_id: int, trophy_id: int, season: int, progress: int, badge_type: int
     ) -> Optional[int]:
         sql = insert(trophy).values(
@@ -198,7 +198,7 @@ class WaccaItemData(BaseData):
 
         conflict = sql.on_duplicate_key_update(progress=progress)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"update_trophy: Failed to insert wacca trophy! user_id: {user_id} trophy_id: {trophy_id} progress {progress}"

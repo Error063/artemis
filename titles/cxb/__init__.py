@@ -7,4 +7,3 @@ index = CxbServlet
 database = CxbData
 reader = CxbReader
 game_codes = [CxbConstants.GAME_CODE]
-current_schema_version = 1

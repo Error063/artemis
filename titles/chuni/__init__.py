@@ -1,10 +1,11 @@
-from titles.chuni.index import ChuniServlet
-from titles.chuni.const import ChuniConstants
-from titles.chuni.database import ChuniData
-from titles.chuni.read import ChuniReader
+from .index import ChuniServlet
+from .const import ChuniConstants
+from .database import ChuniData
+from .read import ChuniReader
+from .frontend import ChuniFrontend
 
 index = ChuniServlet
 database = ChuniData
 reader = ChuniReader
-game_codes = [ChuniConstants.GAME_CODE, ChuniConstants.GAME_CODE_NEW]
-current_schema_version = 3
+frontend = ChuniFrontend
+game_codes = [ChuniConstants.GAME_CODE, ChuniConstants.GAME_CODE_NEW, ChuniConstants.GAME_CODE_INT]

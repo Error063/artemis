@@ -1,9 +1,10 @@
 server:
   enable: True
   loglevel: "info"
+  news_msg: ""
 
 team:
-  name: ARTEMiS
+  name: ARTEMiS # If this is set, all players that are not on a team will use this one by default.
 
 mods:
   use_login_bonus: True
@@ -15,6 +16,17 @@ version:
   12:
     rom: 2.05.00
     data: 2.05.00
+  13:
+    rom: 2.10.00
+    data: 2.10.00
+  14:
+    rom: 2.15.00
+    data: 2.15.00
 
 crypto:
   encrypted_only: False
+
+matching:
+  enable: False
+  match_time_limit: 60
+  match_error_limit: 9999

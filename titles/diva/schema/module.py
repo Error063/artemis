@@ -23,10 +23,10 @@ module = Table(
 
 
 class DivaModuleData(BaseData):
-    def put_module(self, aime_id: int, version: int, module_id: int) -> None:
+    async def put_module(self, aime_id: int, version: int, module_id: int) -> None:
         sql = insert(module).values(version=version, user=aime_id, module_id=module_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert diva profile module! aime id: {aime_id} module: {module_id}"
@@ -34,18 +34,18 @@ class DivaModuleData(BaseData):
             return None
         return result.lastrowid
 
-    def get_modules(self, aime_id: int, version: int) -> Optional[List[Dict]]:
+    async def get_modules(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and an aime id, return all the modules, not used directly
         """
         sql = module.select(and_(module.c.version == version, module.c.user == aime_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_modules_have_string(self, aime_id: int, version: int) -> str:
+    async def get_modules_have_string(self, aime_id: int, version: int) -> str:
         """
         Given a game version and an aime id, return the mdl_have hex string
         required for diva directly

@@ -51,6 +51,7 @@ profile = Table(
     Column("rgo_sts", Integer, nullable=False, server_default="1"),
     Column("lv_efct_id", Integer, nullable=False, server_default="0"),
     Column("lv_plt_id", Integer, nullable=False, server_default="1"),
+    Column("skn_eqp", Integer, nullable=False, server_default="0"),
     Column("passwd_stat", Integer, nullable=False, server_default="0"),
     Column("passwd", String(12), nullable=False, server_default="**********"),
     Column(
@@ -69,7 +70,7 @@ profile = Table(
 
 
 class DivaProfileData(BaseData):
-    def create_profile(
+    async def create_profile(
         self, version: int, aime_id: int, player_name: str
     ) -> Optional[int]:
         """
@@ -81,7 +82,7 @@ class DivaProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(player_name=sql.inserted.player_name)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert diva profile! aime id: {aime_id} username: {player_name}"
@@ -89,21 +90,21 @@ class DivaProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def update_profile(self, aime_id: int, **profile_args) -> None:
+    async def update_profile(self, aime_id: int, **profile_args) -> None:
         """
         Given an aime_id update the profile corresponding to the arguments
         which are the diva_profile Columns
         """
         sql = profile.update(profile.c.user == aime_id).values(**profile_args)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"update_profile: failed to update profile! profile: {aime_id}"
             )
         return None
 
-    def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
+    async def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and either a profile or aime id, return the profile
         """
@@ -111,7 +112,7 @@ class DivaProfileData(BaseData):
             and_(profile.c.version == version, profile.c.user == aime_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

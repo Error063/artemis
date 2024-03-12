@@ -1,0 +1,297 @@
+{
+    "m_stamp_event_id": 26,
+    "stamp_event_nm": "十六夜咲夜スタンプ",
+    "start_dt": "2023-10-01",
+    "end_dt": "2029-01-01",
+    "play_bonus": 1,
+    "daily_bonus": 2,
+    "weekly_bonus": 4,
+    "add_bonus": [
+        {
+            "bonus_category": 0,
+            "bonus_play_num": 0,
+            "bonus_stamp_num": 0,
+            "bonus_daily_flag": 0
+        }
+    ],
+    "sheet_design": 6,
+    "sheet_stamp": 0,
+    "sheet_set": [
+        {
+            "sheet_no": 1,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4381,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "紅魔館のメイド"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4399,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "ネオン(十六夜咲夜)獲得"
+                }
+            ]
+        },
+        {
+            "sheet_no": 2,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 12,
+                    "reward_type_a": 964,
+                    "reward_category_b": 12,
+                    "reward_type_b": 967,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "メイドのホワイトブリム"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 21,
+                    "reward_type_a": 486,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "２時間前に出直してきな"
+                }
+            ]
+        },
+        {
+            "sheet_no": 3,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4393,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "バイナルEX(十六夜咲夜)獲得"
+                }
+            ]
+        },
+        {
+            "sheet_no": 4,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 15,
+                    "reward_type_a": 460,
+                    "reward_category_b": 15,
+                    "reward_type_b": 463,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "メイドの服"
+                }
+            ]
+        },
+        {
+            "sheet_no": 5,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 6,
+                    "reward_type_a": 60,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "スペシャル（十六夜咲夜）"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4384,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "幻在「クロックコープス」"
+                }
+            ]
+        },
+        {
+            "sheet_no": 6,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 21,
+                    "reward_type_a": 487,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "私のナイフから逃げられると思って？"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 7,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4402,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "ネオンDX(十六夜咲夜)獲得"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 8,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4396,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "バイナルDX(十六夜咲夜)獲得"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 9,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                },
+                {
+                    "reward_setting_masu": 15,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                }
+            ]
+        },
+        {
+            "sheet_no": 10,
+            "loop_flag": 0,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 24,
+                    "reward_type_a": 4387,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 1,
+                    "reward_pickup_display_name": "メイド秘技「操りドール」"
+                }
+            ]
+        },
+        {
+            "sheet_no": 11,
+            "loop_flag": 1,
+            "stamp_sheet": [
+                {
+                    "reward_setting_masu": 10,
+                    "reward_category_a": 3,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "ドレスアップトークン×1"
+                },
+                {
+                    "reward_setting_masu": 20,
+                    "reward_category_a": 5,
+                    "reward_type_a": 1,
+                    "reward_category_b": 0,
+                    "reward_type_b": 0,
+                    "reward_is_pickup": 0,
+                    "reward_pickup_display_name": "アバタートークン×1"
+                }
+            ]
+        }
+    ],
+    "weekday_bonus": 0,
+    "weekend_bonus": 0,
+    "sheet_prohibitfreeplaystampcount": false
+}

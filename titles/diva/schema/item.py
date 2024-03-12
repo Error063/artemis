@@ -26,7 +26,7 @@ shop = Table(
 
 
 class DivaItemData(BaseData):
-    def put_shop(
+    async def put_shop(
         self,
         aime_id: int,
         version: int,
@@ -48,7 +48,7 @@ class DivaItemData(BaseData):
             ms_itm_flg_ary=ms_itm_flg_ary,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert diva profile! aime id: {aime_id} array: {mdl_eqp_ary}"
@@ -56,13 +56,13 @@ class DivaItemData(BaseData):
             return None
         return result.lastrowid
 
-    def get_shop(self, aime_id: int, version: int) -> Optional[List[Dict]]:
+    async def get_shop(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and either a profile or aime id, return the profile
         """
         sql = shop.select(and_(shop.c.version == version, shop.c.user == aime_id))
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

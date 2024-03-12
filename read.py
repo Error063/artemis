@@ -1,4 +1,4 @@
-# vim: set fileencoding=utf-8
+#!/usr/bin/env python3
 import argparse
 import re
 import os
@@ -6,6 +6,7 @@ import yaml
 from os import path
 import logging
 import coloredlogs
+import asyncio
 
 from logging.handlers import TimedRotatingFileHandler
 from typing import List, Optional
@@ -38,16 +39,19 @@ class BaseReader:
                     ret.append(f"{root}/{dir}")
 
         return ret
+    
+    async def read(self) -> None:
+        pass
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import Game Information")
     parser.add_argument(
-        "--series",
+        "--game",
         action="store",
         type=str,
         required=True,
-        help="The game series we are importing.",
+        help="The game we are importing.",
     )
     parser.add_argument(
         "--version",
@@ -109,7 +113,7 @@ if __name__ == "__main__":
     logger.setLevel(log_lv)
     coloredlogs.install(level=log_lv, logger=logger, fmt=log_fmt_str)
 
-    if args.series is None or args.version is None:
+    if args.game is None or args.version is None:
         logger.error("Game or version not specified")
         parser.print_help()
         exit(1)
@@ -134,8 +138,10 @@ if __name__ == "__main__":
     titles = Utils.get_all_titles()
 
     for dir, mod in titles.items():
-        if args.series in mod.game_codes:
+        if args.game in mod.game_codes:
             handler = mod.reader(config, args.version, bin_arg, opt_arg, args.extra)
-            handler.read()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(handler.read())
+            
 
     logger.info("Done")

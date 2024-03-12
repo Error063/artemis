@@ -28,7 +28,7 @@ music = Table(
 
 
 class WaccaStaticData(BaseData):
-    def put_music(
+    async def put_music(
         self,
         version: int,
         song_id: int,
@@ -61,13 +61,13 @@ class WaccaStaticData(BaseData):
             jacketFile=jacket,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
-            self.logger.warn(f"Failed to insert music {song_id} chart {chart_id}")
+            self.logger.warning(f"Failed to insert music {song_id} chart {chart_id}")
             return None
         return result.lastrowid
 
-    def get_music_chart(
+    async def get_music_chart(
         self, version: int, song_id: int, chart_id: int
     ) -> Optional[List[Row]]:
         sql = select(music).where(
@@ -78,7 +78,7 @@ class WaccaStaticData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

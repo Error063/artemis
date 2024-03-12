@@ -1,0 +1,28 @@
+{% if error > 0 %}
+<div class="err-banner">
+<h3>Error</h3>
+{% if error == 1 %}
+Card not registered, or wrong password
+{% elif error == 2 %}
+Missing or malformed access code
+{% elif error == 3 %}
+Failed to create user
+{% elif error == 4 %}
+Required field not filled or invalid
+{% elif error == 5 %}
+Incorrect old password
+{% elif error == 6 %}
+Passwords don't match
+{% elif error == 7 %}
+New password not acceptable
+{% elif error == 8 %}
+New Nickname too long
+{% elif error == 9 %}
+You must be logged in to preform this action
+{% elif error == 10 %}
+Invalid serial number
+{% else %}
+An unknown error occoured
+{% endif %}
+</div>
+{% endif %}

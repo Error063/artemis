@@ -7,9 +7,9 @@ from datetime import datetime
 
 from core.config import CoreConfig
 from core.data import Data, cached
-from titles.cxb.config import CxbConfig
-from titles.cxb.base import CxbBase
-from titles.cxb.const import CxbConstants
+from .config import CxbConfig
+from .base import CxbBase
+from .const import CxbConstants
 
 
 class CxbRevSunriseS2(CxbBase):
@@ -17,13 +17,22 @@ class CxbRevSunriseS2(CxbBase):
         super().__init__(cfg, game_cfg)
         self.version = CxbConstants.VER_CROSSBEATS_REV_SUNRISE_S2_OMNI
 
-    def handle_data_path_list_request(self, data: Dict) -> Dict:
+    async def handle_data_path_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_music_list_request(self, data: Dict) -> Dict:
+    async def handle_data_music_list_request(self, data: Dict) -> Dict:
+        version = data["dldate"]["filetype"].split("/")[0]
         ret_str = ""
-        with open(r"titles/cxb/rss2_data/MusicArchiveList.csv") as music:
+
+        if "10104" in version:
+            self.logger.warning("Game Version is Season 2 Non-Omni")
+            file = "titles/cxb/data/rss2/MusicArchiveList-NonOmni.csv"
+        else:
+            self.logger.warning("Game Version is Season 2 Omnimix")
+            file = "titles/cxb/data/rss2/MusicArchiveList.csv"
+        
+        with open(rf"{file}") as music:
             lines = music.readlines()
             for line in lines:
                 line_split = line.split(",")
@@ -32,11 +41,11 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_item_list_detail_request(self, data: Dict) -> Dict:
+    async def handle_data_item_list_detail_request(self, data: Dict) -> Dict:
         # ItemListIcon load
         ret_str = "#ItemListIcon\r\n"
         with open(
-            r"titles/cxb/rss2_data/Item/ItemList_Icon.csv", encoding="utf-8"
+            r"titles/cxb/data/rss2/Item/ItemList_Icon.csv", encoding="utf-8"
         ) as item:
             lines = item.readlines()
             for line in lines:
@@ -45,7 +54,7 @@ class CxbRevSunriseS2(CxbBase):
         # ItemListTitle load
         ret_str += "\r\n#ItemListTitle\r\n"
         with open(
-            r"titles/cxb/rss2_data/Item/ItemList_Title.csv", encoding="utf-8"
+            r"titles/cxb/data/rss2/Item/ItemList_Title.csv", encoding="utf-8"
         ) as item:
             lines = item.readlines()
             for line in lines:
@@ -54,11 +63,11 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_shop_list_detail_request(self, data: Dict) -> Dict:
+    async def handle_data_shop_list_detail_request(self, data: Dict) -> Dict:
         # ShopListIcon load
         ret_str = "#ShopListIcon\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_Icon.csv", encoding="utf-8"
+            r"titles/cxb/data/rss2/Shop/ShopList_Icon.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -67,7 +76,7 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListMusic load
         ret_str += "\r\n#ShopListMusic\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_Music.csv", encoding="utf-8"
+            r"titles/cxb/data/rss2/Shop/ShopList_Music.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -76,7 +85,7 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListSale load
         ret_str += "\r\n#ShopListSale\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_Sale.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss2/Shop/ShopList_Sale.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -85,7 +94,7 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListSkinBg load
         ret_str += "\r\n#ShopListSkinBg\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_SkinBg.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss2/Shop/ShopList_SkinBg.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -94,7 +103,7 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListSkinEffect load
         ret_str += "\r\n#ShopListSkinEffect\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_SkinEffect.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss2/Shop/ShopList_SkinEffect.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -103,7 +112,7 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListSkinNotes load
         ret_str += "\r\n#ShopListSkinNotes\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_SkinNotes.csv", encoding="shift-jis"
+            r"titles/cxb/data/rss2/Shop/ShopList_SkinNotes.csv", encoding="shift-jis"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
@@ -112,50 +121,60 @@ class CxbRevSunriseS2(CxbBase):
         # ShopListTitle load
         ret_str += "\r\n#ShopListTitle\r\n"
         with open(
-            r"titles/cxb/rss2_data/Shop/ShopList_Title.csv", encoding="utf-8"
+            r"titles/cxb/data/rss2/Shop/ShopList_Title.csv", encoding="utf-8"
         ) as shop:
             lines = shop.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_extra_stage_list_request(self, data: Dict) -> Dict:
+    async def handle_data_extra_stage_list_request(self, data: Dict) -> Dict:
+        ret_str=""
+        with open(r"titles/cxb/data/rss2/ExtraStageList.csv") as extra:
+            lines = extra.readlines()
+            for line in lines:
+                ret_str += f"{line[:-1]}\r\n"
+        return({"data":ret_str})
+
+    async def handle_data_exxxxx_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_ex0001_request(self, data: Dict) -> Dict:
+    async def handle_data_one_more_extra_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_one_more_extra_list_request(self, data: Dict) -> Dict:
+    async def handle_data_bonus_list10100_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_bonus_list10100_request(self, data: Dict) -> Dict:
+    async def handle_data_oexxxx_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_oe0001_request(self, data: Dict) -> Dict:
-        return {"data": ""}
-
-    def handle_data_free_coupon_request(self, data: Dict) -> Dict:
-        return {"data": ""}
+    async def handle_data_free_coupon_request(self, data: Dict) -> Dict:
+        ret_str=""
+        with open(r"titles/cxb/data/rss2/FreeCoupon.csv") as coupon:
+            lines = coupon.readlines()
+            for line in lines:
+                ret_str += f"{line[:-1]}\r\n"
+        return({"data":ret_str})
 
     @cached(lifetime=86400)
-    def handle_data_news_list_request(self, data: Dict) -> Dict:
+    async def handle_data_news_list_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss2_data/NewsList.csv", encoding="UTF-8") as news:
+        with open(r"titles/cxb/data/rss2/NewsList.csv", encoding="UTF-8") as news:
             lines = news.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_tips_request(self, data: Dict) -> Dict:
+    async def handle_data_tips_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_release_info_list_request(self, data: Dict) -> Dict:
+    async def handle_data_release_info_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
     @cached(lifetime=86400)
-    def handle_data_random_music_list_request(self, data: Dict) -> Dict:
+    async def handle_data_random_music_list_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss2_data/MusicArchiveList.csv") as music:
+        with open(r"titles/cxb/data/rss2/MusicArchiveList.csv") as music:
             lines = music.readlines()
             count = 0
             for line in lines:
@@ -167,19 +186,19 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_license_request(self, data: Dict) -> Dict:
+    async def handle_data_license_request(self, data: Dict) -> Dict:
         ret_str = ""
-        with open(r"titles/cxb/rss2_data/License.csv", encoding="UTF-8") as licenses:
+        with open(r"titles/cxb/data/rss2/License.csv", encoding="UTF-8") as licenses:
             lines = licenses.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_course_list_request(self, data: Dict) -> Dict:
+    async def handle_data_course_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         with open(
-            r"titles/cxb/rss2_data/Course/CourseList.csv", encoding="UTF-8"
+            r"titles/cxb/data/rss2/Course/CourseList.csv", encoding="UTF-8"
         ) as course:
             lines = course.readlines()
             for line in lines:
@@ -187,27 +206,27 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_csxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_csxxxx_request(self, data: Dict) -> Dict:
         extra_num = int(data["dldate"]["filetype"][-4:])
         ret_str = ""
         with open(
-            rf"titles/cxb/rss2_data/Course/Cs{extra_num}.csv", encoding="shift-jis"
+            rf"titles/cxb/data/rss2/Course/Cs{extra_num}.csv", encoding="shift-jis"
         ) as course:
             lines = course.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_mission_list_request(self, data: Dict) -> Dict:
+    async def handle_data_mission_list_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_mission_bonus_request(self, data: Dict) -> Dict:
+    async def handle_data_mission_bonus_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_unlimited_mission_request(self, data: Dict) -> Dict:
+    async def handle_data_unlimited_mission_request(self, data: Dict) -> Dict:
         return {"data": ""}
 
-    def handle_data_partner_list_request(self, data: Dict) -> Dict:
+    async def handle_data_partner_list_request(self, data: Dict) -> Dict:
         ret_str = ""
         # Lord forgive me for the sins I am about to commit
         for i in range(0, 10):
@@ -226,22 +245,22 @@ class CxbRevSunriseS2(CxbBase):
         return {"data": ret_str}
 
     @cached(lifetime=86400)
-    def handle_data_partnerxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_partnerxxxx_request(self, data: Dict) -> Dict:
         partner_num = int(data["dldate"]["filetype"][-4:])
         ret_str = f"{partner_num},,{partner_num},1,10000,\r\n"
-        with open(r"titles/cxb/rss2_data/Partner0000.csv") as partner:
+        with open(r"titles/cxb/data/rss2/Partner0000.csv") as partner:
             lines = partner.readlines()
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
         return {"data": ret_str}
 
-    def handle_data_server_state_request(self, data: Dict) -> Dict:
+    async def handle_data_server_state_request(self, data: Dict) -> Dict:
         return {"data": True}
 
-    def handle_data_settings_request(self, data: Dict) -> Dict:
+    async def handle_data_settings_request(self, data: Dict) -> Dict:
         return {"data": "2,\r\n"}
 
-    def handle_data_story_list_request(self, data: Dict) -> Dict:
+    async def handle_data_story_list_request(self, data: Dict) -> Dict:
         # story id, story name, game version, start time, end time, course arc, unlock flag, song mcode for menu
         ret_str = "\r\n"
         ret_str += (
@@ -253,7 +272,7 @@ class CxbRevSunriseS2(CxbBase):
         ret_str += f"st0002,REMNANT,10104,1502127790,4096483201,Cs1000,-1,overcl,\r\n"
         return {"data": ret_str}
 
-    def handle_data_stxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_stxxxx_request(self, data: Dict) -> Dict:
         story_num = int(data["dldate"]["filetype"][-4:])
         ret_str = ""
         # Each stories appears to have 10 pieces based on the wiki but as on how they are set.... no clue
@@ -261,18 +280,18 @@ class CxbRevSunriseS2(CxbBase):
             ret_str += f"{i},st000{story_num}_{i-1},,,,,,,,,,,,,,,,1,,-1,1,\r\n"
         return {"data": ret_str}
 
-    def handle_data_event_stamp_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_stamp_list_request(self, data: Dict) -> Dict:
         return {"data": "Cs1002,1,1,1,1,1,1,1,1,1,1,\r\n"}
 
-    def handle_data_premium_list_request(self, data: Dict) -> Dict:
+    async def handle_data_premium_list_request(self, data: Dict) -> Dict:
         return {"data": "1,,,,10,,,,,99,,,,,,,,,100,,\r\n"}
 
-    def handle_data_event_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_list_request(self, data: Dict) -> Dict:
         return {
             "data": "Cs4001,0,10000,1601510400,1604188799,1,nv2006,1,\r\nCs4005,0,10000,1609459200,1615766399,1,nv2006,1,\r\n"
         }
 
-    def handle_data_event_detail_list_request(self, data: Dict) -> Dict:
+    async def handle_data_event_detail_list_request(self, data: Dict) -> Dict:
         event_id = data["dldate"]["filetype"].split("/")[2]
         if "Cs4001" in event_id:
             return {
@@ -289,7 +308,7 @@ class CxbRevSunriseS2(CxbBase):
         else:
             return {"data": ""}
 
-    def handle_data_event_stamp_map_list_csxxxx_request(self, data: Dict) -> Dict:
+    async def handle_data_event_stamp_map_list_csxxxx_request(self, data: Dict) -> Dict:
         event_id = data["dldate"]["filetype"].split("/")[2]
         if "EventStampMapListCs1002" in event_id:
             return {"data": "1,2,1,1,2,3,9,5,6,7,8,9,10,\r\n"}

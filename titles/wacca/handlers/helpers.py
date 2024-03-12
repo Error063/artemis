@@ -96,7 +96,7 @@ class Version(ShortVersion):
             self.role = role
 
     def __str__(self) -> str:
-        return f"{self.major}.{self.minor}.{self.patch}.{self.country}.{self.role}.{self.build}"
+        return f"{self.major}.{self.minor:02}.{self.patch:02}.{self.country}.{self.build:05}.{self.role}"
 
 
 class HousingInfo:
@@ -116,43 +116,43 @@ class HousingInfo:
 
 
 class Notice:
-    name: str = ""
     title: str = ""
     message: str = ""
-    unknown3: str = ""
-    unknown4: str = ""
+    dialog: str = ""
+    fullImage: str = ""
+    messageImage: str = ""
     showTitleScreen: bool = True
     showWelcomeScreen: bool = True
     startTime: int = 0
     endTime: int = 0
-    voiceline: int = 0
+    voiceLine: int = 0
 
     def __init__(
         self,
-        name: str = "",
         title: str = "",
         message: str = "",
+        dialog: str = "",
         start: int = 0,
         end: int = 0,
     ) -> None:
-        self.name = name
         self.title = title
         self.message = message
+        self.dialog = dialog
         self.startTime = start
         self.endTime = end
 
     def make(self) -> List:
         return [
-            self.name,
             self.title,
             self.message,
-            self.unknown3,
-            self.unknown4,
+            self.dialog,
+            self.fullImage,
+            self.messageImage,
             int(self.showTitleScreen),
             int(self.showWelcomeScreen),
             self.startTime,
             self.endTime,
-            self.voiceline,
+            self.voiceLine,
         ]
 
 

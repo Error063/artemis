@@ -139,7 +139,7 @@ gate = Table(
 
 
 class WaccaProfileData(BaseData):
-    def create_profile(
+    async def create_profile(
         self, aime_id: int, username: str, version: int
     ) -> Optional[int]:
         """
@@ -149,7 +149,7 @@ class WaccaProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(username=sql.inserted.username)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert wacca profile! aime id: {aime_id} username: {username}"
@@ -157,7 +157,7 @@ class WaccaProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def update_profile_playtype(
+    async def update_profile_playtype(
         self, profile_id: int, play_type: int, game_version: str
     ) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
@@ -179,14 +179,14 @@ class WaccaProfileData(BaseData):
             last_game_ver=game_version,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"update_profile: failed to update profile! profile: {profile_id}"
             )
         return None
 
-    def update_profile_lastplayed(
+    async def update_profile_lastplayed(
         self,
         profile_id: int,
         last_song_id: int,
@@ -202,29 +202,29 @@ class WaccaProfileData(BaseData):
             last_folder_id=last_folder_id,
             last_song_order=last_song_order,
         )
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"update_profile_lastplayed: failed to update profile! profile: {profile_id}"
             )
         return None
 
-    def update_profile_dan(
+    async def update_profile_dan(
         self, profile_id: int, dan_level: int, dan_type: int
     ) -> Optional[int]:
         sql = profile.update(profile.c.id == profile_id).values(
             dan_level=dan_level, dan_type=dan_type
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
-            self.logger.warn(
+            self.logger.warning(
                 f"update_profile_dan: Failed to update! profile {profile_id}"
             )
             return None
         return result.lastrowid
 
-    def get_profile(self, profile_id: int = 0, aime_id: int = None) -> Optional[Row]:
+    async def get_profile(self, profile_id: int = 0, aime_id: int = None) -> Optional[Row]:
         """
         Given a game version and either a profile or aime id, return the profile
         """
@@ -238,12 +238,12 @@ class WaccaProfileData(BaseData):
             )
             return None
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_options(self, user_id: int, option_id: int = None) -> Optional[List[Row]]:
+    async def get_options(self, user_id: int, option_id: int = None) -> Optional[List[Row]]:
         """
         Get a specific user option for a profile, or all of them if none specified
         """
@@ -254,7 +254,7 @@ class WaccaProfileData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         if option_id is not None:
@@ -262,12 +262,12 @@ class WaccaProfileData(BaseData):
         else:
             return result.fetchall()
 
-    def update_option(self, user_id: int, option_id: int, value: int) -> Optional[int]:
+    async def update_option(self, user_id: int, option_id: int, value: int) -> Optional[int]:
         sql = insert(option).values(user=user_id, opt_id=option_id, value=value)
 
         conflict = sql.on_duplicate_key_update(value=value)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert option! profile: {user_id}, option: {option_id}, value: {value}"
@@ -276,10 +276,10 @@ class WaccaProfileData(BaseData):
 
         return result.lastrowid
 
-    def add_favorite_song(self, user_id: int, song_id: int) -> Optional[int]:
+    async def add_favorite_song(self, user_id: int, song_id: int) -> Optional[int]:
         sql = favorite.insert().values(user=user_id, song_id=song_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to insert favorite! profile: {user_id}, song_id: {song_id}"
@@ -287,35 +287,35 @@ class WaccaProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def remove_favorite_song(self, user_id: int, song_id: int) -> None:
+    async def remove_favorite_song(self, user_id: int, song_id: int) -> None:
         sql = favorite.delete(
             and_(favorite.c.user == user_id, favorite.c.song_id == song_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to remove favorite! profile: {user_id}, song_id: {song_id}"
             )
         return None
 
-    def get_favorite_songs(self, user_id: int) -> Optional[List[Row]]:
+    async def get_favorite_songs(self, user_id: int) -> Optional[List[Row]]:
         sql = favorite.select(favorite.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_gates(self, user_id: int) -> Optional[List[Row]]:
+    async def get_gates(self, user_id: int) -> Optional[List[Row]]:
         sql = select(gate).where(gate.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def update_gate(
+    async def update_gate(
         self,
         user_id: int,
         gate_id: int,
@@ -343,7 +343,7 @@ class WaccaProfileData(BaseData):
             total_points=sql.inserted.total_points,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to update gate! user: {user_id}, gate_id: {gate_id}"
@@ -351,18 +351,18 @@ class WaccaProfileData(BaseData):
             return None
         return result.lastrowid
 
-    def get_friends(self, user_id: int) -> Optional[List[Row]]:
+    async def get_friends(self, user_id: int) -> Optional[List[Row]]:
         sql = friend.select(friend.c.profile_sender == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def profile_to_aime_user(self, profile_id: int) -> Optional[int]:
+    async def profile_to_aime_user(self, profile_id: int) -> Optional[int]:
         sql = select(profile.c.user).where(profile.c.id == profile_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.info(
                 f"profile_to_aime_user: No user found for profile {profile_id}"
@@ -378,7 +378,7 @@ class WaccaProfileData(BaseData):
 
         return this_profile["user"]
 
-    def session_login(
+    async def session_login(
         self, profile_id: int, is_new_day: bool, is_consec_day: bool
     ) -> None:
         # TODO: Reset consec days counter
@@ -395,127 +395,127 @@ class WaccaProfileData(BaseData):
             last_login_date=func.now(),
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"session_login: failed to update profile! profile: {profile_id}"
             )
         return None
 
-    def session_logout(self, profile_id: int) -> None:
+    async def session_logout(self, profile_id: int) -> None:
         sql = profile.update(profile.c.id == id).values(login_count_consec=0)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to update profile! profile: {profile_id}"
             )
         return None
 
-    def add_xp(self, profile_id: int, xp: int) -> None:
+    async def add_xp(self, profile_id: int, xp: int) -> None:
         sql = profile.update(profile.c.id == profile_id).values(xp=profile.c.xp + xp)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"add_xp: Failed to update profile! profile_id {profile_id} xp {xp}"
             )
         return None
 
-    def add_wp(self, profile_id: int, wp: int) -> None:
+    async def add_wp(self, profile_id: int, wp: int) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             wp=profile.c.wp + wp,
             wp_total=profile.c.wp_total + wp,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"add_wp: Failed to update profile! profile_id {profile_id} wp {wp}"
             )
         return None
 
-    def spend_wp(self, profile_id: int, wp: int) -> None:
+    async def spend_wp(self, profile_id: int, wp: int) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             wp=profile.c.wp - wp,
             wp_spent=profile.c.wp_spent + wp,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"spend_wp: Failed to update profile! profile_id {profile_id} wp {wp}"
             )
         return None
 
-    def activate_vip(self, profile_id: int, expire_time) -> None:
+    async def activate_vip(self, profile_id: int, expire_time) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             vip_expire_time=expire_time
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"activate_vip: Failed to update profile! profile_id {profile_id} expire_time {expire_time}"
             )
         return None
 
-    def update_user_rating(self, profile_id: int, new_rating: int) -> None:
+    async def update_user_rating(self, profile_id: int, new_rating: int) -> None:
         sql = profile.update(profile.c.id == profile_id).values(rating=new_rating)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"update_user_rating: Failed to update profile! profile_id {profile_id} new_rating {new_rating}"
             )
         return None
 
-    def update_bingo(self, aime_id: int, page: int, progress: int) -> Optional[int]:
+    async def update_bingo(self, aime_id: int, page: int, progress: int) -> Optional[int]:
         sql = insert(bingo).values(
             user=aime_id, page_number=page, page_progress=progress
         )
 
         conflict = sql.on_duplicate_key_update(page_number=page, page_progress=progress)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"put_bingo: failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_bingo(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_bingo(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(bingo).where(bingo.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_bingo_page(self, aime_id: int, page: Dict) -> Optional[List[Row]]:
+    async def get_bingo_page(self, aime_id: int, page: Dict) -> Optional[List[Row]]:
         sql = select(bingo).where(
             and_(bingo.c.user == aime_id, bingo.c.page_number == page)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def update_vip_time(self, profile_id: int, time_left) -> None:
+    async def update_vip_time(self, profile_id: int, time_left) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             vip_expire_time=time_left
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(f"Failed to update VIP time for profile {profile_id}")
 
-    def update_tutorial_flags(self, profile_id: int, flags: Dict) -> None:
+    async def update_tutorial_flags(self, profile_id: int, flags: Dict) -> None:
         sql = profile.update(profile.c.id == profile_id).values(
             gate_tutorial_flags=flags
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.error(
                 f"Failed to update tutorial flags for profile {profile_id}"

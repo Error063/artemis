@@ -128,53 +128,53 @@ tech_count = Table(
 
 
 class OngekiScoreData(BaseData):
-    def get_tech_count(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_tech_count(self, aime_id: int) -> Optional[List[Dict]]:
         return []
 
-    def put_tech_count(self, aime_id: int, tech_count_data: Dict) -> Optional[int]:
+    async def put_tech_count(self, aime_id: int, tech_count_data: Dict) -> Optional[int]:
         tech_count_data["user"] = aime_id
 
         sql = insert(tech_count).values(**tech_count_data)
         conflict = sql.on_duplicate_key_update(**tech_count_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_tech_count: Failed to update! aime_id: {aime_id}")
+            self.logger.warning(f"put_tech_count: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def get_best_scores(self, aime_id: int) -> Optional[List[Dict]]:
+    async def get_best_scores(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(score_best).where(score_best.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_best_score(
+    async def get_best_score(
         self, aime_id: int, song_id: int, chart_id: int = None
     ) -> Optional[List[Dict]]:
         return []
 
-    def put_best_score(self, aime_id: int, music_detail: Dict) -> Optional[int]:
+    async def put_best_score(self, aime_id: int, music_detail: Dict) -> Optional[int]:
         music_detail["user"] = aime_id
 
         sql = insert(score_best).values(**music_detail)
         conflict = sql.on_duplicate_key_update(**music_detail)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
-            self.logger.warn(f"put_best_score: Failed to add score! aime_id: {aime_id}")
+            self.logger.warning(f"put_best_score: Failed to add score! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_playlog(self, aime_id: int, playlog_data: Dict) -> Optional[int]:
+    async def put_playlog(self, aime_id: int, playlog_data: Dict) -> Optional[int]:
         playlog_data["user"] = aime_id
 
         sql = insert(playlog).values(**playlog_data)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
-            self.logger.warn(f"put_playlog: Failed to add playlog! aime_id: {aime_id}")
+            self.logger.warning(f"put_playlog: Failed to add playlog! aime_id: {aime_id}")
             return None
         return result.lastrowid

@@ -1,0 +1,13 @@
+server:
+  enable: True
+  loglevel: "info"
+  auto_register: True
+
+crypt:
+  enable: False
+  key: ""
+  iv: ""
+
+hash:
+  verify_hash: False
+  hash_base: ""

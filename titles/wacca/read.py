@@ -29,7 +29,7 @@ class WaccaReader(BaseReader):
             self.logger.error(f"Invalid wacca version {version}")
             exit(1)
 
-    def read(self) -> None:
+    async def read(self) -> None:
         if not (
             path.exists(f"{self.bin_dir}/Table")
             and path.exists(f"{self.bin_dir}/Message")
@@ -37,11 +37,11 @@ class WaccaReader(BaseReader):
             self.logger.error("Could not find Table or Message folder, nothing to read")
             return
 
-        self.read_music(f"{self.bin_dir}/Table", "MusicParameterTable")
+        await self.read_music(f"{self.bin_dir}/Table", "MusicParameterTable")
 
-    def read_music(self, base_dir: str, table: str) -> None:
+    async def read_music(self, base_dir: str, table: str) -> None:
         if not self.check_valid_pair(base_dir, table):
-            self.logger.warn(
+            self.logger.warning(
                 f"Cannot find {table} uasset/uexp pair at {base_dir}, music will not be read"
             )
             return
@@ -67,7 +67,7 @@ class WaccaReader(BaseReader):
             designer = wacca_data[str(key)]["NotesDesignerNormal"]
 
             if diff > 0:
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     1,
@@ -84,7 +84,7 @@ class WaccaReader(BaseReader):
             designer = wacca_data[str(key)]["NotesDesignerHard"]
 
             if diff > 0:
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     2,
@@ -101,7 +101,7 @@ class WaccaReader(BaseReader):
             designer = wacca_data[str(key)]["NotesDesignerExpert"]
 
             if diff > 0:
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     3,
@@ -118,7 +118,7 @@ class WaccaReader(BaseReader):
             designer = wacca_data[str(key)]["NotesDesignerInferno"]
 
             if diff > 0:
-                self.data.static.put_music(
+                await self.data.static.put_music(
                     self.version,
                     song_id,
                     4,

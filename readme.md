@@ -3,31 +3,68 @@ A network service emulator for games running SEGA'S ALL.NET service, and similar
 
 # Supported games
 Games listed below have been tested and confirmed working. Only game versions older then the version currently active in arcades, or games versions that have not recieved a major update in over one year, are supported.
-+ Chunithm
-    + All versions up to New!! Plus
-
-+ Crossbeats Rev
-    + All versions + omnimix
-
-+ maimai DX
-    + All versions up to Festival
-
-+ Hatsune Miku Arcade
-    + All versions
 
 + Card Maker
-    + 1.34.xx
-    + 1.35.xx
+    + 1.30
+    + 1.35
 
-+ Ongeki
-    + All versions up to Bright Memory
++ CHUNITHM INTL
+    + SUPERSTAR
+    + NEW
+    + NEW PLUS
+    + SUN
+    + SUN PLUS
 
-+ Wacca
++ CHUNITHM JP
+    + AIR
+    + AIR PLUS
+    + AMAZON
+    + AMAZON PLUS
+    + CRYSTAL
+    + CRYSTAL PLUS
+    + PARADISE
+    + PARADISE LOST
+    + NEW
+    + NEW PLUS
+    + SUN
+    + SUN PLUS
+
++ crossbeats REV.
+    + Crossbeats REV.
+    + Crossbeats REV. SUNRiSE S1
+    + Crossbeats REV. SUNRiSE S2 + omnimix
+
++ Hatsune Miku: Project DIVA Arcade
+    + Future Tone Arcade - All versions
+
++ Initial D THE ARCADE
+    + Season 2
+
++ maimai DX
+    + Splash
+    + Splash Plus
+    + UNiVERSE
+    + UNiVERSE PLUS
+    + FESTiVAL
+    + FESTiVAL PLUS
+
++ O.N.G.E.K.I.
+    + SUMMER
+    + SUMMER PLUS
+    + R.E.D.
+    + R.E.D. PLUS
+    + bright
+    + bright MEMORY
+
++ POKKÉN TOURNAMENT
+    + Final Online
+
++ Sword Art Online Arcade
+    + Final (Single player only)
+
++ WACCA
     + Lily R
     + Reverse
-
-+ Pokken
-    + Final Online
 
 ## Requirements
 - python 3 (tested working with 3.9 and 3.10, other versions YMMV)
@@ -36,7 +73,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
 - mysql/mariadb server
 
 ## Setup guides
-Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md) and [ubuntu](docs/INSTALL_UBUNTU.md) to setup and run the server.
+Follow the platform-specific guides for [windows](docs/INSTALL_WINDOWS.md), [linux (Debian 12 or Rasperry Pi OS recomended, but anything works)](docs/INSTALL_LINUX.md) or [docker](docs/INSTALL_DOCKER.md) to setup and run the server.
 
 ## Game specific information
 Read [Games specific info](docs/game_specific_info.md) for all supported games, importer settings, configuration option and database upgrades.
