@@ -21,10 +21,10 @@ class WaccaS(WaccaBase):
         (1507, 7),
         (1506, 6),
         (1505, 5),
-        (1514, 4),
-        (1513, 3),
-        (1512, 2),
-        (1511, 1),
+        (1504, 4),
+        (1503, 3),
+        (1502, 2),
+        (1501, 1),
     ]
 
     def __init__(self, cfg: CoreConfig, game_cfg: WaccaConfig) -> None:
