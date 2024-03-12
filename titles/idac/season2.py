@@ -1749,7 +1749,7 @@ class IDACSeason2(IDACBase):
 
         return {
             "status_code": "0",
-            "challenge_mode_data": self._generate_challenge_data(user_id),
+            "challenge_mode_data": await self._generate_challenge_data(user_id),
             "car_use_count": [],
             "maker_use_count": [],
         }
