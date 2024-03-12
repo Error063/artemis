@@ -22,7 +22,7 @@ if __name__ == "__main__":
     parser.add_argument("--email", "-e", type=str, help="Email for the new user")
     parser.add_argument("--access_code", "-a", type=str, help="Access code for new/transfer user", default="00000000000000000000")
     parser.add_argument("--message", "-m", type=str, help="Revision message")
-    parser.add_argument("action", type=str, help="create, upgrade, create-owner, migrate, create-revision")
+    parser.add_argument("action", type=str, help="create, upgrade, downgrade, create-owner, migrate, create-revision, create-autorevision")
     args = parser.parse_args()
 
     cfg = CoreConfig()
@@ -65,6 +65,10 @@ if __name__ == "__main__":
     elif args.action == "create-revision":
         loop = asyncio.get_event_loop()
         loop.run_until_complete(data.create_revision(args.message))
+
+    elif args.action == "create-autorevision":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.create_revision_auto(args.message))
 
     else:
         logging.getLogger("database").info(f"Unknown action {args.action}")

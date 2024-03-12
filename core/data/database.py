@@ -235,3 +235,15 @@ class Data:
             "-m",
             message,
         )
+
+    async def create_revision_auto(self, message: str) -> None:
+        if not message:
+            self.logger.info("Message is required for create-revision")
+            return
+        
+        self.__alembic_cmd(
+            "revision",
+            "--autogenerate",
+            "-m",
+            message,
+        )
