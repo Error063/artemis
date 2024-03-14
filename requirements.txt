@@ -21,3 +21,4 @@ starlette
 asyncio
 uvicorn
 alembic
+python-multipart
