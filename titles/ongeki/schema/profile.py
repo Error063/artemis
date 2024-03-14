@@ -246,6 +246,26 @@ rival = Table(
     mysql_charset="utf8mb4",
 )
 
+rating = Table(
+    "ongeki_profile_rating",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("type", String(255), nullable=False),
+    Column("index", Integer, nullable=False),
+    Column("musicId", Integer),
+    Column("difficultId", Integer),
+    Column("romVersionCode", Integer),
+    Column("score", Integer),
+    UniqueConstraint("user", "version", "type", "index", name="ongeki_profile_rating_best_uk"),
+    mysql_charset="utf8mb4",
+)
+
 
 class OngekiProfileData(BaseData):
     def __init__(self, cfg: CoreConfig, conn: Connection) -> None:
@@ -508,6 +528,7 @@ class OngekiProfileData(BaseData):
             )
             return None
         return result.lastrowid
+
     async def delete_rival(self, aime_id: int, rival_id: int) -> Optional[int]:
         sql = delete(rival).where(rival.c.user==aime_id, rival.c.rivalUserId==rival_id)
         result = await self.execute(sql)
@@ -515,3 +536,27 @@ class OngekiProfileData(BaseData):
             self.logger.error(f"delete_rival: failed to delete! aime_id: {aime_id}, rival_id: {rival_id}")
         else:
             return result.rowcount
+    
+    async def put_profile_rating(
+        self,
+        aime_id: int,
+        version: int,
+        rating_type: str,
+        rating_data: List[Dict],
+    ):
+        inserted_values = [
+            {"user": aime_id, "version": version, "type": rating_type, "index": i, **x}
+            for (i, x) in enumerate(rating_data)
+        ]
+        sql = insert(rating).values(inserted_values)
+        update_dict = {x.name: x for x in sql.inserted if x.name != "id"}
+        sql = sql.on_duplicate_key_update(**update_dict)
+        result = await self.execute(sql)
+
+        if result is None:
+            self.logger.warn(
+                f"put_profile_rating_{rating_type}: Could not insert rating entries, aime_id: {aime_id}",
+            )
+            return
+        
+        return result.lastrowid

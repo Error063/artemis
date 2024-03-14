@@ -925,6 +925,17 @@ class ChuniBase:
             for rp in upsert["userRecentPlayerList"]:
                 pass
 
+        for rating_type in {"userRatingBaseList", "userRatingBaseHotList", "userRatingBaseNextList"}:
+            if rating_type not in upsert:
+                continue
+            
+            await self.data.profile.put_profile_rating(
+                user_id,
+                self.version,
+                rating_type,
+                upsert[rating_type],
+            )
+
         return {"returnCode": "1"}
 
     async def handle_upsert_user_chargelog_api_request(self, data: Dict) -> Dict:
