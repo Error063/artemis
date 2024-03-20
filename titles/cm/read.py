@@ -206,6 +206,7 @@ class CardMakerReader(BaseReader):
             "1.25": Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS,
             "1.30": Mai2Constants.VER_MAIMAI_DX_FESTIVAL,
             "1.35": Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS,
+            "1.40": Mai2Constants.VER_MAIMAI_DX_BUDDIES,
         }
 
         for root, dirs, files in os.walk(base_dir):
@@ -223,12 +224,6 @@ class CardMakerReader(BaseReader):
 
                         enabled = (
                             True if troot.find("disable").text == "false" else False
-                        )
-
-                        # check if a date is part of the name and disable the
-                        # card if it is
-                        enabled = (
-                            False if re.search(r"\d{2}/\d{2}/\d{2}", name) else enabled
                         )
 
                         await self.mai2_data.static.put_card(

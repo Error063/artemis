@@ -40,6 +40,8 @@ detail = Table(
     Column("charaLockSlot", JSON),
     Column("contentBit", BigInteger),
     Column("playCount", Integer),
+    Column("currentPlayCount", Integer), # new with buddies
+    Column("renameCredit", Integer), # new with buddies
     Column("mapStock", Integer),  # new with fes+
     Column("eventWatchedDate", String(25)),
     Column("lastGameId", String(25)),
