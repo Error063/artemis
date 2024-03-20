@@ -1,10 +1,9 @@
 from typing import Dict, List, Optional
-from sqlalchemy import Table, Column, UniqueConstraint, PrimaryKeyConstraint, and_
-from sqlalchemy.types import Integer, String, TIMESTAMP, Boolean, JSON, BigInteger
-from sqlalchemy.engine.base import Connection
+from sqlalchemy import Table, Column, UniqueConstraint, and_
+from sqlalchemy.types import Integer, String, Boolean, JSON, BigInteger
 from sqlalchemy.schema import ForeignKey
 from sqlalchemy.engine import Row
-from sqlalchemy.sql import func, select
+from sqlalchemy.sql import select, delete
 from sqlalchemy.dialects.mysql import insert
 
 from core.data.schema import BaseData, metadata
@@ -393,6 +392,26 @@ team = Table(
     mysql_charset="utf8mb4",
 )
 
+rating = Table(
+    "chuni_profile_rating",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    Column("version", Integer, nullable=False),
+    Column("type", String(255), nullable=False),
+    Column("index", Integer, nullable=False),
+    Column("musicId", Integer),
+    Column("difficultId", Integer),
+    Column("romVersionCode", Integer),
+    Column("score", Integer),
+    UniqueConstraint("user", "version", "type", "index", name="chuni_profile_rating_best_uk"),
+    mysql_charset="utf8mb4",
+)
+
 
 class ChuniProfileData(BaseData):
     async def update_name(self, user_id: int, new_name: str) -> bool:
@@ -714,3 +733,27 @@ class ChuniProfileData(BaseData):
         return {
             "total_play_count": total_play_count
         }
+    
+    async def put_profile_rating(
+        self,
+        aime_id: int,
+        version: int,
+        rating_type: str,
+        rating_data: List[Dict],
+    ):
+        inserted_values = [
+            {"user": aime_id, "version": version, "type": rating_type, "index": i, **x}
+            for (i, x) in enumerate(rating_data)
+        ]
+        sql = insert(rating).values(inserted_values)
+        update_dict = {x.name: x for x in sql.inserted if x.name != "id"}
+        sql = sql.on_duplicate_key_update(**update_dict)
+        result = await self.execute(sql)
+
+        if result is None:
+            self.logger.warn(
+                f"put_profile_rating: Could not insert {rating_type}, aime_id: {aime_id}",
+            )
+            return
+        
+        return result.lastrowid

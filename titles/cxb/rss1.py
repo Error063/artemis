@@ -73,42 +73,6 @@ class CxbRevSunriseS1(CxbBase):
             for line in lines:
                 ret_str += f"{line[:-1]}\r\n"
 
-        # ShopListSale load
-        ret_str += "\r\n#ShopListSale\r\n"
-        with open(
-            r"titles/cxb/data/rss1/Shop/ShopList_Sale.csv", encoding="shift-jis"
-        ) as shop:
-            lines = shop.readlines()
-            for line in lines:
-                ret_str += f"{line[:-1]}\r\n"
-
-        # ShopListSkinBg load
-        ret_str += "\r\n#ShopListSkinBg\r\n"
-        with open(
-            r"titles/cxb/data/rss1/Shop/ShopList_SkinBg.csv", encoding="shift-jis"
-        ) as shop:
-            lines = shop.readlines()
-            for line in lines:
-                ret_str += f"{line[:-1]}\r\n"
-
-        # ShopListSkinEffect load
-        ret_str += "\r\n#ShopListSkinEffect\r\n"
-        with open(
-            r"titles/cxb/data/rss1/Shop/ShopList_SkinEffect.csv", encoding="shift-jis"
-        ) as shop:
-            lines = shop.readlines()
-            for line in lines:
-                ret_str += f"{line[:-1]}\r\n"
-
-        # ShopListSkinNotes load
-        ret_str += "\r\n#ShopListSkinNotes\r\n"
-        with open(
-            r"titles/cxb/data/rss1/Shop/ShopList_SkinNotes.csv", encoding="shift-jis"
-        ) as shop:
-            lines = shop.readlines()
-            for line in lines:
-                ret_str += f"{line[:-1]}\r\n"
-
         # ShopListTitle load
         ret_str += "\r\n#ShopListTitle\r\n"
         with open(

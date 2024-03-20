@@ -1,6 +1,10 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240318
+### CXB
++ Fixing handle_data_shop_list_detail_request for Sunrise S1
+
 ## 20240302
 ### SAO
 + Fixing new profile creation with right heroes and start VP

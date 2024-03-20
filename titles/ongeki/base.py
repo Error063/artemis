@@ -1067,6 +1067,24 @@ class OngekiBase:
         if "userKopList" in upsert:
             for x in upsert["userKopList"]:
                 await self.data.profile.put_kop(user_id, x)
+            
+        for rating_type in {
+            "userRatingBaseBestList",
+            "userRatingBaseBestNewList",
+            "userRatingBaseHotList",
+            "userRatingBaseNextList",
+            "userRatingBaseNextNewList",
+            "userRatingBaseHotNextList",
+        }:
+            if rating_type not in upsert:
+                continue
+
+            await self.data.profile.put_profile_rating(
+                user_id,
+                self.version,
+                rating_type,
+                upsert[rating_type],
+            )
 
         return {"returnCode": 1, "apiName": "upsertUserAll"}
 
