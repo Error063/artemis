@@ -10,7 +10,7 @@ Cab added successfully
 {% endif %}
 <ul style="font-size: 20px;">
 {% for c in arcade.cabs %}
-<li><a href="/cab/{{ c.id }}">{{ c.serial }} ({{ c.game }})</a>&nbsp;<button class="btn btn-secondary" onclick="prep_edit_form()">Edit</button>&nbsp;<button class="btn-danger btn">Delete</button></li>
+<li><a href="/cab/{{ c.id }}">{{ c.serial }}</a> ({{ c.game if c.game else "Any" }})&nbsp;<button class="btn btn-secondary" onclick="prep_edit_form()">Edit</button>&nbsp;<button class="btn-danger btn">Delete</button></li>
 {% endfor %}
 </ul>
 {% else %}

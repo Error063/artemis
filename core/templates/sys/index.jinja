@@ -4,6 +4,7 @@
 {% if error is defined %}
 {% include "core/templates/widgets/err_banner.jinja" %}
 {% endif %}
+<h2>Search</h2>
 <div class="row" id="rowForm">
     {% if "{:08b}".format(sesh.permissions)[6] == "1" %}
     <div class="col-sm-6" style="max-width: 25%;">
@@ -21,7 +22,12 @@
             OR
             <div class="form-group">
                 <label for="usrEmail">Email address</label>
-                <input type="email" class="form-control" id="usrEmail" name="usrEmail" aria-describedby="emailHelp">
+                <input type="email" class="form-control" id="usrEmail" name="usrEmail">
+            </div>
+            OR
+            <div class="form-group">
+                <label for="usrAc">Access Code</label>
+                <input type="text" class="form-control" id="usrAc" name="usrAc" maxlength="20" placeholder="00000000000000000000">
             </div>
             <br />
             <button type="submit" class="btn btn-primary">Search</button>
@@ -63,7 +69,121 @@
     </div>
     {% endif %}
 </div>
+<h2>Add</h2>
 <div class="row" id="rowAdd">
-
+    {% if "{:08b}".format(sesh.permissions)[6] == "1" %}
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="usrAdd" name="usrAdd" action="/sys/add.user" class="form-inline" method="POST">
+            <h3>Add User</h3>
+            <div class="form-group">
+                <label for="usrName">Username</label>
+                <input type="text" class="form-control" id="usrName" name="usrName">
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="usrEmail">Email address</label>
+                <input type="email" class="form-control" id="usrEmail" name="usrEmail" required>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="usrPerm">Permission Level</label>
+                <input type="number" class="form-control" id="usrPerm" name="usrPerm" value="1">
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="cardAdd" name="cardAdd" action="/sys/add.card" class="form-inline" method="POST">
+            <h3>Add Card</h3>
+            <div class="form-group">
+                <label for="cardUsr">User ID</label>
+                <input type="number" class="form-control" id="cardUsr" name="cardUsr" required>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="cardAc">Access Code</label>
+                <input type="text" class="form-control" id="cardAc" name="cardAc" maxlength="20" placeholder="00000000000000000000" required>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="cardIdm">IDm/Chip ID</label>
+                <input type="text" class="form-control" id="cardIdm" name="cardIdm" disabled>
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+    {% endif %}
+    {% if "{:08b}".format(sesh.permissions)[5] == "1" %}
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="shopAdd" name="shopAdd" action="/sys/add.shop" class="form-inline" method="POST">
+            <h3>Add Shop</h3>
+            <div class="form-group">
+                <label for="shopName">Name</label>
+                <input type="text" class="form-control" id="shopName" name="shopName">
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="shopCountry">Country Code</label>
+                <input type="text" class="form-control" id="shopCountry" name="shopCountry" maxlength="3" placeholder="JPN">
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="shopIp">VPN IP</label>
+                <input type="text" class="form-control" id="shopIp" name="shopIp">
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+    <div class="col-sm-6" style="max-width: 25%;">
+        <form id="cabAdd" name="cabAdd" action="/sys/add.cab" class="form-inline" method="POST">
+            <h3>Add Machine</h3>
+            <div class="form-group">
+                <label for="cabShop">Shop ID</label>
+                <input type="number" class="form-control" id="cabShop" name="cabShop" required>
+            </div>
+            <br>
+            <div class="form-group">
+                <label for="cabSerial">Serial</label>
+                <input type="text" class="form-control" id="cabSerial" name="cabSerial">
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="cabGame">Game Code</label>
+                <input type="text" class="form-control" id="cabGame" name="cabGame" maxlength="4" placeholder="SXXX">
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+<div class="row" id="rowAddResult" style="margin: 10px;">
+    {% if "{:08b}".format(sesh.permissions)[6] == "1" %}
+    <div id="userAddResult" class="col-sm-6" style="max-width: 25%;">
+        {% if usradd is defined %}
+            <pre>Added user {{ usradd.username if usradd.username is not none else "with no name"}} with id {{usradd.id}} and password {{ usradd.password }}</pre>
+        {% endif %}
+    </div>
+    <div id="cardAddResult" class="col-sm-6" style="max-width: 25%;">
+        {% if cardadd is defined %}
+            <pre>Added {{ cardadd.access_code }} with id {{cardadd.id}} to user {{ cardadd.user }}</pre>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if "{:08b}".format(sesh.permissions)[5] == "1" %}
+    <div id="shopAddResult" class="col-sm-6" style="max-width: 25%;">
+        {% if shopadd is defined %}
+            <pre>Added Shop {{ shopadd.id }}</pre></a>
+        {% endif %}
+    </div>
+    <div id="cabAddResult" class="col-sm-6" style="max-width: 25%;">
+        {% if cabadd is defined %}
+            <pre>Added Machine {{ cabadd.id }} with serial {{ cabadd.serial }}</pre></a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock content %}
