@@ -34,7 +34,8 @@ class Utils:
 
     @classmethod
     def get_ip_addr(cls, req: Request) -> str:
-        return req.headers.get("x-forwarded-for", req.client.host)
+        ip = req.headers.get("x-forwarded-for", req.client.host)
+        return ip.split(", ")[0]
     
     @classmethod
     def get_title_port(cls, cfg: CoreConfig):
