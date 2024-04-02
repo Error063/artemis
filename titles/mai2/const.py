@@ -53,6 +53,7 @@ class Mai2Constants:
     VER_MAIMAI_DX_UNIVERSE_PLUS = 18
     VER_MAIMAI_DX_FESTIVAL = 19
     VER_MAIMAI_DX_FESTIVAL_PLUS = 20
+    VER_MAIMAI_DX_BUDDIES = 21
 
     VERSION_STRING = (
         "maimai",
@@ -76,6 +77,7 @@ class Mai2Constants:
         "maimai DX UNiVERSE PLUS",
         "maimai DX FESTiVAL",
         "maimai DX FESTiVAL PLUS",
+        "maimai DX BUDDiES"
     )
 
     @classmethod

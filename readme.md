@@ -47,6 +47,7 @@ Games listed below have been tested and confirmed working. Only game versions ol
     + UNiVERSE PLUS
     + FESTiVAL
     + FESTiVAL PLUS
+    + BUDDiES
 
 + O.N.G.E.K.I.
     + SUMMER

@@ -44,7 +44,7 @@ class OngekiFrontend(FE_Base):
 
         self.version = usr_sesh.ongeki_version
         if usr_sesh.user_id > 0:
-            profile_data =self.data.profile.get_profile_data(usr_sesh.user_id, self.version)
+            profile_data =await self.data.profile.get_profile_data(usr_sesh.user_id, self.version)
             rival_list = await self.data.profile.get_rivals(usr_sesh.user_id)
             rival_data = {
                 "userRivalList": rival_list,

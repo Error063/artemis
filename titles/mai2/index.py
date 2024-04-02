@@ -25,6 +25,7 @@ from .universe import Mai2Universe
 from .universeplus import Mai2UniversePlus
 from .festival import Mai2Festival
 from .festivalplus import Mai2FestivalPlus
+from .buddies import Mai2Buddies
 
 
 class Mai2Servlet(BaseServlet):
@@ -58,6 +59,7 @@ class Mai2Servlet(BaseServlet):
             Mai2UniversePlus,
             Mai2Festival,
             Mai2FestivalPlus,
+            Mai2Buddies
         ]
 
         self.logger = logging.getLogger("mai2")
@@ -257,8 +259,10 @@ class Mai2Servlet(BaseServlet):
             internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
         elif version >= 130 and version < 135:  # FESTiVAL
             internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
-        elif version >= 135:  # FESTiVAL PLUS
+        elif version >= 135 and version < 140:  # FESTiVAL PLUS
             internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
+        elif version >= 140:  # BUDDiES
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
 
         if (
             request.headers.get("Mai-Encoding") is not None

@@ -94,7 +94,7 @@ class ArcadeData(BaseData):
             return None
         return result.fetchone()
 
-    async def put_machine(
+    async def create_machine(
         self,
         arcade_id: int,
         serial: str = "",
@@ -102,12 +102,12 @@ class ArcadeData(BaseData):
         game: str = None,
         is_cab: bool = False,
     ) -> Optional[int]:
-        if arcade_id:
+        if not arcade_id:
             self.logger.error(f"{__name__ }: Need arcade id!")
             return None
 
         sql = machine.insert().values(
-            arcade=arcade_id, keychip=serial, board=board, game=game, is_cab=is_cab
+            arcade=arcade_id, serial=serial, board=board, game=game, is_cab=is_cab
         )
 
         result = await self.execute(sql)
@@ -148,15 +148,15 @@ class ArcadeData(BaseData):
             return None
         return result.fetchall()
 
-    async def put_arcade(
+    async def create_arcade(
         self,
-        name: str,
+        name: str = None,
         nickname: str = None,
         country: str = "JPN",
         country_id: int = 1,
         state: str = "",
         city: str = "",
-        regional_id: int = 1,
+        region_id: int = 1,
     ) -> Optional[int]:
         if nickname is None:
             nickname = name
@@ -168,7 +168,7 @@ class ArcadeData(BaseData):
             country_id=country_id,
             state=state,
             city=city,
-            regional_id=regional_id,
+            region_id=region_id,
         )
 
         result = await self.execute(sql)
@@ -206,8 +206,8 @@ class ArcadeData(BaseData):
             return None
         return result.lastrowid
 
-    async def format_serial(
-        self, platform_code: str, platform_rev: int, serial_num: int, append: int = 4152
+    def format_serial( # TODO: Actual serial stuff
+        self, platform_code: str, platform_rev: int, serial_num: int, append: int = 8888
     ) -> str:
         return f"{platform_code}{platform_rev:02d}A{serial_num:04d}{append:04d}"  # 0x41 = A, 0x52 = R
 

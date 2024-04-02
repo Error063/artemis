@@ -10,6 +10,9 @@ import bcrypt
 import re
 import jwt
 import yaml
+import secrets
+import string
+import random
 from base64 import b64decode
 from enum import Enum
 from datetime import datetime, timezone
@@ -131,6 +134,10 @@ class FrontendServlet():
                 Route("/", self.system.render_GET, methods=['GET']),
                 Route("/lookup.user", self.system.lookup_user, methods=['GET']),
                 Route("/lookup.shop", self.system.lookup_shop, methods=['GET']),
+                Route("/add.user", self.system.add_user, methods=['POST']),
+                Route("/add.card", self.system.add_card, methods=['POST']),
+                Route("/add.shop", self.system.add_shop, methods=['POST']),
+                Route("/add.cab", self.system.add_cab, methods=['POST']),
             ]),
             Mount("/shop", routes=[
                 Route("/", self.arcade.render_GET, methods=['GET']),
@@ -551,10 +558,16 @@ class FE_System(FE_Base):
         if not usr_sesh or not self.test_perm_minimum(usr_sesh.permissions, PermissionOffset.USERMOD):
             return RedirectResponse("/gate/", 303)
         
+        if request.query_params.get("e", None):
+            err = int(request.query_params.get("e"))
+        else:
+            err = 0
+        
         return Response(template.render(
             title=f"{self.core_config.server.name} | System", 
             sesh=vars(usr_sesh), 
             usrlist=[],
+            error = err
         ), media_type="text/html; charset=utf-8")
         
     async def lookup_user(self, request: Request):
@@ -659,6 +672,113 @@ class FE_System(FE_Base):
             sesh=vars(usr_sesh), 
             usrlist=[],
             shoplist=shoplist,
+        ), media_type="text/html; charset=utf-8")
+
+    async def add_user(self, request: Request):
+        template = self.environment.get_template("core/templates/sys/index.jinja")
+        
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh or not self.test_perm(usr_sesh.permissions, PermissionOffset.ACMOD):
+            return RedirectResponse("/gate/", 303)
+        
+        frm = await request.form()
+        username = frm.get("userName", None)
+        email = frm.get("userEmail", None)
+        perm = frm.get("usrPerm", "1")
+        passwd = "".join(
+            secrets.choice(string.ascii_letters + string.digits) for i in range(20)
+        )
+        hash = bcrypt.hashpw(passwd.encode(), bcrypt.gensalt())
+
+        if not email:
+            return RedirectResponse("/sys/?e=4", 303)
+
+        uid = await self.data.user.create_user(username=username if username else None, email=email, password=hash.decode(), permission=int(perm))
+        return Response(template.render(
+            title=f"{self.core_config.server.name} | System", 
+            sesh=vars(usr_sesh), 
+            usradd={"id": uid, "username": username, "password": passwd},
+        ), media_type="text/html; charset=utf-8")
+
+    async def add_card(self, request: Request):
+        template = self.environment.get_template("core/templates/sys/index.jinja")
+        
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh or not self.test_perm(usr_sesh.permissions, PermissionOffset.ACMOD):
+            return RedirectResponse("/gate/", 303)
+        
+        frm = await request.form()
+        userid = frm.get("cardUsr", None)
+        access_code = frm.get("cardAc", None)
+        idm = frm.get("cardIdm", None)
+
+        if userid is None or access_code is None or not userid.isdigit() or not len(access_code) == 20 or not access_code.isdigit:
+            return RedirectResponse("/sys/?e=4", 303)
+        
+        cardid = await self.data.card.create_card(int(userid), access_code)
+        if not cardid:
+            return RedirectResponse("/sys/?e=99", 303)
+
+        if idm is not None:
+            # TODO: save IDM
+            pass
+        
+        return Response(template.render(
+            title=f"{self.core_config.server.name} | System", 
+            sesh=vars(usr_sesh), 
+            cardadd={"id": cardid, "user": userid, "access_code": access_code},
+        ), media_type="text/html; charset=utf-8")
+
+    async def add_shop(self, request: Request):
+        template = self.environment.get_template("core/templates/sys/index.jinja")
+        
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh or not self.test_perm(usr_sesh.permissions, PermissionOffset.ACMOD):
+            return RedirectResponse("/gate/", 303)
+        
+        frm = await request.form()
+        name = frm.get("shopName", None)
+        country = frm.get("shopCountry", "JPN")
+        ip = frm.get("shopIp", None)
+
+        acid = await self.data.arcade.create_arcade(name if name else None, name if name else None, country)
+        if not acid:
+            return RedirectResponse("/sys/?e=99", 303)
+        
+        if ip:
+            # TODO: set IP
+            pass
+        
+        return Response(template.render(
+            title=f"{self.core_config.server.name} | System", 
+            sesh=vars(usr_sesh), 
+            shopadd={"id": acid},
+        ), media_type="text/html; charset=utf-8")
+
+    async def add_cab(self, request: Request):
+        template = self.environment.get_template("core/templates/sys/index.jinja")
+        
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh or not self.test_perm(usr_sesh.permissions, PermissionOffset.ACMOD):
+            return RedirectResponse("/gate/", 303)
+
+        frm = await request.form()
+        shopid = frm.get("cabShop", None)
+        serial = frm.get("cabSerial", None)
+        game_code = frm.get("cabGame", None)
+
+        if not shopid or not shopid.isdigit():
+            return RedirectResponse("/sys/?e=4", 303)
+        
+        if not serial:
+            serial = self.data.arcade.format_serial("A69E", 1, random.randint(1, 9999))
+        
+        cab_id = await self.data.arcade.create_machine(int(shopid), serial, None, game_code if game_code else None)
+        
+        return Response(template.render(
+            title=f"{self.core_config.server.name} | System", 
+            sesh=vars(usr_sesh), 
+            cabadd={"id": cab_id, "serial": serial},
         ), media_type="text/html; charset=utf-8")
 
 class FE_Arcade(FE_Base):

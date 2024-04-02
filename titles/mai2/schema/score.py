@@ -145,8 +145,31 @@ playlog = Table(
     Column("isNewFree", Boolean),
     Column("extNum1", Integer),
     Column("extNum2", Integer),
-    Column("extNum4", Integer, server_default="0"),
+    Column("extNum4", Integer),
+    Column("extBool1", Boolean), # new with buddies
     Column("trialPlayAchievement", Integer),
+    mysql_charset="utf8mb4",
+)
+
+# new with buddies
+playlog_2p = Table(
+    "mai2_playlog_2p",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    # TODO: ForeignKey to aime_user?
+    Column("userId1", Integer),
+    Column("userId2", Integer),
+    # TODO: ForeignKey to mai2_profile_detail?
+    Column("userName1", String(25)),
+    Column("userName2", String(25)),
+    Column("regionId", Integer),
+    Column("placeId", Integer),
+    Column("user2pPlaylogDetailList", JSON),
     mysql_charset="utf8mb4",
 )
 
@@ -341,6 +364,18 @@ class Mai2ScoreData(BaseData):
         result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"put_playlog:  Failed to insert! user_id {user_id} is_dx {is_dx}")
+            return None
+        return result.lastrowid
+    
+    async def put_playlog_2p(self, user_id: int, playlog_2p_data: Dict) -> Optional[int]:
+        playlog_2p_data["user"] = user_id
+        sql = insert(playlog_2p).values(**playlog_2p_data)
+
+        conflict = sql.on_duplicate_key_update(**playlog_2p_data)
+
+        result = await self.execute(conflict)
+        if result is None:
+            self.logger.error(f"put_playlog_2p:  Failed to insert! user_id {user_id}")
             return None
         return result.lastrowid
 

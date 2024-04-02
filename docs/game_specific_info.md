@@ -192,6 +192,7 @@ Config file is located in `config/cxb.yaml`.
 | SDEZ      | 18         | maimai DX UNiVERSE PLUS |
 | SDEZ      | 19         | maimai DX FESTiVAL      |
 | SDEZ      | 20         | maimai DX FESTiVAL PLUS |
+| SDEZ      | 21         | maimai DX BUDDiES       |
 
 ### Importer
 
@@ -406,6 +407,7 @@ After that, on next login the present should be received (or whenever it suppose
   * UNiVERSE PLUS: Yes
   * FESTiVAL: Yes (added in A031)
   * FESTiVAL PLUS: Yes (added in A035)
+  * BUDDiES: Yes (added in A039)
 * O.N.G.E.K.I. bright MEMORY: Yes
 
 

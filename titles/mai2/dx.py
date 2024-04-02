@@ -212,6 +212,9 @@ class Mai2DX(Mai2Base):
                     ),
                 )
                 await self.data.item.put_friend_season_ranking(user_id, fsr)
+        
+        if "user2pPlaylog" in upsert:
+            await self.data.score.put_playlog_2p(user_id, upsert["user2pPlaylog"])
 
         return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
 
