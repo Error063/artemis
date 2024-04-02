@@ -241,6 +241,10 @@ class Data:
             self.logger.info("Message is required for create-revision")
             return
         
+        for _, mod in Utils.get_all_titles().items():
+            if hasattr(mod, "database"):
+                mod.database(self.config)
+        
         self.__alembic_cmd(
             "revision",
             "--autogenerate",
