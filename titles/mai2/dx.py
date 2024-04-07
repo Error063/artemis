@@ -16,12 +16,36 @@ class Mai2DX(Mai2Base):
         self.version = Mai2Constants.VER_MAIMAI_DX
 
     async def handle_get_game_setting_api_request(self, data: Dict):
+        # if reboot start/end time is not defined use the default behavior of being a few hours ago
+        if self.core_config.title.reboot_start_time == "" or self.core_config.title.reboot_end_time == "":
+            reboot_start = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=6), self.date_time_format
+            )
+            reboot_end = datetime.strftime(
+                datetime.utcnow() + timedelta(hours=7), self.date_time_format
+            )
+        else:
+            # get current datetime in JST
+            current_jst = datetime.now(pytz.timezone('Asia/Tokyo')).date()
+
+            # parse config start/end times into datetime
+            reboot_start_time = datetime.strptime(self.core_config.title.reboot_start_time, "%H:%M")
+            reboot_end_time = datetime.strptime(self.core_config.title.reboot_end_time, "%H:%M")
+
+            # offset datetimes with current date/time
+            reboot_start_time = reboot_start_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+            reboot_end_time = reboot_end_time.replace(year=current_jst.year, month=current_jst.month, day=current_jst.day, tzinfo=pytz.timezone('Asia/Tokyo'))
+
+            # create strings for use in gameSetting
+            reboot_start = reboot_start_time.strftime(self.date_time_format)
+            reboot_end = reboot_end_time.strftime(self.date_time_format)
+
         return {
             "gameSetting": {
                 "isMaintenance": False,
                 "requestInterval": 1800,
-                "rebootStartTime": "2020-01-01 07:00:00.0",
-                "rebootEndTime": "2020-01-01 07:59:59.0",
+                "rebootStartTime": reboot_start,
+                "rebootEndTime": reboot_end,
                 "movieUploadLimit": 100,
                 "movieStatus": 1,
                 "movieServerUri": self.old_server + "movie/",
