@@ -28,6 +28,7 @@ class Mai2Constants:
     GAME_CODE_MILK = "SDDZ"
     GAME_CODE_FINALE = "SDEY"
     GAME_CODE_DX = "SDEZ"
+    GAME_CODE_DX_INT = "SDGA"
 
     CONFIG_NAME = "mai2.yaml"
 

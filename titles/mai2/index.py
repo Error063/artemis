@@ -113,18 +113,23 @@ class Mai2Servlet(BaseServlet):
             Route("/{version:int}/MaimaiServlet/usbdl/{endpoint:str}", self.handle_usbdl),
             Route("/{version:int}/MaimaiServlet/deliver/{endpoint:str}", self.handle_deliver),
             Route("/{version:int}/MaimaiServlet/{endpoint:str}", self.handle_mai, methods=['POST']),
-            Route("/{version:int}/Maimai2Servlet/{endpoint:str}", self.handle_mai2, methods=['POST']),
+            Route("/{game:str}/{version:int}/Maimai2Servlet/{endpoint:str}", self.handle_mai2, methods=['POST']),
         ]
         
-    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:        
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if game_code in {Mai2Constants.GAME_CODE_DX, Mai2Constants.GAME_CODE_DX_INT}:
+            path = f"{game_code}/{game_ver}"
+        else:
+            path = game_ver
+
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/",
+                f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{path}/",
                 f"{self.core_cfg.server.hostname}",
             )
 
         return (
-            f"http://{self.core_cfg.server.hostname}/{game_ver}/",
+            f"http://{self.core_cfg.server.hostname}/{path}/",
             f"{self.core_cfg.server.hostname}",
         )
 
@@ -239,6 +244,8 @@ class Mai2Servlet(BaseServlet):
     async def handle_mai2(self, request: Request) -> bytes:
         endpoint: str = request.path_params.get('endpoint')
         version: int = request.path_params.get('version')
+        game_code = request.path_params.get('game')
+
         if endpoint.lower() == "ping":
             return Response(zlib.compress(b'{"returnCode": "1"}'))
 
@@ -292,6 +299,11 @@ class Mai2Servlet(BaseServlet):
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
+        endpoint = (
+            endpoint.replace("MaimaiExp", "")
+            if game_code == Mai2Constants.GAME_CODE_DX_INT
+            else endpoint
+        )
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
