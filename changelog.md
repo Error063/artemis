@@ -1,6 +1,15 @@
 # Changelog
 Documenting updates to ARTEMiS, to be updated every time the master branch is pushed to.
 
+## 20240408
+### System
++ Modified the game specific documentation
+
+## 20240407
+### Maimai
++ Support maimai DX International [#118](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/118) (Thanks beerpsi!)
++ Fixed the maimai DX reboot time from config [#120](https://gitea.tendokyu.moe/Hay1tsme/artemis/pulls/120) (Thanks topty!)
+
 ## 20240318
 ### CXB
 + Fixing handle_data_shop_list_detail_request for Sunrise S1

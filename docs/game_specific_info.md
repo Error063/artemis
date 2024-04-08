@@ -9,7 +9,15 @@ using the megaime database. Clean installations always create the latest databas
 To upgrade the core database and the database for every game, execute:
 
 ```shell
-python dbutils.py autoupgrade
+python dbutils.py upgrade
+```
+
+If you are using the old master branch that was not setup with alembic, make sure to do the following steps in order:
+- Pull down latest master/develop
+- Update core.yaml
+- Back up your existing database
+```shell
+python dbutils.py migrate
 ```
 
 # Table of content
@@ -22,7 +30,7 @@ python dbutils.py autoupgrade
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
     - [Sword Art Online Arcade](#sao)
-	- [Initial D THE ARCADE](#initial-d-the-arcade)
+    - [Initial D THE ARCADE](#initial-d-the-arcade)
 
 
 # Supported Games
