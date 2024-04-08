@@ -13,6 +13,7 @@ import traceback
 import sys
 
 from core import CoreConfig, Utils
+from core.data import Data
 from core.title import BaseServlet
 from .config import WaccaConfig
 from .config import WaccaConfig
@@ -33,6 +34,7 @@ class WaccaServlet(BaseServlet):
             self.game_cfg.update(
                 yaml.safe_load(open(f"{cfg_dir}/{WaccaConstants.CONFIG_NAME}"))
             )
+        self.data = Data(core_cfg)
 
         self.versions = [
             WaccaBase(core_cfg, self.game_cfg),
@@ -136,6 +138,15 @@ class WaccaServlet(BaseServlet):
             resp.status = 1
             resp.message = "不正なリクエスト エラーです"
             return end(resp.make())
+        
+        if not self.core_cfg.server.allow_unregistered_serials:
+            mech = await self.data.arcade.get_machine(req.chipId)
+            if not mech:
+                self.logger.error(f"Blocked request from unregistered serial {req.chipId} to {url_path}")
+                resp = BaseResponse()
+                resp.status = 1
+                resp.message = "機械エラーです"
+                return end(resp.make())
 
         ver_search = int(version_full)
 
