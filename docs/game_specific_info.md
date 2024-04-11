@@ -101,7 +101,7 @@ crypto:
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDBT upgrade
+python dbutils.py upgrade
 ```
 
 ### Online Battle
@@ -224,7 +224,7 @@ The importer for maimai Pre-DX will import Events and Music. Not all games will 
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDEZ upgrade
+python dbutils.py upgrade
 ```
 
 Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
@@ -268,7 +268,7 @@ In order to use custom PV Lists, simply drop in your .dat files inside of /title
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SBZV upgrade
+python dbutils.py upgrade
 ```
 
 ## O.N.G.E.K.I.
@@ -324,7 +324,7 @@ crypto:
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDDT upgrade
+python dbutils.py upgrade
 ```
 
 ### Controlling Events (Ranking Event, Technical Challenge Event, Mission Event)
@@ -552,7 +552,7 @@ Config file is located in `config/wacca.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDFE upgrade
+python dbutils.py upgrade
 ```
 
 ### VIP Rewards
@@ -625,7 +625,7 @@ Config file is located in `config/sao.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDEW upgrade
+python dbutils.py upgrade
 ```
 
 ### Notes
@@ -690,7 +690,7 @@ Config file is located in `config/idac.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDGT upgrade
+python dbutils.py upgrade
 ```
 
 ### Notes
