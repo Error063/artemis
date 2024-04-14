@@ -1,0 +1,184 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+<style>
+  {% include 'titles/chuni/templates/css/chuni_style.css' %}
+</style>
+<div class="container">
+  {% include 'titles/chuni/templates/chuni_header.jinja' %}
+  {% if playlog is defined and playlog is not none %}
+  <div class="row">
+    <h4 style="text-align: center;">Playlog counts: {{ playlog_count }}</h4>
+    {% set rankName = ['D', 'C', 'B', 'BB', 'BBB', 'A', 'AA', 'AAA', 'S', 'S+', 'SS', 'SS+', 'SSS', 'SSS+'] %}
+    {% set difficultyName = ['normal', 'hard', 'expert', 'master', 'ultimate'] %}
+    {% for record in playlog %}
+    <div class="col-lg-6 mt-3">
+      <div class="card bg-card rounded card-hover">
+        <div class="card-header row">
+          <div class="col-8 scrolling-text">
+            <h5 class="card-text"> {{ record.title }} </h5>
+            <br>
+            <h6 class="card-text"> {{ record.artist }} </h6>
+          </div>
+          <div class="col-4">
+            <h6 class="card-text">{{ record.raw.userPlayDate }}</h6>
+            <h6 class="card-text">TRACK {{ record.raw.track }}</h6>
+          </div>
+        </div>
+        <div class="card-body row">
+          <div class="col-3" style="text-align: center;">
+            <h4 class="card-text">{{ record.raw.score }}</h4>
+            <h2>{{ rankName[record.raw.rank] }}</h2>
+            <h6
+              class="{% if record.raw.level == 0 %}normal{% elif record.raw.level == 1 %}advanced{% elif record.raw.level == 2 %}expert{% elif record.raw.level == 3 %}master{% elif record.raw.level == 4 %}ultima{% endif %}">
+              {{ difficultyName[record.raw.level] }}&nbsp&nbsp{{ record.difficultyNum }}
+            </h6>
+          </div>
+          <div class="col-6" style="text-align: center;">
+            <table class="table-small table-rowdistinc">
+              <tr>
+                <td>JUSTICE CRITIAL</td>
+                <td>
+                  {{ record.raw.judgeCritical + record.raw.judgeHeaven }}
+                </td>
+              </tr>
+              <tr>
+                <td>JUSTICE</td>
+                <td>
+                  {{ record.raw.judgeJustice }}
+                </td>
+              </tr>
+              <tr>
+                <td>ATTACK</td>
+                <td>
+                  {{ record.raw.judgeAttack }}
+                </td>
+              </tr>
+              <tr>
+                <td>MISS</td>
+                <td>
+                  {{ record.raw.judgeGuilty }}
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-3" style="text-align: center;">
+            {%if record.raw.isFullCombo == 1 %}
+            <h6>FULL COMBO</h6>
+            {% endif %}
+            {%if record.raw.isAllJustice == 1 %}
+            <h6>ALL JUSTICE</h6>
+            {% endif %}
+            {%if record.raw.isNewRecord == 1 %}
+            <h6>NEW RECORD</h6>
+            {% endif %}
+            {%if record.raw.fullChainKind > 0 %}
+            <h6>FULL CHAIN</h6>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% set playlog_pages = playlog_count // 20 + 1 %}
+  {% elif sesh is defined and sesh is not none and sesh.user_id > 0 %}
+  No Playlog information found for this account.
+  {% else %}
+  Login to view profile information.
+  {% endif %}
+</div>
+<footer class="navbar-fixed-bottom">
+  <nav aria-label="Playlog page navigation">
+    <ul class="pagination justify-content-center mt-3">
+      <li class="page-item"><a id="prev_page" class="page-link" href="#">Previous</a></li>
+      <li class="page-item"><a id="first_page" class="page-link" href="/game/chuni/playlog/">1</a></li>
+      <li class="page-item"><a id="prev_3_page" class="page-link" href="">...</a></li>
+      <li class="page-item"><a id="front_page" class="page-link" href="">2</a></li>
+      <li class="page-item"><a id="cur_page" class="page-link active" href="">3</a></li>
+      <li class="page-item"><a id="back_page" class="page-link" href="">4</a></li>
+      <li class="page-item"><a id="next_3_page" class="page-link" href="">...</a></li>
+      <li class="page-item"><a id="last_page" class="page-link" href="/game/chuni/playlog/{{ playlog_pages }}">{{
+          playlog_pages }}</a></li>
+      <li class="page-item"><a id="next_page" class="page-link" href="#">Next</a></li>
+      &nbsp
+    </ul>
+  </nav>
+  <div class="row">
+    <div class="col-5"></div>
+    <div class="col-2">
+      <div class="input-group rounded">
+        <input id="page_input" type="text" class="form-control" placeholder="go to page">
+        <span class="input-group-btn">
+          <button id="go_button" class="btn btn-light" type="button">
+            Go!
+          </button>
+        </span>
+      </div>
+    </div>
+    <div class="col-5"></div>
+  </div>
+</footer>
+
+<script>
+  $(document).ready(function () {
+    $('.scrolling-text p, .scrolling-text h1, .scrolling-text h2, .scrolling-text h3, .scrolling-text h4, .scrolling-text h5, .scrolling-text h6').each(function () {
+      var parentWidth = $(this).parent().width();
+      var elementWidth = $(this).outerWidth();
+      var elementWidthWithPadding = $(this).outerWidth(true);
+
+      if (elementWidthWithPadding > parentWidth) {
+        $(this).addClass('scrolling');
+      }
+    });
+
+    var currentUrl = window.location.pathname;
+    var currentPage = parseInt(currentUrl.split('/').pop());
+    var rootUrl = '/game/chuni/playlog/';
+    var playlogPages = {{ playlog_pages }};
+  if (Number.isNaN(currentPage)) {
+    currentPage = 1;
+  }
+  $('#cur_page').text(currentPage);
+  $('#prev_page').attr('href', rootUrl + (currentPage - 1))
+  $('#next_page').attr('href', rootUrl + (currentPage + 1))
+  $('#front_page').attr('href', rootUrl + (currentPage - 1))
+  $('#front_page').text(currentPage - 1);
+  $('#back_page').attr('href', rootUrl + (currentPage + 1))
+  $('#back_page').text(currentPage + 1);
+  $('#prev_3_page').attr('href', rootUrl + (currentPage - 3))
+  $('#next_3_page').attr('href', rootUrl + (currentPage + 3))
+  if ((currentPage - 1) < 3) {
+    $('#prev_3_page').hide();
+    if ((currentPage - 1) < 2) {
+      $('#front_page').hide();
+      if (currentPage === 1) {
+        $('#first_page').hide();
+        $('#prev_page').addClass('disabled');
+      }
+    }
+  }
+  if ((playlogPages - currentPage) < 3) {
+    $('#next_3_page').hide();
+    if ((playlogPages - currentPage) < 2) {
+      $('#back_page').hide();
+      if (currentPage === playlogPages) {
+        $('#last_page').hide();
+        $('#next_page').addClass('disabled');
+      }
+    }
+  }
+
+  $('#go_button').click(function () {
+    var pageNumber = parseInt($('#page_input').val());
+
+    if (!Number.isNaN(pageNumber) && pageNumber <= playlogPages && pageNumber >= 0) {
+      var url = '/game/chuni/playlog/' + pageNumber;
+      window.location.href = url;
+    } else {
+      $('#page_input').val('');
+      $('#page_input').attr('placeholder', 'invalid input!');
+    }
+  });
+  });
+</script>
+{% endblock content %}

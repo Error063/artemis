@@ -190,6 +190,23 @@ class ChuniScoreData(BaseData):
             return None
         return result.fetchall()
 
+    async def get_playlogs_limited(self, aime_id: int, index: int, count: int) -> Optional[Row]:
+        sql = select(playlog).where(playlog.c.user == aime_id).order_by(playlog.c.id.desc()).limit(count).offset(index * count)
+
+        result = await self.execute(sql)
+        if result is None:
+            self.logger.warning(f" aime_id {aime_id} has no playlog ")
+            return None
+        return result.fetchall()
+
+    async def get_user_playlogs_count(self, aime_id: int) -> Optional[Row]:
+        sql = select(func.count()).where(playlog.c.user == aime_id)
+        result = await self.execute(sql)
+        if result is None:
+            self.logger.warning(f" aime_id {aime_id} has no playlog ")
+            return None
+        return result.scalar()
+
     async def put_playlog(self, aime_id: int, playlog_data: Dict, version: int) -> Optional[int]:
         # Calculate the ROM version that should be inserted into the DB, based on the version of the ggame being inserted
         # We only need from Version 10 (Plost) and back, as newer versions include romVersion in their upsert

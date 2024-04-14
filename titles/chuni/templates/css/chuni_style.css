@@ -1,0 +1,195 @@
+.chuni-header {
+    text-align: center;
+}
+
+ul.chuni-navi {
+    list-style-type: none;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+    text-align: center;
+    display: inline-block;
+}
+
+ul.chuni-navi li {
+    display: inline-block;
+}
+
+ul.chuni-navi li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+ul.chuni-navi li a:hover:not(.active) {
+    background-color: #111;
+}
+
+ul.chuni-navi li a.active {
+    background-color: #4CAF50;
+}
+
+ul.chuni-navi li.right {
+    float: right;
+}
+
+@media screen and (max-width: 600px) {
+
+    ul.chuni-navi li.right,
+    ul.chuni-navi li {
+        float: none;
+        display: block;
+        text-align: center;
+    }
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border-collapse: separate;
+    overflow: hidden;
+    background-color: #555555;
+
+}
+
+th, td {
+    text-align: left;
+    border: none;
+
+}
+
+th {
+    color: white;
+}
+
+.table-rowdistinct tr:nth-child(even) {
+    background-color: #303030;
+}
+
+.table-rowdistinct tr:nth-child(odd) {
+    background-color: #555555;
+}
+
+caption {
+    text-align: center;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.table-large {
+    margin: 16px;
+}
+
+.table-large th,
+.table-large td {
+    padding: 8px;
+}
+
+.table-small {
+    width: 100%;
+    margin: 4px;
+}
+
+.table-small th,
+.table-small td {
+    padding: 2px;
+}
+
+.bg-card {
+    background-color: #555555;
+}
+
+.card-hover {
+    transition: all 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: scale(1.02);
+}
+
+.normal {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.hard {
+    color: #ffc107;
+
+    font-weight: bold;
+}
+
+.expert {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.master {
+    color: #dd09e8;
+    font-weight: bold;
+}
+
+.ultimate {
+    color: #000000;
+    font-weight: bold;
+}
+
+.score {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.rainbow {
+    background: linear-gradient(to right, red, yellow, lime, aqua, blue, fuchsia) 0 / 5em;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.platinum {
+    color: #FFFF00;
+    font-weight: bold;
+}
+
+.gold {
+    color: #FFFF00;
+    font-weight: bold;
+}
+
+.scrolling-text {
+    overflow: hidden;
+}
+
+.scrolling-text p {
+    white-space: nowrap;
+    display: inline-block;
+
+}
+
+.scrolling-text h6 {
+    white-space: nowrap;
+    display: inline-block;
+
+}
+
+.scrolling-text h5 {
+    white-space: nowrap;
+    display: inline-block;
+
+}
+
+.scrolling {
+    animation: scroll 10s linear infinite;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
