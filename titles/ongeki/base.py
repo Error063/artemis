@@ -426,9 +426,10 @@ class OngekiBase:
         userTechCountList = []
 
         for tc in utcl:
-            tc.pop("id")
-            tc.pop("user")
-            userTechCountList.append(tc)
+            tmp = tc._asdict()
+            tmp.pop("id")
+            tmp.pop("user")
+            userTechCountList.append(tmp)
 
         return {
             "userId": data["userId"],
