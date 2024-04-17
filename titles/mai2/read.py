@@ -35,7 +35,7 @@ class Mai2Reader(BaseReader):
             self.logger.error(f"Invalid maimai DX version {version}")
             exit(1)
 
-    def read(self) -> None:
+    async def read(self) -> None:
         data_dirs = []
         if self.version >= Mai2Constants.VER_MAIMAI_DX:
             if self.bin_dir is not None:
@@ -46,10 +46,10 @@ class Mai2Reader(BaseReader):
 
             for dir in data_dirs:
                 self.logger.info(f"Read from {dir}")
-                self.get_events(f"{dir}/event")
-                self.disable_events(f"{dir}/information", f"{dir}/scoreRanking")
-                self.read_music(f"{dir}/music")
-                self.read_tickets(f"{dir}/ticket")
+                await self.get_events(f"{dir}/event")
+                await self.disable_events(f"{dir}/information", f"{dir}/scoreRanking")
+                await self.read_music(f"{dir}/music")
+                await self.read_tickets(f"{dir}/ticket")
         
         else:
             if not os.path.exists(f"{self.bin_dir}/tables"):
@@ -70,16 +70,16 @@ class Mai2Reader(BaseReader):
             txt_table = self.load_table_raw(f"{self.bin_dir}/tables", "mmtextout_jp.bin", key)
             score_table = self.load_table_raw(f"{self.bin_dir}/tables", "mmScore.bin", key)
             
-            self.read_old_events(evt_table)
-            self.read_old_music(score_table, txt_table)
+            await self.read_old_events(evt_table)
+            await self.read_old_music(score_table, txt_table)
             
             if self.opt_dir is not None:
                 evt_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmEvent.bin", key)
                 txt_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmtextout_jp.bin", key)
                 score_table = self.load_table_raw(f"{self.opt_dir}/tables", "mmScore.bin", key)
 
-                self.read_old_events(evt_table)
-                self.read_old_music(score_table, txt_table)
+                await self.read_old_events(evt_table)
+                await self.read_old_music(score_table, txt_table)
 
             return
     
@@ -179,7 +179,7 @@ class Mai2Reader(BaseReader):
             self.logger.warning("Failed load table content, skipping")
             return
 
-    def get_events(self, base_dir: str) -> None:
+    async def get_events(self, base_dir: str) -> None:
         self.logger.info(f"Reading events from {base_dir}...")
 
         for root, dirs, files in os.walk(base_dir):
@@ -192,12 +192,12 @@ class Mai2Reader(BaseReader):
                         id = int(troot.find("name").find("id").text)
                         event_type = int(troot.find("infoType").text)
 
-                        self.data.static.put_game_event(
+                        await self.data.static.put_game_event(
                             self.version, event_type, id, name
                         )
                         self.logger.info(f"Added event {id}...")
 
-    def disable_events(
+    async def disable_events(
         self, base_information_dir: str, base_score_ranking_dir: str
     ) -> None:
         self.logger.info(f"Reading disabled events from {base_information_dir}...")
@@ -210,7 +210,7 @@ class Mai2Reader(BaseReader):
 
                         event_id = int(troot.find("name").find("id").text)
 
-                        self.data.static.toggle_game_event(
+                        await self.data.static.toggle_game_event(
                             self.version, event_id, toggle=False
                         )
                         self.logger.info(f"Disabled event {event_id}...")
@@ -223,7 +223,7 @@ class Mai2Reader(BaseReader):
 
                         event_id = int(troot.find("eventName").find("id").text)
 
-                        self.data.static.toggle_game_event(
+                        await self.data.static.toggle_game_event(
                             self.version, event_id, toggle=False
                         )
                         self.logger.info(f"Disabled event {event_id}...")
@@ -252,10 +252,10 @@ class Mai2Reader(BaseReader):
             22091518,
             22091519,
         ]:
-            self.data.static.toggle_game_event(self.version, event_id, toggle=False)
+            await self.data.static.toggle_game_event(self.version, event_id, toggle=False)
             self.logger.info(f"Disabled event {event_id}...")
 
-    def read_music(self, base_dir: str) -> None:
+    async def read_music(self, base_dir: str) -> None:
         self.logger.info(f"Reading music from {base_dir}...")
 
         for root, dirs, files in os.walk(base_dir):
@@ -285,7 +285,7 @@ class Mai2Reader(BaseReader):
                                         dif.find("notesDesigner").find("str").text
                                     )
 
-                                    self.data.static.put_game_music(
+                                    await self.data.static.put_game_music(
                                         self.version,
                                         song_id,
                                         chart_id,
@@ -302,7 +302,7 @@ class Mai2Reader(BaseReader):
                                         f"Added music id {song_id} chart {chart_id}"
                                     )
 
-    def read_tickets(self, base_dir: str) -> None:
+    async def read_tickets(self, base_dir: str) -> None:
         self.logger.info(f"Reading tickets from {base_dir}...")
 
         for root, dirs, files in os.walk(base_dir):
@@ -316,12 +316,12 @@ class Mai2Reader(BaseReader):
                         ticket_type = int(troot.find("ticketKind").find("id").text)
                         price = int(troot.find("creditNum").text)
 
-                        self.data.static.put_game_ticket(
+                        await self.data.static.put_game_ticket(
                             self.version, id, ticket_type, price, name
                         )
                         self.logger.info(f"Added ticket {id}...")
 
-    def read_old_events(self, events: Optional[List[Dict[str, str]]]) -> None:
+    async def read_old_events(self, events: Optional[List[Dict[str, str]]]) -> None:
         if events is None:
             return
         
@@ -332,12 +332,12 @@ class Mai2Reader(BaseReader):
             is_aou = bool(int(event.get('AOU許可', '0')))
             name = event.get('comment', f'evt_{evt_id}')
 
-            self.data.static.put_game_event(self.version, 0, evt_id, name)
+            await self.data.static.put_game_event(self.version, 0, evt_id, name)
             
             if not (is_exp or is_aou):
-                self.data.static.toggle_game_event(self.version, evt_id, False)
+                await self.data.static.toggle_game_event(self.version, evt_id, False)
     
-    def read_old_music(self, scores: Optional[List[Dict[str, str]]], text: Optional[List[Dict[str, str]]]) -> None:
+    async def read_old_music(self, scores: Optional[List[Dict[str, str]]], text: Optional[List[Dict[str, str]]]) -> None:
         if scores is None or text is None:
             return
         # TODO

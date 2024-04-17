@@ -14,8 +14,7 @@ class SaoBase:
     def __init__(self, core_cfg: CoreConfig, game_cfg: SaoConfig) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = game_cfg
-        self.core_data = Data(core_cfg)
-        self.game_data = SaoData(core_cfg)
+        self.data = SaoData(core_cfg)
         self.version = 0
         self.logger = logging.getLogger("sao")
 
@@ -32,66 +31,75 @@ class SaoBase:
         self.logger.warning(f"Failed to find csv file {file}.csv")
         return ret
 
-    def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
+    async def handle_noop(self, header: SaoRequestHeader, request: bytes) -> bytes:        
         self.logger.info(f"Using Generic handler")
         resp_thing = SaoNoopResponse(header.cmd + 1)
         return resp_thing.make()
 
-    def handle_c122(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c122(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_maintenance_info
         resp = SaoGetMaintResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c12a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        #common/give_free_ticket
+        req = SaoGiveFreeTicketRequest(header, request)
+        self.logger.info(f"Give {req.give_num} free tickets (id {req.ticket_id}) to user {req.user_id}")
+        resp = SaoGiveFreeTicketResponse(header.cmd +1)
+        return resp.make()
+
+    async def handle_c12e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/ac_cabinet_boot_notification
         resp = SaoCommonAcCabinetBootNotificationResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c100(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c100(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_app_versions
         resp = SaoCommonGetAppVersionsRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c102(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c102(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/master_data_version_check
         resp = SaoMasterDataVersionCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c10a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c10a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/paying_play_start
         resp = SaoCommonPayingPlayStartRequest(header.cmd +1)
         return resp.make()
 
-    def handle_ca02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_ca02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest_multi_play_room/get_quest_scene_multi_play_photon_server
         resp = SaoGetQuestSceneMultiPlayPhotonServerResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c11e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c11e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_auth_card_data
         req = SaoGetAuthCardDataRequest(header, request)
 
         #Check authentication
-        user_id = self.core_data.card.get_user_id_from_card( req.access_code )
+        user_id = await self.data.card.get_user_id_from_card( req.access_code )
 
         if not user_id:
-            user_id = self.core_data.user.create_user() #works
-            card_id = self.core_data.card.create_card(user_id, req.access_code)
+            user_id = await self.data.user.create_user() #works
+            card_id = await self.data.card.create_card(user_id, req.access_code)
 
             if card_id is None:
                 user_id = -1
                 self.logger.error("Failed to register card!")
 
             # Create profile with 3 basic heroes
-            profile_id = self.game_data.profile.create_profile(user_id)
-            self.game_data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
-            self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
-            self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
-            self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
-            self.game_data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
+            profile_id = await self.data.profile.create_profile(user_id)
+            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 201000000, 0, 1002, 1003, 1014, 30001, 30310)
+            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 202000000, 0, 3001, 3002, 3004, 30007, 3011)
+            await self.data.item.put_hero_log(user_id, 105000010, 1, 0, 209000000, 0, 10005, 10002, 10004, 30006, 10003)
+            await self.data.item.put_hero_log(user_id, 101000110, 1, 0, 201000000, 101000110, 2002, 2001, 2014, 0, 0)
+            await self.data.item.put_hero_party(user_id, 0, 101000010, 102000010, 105000010)
+            await self.data.item.put_equipment_data(user_id, 201000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 202000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 209000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 101000110, 1, 200, 0, 0, 0)
+            await self.data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
 
             # Force the tutorial stage to be completed due to potential crash in-game
             
@@ -99,195 +107,197 @@ class SaoBase:
         self.logger.info(f"User Authenticated: { req.access_code } | { user_id }")
 
         #Grab values from profile
-        profile_data = self.game_data.profile.get_profile(user_id)
+        profile_data = await self.data.profile.get_profile(user_id)
 
         if user_id and not profile_data:
-            profile_id = self.game_data.profile.create_profile(user_id)
-            self.game_data.item.put_hero_log(user_id, 101000010, 1, 0, 101000016, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_log(user_id, 102000010, 1, 0, 103000006, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_log(user_id, 103000010, 1, 0, 112000009, 0, 30086, 1001, 1002, 1003, 1005)
-            self.game_data.item.put_hero_party(user_id, 0, 101000010, 102000010, 103000010)
-            self.game_data.item.put_equipment_data(user_id, 101000016, 1, 200, 0, 0, 0)
-            self.game_data.item.put_equipment_data(user_id, 103000006, 1, 200, 0, 0, 0)
-            self.game_data.item.put_equipment_data(user_id, 112000009, 1, 200, 0, 0, 0)
-            self.game_data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
+            profile_id = await self.data.profile.create_profile(user_id)
+            await self.data.item.put_hero_log(user_id, 101000010, 1, 0, 201000000, 0, 1002, 1003, 1014, 30001, 30310)
+            await self.data.item.put_hero_log(user_id, 102000010, 1, 0, 202000000, 0, 3001, 3002, 3004, 30007, 3011)
+            await self.data.item.put_hero_log(user_id, 105000010, 1, 0, 209000000, 0, 10005, 10002, 10004, 30006, 10003)
+            await self.data.item.put_hero_log(user_id, 101000110, 1, 0, 201000000, 101000110, 2002, 2001, 2014, 0, 0)
+            await self.data.item.put_hero_party(user_id, 0, 101000010, 102000010, 105000010)
+            await self.data.item.put_equipment_data(user_id, 201000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 202000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 209000000, 1, 200, 0, 0, 0)
+            await self.data.item.put_equipment_data(user_id, 101000110, 1, 200, 0, 0, 0)
+            await self.data.item.put_player_quest(user_id, 1001, True, 300, 0, 0, 1)
 
             # Force the tutorial stage to be completed due to potential crash in-game
 
 
-            profile_data = self.game_data.profile.get_profile(user_id)
+            profile_data = await self.data.profile.get_profile(user_id)
 
         resp = SaoGetAuthCardDataResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c40c(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c40c(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_ac_login_bonus
         resp = SaoHomeCheckAcLoginBonusResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c104(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c104(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/login
         req = SaoCommonLoginRequest(header, request)
 
-        user_id = self.core_data.card.get_user_id_from_card( req.access_code )
-        profile_data = self.game_data.profile.get_profile(user_id)
+        user_id = await self.data.card.get_user_id_from_card( req.access_code )
+        profile_data = await self.data.profile.get_profile(user_id)
 
         resp = SaoCommonLoginResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c404(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_comeback_event
         resp = SaoCheckComebackEventRequest(header.cmd +1)
         return resp.make()
 
-    def handle_c000(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c000(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #ticket/ticket
         resp = SaoTicketResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c500(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c500(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #user_info/get_user_basic_data
         req = SaoGetUserBasicDataRequest(header, request)
 
-        profile_data = self.game_data.profile.get_profile(req.user_id)
+        profile_data = await self.data.profile.get_profile(req.user_id)
 
         resp = SaoGetUserBasicDataResponse(header.cmd +1, profile_data)
         return resp.make()
         
-    def handle_c600(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c600(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_hero_log_user_data_list
         req = SaoGetHeroLogUserDataListRequest(header, request)
 
-        hero_data = self.game_data.item.get_hero_logs(req.user_id)
+        hero_data = await self.data.item.get_hero_logs(req.user_id)
         
         resp = SaoGetHeroLogUserDataListResponse(header.cmd +1, hero_data)
         return resp.make()
     
-    def handle_c602(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c602(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_equipment_user_data_list
         req = SaoGetEquipmentUserDataListRequest(header, request)
     
-        equipment_data = self.game_data.item.get_user_equipments(req.user_id)
+        equipment_data = await self.data.item.get_user_equipments(req.user_id)
 
         resp = SaoGetEquipmentUserDataListResponse(header.cmd +1, equipment_data)
         return resp.make()
         
-    def handle_c604(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_item_user_data_list
         req = SaoGetItemUserDataListRequest(header, request)
 
-        item_data = self.game_data.item.get_user_items(req.user_id)
+        item_data = await self.data.item.get_user_items(req.user_id)
 
         resp = SaoGetItemUserDataListResponse(header.cmd +1, item_data)
         return resp.make()
         
-    def handle_c606(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_support_log_user_data_list
-        supportIdsData = self.game_data.static.get_support_log_ids(0, True)
+        supportIdsData = await self.data.static.get_support_log_ids(0, True)
         
         resp = SaoGetSupportLogUserDataListResponse(header.cmd +1, supportIdsData)
         return resp.make()
     
-    def handle_c800(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c800(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_title_user_data_list
-        titleIdsData = self.game_data.static.get_title_ids(0, True)
+        titleIdsData = await self.data.static.get_title_ids(0, True)
         
         resp = SaoGetTitleUserDataListResponse(header.cmd +1, titleIdsData)
         return resp.make()
         
-    def handle_c608(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c608(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #have_object/get_episode_append_data_list
         req = SaoGetEpisodeAppendDataListRequest(header, request)
 
-        profile_data = self.game_data.profile.get_profile(req.user_id)
+        profile_data = await self.data.profile.get_profile(req.user_id)
 
         resp = SaoGetEpisodeAppendDataListResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c804(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c804(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/get_party_data_list
         req = SaoGetPartyDataListRequest(header, request)
 
-        hero_party = self.game_data.item.get_hero_party(req.user_id, 0)
-        hero1_data = self.game_data.item.get_hero_log(req.user_id, hero_party[3])
-        hero2_data = self.game_data.item.get_hero_log(req.user_id, hero_party[4])
-        hero3_data = self.game_data.item.get_hero_log(req.user_id, hero_party[5])
+        hero_party = await self.data.item.get_hero_party(req.user_id, 0)
+        hero1_data = await self.data.item.get_hero_log(req.user_id, hero_party[3])
+        hero2_data = await self.data.item.get_hero_log(req.user_id, hero_party[4])
+        hero3_data = await self.data.item.get_hero_log(req.user_id, hero_party[5])
 
         resp = SaoGetPartyDataListResponse(header.cmd +1, hero1_data, hero2_data, hero3_data)
         return resp.make()
 
-    def handle_c902(self, header: SaoRequestHeader, request: bytes) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
+    async def handle_c902(self, header: SaoRequestHeader, request: bytes) -> bytes: # for whatever reason, having all entries empty or filled changes nothing
         #quest/get_quest_scene_prev_scan_profile_card
         resp = SaoGetQuestScenePrevScanProfileCardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c124(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c124(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #common/get_resource_path_info
         resp = SaoGetResourcePathInfoResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c900(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c900(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/get_quest_scene_user_data_list // QuestScene.csv
         req = SaoGetQuestSceneUserDataListRequest(header, request)
 
-        quest_data = self.game_data.item.get_quest_logs(req.user_id)
+        quest_data = await self.data.item.get_quest_logs(req.user_id)
 
         resp = SaoGetQuestSceneUserDataListResponse(header.cmd +1, quest_data)
         return resp.make()
 
-    def handle_c400(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c400(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_yui_medal_get_condition
         resp = SaoCheckYuiMedalGetConditionResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c402(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c402(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/get_yui_medal_bonus_user_data
         resp = SaoGetYuiMedalBonusUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c40a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c40a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #home/check_profile_card_used_reward
         resp = SaoCheckProfileCardUsedRewardResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c814(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c814(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_hero_log
         req = SaoSynthesizeEnhancementHeroLogRequest(header, request)
 
-        synthesize_hero_log_data = self.game_data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
+        synthesize_hero_log_data = await self.data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
 
         for x in req.material_common_reward_user_data_list:
             hero_exp = 0
-            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
+            itemList = await self.data.static.get_item_id(x.user_common_reward_id)
+            heroList = await self.data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = await self.data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 hero_exp = 2000 + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_item(req.user_id, x.user_common_reward_id)
+                await self.data.item.remove_item(req.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req.user_id, x.user_common_reward_id)
+                equipment_data = await self.data.item.get_user_equipment(req.user_id, x.user_common_reward_id)
                 if equipment_data is None:
                     self.logger.error(f"Failed to find equipment {x.user_common_reward_id} for user {req.user_id}!")
                     continue
                 
                 hero_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_equipment(req.user_id, x.user_common_reward_id)
+                await self.data.item.remove_equipment(req.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req.user_id, x.user_common_reward_id)
+                hero_data = await self.data.item.get_hero_log(req.user_id, x.user_common_reward_id)
                 if hero_data is None:
                     self.logger.error(f"Failed to find hero {x.user_common_reward_id} for user {req.user_id}!")
                     continue
                 
                 hero_exp = int(hero_data["log_exp"]) + int(synthesize_hero_log_data["log_exp"])
-                self.game_data.item.remove_hero_log(req.user_id, x.user_common_reward_id)
+                await self.data.item.remove_hero_log(req.user_id, x.user_common_reward_id)
             
             if hero_exp == 0:
                 self.logger.warn(f"Hero {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
 
-            self.game_data.item.put_hero_log(
+            await self.data.item.put_hero_log(
                 req.user_id, 
                 int(req.origin_user_hero_log_id), 
                 synthesize_hero_log_data["log_level"], 
@@ -301,12 +311,12 @@ class SaoBase:
                 synthesize_hero_log_data["skill_slot5_skill_id"]
             )
 
-            profile = self.game_data.profile.get_profile(req.user_id)
+            profile = await self.data.profile.get_profile(req.user_id)
             new_col = int(profile["own_col"]) - 100
 
             # Update profile
             
-            self.game_data.profile.put_profile(
+            await self.data.profile.put_profile(
                 req.user_id,
                 profile["user_type"], 
                 profile["nick_name"], 
@@ -319,56 +329,56 @@ class SaoBase:
             )
 
         # Load the item again to push to the response handler  
-        synthesize_hero_log_data = self.game_data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
+        synthesize_hero_log_data = await self.data.item.get_hero_log(req.user_id, req.origin_user_hero_log_id)
 
         resp = SaoSynthesizeEnhancementHeroLogResponse(header.cmd +1, synthesize_hero_log_data)
         return resp.make()
 
-    def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c816(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/synthesize_enhancement_equipment
         req_data = SaoSynthesizeEnhancementEquipmentRequest(header, request)
-        synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
+        synthesize_equipment_data = await self.data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
         for x in req_data.material_common_reward_user_data_list:
             equipment_exp = 0
-            itemList = self.game_data.static.get_item_id(x.user_common_reward_id)
-            heroList = self.game_data.static.get_hero_id(x.user_common_reward_id)
-            equipmentList = self.game_data.static.get_equipment_id(x.user_common_reward_id)
+            itemList = await self.data.static.get_item_id(x.user_common_reward_id)
+            heroList = await self.data.static.get_hero_id(x.user_common_reward_id)
+            equipmentList = await self.data.static.get_equipment_id(x.user_common_reward_id)
 
             if itemList:
                 equipment_exp = 2000 + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_item(req_data.user_id, x.user_common_reward_id)
+                await self.data.item.remove_item(req_data.user_id, x.user_common_reward_id)
 
             if equipmentList:
-                equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, x.user_common_reward_id)
+                equipment_data = await self.data.item.get_user_equipment(req_data.user_id, x.user_common_reward_id)
                 if equipment_data is None:
                     self.logger.error(f"Failed to find equipment {x.user_common_reward_id} for user {req_data.user_id}!")
                     continue
 
                 equipment_exp = int(equipment_data["enhancement_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_equipment(req_data.user_id, x.user_common_reward_id)
+                await self.data.item.remove_equipment(req_data.user_id, x.user_common_reward_id)
 
             if heroList:
-                hero_data = self.game_data.item.get_hero_log(req_data.user_id, x.user_common_reward_id)
+                hero_data = await self.data.item.get_hero_log(req_data.user_id, x.user_common_reward_id)
                 if hero_data is None:
                     self.logger.error(f"Failed to find hero {x.user_common_reward_id} for user {req_data.user_id}!")
                     continue
 
                 equipment_exp = int(hero_data["log_exp"]) + int(synthesize_equipment_data["enhancement_exp"])
-                self.game_data.item.remove_hero_log(req_data.user_id, x.user_common_reward_id)
+                await self.data.item.remove_hero_log(req_data.user_id, x.user_common_reward_id)
 
             if equipment_exp == 0:
                 self.logger.warn(f"Common reward {x.user_common_reward_id} (type {x.common_reward_type}) not found!")
                 continue
             
-            self.game_data.item.put_equipment_data(req_data.user_id, int(req_data.origin_user_equipment_id), synthesize_equipment_data["enhancement_value"], equipment_exp, 0, 0, 0)
+            await self.data.item.put_equipment_data(req_data.user_id, int(req_data.origin_user_equipment_id), synthesize_equipment_data["enhancement_value"], equipment_exp, 0, 0, 0)
 
-            profile = self.game_data.profile.get_profile(req_data.user_id)
+            profile = await self.data.profile.get_profile(req_data.user_id)
             new_col = int(profile["own_col"]) - 100
 
             # Update profile
             
-            self.game_data.profile.put_profile(
+            await self.data.profile.put_profile(
                 req_data.user_id,
                 profile["user_type"], 
                 profile["nick_name"], 
@@ -381,18 +391,18 @@ class SaoBase:
                 )
 
         # Load the item again to push to the response handler  
-        synthesize_equipment_data = self.game_data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
+        synthesize_equipment_data = await self.data.item.get_user_equipment(req_data.user_id, req_data.origin_user_equipment_id)
 
         resp = SaoSynthesizeEnhancementEquipmentResponse(header.cmd +1, synthesize_equipment_data)
         return resp.make()
 
-    def handle_c806(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c806(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #custom/change_party
         req_data = SaoChangePartyRequest(header, request)
         party_hero_list = []
 
         for party_team in req_data.party_data_list[0].party_team_data_list:
-            hero_data = self.game_data.item.get_hero_log(req_data.user_id, party_team.user_hero_log_id)
+            hero_data = await self.data.item.get_hero_log(req_data.user_id, party_team.user_hero_log_id)
             hero_level = 1
             hero_exp = 0
 
@@ -400,7 +410,7 @@ class SaoBase:
                 hero_level = hero_data["log_level"]
                 hero_exp = hero_data["log_exp"]
 
-            self.game_data.item.put_hero_log(
+            await self.data.item.put_hero_log(
                 req_data.user_id,
                 party_team.user_hero_log_id,
                 hero_level,
@@ -416,19 +426,19 @@ class SaoBase:
 
             party_hero_list.append(party_team.user_hero_log_id)
 
-        self.game_data.item.put_hero_party(req_data.user_id, req_data.party_data_list[0].party_team_data_list[0].user_party_team_id, party_hero_list[0], party_hero_list[1], party_hero_list[2])
+        await self.data.item.put_hero_party(req_data.user_id, req_data.party_data_list[0].party_team_data_list[0].user_party_team_id, party_hero_list[0], party_hero_list[1], party_hero_list[2])
 
         resp = SaoNoopResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c904(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c904(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_start
         req_data = SaoEpisodePlayStartRequest(header, request)
 
         user_id = req_data.user_id
-        profile_data = self.game_data.profile.get_profile(user_id)
+        profile_data = await self.data.profile.get_profile(user_id)
 
-        self.game_data.item.create_session(
+        await self.data.item.create_session(
             user_id, 
             int(req_data.play_start_request_data[0].user_party_id), 
             req_data.episode_id, 
@@ -439,7 +449,7 @@ class SaoBase:
         resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c908(self, header: SaoRequestHeader, request: bytes) -> bytes: # Level calculation missing for the profile and heroes
+    async def handle_c908(self, header: SaoRequestHeader, request: bytes) -> bytes: # Level calculation missing for the profile and heroes
         #quest/episode_play_end
 
         req_data = SaoEpisodePlayEndRequest(header, request)
@@ -453,7 +463,7 @@ class SaoBase:
         total_damage = req_data.play_end_request_data_list[0].score_data_list[0].total_damage
         concurrent_destroying_num = req_data.play_end_request_data_list[0].score_data_list[0].concurrent_destroying_num
 
-        profile = self.game_data.profile.get_profile(user_id)
+        profile = await self.data.profile.get_profile(user_id)
         vp = int(profile["own_vp"])
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
         col = int(profile["own_col"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_col)
@@ -472,10 +482,10 @@ class SaoBase:
                 episode_id = int(episode_id) + int(stage_id)
 
                 # Match episode_id with the questSceneId saved in the DB through sortNo
-                questId = self.game_data.static.get_quests_id(episode_id)
+                questId = await self.data.static.get_quests_id(episode_id)
                 episode_id = questId[2]
 
-            self.game_data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
+            await self.data.item.put_player_quest(user_id, episode_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 
             vp = int(profile["own_vp"]) + 10 #always 10 VP per cleared stage
 
@@ -498,7 +508,7 @@ class SaoBase:
                 break
 
         # Update profile
-        updated_profile = self.game_data.profile.put_profile(
+        updated_profile = await self.data.profile.put_profile(
             user_id,
             profile["user_type"], 
             profile["nick_name"], 
@@ -511,8 +521,8 @@ class SaoBase:
             )
 
         # Update heroes from the used party
-        play_session = self.game_data.item.get_session(user_id)
-        session_party = self.game_data.item.get_hero_party(user_id, play_session["user_party_team_id"])
+        play_session = await self.data.item.get_session(user_id)
+        session_party = await self.data.item.get_hero_party(user_id, play_session["user_party_team_id"])
 
         hero_list = []
         hero_list.append(session_party["user_hero_log_id_1"])
@@ -520,7 +530,7 @@ class SaoBase:
         hero_list.append(session_party["user_hero_log_id_3"])
 
         for i in range(0,len(hero_list)):
-            hero_data = self.game_data.item.get_hero_log(user_id, hero_list[i])
+            hero_data = await self.data.item.get_hero_log(user_id, hero_list[i])
 
             log_exp = int(hero_data["log_exp"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_hero_log_exp)
 
@@ -541,7 +551,7 @@ class SaoBase:
                     hero_level = int(data[e][0])
                     break
 
-            self.game_data.item.put_hero_log(
+            await self.data.item.put_hero_log(
                 user_id,
                 hero_data["user_hero_log_id"],
                 hero_level,
@@ -559,19 +569,19 @@ class SaoBase:
         json_data = {"data": []}
 
         for r in range(0,req_data.play_end_request_data_list[0].get_rare_drop_data_count):
-            rewardList = self.game_data.static.get_rare_drop_id(int(req_data.play_end_request_data_list[0].get_rare_drop_data_list[r].quest_rare_drop_id))
+            rewardList = await self.data.static.get_rare_drop_id(int(req_data.play_end_request_data_list[0].get_rare_drop_data_list[r].quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
 
-            heroList = self.game_data.static.get_hero_id(commonRewardId)
-            equipmentList = self.game_data.static.get_equipment_id(commonRewardId)
-            itemList = self.game_data.static.get_item_id(commonRewardId)
+            heroList = await self.data.static.get_hero_id(commonRewardId)
+            equipmentList = await self.data.static.get_equipment_id(commonRewardId)
+            itemList = await self.data.static.get_item_id(commonRewardId)
 
             if heroList:
-                self.game_data.item.put_hero_log(user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                await self.data.item.put_hero_log(user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(user_id, commonRewardId, 1, 200, 0, 0, 0)
+                await self.data.item.put_equipment_data(user_id, commonRewardId, 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(user_id, commonRewardId)
+                await self.data.item.put_item(user_id, commonRewardId)
         
         # Generate random hero(es) based off the response    
         for a in range(0,req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_count):
@@ -580,34 +590,34 @@ class SaoBase:
                 data_unanalyzed = list(DictReader(f, fieldnames=keys_unanalyzed))
 
             randomized_unanalyzed_id = choice(data_unanalyzed)
-            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-            equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
-            itemList = self.game_data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
+            heroList = await self.data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+            equipmentList = await self.data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
+            itemList = await self.data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
             if heroList:
-                self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                await self.data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
+                await self.data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
+                await self.data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
 
             json_data["data"].append(randomized_unanalyzed_id['CommonRewardId'])
             
         # Send response
 
-        self.game_data.item.create_end_session(user_id, episode_id, quest_clear_flag, json_data["data"])
+        await self.data.item.create_end_session(user_id, episode_id, quest_clear_flag, json_data["data"])
 
         resp = SaoEpisodePlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c914(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_start
         req_data = SaoTrialTowerPlayStartRequest(header, request)
 
         user_id = req_data.user_id
         floor_id = req_data.trial_tower_id
-        profile_data = self.game_data.profile.get_profile(user_id)
+        profile_data = await self.data.profile.get_profile(user_id)
 
-        self.game_data.item.create_session(
+        await self.data.item.create_session(
             user_id, 
             int(req_data.play_start_request_data[0].user_party_id), 
             req_data.trial_tower_id, 
@@ -618,7 +628,7 @@ class SaoBase:
         resp = SaoEpisodePlayStartResponse(header.cmd +1, profile_data)
         return resp.make()
 
-    def handle_c918(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c918(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/trial_tower_play_end
         req_data = SaoTrialTowerPlayEndRequest(header, request)
 
@@ -663,16 +673,16 @@ class SaoBase:
                 trial_tower_id = trial_tower_id + 3000
                 next_tower_id = trial_tower_id + 1
 
-            self.game_data.item.put_player_quest(user_id, trial_tower_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
+            await self.data.item.put_player_quest(user_id, trial_tower_id, quest_clear_flag, clear_time, combo_num, total_damage, concurrent_destroying_num)
 
             # Check if next stage is already done
-            checkQuest = self.game_data.item.get_quest_log(user_id, next_tower_id)
+            checkQuest = await self.data.item.get_quest_log(user_id, next_tower_id)
             if not checkQuest:
                 if next_tower_id != 3101:
-                    self.game_data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
+                    await self.data.item.put_player_quest(user_id, next_tower_id, 0, 0, 0, 0, 0)
 
         # Update the profile 
-        profile = self.game_data.profile.get_profile(user_id)
+        profile = await self.data.profile.get_profile(user_id)
         
         exp = int(profile["rank_exp"]) + 100 #always 100 extra exp for some reason
         col = int(profile["own_col"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_col)
@@ -694,7 +704,7 @@ class SaoBase:
                 player_level = int(data[i][0])
                 break
 
-        updated_profile = self.game_data.profile.put_profile(
+        updated_profile = await self.data.profile.put_profile(
             user_id,
             profile["user_type"], 
             profile["nick_name"], 
@@ -707,8 +717,8 @@ class SaoBase:
             )
 
         # Update heroes from the used party
-        play_session = self.game_data.item.get_session(user_id)
-        session_party = self.game_data.item.get_hero_party(user_id, play_session["user_party_team_id"])
+        play_session = await self.data.item.get_session(user_id)
+        session_party = await self.data.item.get_hero_party(user_id, play_session["user_party_team_id"])
 
         hero_list = []
         hero_list.append(session_party["user_hero_log_id_1"])
@@ -716,7 +726,7 @@ class SaoBase:
         hero_list.append(session_party["user_hero_log_id_3"])
 
         for i in range(0,len(hero_list)):
-            hero_data = self.game_data.item.get_hero_log(user_id, hero_list[i])
+            hero_data = await self.data.item.get_hero_log(user_id, hero_list[i])
 
             log_exp = int(hero_data["log_exp"]) + int(req_data.play_end_request_data_list[0].base_get_data_list[0].get_hero_log_exp)
 
@@ -737,7 +747,7 @@ class SaoBase:
                     hero_level = int(data[e][0])
                     break
 
-            self.game_data.item.put_hero_log(
+            await self.data.item.put_hero_log(
                 user_id,
                 hero_data["user_hero_log_id"],
                 hero_level,
@@ -755,19 +765,19 @@ class SaoBase:
         
         # Grab the rare loot from the table, match it with the right item and then push to the player profile
         for x in req_data.play_end_request_data_list[0].get_rare_drop_data_list:
-            rewardList = self.game_data.static.get_rare_drop_id(int(x.quest_rare_drop_id))
+            rewardList = await self.data.static.get_rare_drop_id(int(x.quest_rare_drop_id))
             commonRewardId = rewardList["commonRewardId"]
 
-            heroList = self.game_data.static.get_hero_id(commonRewardId)
-            equipmentList = self.game_data.static.get_equipment_id(commonRewardId)
-            itemList = self.game_data.static.get_item_id(commonRewardId)
+            heroList = await self.data.static.get_hero_id(commonRewardId)
+            equipmentList = await self.data.static.get_equipment_id(commonRewardId)
+            itemList = await self.data.static.get_item_id(commonRewardId)
 
             if heroList:
-                self.game_data.item.put_hero_log(user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                await self.data.item.put_hero_log(user_id, commonRewardId, 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(user_id, commonRewardId, 1, 200, 0, 0, 0)
+                await self.data.item.put_equipment_data(user_id, commonRewardId, 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(user_id, commonRewardId)
+                await self.data.item.put_item(user_id, commonRewardId)
 
         # Generate random hero(es) based off the response    
         for x in req_data.play_end_request_data_list[0].get_unanalyzed_log_tmp_reward_data_list:
@@ -780,96 +790,96 @@ class SaoBase:
             while int(randomized_unanalyzed_id['UnanalyzedLogGradeId']) != x.unanalyzed_log_grade_id:
                 randomized_unanalyzed_id = choice(data_unanalyzed)
             
-            heroList = self.game_data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
-            equipmentList = self.game_data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
-            itemList = self.game_data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
+            heroList = await self.data.static.get_hero_id(randomized_unanalyzed_id['CommonRewardId'])
+            equipmentList = await self.data.static.get_equipment_id(randomized_unanalyzed_id['CommonRewardId'])
+            itemList = await self.data.static.get_item_id(randomized_unanalyzed_id['CommonRewardId'])
             if heroList:
-                self.game_data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
+                await self.data.item.put_hero_log(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 0, 101000016, 0, 30086, 1001, 1002, 0, 0)
             if equipmentList:
-                self.game_data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
+                await self.data.item.put_equipment_data(user_id, randomized_unanalyzed_id['CommonRewardId'], 1, 200, 0, 0, 0)
             if itemList:
-                self.game_data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
+                await self.data.item.put_item(user_id, randomized_unanalyzed_id['CommonRewardId'])
 
             json_data["data"].append(randomized_unanalyzed_id['CommonRewardId'])
             
         # Send response
 
-        self.game_data.item.create_end_session(user_id, trial_tower_id, quest_clear_flag, json_data["data"])
+        await self.data.item.create_end_session(user_id, trial_tower_id, quest_clear_flag, json_data["data"])
 
         resp = SaoTrialTowerPlayEndResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c90a(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #quest/episode_play_end_unanalyzed_log_fixed
 
         req = SaoEpisodePlayEndUnanalyzedLogFixedRequest(header, request)
 
-        end_session_data = self.game_data.item.get_end_session(req.user_id)
+        end_session_data = await self.data.item.get_end_session(req.user_id)
 
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
+    async def handle_c91a(self, header: SaoRequestHeader, request: bytes) -> bytes: # handler is identical to the episode
         #quest/trial_tower_play_end_unanalyzed_log_fixed
         req = TrialTowerPlayEndUnanalyzedLogFixed(header, request)
 
-        end_session_data = self.game_data.item.get_end_session(req.user_id)
+        end_session_data = await self.data.item.get_end_session(req.user_id)
 
         resp = SaoEpisodePlayEndUnanalyzedLogFixedResponse(header.cmd +1, end_session_data[4])
         return resp.make()
 
-    def handle_cd00(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd00(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_basic_data
         resp = SaoGetDefragMatchBasicDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd02(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_ranking_user_data
         resp = SaoGetDefragMatchRankingUserDataResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd04(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd04(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_point_ranking_list
         resp = SaoGetDefragMatchLeaguePointRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_cd06(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cd06(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #defrag_match/get_defrag_match_league_score_ranking_list
         resp = SaoGetDefragMatchLeagueScoreRankingListResponse(header.cmd +1)
         return resp.make()
 
-    def handle_d404(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d404(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #other/bnid_serial_code_check
         resp = SaoBnidSerialCodeCheckResponse(header.cmd +1)
         return resp.make()
 
-    def handle_c306(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c306(self, header: SaoRequestHeader, request: bytes) -> bytes:
         #card/scan_qr_quest_profile_card
         resp = SaoScanQrQuestProfileCardResponse(header.cmd +1)
         return resp.make()
     
-    def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_c700(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # shop/get_shop_resource_sales_data_list
         # TODO: Get user shop data
         req = GetShopResourceSalesDataListRequest(header, request)
         resp = GetShopResourceSalesDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_d100(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d100(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # shop/get_yui_medal_shop_user_data_list
         # TODO: Get user shop data
         req = GetYuiMedalShopUserDataListRequest(header, request)
         resp = GetYuiMedalShopUserDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_cf0e(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_cf0e(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # gasha/get_gasha_medal_shop_user_data_list
         # TODO: Get user shop data
         req = GetGashaMedalShopUserDataListRequest(header, request)
         resp = GetGashaMedalShopUserDataListResponse(header.cmd + 1)
         return resp.make()
     
-    def handle_d5da(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5da(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_yui_medal_shops
         req = GetMYuiMedalShopDataRequest(header, request)
         resp = GetMYuiMedalShopDataResponse(header.cmd + 1)
@@ -897,7 +907,7 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shops")
         return resp.make()
     
-    def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5dc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_yui_medal_shop_items
         req = GetMYuiMedalShopItemsRequest(header, request)
         resp = GetMYuiMedalShopItemsResponse(header.cmd + 1)
@@ -927,7 +937,7 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Yui Medal Shop Items")
         return resp.make()
     
-    def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5fc(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shops
         req = GetMGashaMedalShopsRequest(header, request)
         resp = GetMGashaMedalShopsResponse(header.cmd + 1)
@@ -942,11 +952,11 @@ class SaoBase:
         self.logger.debug(f"Load {len(resp.data_list)} Gasha Medal Shops")
         return resp.make()
     
-    def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d5fe(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data/get_m_gasha_medal_shop_items
         return SaoNoopResponse(header.cmd + 1).make()
     
-    def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d604(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shops
         req = GetMResEarnCampaignShopsRequest(header, request)
         resp = GetMResEarnCampaignShopsResponse(header.cmd + 1)
@@ -968,6 +978,21 @@ class SaoBase:
         #self.logger.debug(f"Load {len(resp.data_list)} Res Earn Campaign Shops")
         return SaoNoopResponse(header.cmd + 1).make()
     
-    def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
+    async def handle_d606(self, header: SaoRequestHeader, request: bytes) -> bytes:
         # master_data_2/get_m_res_earn_campaign_shop_items
         return SaoNoopResponse(header.cmd + 1).make()
+    
+    async def handle_c108(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # common/logout_ticket_unpurchased
+        req = SaoLogoutTicketUnpurchasedRequest(header, request)
+        return SaoLogoutTicketUnpurchasedResponse(header.cmd + 1).make()
+    
+    async def handle_cb02(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # quest_ranking/get_quest_hierarchy_progress_degrees_ranking_list
+        req = SaoGetQuestHierarchyProgressDegreesRankingListRequest(header, request)
+        return SaoGetQuestHierarchyProgressDegreesRankingListResponse(header.cmd + 1).make()
+    
+    async def handle_cb04(self, header: SaoRequestHeader, request: bytes) -> bytes:
+        # quest_ranking/get_quest_popular_hero_log_ranking_list
+        req = SaoGetQuestPopularHeroLogRankingListRequest(header, request)
+        return SaoGetQuestPopularHeroLogRankingListResponse(header.cmd + 1).make()

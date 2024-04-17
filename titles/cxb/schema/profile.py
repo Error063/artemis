@@ -21,7 +21,7 @@ profile = Table(
 
 
 class CxbProfileData(BaseData):
-    def put_profile(
+    async def put_profile(
         self, user_id: int, version: int, index: int, data: JSON
     ) -> Optional[int]:
         sql = insert(profile).values(
@@ -30,7 +30,7 @@ class CxbProfileData(BaseData):
 
         conflict = sql.on_duplicate_key_update(index=index, data=data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} failed to update! user: {user_id}, index: {index}, data: {data}"
@@ -39,7 +39,7 @@ class CxbProfileData(BaseData):
 
         return result.lastrowid
 
-    def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
+    async def get_profile(self, aime_id: int, version: int) -> Optional[List[Dict]]:
         """
         Given a game version and either a profile or aime id, return the profile
         """
@@ -47,12 +47,12 @@ class CxbProfileData(BaseData):
             and_(profile.c.version == version, profile.c.user == aime_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_profile_index(
+    async def get_profile_index(
         self, index: int, aime_id: int = None, version: int = None
     ) -> Optional[Dict]:
         """
@@ -72,7 +72,7 @@ class CxbProfileData(BaseData):
             )
             return None
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

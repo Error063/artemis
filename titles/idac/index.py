@@ -1,28 +1,26 @@
 import json
 import traceback
-import inflection
+from starlette.routing import Route
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 import yaml
 import logging
 import coloredlogs
-
 from os import path
 from typing import Dict, List, Tuple
 from logging.handlers import TimedRotatingFileHandler
-from twisted.web import server
-from twisted.web.http import Request
-from twisted.internet import reactor, endpoints
+import asyncio
 
 from core.config import CoreConfig
+from core.title import BaseServlet, JSONResponseNoASCII
 from core.utils import Utils
 from titles.idac.base import IDACBase
 from titles.idac.season2 import IDACSeason2
 from titles.idac.config import IDACConfig
 from titles.idac.const import IDACConstants
 from titles.idac.echo import IDACEchoUDP
-from titles.idac.matching import IDACMatching
 
-
-class IDACServlet:
+class IDACServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         self.core_cfg = core_cfg
         self.game_cfg = IDACConfig()
@@ -72,12 +70,12 @@ class IDACServlet:
             return False
         
         return True
-
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [("render_POST", "/SDGT/{version}/initiald/{category}/{endpoint}", {})]
-        )
+    
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/{version:int}/initiald/{category:str}/{endpoint:str}", self.render_POST, methods=["POST"]),
+            Route("/{version:int}/initiald-matching/{endpoint:str}", self.render_matching, methods=["POST"]),
+        ]
 
     def get_allnet_info(
         self, game_code: str, game_ver: int, keychip: str
@@ -88,15 +86,15 @@ class IDACServlet:
         return (
             f"",
             # requires http or else it defaults to https
-            f"http://{self.core_cfg.title.hostname}{t_port}/{game_code}/{game_ver}/",
+            f"http://{self.core_cfg.server.hostname}{t_port}/{game_ver}/",
         )
 
-    def render_POST(self, request: Request, game_code: int, matchers: Dict) -> bytes:
-        req_raw = request.content.getvalue()
+    async def render_POST(self, request: Request) -> bytes:
+        req_raw = await request.body()
         internal_ver = 0
-        version = int(matchers['version'])
-        category = matchers['category']
-        endpoint = matchers['endpoint']
+        version: int = request.path_params.get('version')
+        category: str = request.path_params.get('category')
+        endpoint: str = request.path_params.get('endpoint')
         client_ip = Utils.get_ip_addr(request)
 
         if version >= 100 and version < 140:  # IDAC Season 1
@@ -104,7 +102,7 @@ class IDACServlet:
         elif version >= 140 and version < 171:  # IDAC Season 2
             internal_ver = IDACConstants.VER_IDAC_SEASON_2
 
-        header_application = self.decode_header(request.getAllHeaders())
+        header_application = self.decode_header(request.headers.get("application", ""))
 
         req_data = json.loads(req_raw)
 
@@ -119,27 +117,61 @@ class IDACServlet:
 
         if not hasattr(self.versions[internal_ver], func_to_find):
             self.logger.warning(f"Unhandled v{version} request {endpoint}")
-            return '{"status_code": "0"}'.encode("utf-8")
+            return JSONResponse('{"status_code": "0"}')
 
         resp = None
         try:
             handler = getattr(self.versions[internal_ver], func_to_find)
-            resp = handler(req_data, header_application)
+            resp = await handler(req_data, header_application)
 
         except Exception as e:
             traceback.print_exc()
             self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-            return '{"status_code": "0"}'.encode("utf-8")
+            return JSONResponse('{"status_code": "0"}')
 
         if resp is None:
             resp = {"status_code": "0"}
 
         self.logger.debug(f"Response {resp}")
-        return json.dumps(resp, ensure_ascii=False).encode("utf-8")
+        return JSONResponseNoASCII(resp)
 
+    async def render_matching(self, request: Request):
+        url: str = request.path_params.get("endpoint")
+        ver: int = request.path_params.get("version")
+        client_ip = Utils.get_ip_addr(request)
+        req_data = await request.json()
+        header_application = self.decode_header(request.headers.get('application', ''))
+        user_id = int(header_application["session"])
 
-    def decode_header(self, data: Dict) -> Dict:
-        app: str = data[b"application"].decode()
+        # self.getMatchingStatus(user_id)
+
+        self.logger.info(
+            f"IDAC Matching request from {client_ip}: {url} - {req_data}"
+        )
+
+        resp = {"status_code": "0"}
+        if url == "/regist":
+            self.queue = self.queue + 1
+        elif url == "/status":
+            if req_data.get("cancel_flag"):
+                self.queue = self.queue - 1
+                self.logger.info(
+                    f"IDAC Matching endpoint {client_ip} had quited"
+                )
+
+            resp = {
+                "status_code": "0",
+                # Only IPv4 is supported
+                "host": self.game_config.server.matching_host,
+                "port": self.game_config.server.matching_p2p,
+                "room_name": "INDTA",
+                "state": 1,
+            }
+
+        self.logger.debug(f"Response {resp}")
+        return JSONResponseNoASCII(resp)
+
+    def decode_header(self, app: str) -> Dict:
         ret = {}
 
         for x in app.split(", "):
@@ -150,18 +182,13 @@ class IDACServlet:
 
     def setup(self):
         if self.game_cfg.server.enable:
-            endpoints.serverFromString(
-                reactor,
-                f"tcp:{self.game_cfg.server.matching}:interface={self.core_cfg.server.listen_address}",
-            ).listen(server.Site(IDACMatching(self.core_cfg, self.game_cfg)))
-
-            reactor.listenUDP(
-                self.game_cfg.server.echo1,
-                IDACEchoUDP(self.core_cfg, self.game_cfg, self.game_cfg.server.echo1),
-            )
-            reactor.listenUDP(
-                self.game_cfg.server.echo2,
-                IDACEchoUDP(self.core_cfg, self.game_cfg, self.game_cfg.server.echo2),
+            loop = asyncio.get_running_loop()
+            asyncio.create_task(
+                loop.create_datagram_endpoint(
+                    lambda: IDACEchoUDP(),
+                    local_addr=(self.core_cfg.server.listen_address, self.game_cfg.server.echo1)
+                )
             )
             
-            self.logger.info(f"Matching listening on {self.game_cfg.server.matching} with echos on {self.game_cfg.server.echo1} and {self.game_cfg.server.echo2}")
+            self.logger.info(f"Matching listening on {self.game_cfg.server.matching} with echo on {self.game_cfg.server.echo1}")
+            

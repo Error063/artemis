@@ -6,7 +6,4 @@ from titles.cm.database import CardMakerData
 index = CardMakerServlet
 reader = CardMakerReader
 database = CardMakerData
-
 game_codes = [CardMakerConstants.GAME_CODE]
-
-current_schema_version = 1

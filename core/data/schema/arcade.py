@@ -69,7 +69,7 @@ arcade_owner = Table(
 
 
 class ArcadeData(BaseData):
-    def get_machine(self, serial: str = None, id: int = None) -> Optional[Row]:
+    async def get_machine(self, serial: str = None, id: int = None) -> Optional[Row]:
         if serial is not None:
             serial = serial.replace("-", "")
             if len(serial) == 11:
@@ -89,12 +89,12 @@ class ArcadeData(BaseData):
             self.logger.error(f"{__name__ }: Need either serial or ID to look up!")
             return None
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_machine(
+    async def create_machine(
         self,
         arcade_id: int,
         serial: str = "",
@@ -102,21 +102,21 @@ class ArcadeData(BaseData):
         game: str = None,
         is_cab: bool = False,
     ) -> Optional[int]:
-        if arcade_id:
+        if not arcade_id:
             self.logger.error(f"{__name__ }: Need arcade id!")
             return None
 
         sql = machine.insert().values(
-            arcade=arcade_id, keychip=serial, board=board, game=game, is_cab=is_cab
+            arcade=arcade_id, serial=serial, board=board, game=game, is_cab=is_cab
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.lastrowid
 
-    def set_machine_serial(self, machine_id: int, serial: str) -> None:
-        result = self.execute(
+    async def set_machine_serial(self, machine_id: int, serial: str) -> None:
+        result = await self.execute(
             machine.update(machine.c.id == machine_id).values(keychip=serial)
         )
         if result is None:
@@ -125,8 +125,8 @@ class ArcadeData(BaseData):
             )
         return result.lastrowid
 
-    def set_machine_boardid(self, machine_id: int, boardid: str) -> None:
-        result = self.execute(
+    async def set_machine_boardid(self, machine_id: int, boardid: str) -> None:
+        result = await self.execute(
             machine.update(machine.c.id == machine_id).values(board=boardid)
         )
         if result is None:
@@ -134,29 +134,29 @@ class ArcadeData(BaseData):
                 f"Failed to update board id for machine {machine_id} -> {boardid}"
             )
 
-    def get_arcade(self, id: int) -> Optional[Row]:
+    async def get_arcade(self, id: int) -> Optional[Row]:
         sql = arcade.select(arcade.c.id == id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
     
-    def get_arcade_machines(self, id: int) -> Optional[List[Row]]:
+    async def get_arcade_machines(self, id: int) -> Optional[List[Row]]:
         sql = machine.select(machine.c.arcade == id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def put_arcade(
+    async def create_arcade(
         self,
-        name: str,
+        name: str = None,
         nickname: str = None,
         country: str = "JPN",
         country_id: int = 1,
         state: str = "",
         city: str = "",
-        regional_id: int = 1,
+        region_id: int = 1,
     ) -> Optional[int]:
         if nickname is None:
             nickname = name
@@ -168,46 +168,46 @@ class ArcadeData(BaseData):
             country_id=country_id,
             state=state,
             city=city,
-            regional_id=regional_id,
+            region_id=region_id,
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.lastrowid
 
-    def get_arcades_managed_by_user(self, user_id: int) -> Optional[List[Row]]:
+    async def get_arcades_managed_by_user(self, user_id: int) -> Optional[List[Row]]:
         sql = select(arcade).join(arcade_owner, arcade_owner.c.arcade == arcade.c.id).where(arcade_owner.c.user == user_id)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return False
         return result.fetchall()
     
-    def get_manager_permissions(self, user_id: int, arcade_id: int) -> Optional[int]:
+    async def get_manager_permissions(self, user_id: int, arcade_id: int) -> Optional[int]:
         sql = select(arcade_owner.c.permissions).where(and_(arcade_owner.c.user == user_id, arcade_owner.c.arcade == arcade_id))
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return False
         return result.fetchone()
 
-    def get_arcade_owners(self, arcade_id: int) -> Optional[Row]:
+    async def get_arcade_owners(self, arcade_id: int) -> Optional[Row]:
         sql = select(arcade_owner).where(arcade_owner.c.arcade == arcade_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def add_arcade_owner(self, arcade_id: int, user_id: int) -> None:
+    async def add_arcade_owner(self, arcade_id: int, user_id: int) -> None:
         sql = insert(arcade_owner).values(arcade=arcade_id, user=user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.lastrowid
 
-    def format_serial(
-        self, platform_code: str, platform_rev: int, serial_num: int, append: int = 4152
+    def format_serial( # TODO: Actual serial stuff
+        self, platform_code: str, platform_rev: int, serial_num: int, append: int = 8888
     ) -> str:
         return f"{platform_code}{platform_rev:02d}A{serial_num:04d}{append:04d}"  # 0x41 = A, 0x52 = R
 
@@ -217,16 +217,16 @@ class ArcadeData(BaseData):
         
         return True
 
-    def get_arcade_by_name(self, name: str) -> Optional[List[Row]]:
+    async def get_arcade_by_name(self, name: str) -> Optional[List[Row]]:
         sql = arcade.select(or_(arcade.c.name.like(f"%{name}%"), arcade.c.nickname.like(f"%{name}%")))
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_arcades_by_ip(self, ip: str) -> Optional[List[Row]]:
+    async def get_arcades_by_ip(self, ip: str) -> Optional[List[Row]]:
         sql = arcade.select().where(arcade.c.ip == ip)
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

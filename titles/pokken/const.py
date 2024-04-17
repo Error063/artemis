@@ -3,12 +3,19 @@ from enum import Enum
 
 class PokkenConstants:
     GAME_CODE = "SDAK"
+    GAME_CDS = ["PKF1"]
 
     CONFIG_NAME = "pokken.yaml"
 
     VER_POKKEN = 0
 
     VERSION_NAMES = "Pokken Tournament"
+
+    SERIAL_IDENT = [2747]
+    NETID_PREFIX = ["ABGN"]
+    SERIAL_REGIONS = [1]
+    SERIAL_ROLES = [3]
+    SERIAL_CAB_IDENTS = [19]
 
     class BATTLE_TYPE(Enum):
         TUTORIAL = 1

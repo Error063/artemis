@@ -18,6 +18,12 @@ class CxbServerConfig:
                 self.__config, "cxb", "server", "loglevel", default="info"
             )
         )
+    
+    @property
+    def use_https(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "cxb", "server", "use_https", default=True
+        )
 
 
 class CxbConfig(dict):

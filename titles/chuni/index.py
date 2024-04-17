@@ -1,4 +1,6 @@
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.routing import Route
+from starlette.responses import Response
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
 import zlib
@@ -32,7 +34,6 @@ from .new import ChuniNew
 from .newplus import ChuniNewPlus
 from .sun import ChuniSun
 from .sunplus import ChuniSunPlus
-
 
 class ChuniServlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -124,15 +125,6 @@ class ChuniServlet(BaseServlet):
                     f"Hashed v{version} method {method_fixed} with {bytes.fromhex(keys[2])} to get {hash.hex()}"
                 )
 
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [], 
-            [
-               ("render_POST", "/{game}/{version}/ChuniServlet/{endpoint}", {}),
-               ("render_POST", "/{game}/{version}/ChuniServlet/MatchingServer/{endpoint}", {})
-            ]
-        )
-
     @classmethod
     def is_game_enabled(
         cls, game_code: str, core_cfg: CoreConfig, cfg_dir: str
@@ -150,19 +142,25 @@ class ChuniServlet(BaseServlet):
 
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", self.core_cfg.title.hostname)
+            return (f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", self.core_cfg.server.hostname)
 
-        return (f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/", self.core_cfg.title.hostname)
+        return (f"http://{self.core_cfg.server.hostname}/{game_code}/{game_ver}/", self.core_cfg.server.hostname)
 
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = int(matchers['version'])
-        game_code = matchers['game']
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/{game:str}/{version:int}/ChuniServlet/{endpoint:str}", self.render_POST, methods=['POST']),
+            Route("/{game:str}/{version:int}/ChuniServlet/MatchingServer/{endpoint:str}", self.render_POST, methods=['POST']),
+        ]
+
+    async def render_POST(self, request: Request) -> bytes:
+        endpoint: str = request.path_params.get('endpoint')
+        version: int = request.path_params.get('version')
+        game_code: str = request.path_params.get('game')
 
         if endpoint.lower() == "ping":
-            return zlib.compress(b'{"returnCode": "1"}')
+            return Response(zlib.compress(b'{"returnCode": "1"}'))
 
-        req_raw = request.content.getvalue()
+        req_raw = await request.body()
 
         encrtped = False
         internal_ver = 0
@@ -201,7 +199,7 @@ class ChuniServlet(BaseServlet):
               internal_ver = ChuniConstants.VER_CHUNITHM_SUN_PLUS
         elif game_code == "SDGS": # Int
           if version < 110: # SUPERSTAR
-              internal_ver = ChuniConstants.PARADISE
+              internal_ver = ChuniConstants.VER_CHUNITHM_PARADISE # FIXME: Not sure what was intended to go here? was just "PARADISE"
           elif version >= 110 and version < 115: # NEW
               internal_ver = ChuniConstants.VER_CHUNITHM_NEW
           elif version >= 115 and version < 120: # NEW PLUS!!
@@ -216,20 +214,20 @@ class ChuniServlet(BaseServlet):
             # doing encrypted. The likelyhood of false positives is low but
             # technically not 0
             if internal_ver < ChuniConstants.VER_CHUNITHM_NEW:
-                endpoint = request.getHeader("User-Agent").split("#")[0]
+                endpoint = request.headers.get("User-Agent").split("#")[0]
 
             else:
                 if internal_ver not in self.hash_table:
                     self.logger.error(
                         f"v{version} does not support encryption or no keys entered"
                     )
-                    return zlib.compress(b'{"stat": "0"}')
+                    return Response(zlib.compress(b'{"stat": "0"}'))
 
                 elif endpoint.lower() not in self.hash_table[internal_ver]:
                     self.logger.error(
                         f"No hash found for v{version} endpoint {endpoint}"
                     )
-                    return zlib.compress(b'{"stat": "0"}')
+                    return Response(zlib.compress(b'{"stat": "0"}'))
 
                 endpoint = self.hash_table[internal_ver][endpoint.lower()]
 
@@ -246,7 +244,7 @@ class ChuniServlet(BaseServlet):
                 self.logger.error(
                     f"Failed to decrypt v{version} request to {endpoint} -> {e}"
                 )
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
             encrtped = True
 
@@ -258,7 +256,7 @@ class ChuniServlet(BaseServlet):
             self.logger.error(
                 f"Unencrypted v{version} {endpoint} request, but config is set to encrypted only: {req_raw}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         try:
             unzip = zlib.decompress(req_raw)
@@ -267,7 +265,7 @@ class ChuniServlet(BaseServlet):
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return b""
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
@@ -285,11 +283,11 @@ class ChuniServlet(BaseServlet):
         else:
             try:
                 handler = getattr(handler_cls, func_to_find)
-                resp = handler(req_data)
+                resp = await handler(req_data)
 
             except Exception as e:
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
         if resp == None:
             resp = {"returnCode": 1}
@@ -299,7 +297,7 @@ class ChuniServlet(BaseServlet):
         zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
 
         if not encrtped:
-            return zipped
+            return Response(zipped)
 
         padded = pad(zipped, 16)
 
@@ -309,4 +307,4 @@ class ChuniServlet(BaseServlet):
             bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
-        return crypt.encrypt(padded)
+        return Response(crypt.encrypt(padded))

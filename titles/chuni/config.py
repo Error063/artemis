@@ -89,6 +89,27 @@ class ChuniCryptoConfig:
             self.__config, "chuni", "crypto", "encrypted_only", default=False
         )
 
+class ChuniMatchingConfig:
+    def __init__(self, parent_config: "ChuniConfig") -> None:
+        self.__config = parent_config
+    
+    @property
+    def enable(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "enable", default=False
+        )
+    
+    @property
+    def match_time_limit(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "match_time_limit", default=60
+        )
+    
+    @property
+    def match_error_limit(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "chuni", "matching", "match_error_limit", default=9999
+        )
 
 class ChuniConfig(dict):
     def __init__(self) -> None:
@@ -97,3 +118,4 @@ class ChuniConfig(dict):
         self.mods = ChuniModsConfig(self)
         self.version = ChuniVersionConfig(self)
         self.crypto = ChuniCryptoConfig(self)
+        self.matching = ChuniMatchingConfig(self)

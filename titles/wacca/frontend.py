@@ -1,10 +1,12 @@
+from typing import List
+from starlette.routing import Route
+from starlette.requests import Request
+from starlette.responses import Response
+from os import path
 import yaml
 import jinja2
-from twisted.web.http import Request
-from os import path
-from twisted.web.server import Session
 
-from core.frontend import FE_Base, IUserSession
+from core.frontend import FE_Base, UserSession
 from core.config import CoreConfig
 from titles.wacca.database import WaccaData
 from titles.wacca.config import WaccaConfig
@@ -24,15 +26,21 @@ class WaccaFrontend(FE_Base):
             )
         self.nav_name = "Wacca"
 
-    def render_GET(self, request: Request) -> bytes:
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/", self.render_GET, methods=['GET'])
+        ]
+
+    async def render_GET(self, request: Request) -> bytes:
         template = self.environment.get_template(
-            "titles/wacca/frontend/wacca_index.jinja"
+            "titles/wacca/templates/wacca_index.jinja"
         )
-        sesh: Session = request.getSession()
-        usr_sesh = IUserSession(sesh)
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh:
+            usr_sesh = UserSession()
         
-        return template.render(
+        return Response(template.render(
             title=f"{self.core_config.server.name} | {self.nav_name}",
             game_list=self.environment.globals["game_list"],
             sesh=vars(usr_sesh)
-        ).encode("utf-16")
+        ), media_type="text/html; charset=utf-8")

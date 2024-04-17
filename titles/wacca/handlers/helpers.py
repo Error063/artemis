@@ -96,7 +96,7 @@ class Version(ShortVersion):
             self.role = role
 
     def __str__(self) -> str:
-        return f"{self.major}.{self.minor}.{self.patch}.{self.country}.{self.role}.{self.build}"
+        return f"{self.major}.{self.minor:02}.{self.patch:02}.{self.country}.{self.build:05}.{self.role}"
 
 
 class HousingInfo:

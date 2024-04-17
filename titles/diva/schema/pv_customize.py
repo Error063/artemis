@@ -39,7 +39,7 @@ pv_customize = Table(
 
 
 class DivaPvCustomizeData(BaseData):
-    def put_pv_customize(
+    async def put_pv_customize(
         self,
         aime_id: int,
         version: int,
@@ -64,7 +64,7 @@ class DivaPvCustomizeData(BaseData):
             ms_itm_flg_ary=ms_itm_flg_ary,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"{__name__} Failed to insert diva pv customize! aime id: {aime_id}"
@@ -72,7 +72,7 @@ class DivaPvCustomizeData(BaseData):
             return None
         return result.lastrowid
 
-    def get_pv_customize(self, aime_id: int, pv_id: int) -> Optional[List[Dict]]:
+    async def get_pv_customize(self, aime_id: int, pv_id: int) -> Optional[List[Dict]]:
         """
         Given either a profile or aime id, return a Pv Customize row
         """
@@ -80,7 +80,7 @@ class DivaPvCustomizeData(BaseData):
             and_(pv_customize.c.user == aime_id, pv_customize.c.pv_id == pv_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()

@@ -1,11 +1,23 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
+import json
 import logging, coloredlogs
 from logging.handlers import TimedRotatingFileHandler
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette.routing import Route
 
 from core.config import CoreConfig
 from core.data import Data
 from core.utils import Utils
+
+class JSONResponseNoASCII(Response):
+    media_type = "application/json"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+        ).encode("utf-8")
 
 class BaseServlet:
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
@@ -28,18 +40,16 @@ class BaseServlet:
         """
         return False
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
+    def get_routes(self) -> List[Route]:
         """Called during boot to get all matcher endpoints this title servlet handles
 
         Returns:
-            Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]: A 2-length tuple where offset 0 is GET and offset 1 is POST, 
-            containing a list of 3-length tuples where offset 0 is the name of the function in the handler that should be called, offset 1
-            is the matching string, and offset 2 is a dict containing rules for the matcher.
+            List[Route]: A list of Routes, WebSocketRoutes, or similar classes
         """
-        return (
-            [("render_GET", "/{game}/{version}/{endpoint}", {'game': R'S...'})], 
-            [("render_POST", "/{game}/{version}/{endpoint}", {'game': R'S...'})]
-        )
+        return [
+            Route("/{game}/{version}/{endpoint}", self.render_POST, methods=["POST"]),
+            Route("/{game}/{version}/{endpoint}", self.render_GET, methods=["GET"]),
+        ]
     
     def setup(self) -> None:
         """Called once during boot, should contain any additional setup the handler must do, such as starting any sub-services
@@ -58,11 +68,11 @@ class BaseServlet:
             Tuple[str, str]: A tuple where offset 0 is the allnet uri field, and offset 1 is the allnet host field
         """
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
-            return (f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", "")
+            return (f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/", "")
 
-        return (f"http://{self.core_cfg.title.hostname}/{game_code}/{game_ver}/", "")
+        return (f"http://{self.core_cfg.server.hostname}/{game_code}/{game_ver}/", "")
 
-    def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, str]:
+    def get_mucha_info(self, core_cfg: CoreConfig, cfg_dir: str) -> Tuple[bool, List[str], List[str]]:
         """Called once during boot to check if this game is a mucha game
 
         Args:
@@ -72,15 +82,15 @@ class BaseServlet:
         Returns:
             Tuple[bool, str]: Tuple where offset 0 is true if the game is enabled, false otherwise, and offset 1 is the game CD
         """
-        return (False, "")
+        return (False, [], [])
 
-    def render_POST(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        self.logger.warn(f"{game_code} Does not dispatch POST")
-        return None
+    async def render_POST(self, request: Request) -> bytes:
+        self.logger.warn(f"Game Does not dispatch POST")
+        return Response()
 
-    def render_GET(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        self.logger.warn(f"{game_code} Does not dispatch GET")
-        return None
+    async def render_GET(self, request: Request) -> bytes:
+        self.logger.warn(f"Game Does not dispatch GET")
+        return Response()
 
 class TitleServlet:
     title_registry: Dict[str, BaseServlet] = {}
@@ -136,7 +146,7 @@ class TitleServlet:
                 self.logger.error(f"{folder} missing game_code or index in __init__.py, or is_game_enabled in index")
 
         self.logger.info(
-            f"Serving {len(self.title_registry)} game codes {'on port ' + str(core_cfg.title.port) if core_cfg.title.port > 0 else ''}"
+            f"Serving {len(self.title_registry)} game codes {'on port ' + str(core_cfg.server.port) if core_cfg.server.port > 0 else ''}"
         )
 
     def render_GET(self, request: Request, endpoints: dict) -> bytes:

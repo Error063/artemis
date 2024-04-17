@@ -9,4 +9,3 @@ database = WaccaData
 reader = WaccaReader
 frontend = WaccaFrontend
 game_codes = [WaccaConstants.GAME_CODE]
-current_schema_version = 5

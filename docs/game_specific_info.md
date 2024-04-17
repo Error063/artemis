@@ -9,7 +9,15 @@ using the megaime database. Clean installations always create the latest databas
 To upgrade the core database and the database for every game, execute:
 
 ```shell
-python dbutils.py autoupgrade
+python dbutils.py upgrade
+```
+
+If you are using the old master branch that was not setup with alembic, make sure to do the following steps in order:
+- Pull down latest master/develop
+- Update core.yaml
+- Back up your existing database
+```shell
+python dbutils.py migrate
 ```
 
 # Table of content
@@ -22,7 +30,7 @@ python dbutils.py autoupgrade
     - [Card Maker](#card-maker)
     - [WACCA](#wacca)
     - [Sword Art Online Arcade](#sao)
-	- [Initial D THE ARCADE](#initial-d-the-arcade)
+    - [Initial D THE ARCADE](#initial-d-the-arcade)
 
 
 # Supported Games
@@ -93,7 +101,7 @@ crypto:
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDBT upgrade
+python dbutils.py upgrade
 ```
 
 ### Online Battle
@@ -192,6 +200,7 @@ Config file is located in `config/cxb.yaml`.
 | SDEZ      | 18         | maimai DX UNiVERSE PLUS |
 | SDEZ      | 19         | maimai DX FESTiVAL      |
 | SDEZ      | 20         | maimai DX FESTiVAL PLUS |
+| SDEZ      | 21         | maimai DX BUDDiES       |
 
 ### Importer
 
@@ -215,7 +224,7 @@ The importer for maimai Pre-DX will import Events and Music. Not all games will 
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDEZ upgrade
+python dbutils.py upgrade
 ```
 
 Pre-Dx uses the same database as DX, so only upgrade using the SDEZ game code!
@@ -259,7 +268,7 @@ In order to use custom PV Lists, simply drop in your .dat files inside of /title
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SBZV upgrade
+python dbutils.py upgrade
 ```
 
 ## O.N.G.E.K.I.
@@ -315,7 +324,7 @@ crypto:
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDDT upgrade
+python dbutils.py upgrade
 ```
 
 ### Controlling Events (Ranking Event, Technical Challenge Event, Mission Event)
@@ -406,6 +415,7 @@ After that, on next login the present should be received (or whenever it suppose
   * UNiVERSE PLUS: Yes
   * FESTiVAL: Yes (added in A031)
   * FESTiVAL PLUS: Yes (added in A035)
+  * BUDDiES: Yes (added in A039)
 * O.N.G.E.K.I. bright MEMORY: Yes
 
 
@@ -542,7 +552,7 @@ Config file is located in `config/wacca.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDFE upgrade
+python dbutils.py upgrade
 ```
 
 ### VIP Rewards
@@ -594,7 +604,7 @@ Below is a list of VIP rewards. Currently, VIP is not implemented, and thus thes
 In order to use the importer locate your game installation folder and execute:
 
 ```shell
-python read.py --game SDEW --version <version ID> --binfolder /path/to/game/extractedassets
+python read.py --game SDEW --version 0 --binfolder /titles/sao/data/
 ```
 
 The importer for SAO will import all items, heroes, support skills and titles data.
@@ -615,21 +625,23 @@ Config file is located in `config/sao.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDEW upgrade
+python dbutils.py upgrade
 ```
 
 ### Notes
 - Defrag Match will crash at loading
 - Co-Op Online is not supported
-- Shop is not functionnal
+- Shop is displayed but cannot purchase heroes or items
 - Player title is currently static and cannot be changed in-game
 - QR Card Scanning currently only load a static hero
-
-**Network hashing in GssSite.dll must be disabled**
+- Ex-quests progression not supported yet
+- Daily Missions not implemented
+- EX TOWER 1,2 & 3 are not yet supported
+- Daily Yui coin not yet fixed
 
 ### Credits for SAO support:
 
-- Midorica - Limited Network Support
+- Midorica - Network Support
 - Dniel97 - Helping with network base
 - tungnotpunk - Source
 
@@ -678,7 +690,7 @@ Config file is located in `config/idac.yaml`.
 Always make sure your database (tables) are up-to-date:
 
 ```shell
-python dbutils.py --game SDGT upgrade
+python dbutils.py upgrade
 ```
 
 ### Notes

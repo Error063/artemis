@@ -297,7 +297,7 @@ timetrial_event = Table(
 
 
 class IDACItemData(BaseData):
-    def get_random_user_car(self, aime_id: int, version: int) -> Optional[List[Row]]:
+    async def get_random_user_car(self, aime_id: int, version: int) -> Optional[List[Row]]:
         sql = (
             select(car)
             .where(and_(car.c.user == aime_id, car.c.version == version))
@@ -305,20 +305,20 @@ class IDACItemData(BaseData):
             .limit(1)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_random_car(self, version: int) -> Optional[List[Row]]:
+    async def get_random_car(self, version: int) -> Optional[List[Row]]:
         sql = select(car).where(car.c.version == version).order_by(func.rand()).limit(1)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_car(
+    async def get_car(
         self, aime_id: int, version: int, style_car_id: int
     ) -> Optional[List[Row]]:
         sql = select(car).where(
@@ -329,12 +329,12 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_cars(
+    async def get_cars(
         self, version: int, aime_id: int, only_pickup: bool = False
     ) -> Optional[List[Row]]:
         if only_pickup:
@@ -350,106 +350,106 @@ class IDACItemData(BaseData):
                 and_(car.c.user == aime_id, car.c.version == version)
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_ticket(self, aime_id: int, ticket_id: int) -> Optional[Row]:
+    async def get_ticket(self, aime_id: int, ticket_id: int) -> Optional[Row]:
         sql = select(ticket).where(
             ticket.c.user == aime_id, ticket.c.ticket_id == ticket_id
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_tickets(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_tickets(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(ticket).where(ticket.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_story(self, aime_id: int, chapter_id: int) -> Optional[Row]:
+    async def get_story(self, aime_id: int, chapter_id: int) -> Optional[Row]:
         sql = select(story).where(
             and_(story.c.user == aime_id, story.c.chapter == chapter_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_stories(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_stories(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(story).where(story.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_story_episodes(self, aime_id: int, chapter_id: int) -> Optional[List[Row]]:
+    async def get_story_episodes(self, aime_id: int, chapter_id: int) -> Optional[List[Row]]:
         sql = select(episode).where(
             and_(episode.c.user == aime_id, episode.c.chapter == chapter_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_story_episode(self, aime_id: int, episode_id: int) -> Optional[Row]:
+    async def get_story_episode(self, aime_id: int, episode_id: int) -> Optional[Row]:
         sql = select(episode).where(
             and_(episode.c.user == aime_id, episode.c.episode == episode_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_story_episode_difficulties(
+    async def get_story_episode_difficulties(
         self, aime_id: int, episode_id: int
     ) -> Optional[List[Row]]:
         sql = select(difficulty).where(
             and_(difficulty.c.user == aime_id, difficulty.c.episode == episode_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_courses(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_courses(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(course).where(course.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_course(self, aime_id: int, course_id: int) -> Optional[Row]:
+    async def get_course(self, aime_id: int, course_id: int) -> Optional[Row]:
         sql = select(course).where(
             and_(course.c.user == aime_id, course.c.course_id == course_id)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_time_trial_courses(self, version: int) -> Optional[List[Row]]:
+    async def get_time_trial_courses(self, version: int) -> Optional[List[Row]]:
         sql = select(trial.c.course_id).where(trial.c.version == version).distinct()
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_time_trial_user_best_time_by_course_car(
+    async def get_time_trial_user_best_time_by_course_car(
         self, version: int, aime_id: int, course_id: int, style_car_id: int
     ) -> Optional[Row]:
         sql = select(trial).where(
@@ -461,12 +461,12 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_time_trial_user_best_courses(
+    async def get_time_trial_user_best_courses(
         self, version: int, aime_id: int
     ) -> Optional[List[Row]]:
         # get for a given aime_id the best time for each course
@@ -491,12 +491,12 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_time_trial_best_cars_by_course(
+    async def get_time_trial_best_cars_by_course(
         self, version: int, course_id: int, aime_id: Optional[int] = None
     ) -> Optional[List[Row]]:
         subquery = (
@@ -527,12 +527,12 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_time_trial_ranking_by_course(
+    async def get_time_trial_ranking_by_course(
         self,
         version: int,
         course_id: int,
@@ -568,12 +568,12 @@ class IDACItemData(BaseData):
         if limit is not None:
             sql = sql.limit(limit)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_time_trial_best_ranking_by_course(
+    async def get_time_trial_best_ranking_by_course(
         self, version: int, aime_id: int, course_id: int
     ) -> Optional[Row]:
         sql = (
@@ -589,12 +589,12 @@ class IDACItemData(BaseData):
             .limit(1)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_challenge(
+    async def get_challenge(
         self, aime_id: int, vs_type: int, play_difficulty: int
     ) -> Optional[Row]:
         sql = select(challenge).where(
@@ -605,20 +605,20 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_challenges(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_challenges(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(challenge).where(challenge.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_best_challenges_by_vs_type(
+    async def get_best_challenges_by_vs_type(
         self, aime_id: int, story_type: int = 4
     ) -> Optional[List[Row]]:
         subquery = (
@@ -653,20 +653,20 @@ class IDACItemData(BaseData):
             .order_by(challenge.c.vs_type)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_theory_courses(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_theory_courses(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(theory_course).where(theory_course.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_theory_course_by_powerhouse_lv(
+    async def get_theory_course_by_powerhouse_lv(
         self, aime_id: int, course_id: int, powerhouse_lv: int, count: int = 3
     ) -> Optional[List[Row]]:
         sql = (
@@ -682,40 +682,40 @@ class IDACItemData(BaseData):
             .limit(count)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_theory_course(self, aime_id: int, course_id: int) -> Optional[List[Row]]:
+    async def get_theory_course(self, aime_id: int, course_id: int) -> Optional[List[Row]]:
         sql = select(theory_course).where(
             and_(
                 theory_course.c.user == aime_id, theory_course.c.course_id == course_id
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_theory_partners(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_theory_partners(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(theory_partner).where(theory_partner.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_theory_running(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_theory_running(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(theory_running).where(theory_running.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_theory_running_by_course(
+    async def get_theory_running_by_course(
         self, aime_id: int, course_id: int
     ) -> Optional[Row]:
         sql = select(theory_running).where(
@@ -725,32 +725,32 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def get_vs_infos(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_vs_infos(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(vs_info).where(vs_info.c.user == aime_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_stamps(self, aime_id: int) -> Optional[List[Row]]:
+    async def get_stamps(self, aime_id: int) -> Optional[List[Row]]:
         sql = select(stamp).where(
             and_(
                 stamp.c.user == aime_id,
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_timetrial_event(self, aime_id: int, timetrial_event_id: int) -> Optional[Row]:
+    async def get_timetrial_event(self, aime_id: int, timetrial_event_id: int) -> Optional[Row]:
         sql = select(timetrial_event).where(
             and_(
                 timetrial_event.c.user == aime_id,
@@ -758,49 +758,49 @@ class IDACItemData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_car(self, aime_id: int, version: int, car_data: Dict) -> Optional[int]:
+    async def put_car(self, aime_id: int, version: int, car_data: Dict) -> Optional[int]:
         car_data["user"] = aime_id
         car_data["version"] = version
 
         sql = insert(car).values(**car_data)
         conflict = sql.on_duplicate_key_update(**car_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_car: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_ticket(self, aime_id: int, ticket_data: Dict) -> Optional[int]:
+    async def put_ticket(self, aime_id: int, ticket_data: Dict) -> Optional[int]:
         ticket_data["user"] = aime_id
 
         sql = insert(ticket).values(**ticket_data)
         conflict = sql.on_duplicate_key_update(**ticket_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_ticket: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_story(self, aime_id: int, story_data: Dict) -> Optional[int]:
+    async def put_story(self, aime_id: int, story_data: Dict) -> Optional[int]:
         story_data["user"] = aime_id
 
         sql = insert(story).values(**story_data)
         conflict = sql.on_duplicate_key_update(**story_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_story: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_story_episode_play_status(
+    async def put_story_episode_play_status(
         self, aime_id: int, chapter_id: int, play_status: int = 1
     ) -> Optional[int]:
         sql = (
@@ -809,7 +809,7 @@ class IDACItemData(BaseData):
             .values(play_status=play_status)
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             self.logger.warn(
                 f"put_story_episode_play_status: Failed to update! aime_id: {aime_id}"
@@ -817,7 +817,7 @@ class IDACItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_story_episode(
+    async def put_story_episode(
         self, aime_id: int, chapter_id: int, episode_data: Dict
     ) -> Optional[int]:
         episode_data["user"] = aime_id
@@ -825,14 +825,14 @@ class IDACItemData(BaseData):
 
         sql = insert(episode).values(**episode_data)
         conflict = sql.on_duplicate_key_update(**episode_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_story_episode: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_story_episode_difficulty(
+    async def put_story_episode_difficulty(
         self, aime_id: int, episode_id: int, difficulty_data: Dict
     ) -> Optional[int]:
         difficulty_data["user"] = aime_id
@@ -840,7 +840,7 @@ class IDACItemData(BaseData):
 
         sql = insert(difficulty).values(**difficulty_data)
         conflict = sql.on_duplicate_key_update(**difficulty_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -849,19 +849,19 @@ class IDACItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_course(self, aime_id: int, course_data: Dict) -> Optional[int]:
+    async def put_course(self, aime_id: int, course_data: Dict) -> Optional[int]:
         course_data["user"] = aime_id
 
         sql = insert(course).values(**course_data)
         conflict = sql.on_duplicate_key_update(**course_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_course: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_time_trial(
+    async def put_time_trial(
         self, version: int, aime_id: int, time_trial_data: Dict
     ) -> Optional[int]:
         time_trial_data["user"] = aime_id
@@ -869,47 +869,47 @@ class IDACItemData(BaseData):
 
         sql = insert(trial).values(**time_trial_data)
         conflict = sql.on_duplicate_key_update(**time_trial_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_time_trial: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_challenge(self, aime_id: int, challenge_data: Dict) -> Optional[int]:
+    async def put_challenge(self, aime_id: int, challenge_data: Dict) -> Optional[int]:
         challenge_data["user"] = aime_id
 
         sql = insert(challenge).values(**challenge_data)
         conflict = sql.on_duplicate_key_update(**challenge_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_challenge: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_theory_course(
+    async def put_theory_course(
         self, aime_id: int, theory_course_data: Dict
     ) -> Optional[int]:
         theory_course_data["user"] = aime_id
 
         sql = insert(theory_course).values(**theory_course_data)
         conflict = sql.on_duplicate_key_update(**theory_course_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_theory_course: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_theory_partner(
+    async def put_theory_partner(
         self, aime_id: int, theory_partner_data: Dict
     ) -> Optional[int]:
         theory_partner_data["user"] = aime_id
 
         sql = insert(theory_partner).values(**theory_partner_data)
         conflict = sql.on_duplicate_key_update(**theory_partner_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -918,14 +918,14 @@ class IDACItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_theory_running(
+    async def put_theory_running(
         self, aime_id: int, theory_running_data: Dict
     ) -> Optional[int]:
         theory_running_data["user"] = aime_id
 
         sql = insert(theory_running).values(**theory_running_data)
         conflict = sql.on_duplicate_key_update(**theory_running_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -934,26 +934,26 @@ class IDACItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_vs_info(self, aime_id: int, vs_info_data: Dict) -> Optional[int]:
+    async def put_vs_info(self, aime_id: int, vs_info_data: Dict) -> Optional[int]:
         vs_info_data["user"] = aime_id
 
         sql = insert(vs_info).values(**vs_info_data)
         conflict = sql.on_duplicate_key_update(**vs_info_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(f"put_vs_info: Failed to update! aime_id: {aime_id}")
             return None
         return result.lastrowid
 
-    def put_stamp(
+    async def put_stamp(
         self, aime_id: int, stamp_data: Dict
     ) -> Optional[int]:
         stamp_data["user"] = aime_id
 
         sql = insert(stamp).values(**stamp_data)
         conflict = sql.on_duplicate_key_update(**stamp_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(
@@ -962,7 +962,7 @@ class IDACItemData(BaseData):
             return None
         return result.lastrowid
 
-    def put_timetrial_event(
+    async def put_timetrial_event(
         self, aime_id: int, time_trial_event_id: int, point: int
     ) -> Optional[int]:
         timetrial_event_data = {
@@ -973,7 +973,7 @@ class IDACItemData(BaseData):
 
         sql = insert(timetrial_event).values(**timetrial_event_data)
         conflict = sql.on_duplicate_key_update(**timetrial_event_data)
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
 
         if result is None:
             self.logger.warn(

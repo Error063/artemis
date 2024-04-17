@@ -1,25 +1,24 @@
 server:
-  listen_address: "127.0.0.1"
+  listen_address: "127.0.0.1"  
+  hostname: "localhost"  
+  port: 80
+  ssl_key: "cert/title.key"
+  ssl_cert: "cert/title.crt"
   allow_user_registration: True
   allow_unregistered_serials: True
   name: "ARTEMiS"
   is_develop: True
   is_using_proxy: False
-  threading: False
+  proxy_port: 0
+  proxy_port_ssl: 0
   log_dir: "logs"
   check_arcade_ip: False
   strict_ip_checking: False
 
 title:
   loglevel: "info"
-  hostname: "localhost"
-  port: 8080
-  port_ssl: 0
-  ssl_cert: "cert/title.crt"
-  ssl_key: "cert/title.key"
   reboot_start_time: "04:00"
   reboot_end_time: "05:00"
-
 
 database:
   host: "localhost"
@@ -29,30 +28,34 @@ database:
   port: 3306
   protocol: "mysql"
   sha2_password: False
-  loglevel: "warn"
-  user_table_autoincrement_start: 10000
+  loglevel: "info"
   enable_memcached: True
   memcached_host: "localhost"
 
 frontend:
   enable: False
-  port: 8090
+  port: 8080
   loglevel: "info"
+  secret: ""
 
 allnet:
-  loglevel: "info"
+  standalone: False
   port: 80
-  ip_check: False
+  loglevel: "info"
   allow_online_updates: False
   update_cfg_folder: ""
 
 billing:
+  standalone: True
+  loglevel: "info"
   port: 8443
   ssl_key: "cert/server.key"
   ssl_cert: "cert/server.pem"
   signing_key: "cert/billing.key"
 
 aimedb:
+  enable: True
+  listen_address: ""
   loglevel: "info"
   port: 22345
   key: ""
@@ -60,6 +63,4 @@ aimedb:
   id_lifetime_seconds: 86400
 
 mucha:
-  enable: False
-  hostname: "localhost"
   loglevel: "info"

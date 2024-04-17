@@ -1,9 +1,9 @@
-from twisted.web.http import Request
-from twisted.web.server import NOT_DONE_YET
+from starlette.requests import Request
+from starlette.responses import Response, JSONResponse
+from starlette.routing import Route
 import json
 import inflection
 import yaml
-import string
 import logging, coloredlogs
 import zlib
 from logging.handlers import TimedRotatingFileHandler
@@ -25,6 +25,7 @@ from .universe import Mai2Universe
 from .universeplus import Mai2UniversePlus
 from .festival import Mai2Festival
 from .festivalplus import Mai2FestivalPlus
+from .buddies import Mai2Buddies
 
 
 class Mai2Servlet(BaseServlet):
@@ -58,6 +59,7 @@ class Mai2Servlet(BaseServlet):
             Mai2UniversePlus,
             Mai2Festival,
             Mai2FestivalPlus,
+            Mai2Buddies
         ]
 
         self.logger = logging.getLogger("mai2")
@@ -101,33 +103,34 @@ class Mai2Servlet(BaseServlet):
         
         return True
     
-    def get_endpoint_matchers(self) -> Tuple[List[Tuple[str, str, Dict]], List[Tuple[str, str, Dict]]]:
-        return (
-            [
-                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint}", {}),
-                ("handle_old_srv", "/{version}/MaimaiServlet/old/{endpoint}", {}),
-                ("handle_old_srv_userdata", "/{version}/MaimaiServlet/old/{endpoint}/{placeid}/{keychip}/{userid}", {}),
-                ("handle_old_srv_userdata", "/{version}/MaimaiServlet/old/{endpoint}/{userid}", {}),
-                ("handle_usbdl", "/{version}/MaimaiServlet/usbdl/{endpoint}", {}),
-                ("handle_deliver", "/{version}/MaimaiServlet/deliver/{endpoint}", {}),
-            ], 
-            [
-                ("handle_movie", "/{version}/MaimaiServlet/api/movie/{endpoint}", {}),
-                ("handle_mai", "/{version}/MaimaiServlet/{endpoint}", {}),
-                ("handle_mai2", "/{version}/Maimai2Servlet/{endpoint}", {}),
-            ]
-        )
-    
-    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:        
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/{version:int}/MaimaiServlet/api/movie/{endpoint:str}", self.handle_movie, methods=['GET', 'POST']),
+            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}", self.handle_old_srv),
+            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{placeid:str}/{keychip:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{version:int}/MaimaiServlet/usbdl/{endpoint:str}", self.handle_usbdl),
+            Route("/{version:int}/MaimaiServlet/deliver/{endpoint:str}", self.handle_deliver),
+            Route("/{version:int}/MaimaiServlet/{endpoint:str}", self.handle_mai, methods=['POST']),
+            Route("/{game:str}/{version:int}/Maimai2Servlet/{endpoint:str}", self.handle_mai2, methods=['POST']),
+        ]
+        
+    def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
+        if game_code in {Mai2Constants.GAME_CODE_DX, Mai2Constants.GAME_CODE_DX_INT}:
+            path = f"{game_code}/{game_ver}"
+        else:
+            path = game_ver
+
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                f"http://{self.core_cfg.title.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_ver}/",
-                f"{self.core_cfg.title.hostname}",
+                f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{path}/",
+                f"{self.core_cfg.server.hostname}",
             )
 
         return (
-            f"http://{self.core_cfg.title.hostname}/{game_ver}/",
-            f"{self.core_cfg.title.hostname}",
+            f"http://{self.core_cfg.server.hostname}/{path}/",
+            f"{self.core_cfg.server.hostname}",
         )
 
     def setup(self):
@@ -155,13 +158,22 @@ class Mai2Servlet(BaseServlet):
                     f"Failed to make movie upload directory at {self.game_cfg.uploads.movies_dir}"
                 )
 
-    def handle_mai(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = int(matchers['version'])
+    async def handle_movie(self, request: Request):
+        return JSONResponse()
+    
+    async def handle_usbdl(self, request: Request):
+        return Response("OK")
+
+    async def handle_deliver(self, request: Request):
+        return Response(status_code=404)
+
+    async def handle_mai(self, request: Request) -> bytes:
+        endpoint: str = request.path_params.get('endpoint')
+        version: int = request.path_params.get('version')
         if endpoint.lower() == "ping":
-            return zlib.compress(b'{"returnCode": "1"}')
+            return Response(zlib.compress(b'{"returnCode": "1"}'))
         
-        req_raw = request.content.getvalue()
+        req_raw = await request.body()
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
         
@@ -199,7 +211,7 @@ class Mai2Servlet(BaseServlet):
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
@@ -216,26 +228,28 @@ class Mai2Servlet(BaseServlet):
         else:
             try:
                 handler = getattr(handler_cls, func_to_find)
-                resp = handler(req_data)
+                resp = await handler(req_data)
 
             except Exception as e:
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-                return zlib.compress(b'{"returnCode": "0"}')
+                return Response(zlib.compress(b'{"returnCode": "0"}'))
 
         if resp == None:
             resp = {"returnCode": 1}
 
         self.logger.debug(f"Response {resp}")
 
-        return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+        return Response(zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8")))
 
-    def handle_mai2(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = int(matchers['version'])
+    async def handle_mai2(self, request: Request) -> bytes:
+        endpoint: str = request.path_params.get('endpoint')
+        version: int = request.path_params.get('version')
+        game_code = request.path_params.get('game')
+
         if endpoint.lower() == "ping":
-            return zlib.compress(b'{"returnCode": "1"}')
+            return Response(zlib.compress(b'{"returnCode": "1"}'))
 
-        req_raw = request.content.getvalue()
+        req_raw = await request.body()
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
         if version < 105:  # 1.0
@@ -252,21 +266,23 @@ class Mai2Servlet(BaseServlet):
             internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
         elif version >= 130 and version < 135:  # FESTiVAL
             internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
-        elif version >= 135:  # FESTiVAL PLUS
+        elif version >= 135 and version < 140:  # FESTiVAL PLUS
             internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
+        elif version >= 140:  # BUDDiES
+            internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
 
         if (
-            request.getHeader("Mai-Encoding") is not None
-            or request.getHeader("X-Mai-Encoding") is not None
+            request.headers.get("Mai-Encoding") is not None
+            or request.headers.get("X-Mai-Encoding") is not None
         ):
             # The has is some flavor of MD5 of the endpoint with a constant bolted onto the end of it.
             # See cake.dll's Obfuscator function for details. Hopefully most DLL edits will remove
             # these two(?) headers to not cause issues, but given the general quality of SEGA data...
-            enc_ver = request.getHeader("Mai-Encoding")
+            enc_ver = request.headers.get("Mai-Encoding")
             if enc_ver is None:
-                enc_ver = request.getHeader("X-Mai-Encoding")
+                enc_ver = request.headers.get("X-Mai-Encoding")
             self.logger.debug(
-                f"Encryption v{enc_ver} - User-Agent: {request.getHeader('User-Agent')}"
+                f"Encryption v{enc_ver} - User-Agent: {request.headers.get('User-Agent')}"
             )
 
         try:
@@ -276,13 +292,18 @@ class Mai2Servlet(BaseServlet):
             self.logger.error(
                 f"Failed to decompress v{version} {endpoint} request -> {e}"
             )
-            return zlib.compress(b'{"stat": "0"}')
+            return Response(zlib.compress(b'{"stat": "0"}'))
 
         req_data = json.loads(unzip)
 
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
+        endpoint = (
+            endpoint.replace("MaimaiExp", "")
+            if game_code == Mai2Constants.GAME_CODE_DX_INT
+            else endpoint
+        )
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
@@ -293,80 +314,27 @@ class Mai2Servlet(BaseServlet):
         else:
             try:
                 handler = getattr(handler_cls, func_to_find)
-                resp = handler(req_data)
+                resp = await handler(req_data)
 
             except Exception as e:
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
-                return zlib.compress(b'{"stat": "0"}')
+                return Response(zlib.compress(b'{"stat": "0"}'))
 
         if resp == None:
             resp = {"returnCode": 1}
 
         self.logger.debug(f"Response {resp}")
 
-        return zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+        return Response(zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8")))
 
-    def handle_old_srv(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = matchers['version']
+    async def handle_old_srv(self, request: Request) -> bytes:
+        endpoint = request.path_params.get('endpoint')
+        version = request.path_params.get('version')
         self.logger.info(f"v{version} old server {endpoint}")
-        return zlib.compress(b"ok")
+        return Response(zlib.compress(b"ok"))
 
-    def handle_old_srv_userdata(self, request: Request, game_code: str, matchers: Dict) -> bytes:
-        endpoint = matchers['endpoint']
-        version = matchers['version']
+    async def handle_old_srv_userdata(self, request: Request) -> bytes:
+        endpoint = request.path_params.get('endpoint')
+        version = request.path_params.get('version')
         self.logger.info(f"v{version} old server {endpoint}")
-        return zlib.compress(b"{}")
-
-    def render_GET(self, request: Request, version: int, url_path: str) -> bytes:
-        self.logger.debug(f"v{version} GET {url_path}")
-        url_split = url_path.split("/")
-
-        if (url_split[0] == "api" and url_split[1] == "movie") or url_split[
-            0
-        ] == "movie":
-            if url_split[2] == "moviestart":
-                return json.dumps({"moviestart": {"status": "OK"}}).encode()
-
-            else:
-                request.setResponseCode(404)
-                return b""
-
-        elif url_split[0] == "usbdl":
-            if url_split[1] == "CONNECTIONTEST":
-                self.logger.info(f"v{version} usbdl server test")
-                return b""
-
-            elif self.game_cfg.deliver.udbdl_enable and path.exists(
-                f"{self.game_cfg.deliver.content_folder}/usb/{url_split[-1]}"
-            ):
-                with open(
-                    f"{self.game_cfg.deliver.content_folder}/usb/{url_split[-1]}", "rb"
-                ) as f:
-                    return f.read()
-
-            else:
-                request.setResponseCode(404)
-                return b""
-
-        elif url_split[0] == "deliver":
-            file = url_split[len(url_split) - 1]
-            self.logger.info(f"v{version} {file} deliver inquire")
-            self.logger.debug(
-                f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}"
-            )
-
-            if self.game_cfg.deliver.enable and path.exists(
-                f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}"
-            ):
-                with open(
-                    f"{self.game_cfg.deliver.content_folder}/net_deliver/{file}", "rb"
-                ) as f:
-                    return f.read()
-
-            else:
-                request.setResponseCode(404)
-                return b""
-
-        else:
-            return zlib.compress(b"{}")
+        return Response(zlib.compress(b"{}"))

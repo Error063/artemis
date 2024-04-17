@@ -37,44 +37,44 @@ class WaccaLily(WaccaS):
             (210003, 0),
         ]
 
-    def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
+    async def handle_advertise_GetNews_request(self, data: Dict) -> Dict:
         resp = GetNewsResponseV3()
         return resp.make()
 
-    def handle_user_status_create_request(self, data: Dict) -> Dict:
+    async def handle_user_status_create_request(self, data: Dict) -> Dict:
         req = UserStatusCreateRequest(data)
-        ret = super().handle_user_status_create_request(data)
+        ret = await super().handle_user_status_create_request(data)
 
-        new_user = self.data.profile.get_profile(aime_id=req.aimeId)
+        new_user = await self.data.profile.get_profile(aime_id=req.aimeId)
 
         if new_user is None:
             return BaseResponse().make()
         
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["user_plate"], 211001
         )  # Added lily
         
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["note_sound"], 205005
         )  # Added lily
 
-        self.data.item.put_item(
+        await self.data.item.put_item(
             req.aimeId, WaccaConstants.ITEM_TYPES["navigator"], 210002
         )  # Lily, Added Lily
 
         return ret
 
-    def handle_user_status_get_request(self, data: Dict) -> Dict:
+    async def handle_user_status_get_request(self, data: Dict) -> Dict:
         req = UserStatusGetRequest(data)
         resp = UserStatusGetV2Response()
 
-        profile = self.data.profile.get_profile(aime_id=req.aimeId)
+        profile = await self.data.profile.get_profile(aime_id=req.aimeId)
         if profile is None:
             self.logger.info(f"No user exists for aime id {req.aimeId}")
             resp.profileStatus = ProfileStatus.ProfileRegister
             return resp.make()
 
-        opts = self.data.profile.get_options(req.aimeId)
+        opts = await self.data.profile.get_options(req.aimeId)
 
         self.logger.info(f"User preview for {req.aimeId} from {req.chipId}")
         if profile["last_game_ver"] is None:
@@ -94,14 +94,14 @@ class WaccaLily(WaccaS):
         resp.userStatus.loginsToday = profile["login_count_today"]
         resp.userStatus.rating = profile["rating"]
 
-        set_title_id = self.data.profile.get_options(
+        set_title_id = await self.data.profile.get_options(
             WaccaConstants.OPTIONS["set_title_id"], profile["user"]
         )
         if set_title_id is None:
             set_title_id = self.OPTIONS_DEFAULTS["set_title_id"]
         resp.setTitleId = set_title_id
 
-        set_icon_id = self.data.profile.get_options(
+        set_icon_id = await self.data.profile.get_options(
             WaccaConstants.OPTIONS["set_title_id"], profile["user"]
         )
         if set_icon_id is None:
@@ -145,7 +145,7 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_status_login_request(self, data: Dict) -> Dict:
+    async def handle_user_status_login_request(self, data: Dict) -> Dict:
         req = UserStatusLoginRequest(data)
         resp = UserStatusLoginResponseV2()
         is_consec_day = True
@@ -155,7 +155,7 @@ class WaccaLily(WaccaS):
             resp.lastLoginDate = 0
 
         else:
-            profile = self.data.profile.get_profile(req.userId)
+            profile = await self.data.profile.get_profile(req.userId)
             if profile is None:
                 self.logger.warning(
                     f"Unknown user id {req.userId} attempted login from {req.chipId}"
@@ -179,7 +179,7 @@ class WaccaLily(WaccaS):
             if midnight_today_ts - last_login_time > 86400:
                 is_consec_day = False
 
-            self.data.profile.session_login(
+            await self.data.profile.session_login(
                 req.userId, resp.firstLoginDaily, is_consec_day
             )
             resp.vipInfo.pageYear = datetime.now().year
@@ -189,14 +189,14 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
+    async def handle_user_status_getDetail_request(self, data: Dict) -> Dict:
         req = UserStatusGetDetailRequest(data)
         if req.appVersion.minor >= 53:
             resp = UserStatusGetDetailResponseV3()
         else:
             resp = UserStatusGetDetailResponseV2()
 
-        profile = self.data.profile.get_profile(req.userId)
+        profile = await self.data.profile.get_profile(req.userId)
         if profile is None:
             self.logger.warning(f"Unknown profile {req.userId}")
             return resp.make()
@@ -204,14 +204,14 @@ class WaccaLily(WaccaS):
         self.logger.info(f"Get detail for profile {req.userId}")
         user_id = profile["user"]
 
-        profile_scores = self.data.score.get_best_scores(user_id)
-        profile_items = self.data.item.get_items(user_id)
-        profile_song_unlocks = self.data.item.get_song_unlocks(user_id)
-        profile_options = self.data.profile.get_options(user_id)
-        profile_favorites = self.data.profile.get_favorite_songs(user_id)
-        profile_gates = self.data.profile.get_gates(user_id)
-        profile_trophies = self.data.item.get_trophies(user_id)
-        profile_tickets = self.data.item.get_tickets(user_id)
+        profile_scores = await self.data.score.get_best_scores(user_id)
+        profile_items = await self.data.item.get_items(user_id)
+        profile_song_unlocks = await self.data.item.get_song_unlocks(user_id)
+        profile_options = await self.data.profile.get_options(user_id)
+        profile_favorites = await self.data.profile.get_favorite_songs(user_id)
+        profile_gates = await self.data.profile.get_gates(user_id)
+        profile_trophies = await self.data.item.get_trophies(user_id)
+        profile_tickets = await self.data.item.get_tickets(user_id)
 
         if profile["vip_expire_time"] is None:
             resp.userStatus.vipExpireTime = 0
@@ -440,13 +440,13 @@ class WaccaLily(WaccaS):
 
         return resp.make()
 
-    def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
+    async def handle_user_info_getMyroom_request(self, data: Dict) -> Dict:
         return UserInfogetMyroomResponseV2().make()
 
-    def handle_user_status_update_request(self, data: Dict) -> Dict:
-        super().handle_user_status_update_request(data)
+    async def handle_user_status_update_request(self, data: Dict) -> Dict:
+        await super().handle_user_status_update_request(data)
         req = UserStatusUpdateRequestV2(data)
-        self.data.profile.update_profile_lastplayed(
+        await self.data.profile.update_profile_lastplayed(
             req.profileId,
             req.lastSongInfo.lastSongId,
             req.lastSongInfo.lastSongDiff,

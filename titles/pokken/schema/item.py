@@ -31,7 +31,7 @@ class PokkenItemData(BaseData):
     Items obtained as rewards
     """
 
-    def add_reward(self, user_id: int, category: int, content: int, item_type: int) -> Optional[int]:
+    async def add_reward(self, user_id: int, category: int, content: int, item_type: int) -> Optional[int]:
         sql = insert(item).values(
             user=user_id,
             category=category,
@@ -43,7 +43,7 @@ class PokkenItemData(BaseData):
             content=content,
         )
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.warning(f"Failed to insert reward for user {user_id}: {category}-{content}-{item_type}")
             return None

@@ -1,9 +1,12 @@
-import yaml
+#!/usr/bin/env python3
 import argparse
 import logging
-from core.config import CoreConfig
+from os import mkdir, path, access, W_OK
+import yaml
+import asyncio
+
 from core.data import Data
-from os import path, mkdir, access, W_OK
+from core.config import CoreConfig
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Database utilities")
@@ -16,19 +19,10 @@ if __name__ == "__main__":
         type=str,
         help="Version of the database to upgrade/rollback to",
     )
-    parser.add_argument(
-        "--game",
-        "-g",
-        type=str,
-        help="Game code of the game who's schema will be updated/rolled back. Ex. SDFE",
-    )
     parser.add_argument("--email", "-e", type=str, help="Email for the new user")
-    parser.add_argument("--old_ac", "-o", type=str, help="Access code to transfer from")
-    parser.add_argument("--new_ac", "-n", type=str, help="Access code to transfer to")
-    parser.add_argument("--force", "-f", type=bool, help="Force the action to happen")
-    parser.add_argument(
-        "action", type=str, help="DB Action, create, recreate, upgrade, or rollback"
-    )
+    parser.add_argument("--access_code", "-a", type=str, help="Access code for new/transfer user", default="00000000000000000000")
+    parser.add_argument("--message", "-m", type=str, help="Revision message")
+    parser.add_argument("action", type=str, help="create, upgrade, downgrade, create-owner, migrate, create-revision, create-autorevision")
     args = parser.parse_args()
 
     cfg = CoreConfig()
@@ -50,42 +44,31 @@ if __name__ == "__main__":
 
     if args.action == "create":
         data.create_database()
+    
+    elif args.action == "upgrade":
+        data.schema_upgrade(args.version)
 
-    elif args.action == "recreate":
-        data.recreate_database()
-
-    elif args.action == "upgrade" or args.action == "rollback":
-        if args.version is None:
-            data.logger.warning("No version set, upgrading to latest")
-
-        if args.game is None:
-            data.logger.warning("No game set, upgrading core schema")
-            data.migrate_database(
-                "CORE",
-                int(args.version) if args.version is not None else None,
-                args.action,
-            )
-
-        else:
-            data.migrate_database(
-                args.game,
-                int(args.version) if args.version is not None else None,
-                args.action,
-            )
-
-    elif args.action == "autoupgrade":
-        data.autoupgrade()
+    elif args.action == "downgrade":
+        if not args.version:
+            logging.getLogger("database").error(f"Version argument required for downgrade")
+            exit(1)
+        data.schema_downgrade(args.version)
 
     elif args.action == "create-owner":
-        data.create_owner(args.email)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.create_owner(args.email, args.access_code))
 
-    elif args.action == "migrate-card":
-        data.migrate_card(args.old_ac, args.new_ac, args.force)
+    elif args.action == "migrate":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.migrate())
 
-    elif args.action == "cleanup":
-        data.delete_hanging_users()
-    
-    elif args.action == "version":
-        data.show_versions()
+    elif args.action == "create-revision":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.create_revision(args.message))
 
-    data.logger.info("Done")
+    elif args.action == "create-autorevision":
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(data.create_revision_auto(args.message))
+
+    else:
+        logging.getLogger("database").info(f"Unknown action {args.action}")

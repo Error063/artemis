@@ -1,11 +1,12 @@
+from typing import List
+from starlette.routing import Route
 import yaml
 import jinja2
-from twisted.web.http import Request
+from starlette.requests import Request
+from starlette.responses import Response, RedirectResponse
 from os import path
-from twisted.web.util import redirectTo
-from twisted.web.server import Session
 
-from core.frontend import FE_Base, IUserSession
+from core.frontend import FE_Base, UserSession
 from core.config import CoreConfig
 
 from titles.ongeki.config import OngekiConfig
@@ -27,24 +28,33 @@ class OngekiFrontend(FE_Base):
             )
         self.nav_name = "O.N.G.E.K.I."
         self.version_list = OngekiConstants.VERSION_NAMES
+    
+    def get_routes(self) -> List[Route]:
+        return [
+            Route("/", self.render_GET)
+        ]
 
-    def render_GET(self, request: Request) -> bytes:
+    async def render_GET(self, request: Request) -> bytes:
         template = self.environment.get_template(
-            "titles/ongeki/frontend/ongeki_index.jinja"
+            "titles/ongeki/templates/ongeki_index.jinja"
         )
-        sesh: Session = request.getSession()
-        usr_sesh = IUserSession(sesh)
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh:
+            usr_sesh = UserSession()
+
         self.version = usr_sesh.ongeki_version
-        if getattr(usr_sesh, "userId", 0) != 0:
-            profile_data =self.data.profile.get_profile_data(usr_sesh.userId, self.version)
-            rival_list = self.data.profile.get_rivals(usr_sesh.userId)
+        if usr_sesh.user_id > 0:
+            profile_data =await self.data.profile.get_profile_data(usr_sesh.user_id, self.version)
+            rival_list = await self.data.profile.get_rivals(usr_sesh.user_id)
             rival_data = {
                 "userRivalList": rival_list,
-                "userId": usr_sesh.userId
+                "userId": usr_sesh.user_id
             }
-            rival_info = OngekiBase.handle_get_user_rival_data_api_request(self, rival_data)
 
-            return template.render(
+            # Hay1tsme 01/09/2024: ??????????????????????????????????????????????????????????????
+            rival_info = await OngekiBase.handle_get_user_rival_data_api_request(self, rival_data)
+
+            return Response(template.render(
                 data=self.data.profile,
                 title=f"{self.core_config.server.name} | {self.nav_name}",
                 game_list=self.environment.globals["game_list"],
@@ -54,34 +64,36 @@ class OngekiFrontend(FE_Base):
                 version_list=self.version_list,
                 version=self.version,
                 sesh=vars(usr_sesh)
-            ).encode("utf-16")
+            ), media_type="text/html; charset=utf-8")
         else:
-            return redirectTo(b"/gate/", request)
+            return RedirectResponse("/gate/", 303)
     
-    def render_POST(self, request: Request):
+    async def render_POST(self, request: Request):
         uri = request.uri.decode()
-        sesh: Session = request.getSession()
-        usr_sesh = IUserSession(sesh)
-        if hasattr(usr_sesh, "userId"):
+        usr_sesh = self.validate_session(request)
+        if not usr_sesh:
+            usr_sesh = UserSession()
+
+        if usr_sesh.user_id > 0:
             if uri == "/game/ongeki/rival.add":
                 rival_id = request.args[b"rivalUserId"][0].decode()
-                self.data.profile.put_rival(usr_sesh.userId, rival_id)
-                # self.logger.info(f"{usr_sesh.userId} added a rival")
-                return redirectTo(b"/game/ongeki/", request)
+                await self.data.profile.put_rival(usr_sesh.user_id, rival_id)
+                # self.logger.info(f"{usr_sesh.user_id} added a rival")
+                return RedirectResponse(b"/game/ongeki/", 303)
             
             elif uri == "/game/ongeki/rival.delete":
                 rival_id = request.args[b"rivalUserId"][0].decode()
-                self.data.profile.delete_rival(usr_sesh.userId, rival_id)
+                await self.data.profile.delete_rival(usr_sesh.user_id, rival_id)
                 # self.logger.info(f"{response}")
-                return redirectTo(b"/game/ongeki/", request)
+                return RedirectResponse(b"/game/ongeki/", 303)
             
             elif uri == "/game/ongeki/version.change":
                 ongeki_version=request.args[b"version"][0].decode()
                 if(ongeki_version.isdigit()):
                     usr_sesh.ongeki_version=int(ongeki_version)
-                return redirectTo(b"/game/ongeki/", request)
+                return RedirectResponse("/game/ongeki/", 303)
             
             else:
-                return b"Something went wrong"
+                Response("Something went wrong", status_code=500)
         else:
-            return b"User is not logged in"
+            return RedirectResponse("/gate/", 303)

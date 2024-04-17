@@ -145,8 +145,31 @@ playlog = Table(
     Column("isNewFree", Boolean),
     Column("extNum1", Integer),
     Column("extNum2", Integer),
-    Column("extNum4", Integer, server_default="0"),
+    Column("extNum4", Integer),
+    Column("extBool1", Boolean), # new with buddies
     Column("trialPlayAchievement", Integer),
+    mysql_charset="utf8mb4",
+)
+
+# new with buddies
+playlog_2p = Table(
+    "mai2_playlog_2p",
+    metadata,
+    Column("id", Integer, primary_key=True, nullable=False),
+    Column(
+        "user",
+        ForeignKey("aime_user.id", ondelete="cascade", onupdate="cascade"),
+        nullable=False,
+    ),
+    # TODO: ForeignKey to aime_user?
+    Column("userId1", Integer),
+    Column("userId2", Integer),
+    # TODO: ForeignKey to mai2_profile_detail?
+    Column("userName1", String(25)),
+    Column("userName2", String(25)),
+    Column("regionId", Integer),
+    Column("placeId", Integer),
+    Column("user2pPlaylogDetailList", JSON),
     mysql_charset="utf8mb4",
 )
 
@@ -273,7 +296,7 @@ best_score_old = Table(
 )
 
 class Mai2ScoreData(BaseData):
-    def put_best_score(self, user_id: int, score_data: Dict, is_dx: bool = True) -> Optional[int]:
+    async def put_best_score(self, user_id: int, score_data: Dict, is_dx: bool = True) -> Optional[int]:
         score_data["user"] = user_id
 
         if is_dx:
@@ -282,7 +305,7 @@ class Mai2ScoreData(BaseData):
             sql = insert(best_score_old).values(**score_data)
         conflict = sql.on_duplicate_key_update(**score_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(
                 f"put_best_score:  Failed to insert best score! user_id {user_id} is_dx {is_dx}"
@@ -291,7 +314,7 @@ class Mai2ScoreData(BaseData):
         return result.lastrowid
 
     @cached(2)
-    def get_best_scores(self, user_id: int, song_id: int = None, is_dx: bool = True) -> Optional[List[Row]]:
+    async def get_best_scores(self, user_id: int, song_id: int = None, is_dx: bool = True) -> Optional[List[Row]]:
         if is_dx:
             sql = best_score.select(
                 and_(
@@ -307,12 +330,12 @@ class Mai2ScoreData(BaseData):
                 )
             )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()
 
-    def get_best_score(
+    async def get_best_score(
         self, user_id: int, song_id: int, chart_id: int
     ) -> Optional[Row]:
         sql = best_score.select(
@@ -323,12 +346,12 @@ class Mai2ScoreData(BaseData):
             )
         )
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchone()
 
-    def put_playlog(self, user_id: int, playlog_data: Dict, is_dx: bool = True) -> Optional[int]:
+    async def put_playlog(self, user_id: int, playlog_data: Dict, is_dx: bool = True) -> Optional[int]:
         playlog_data["user"] = user_id
 
         if is_dx:
@@ -338,28 +361,40 @@ class Mai2ScoreData(BaseData):
 
         conflict = sql.on_duplicate_key_update(**playlog_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"put_playlog:  Failed to insert! user_id {user_id} is_dx {is_dx}")
             return None
         return result.lastrowid
+    
+    async def put_playlog_2p(self, user_id: int, playlog_2p_data: Dict) -> Optional[int]:
+        playlog_2p_data["user"] = user_id
+        sql = insert(playlog_2p).values(**playlog_2p_data)
 
-    def put_course(self, user_id: int, course_data: Dict) -> Optional[int]:
+        conflict = sql.on_duplicate_key_update(**playlog_2p_data)
+
+        result = await self.execute(conflict)
+        if result is None:
+            self.logger.error(f"put_playlog_2p:  Failed to insert! user_id {user_id}")
+            return None
+        return result.lastrowid
+
+    async def put_course(self, user_id: int, course_data: Dict) -> Optional[int]:
         course_data["user"] = user_id
         sql = insert(course).values(**course_data)
 
         conflict = sql.on_duplicate_key_update(**course_data)
 
-        result = self.execute(conflict)
+        result = await self.execute(conflict)
         if result is None:
             self.logger.error(f"put_course:  Failed to insert! user_id {user_id}")
             return None
         return result.lastrowid
 
-    def get_courses(self, user_id: int) -> Optional[List[Row]]:
+    async def get_courses(self, user_id: int) -> Optional[List[Row]]:
         sql = course.select(course.c.user == user_id)
 
-        result = self.execute(sql)
+        result = await self.execute(sql)
         if result is None:
             return None
         return result.fetchall()

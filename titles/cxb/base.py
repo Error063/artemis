@@ -28,14 +28,14 @@ class CxbBase:
         
         return []
 
-    def handle_action_rpreq_request(self, data: Dict) -> Dict:
+    async def handle_action_rpreq_request(self, data: Dict) -> Dict:
         return {}
 
-    def handle_action_hitreq_request(self, data: Dict) -> Dict:
+    async def handle_action_hitreq_request(self, data: Dict) -> Dict:
         return {"data": []}
 
-    def handle_auth_usercheck_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_index(
+    async def handle_auth_usercheck_request(self, data: Dict) -> Dict:
+        profile = await self.data.profile.get_profile_index(
             0, data["usercheck"]["authid"], self.version
         )
         if profile is not None:
@@ -45,12 +45,12 @@ class CxbBase:
         self.logger.info(f"No profile for aime id {data['usercheck']['authid']}")
         return {"exist": "false", "logout": "true"}
 
-    def handle_auth_entry_request(self, data: Dict) -> Dict:
+    async def handle_auth_entry_request(self, data: Dict) -> Dict:
         self.logger.info(f"New profile for {data['entry']['authid']}")
         return {"token": data["entry"]["authid"], "uid": data["entry"]["authid"]}
 
-    def handle_auth_login_request(self, data: Dict) -> Dict:
-        profile = self.data.profile.get_profile_index(
+    async def handle_auth_login_request(self, data: Dict) -> Dict:
+        profile = await self.data.profile.get_profile_index(
             0, data["login"]["authid"], self.version
         )
 
@@ -198,14 +198,14 @@ class CxbBase:
             ).decode("utf-8")
         )
 
-    def handle_action_loadrange_request(self, data: Dict) -> Dict:
+    async def handle_action_loadrange_request(self, data: Dict) -> Dict:
         range_start = data["loadrange"]["range"][0]
         range_end = data["loadrange"]["range"][1]
         uid = data["loadrange"]["uid"]
 
         self.logger.info(f"Load data for {uid}")
-        profile = self.data.profile.get_profile(uid, self.version)
-        songs = self.data.score.get_best_scores(uid)
+        profile = await self.data.profile.get_profile(uid, self.version)
+        songs = await self.data.score.get_best_scores(uid)
 
         data1 = []
         index = []
@@ -271,7 +271,7 @@ class CxbBase:
             thread_ScoreData = Thread(target=CxbBase.task_generateScoreData(song, index, data1))
             thread_ScoreData.start()
 
-        v_profile = self.data.profile.get_profile_index(0, uid, self.version)
+        v_profile = await self.data.profile.get_profile_index(0, uid, self.version)
         v_profile_data = v_profile["data"]
 
         for _, data in enumerate(profile):
@@ -282,7 +282,7 @@ class CxbBase:
 
         return {"index": index, "data": data1, "version": versionindex}
 
-    def handle_action_saveindex_request(self, data: Dict) -> Dict:
+    async def handle_action_saveindex_request(self, data: Dict) -> Dict:
         save_data = data["saveindex"]
 
         try:
@@ -300,11 +300,11 @@ class CxbBase:
 
             for value in data["saveindex"]["data"]:
                 if "playedUserId" in value[1]:
-                    self.data.profile.put_profile(
+                    await self.data.profile.put_profile(
                         data["saveindex"]["uid"], self.version, value[0], value[1]
                     )
                 if "mcode" not in value[1]:
-                    self.data.profile.put_profile(
+                    await self.data.profile.put_profile(
                         data["saveindex"]["uid"], self.version, value[0], value[1]
                     )
                 if "shopId" in value:
@@ -335,7 +335,7 @@ class CxbBase:
                             "index": value[0],
                         }
                     )
-                    self.data.score.put_best_score(
+                    await self.data.score.put_best_score(
                         data["saveindex"]["uid"],
                         song_json["mcode"],
                         self.version,
@@ -360,32 +360,32 @@ class CxbBase:
 
         for index, value in enumerate(data["saveindex"]["data"]):
             if int(data["saveindex"]["index"][index]) == 101:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if (
                 int(data["saveindex"]["index"][index]) >= 700000
                 and int(data["saveindex"]["index"][index]) <= 701000
             ):
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if (
                 int(data["saveindex"]["index"][index]) >= 500
                 and int(data["saveindex"]["index"][index]) <= 510
             ):
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId, self.version, data["saveindex"]["index"][index], value
                 )
             if "playedUserId" in value:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId,
                     self.version,
                     data["saveindex"]["index"][index],
                     json.loads(value),
                 )
             if "mcode" not in value and "normalCR" not in value:
-                self.data.profile.put_profile(
+                await self.data.profile.put_profile(
                     aimeId,
                     self.version,
                     data["saveindex"]["index"][index],
@@ -437,16 +437,16 @@ class CxbBase:
                 }
             )
 
-            self.data.score.put_best_score(
+            await self.data.score.put_best_score(
                 aimeId, data1["mcode"], self.version, indexSongList[i], songCode[0]
             )
             i += 1
         return {}
 
-    def handle_action_sprankreq_request(self, data: Dict) -> Dict:
+    async def handle_action_sprankreq_request(self, data: Dict) -> Dict:
         uid = data["sprankreq"]["uid"]
         self.logger.info(f"Get best rankings for {uid}")
-        p = self.data.score.get_best_rankings(uid)
+        p = await self.data.score.get_best_rankings(uid)
 
         rankList: List[Dict[str, Any]] = []
 
@@ -475,16 +475,16 @@ class CxbBase:
             "rankx": [1, 1, 1],
         }
 
-    def handle_action_getadv_request(self, data: Dict) -> Dict:
+    async def handle_action_getadv_request(self, data: Dict) -> Dict:
         return {"data": [{"r": "1", "i": "100300", "c": "20"}]}
 
-    def handle_action_getmsg_request(self, data: Dict) -> Dict:
+    async def handle_action_getmsg_request(self, data: Dict) -> Dict:
         return {"msgs": []}
 
-    def handle_auth_logout_request(self, data: Dict) -> Dict:
+    async def handle_auth_logout_request(self, data: Dict) -> Dict:
         return {"auth": True}
 
-    def handle_action_rankreg_request(self, data: Dict) -> Dict:
+    async def handle_action_rankreg_request(self, data: Dict) -> Dict:
         uid = data["rankreg"]["uid"]
         self.logger.info(f"Put {len(data['rankreg']['data'])} rankings for {uid}")
 
@@ -492,7 +492,7 @@ class CxbBase:
             # REV S2
             if "clear" in rid:
                 try:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=int(rid["sc"][1]),
@@ -500,7 +500,7 @@ class CxbBase:
                         clear=rid["clear"],
                     )
                 except Exception:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=0,
@@ -510,7 +510,7 @@ class CxbBase:
             # REV
             else:
                 try:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=int(rid["sc"][1]),
@@ -518,7 +518,7 @@ class CxbBase:
                         clear=0,
                     )
                 except Exception:
-                    self.data.score.put_ranking(
+                    await self.data.score.put_ranking(
                         user_id=uid,
                         rev_id=int(rid["rid"]),
                         song_id=0,
@@ -527,15 +527,15 @@ class CxbBase:
                     )
         return {}
 
-    def handle_action_addenergy_request(self, data: Dict) -> Dict:
+    async def handle_action_addenergy_request(self, data: Dict) -> Dict:
         uid = data["addenergy"]["uid"]
         self.logger.info(f"Add energy to user {uid}")
-        profile = self.data.profile.get_profile_index(0, uid, self.version)
+        profile = await self.data.profile.get_profile_index(0, uid, self.version)
         data1 = profile["data"]
-        p = self.data.item.get_energy(uid)
+        p = await self.data.item.get_energy(uid)
 
         if not p:
-            self.data.item.put_energy(uid, 5)
+            await self.data.item.put_energy(uid, 5)
 
             return {
                 "class": data1["myClass"],
@@ -548,7 +548,7 @@ class CxbBase:
         energy = p["energy"]
 
         newenergy = int(energy) + 5
-        self.data.item.put_energy(uid, newenergy)
+        await self.data.item.put_energy(uid, newenergy)
 
         if int(energy) <= 995:
             array.append(
@@ -570,10 +570,10 @@ class CxbBase:
             )
         return array[0]
 
-    def handle_action_eventreq_request(self, data: Dict) -> Dict:
+    async def handle_action_eventreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"eventreq": ""}
 
-    def handle_action_stampreq_request(self, data: Dict) -> Dict:
+    async def handle_action_stampreq_request(self, data: Dict) -> Dict:
         self.logger.info(data)
         return {"stampreq": ""}

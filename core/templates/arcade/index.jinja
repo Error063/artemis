@@ -1,0 +1,19 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+{% if arcade is defined %}
+<h1>{{ arcade.name }}</h1>
+<h2>PCBs assigned to this arcade <button class="btn btn-success" id="btn_add_cab" onclick="toggle_add_cab_form()">Add</button></h2>
+{% if success is defined and success == 3 %}
+<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
+Cab added successfully
+</div>
+{% endif %}
+<ul style="font-size: 20px;">
+{% for c in arcade.cabs %}
+<li><a href="/cab/{{ c.id }}">{{ c.serial }}</a> ({{ c.game if c.game else "Any" }})&nbsp;<button class="btn btn-secondary" onclick="prep_edit_form()">Edit</button>&nbsp;<button class="btn-danger btn">Delete</button></li>
+{% endfor %}
+</ul>
+{% else %}
+<h3>Arcade Not Found</h3>
+{% endif %}
+{% endblock content %}

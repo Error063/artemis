@@ -33,7 +33,7 @@ class IDACReader(BaseReader):
             self.logger.error(f"Invalid Initial D THE ARCADE version {version}")
             exit(1)
 
-    def read(self) -> None:
+    async def read(self) -> None:
         if self.bin_dir is None and self.opt_dir is None:
             self.logger.error(
                 (
@@ -59,9 +59,9 @@ class IDACReader(BaseReader):
                 )
                 exit(1)
 
-            self.read_idac_profile(self.opt_dir)
+            await self.read_idac_profile(self.opt_dir)
 
-    def read_idac_profile(self, file_path: str) -> None:
+    async def read_idac_profile(self, file_path: str) -> None:
         self.logger.info(f"Reading profile from {file_path}...")
 
         # read it as binary to avoid encoding issues
@@ -88,14 +88,14 @@ class IDACReader(BaseReader):
                 self.logger.info("Exiting...")
                 exit(0)
 
-            user_id = self.data.user.create_user()
+            user_id = await self.data.user.create_user()
 
             if user_id is None:
                 self.logger.error("Failed to register user!")
                 user_id = -1
 
             else:
-                card_id = self.data.card.create_card(user_id, access_code)
+                card_id = await self.data.card.create_card(user_id, access_code)
 
                 if card_id is None:
                     self.logger.error("Failed to register card!")
@@ -150,7 +150,7 @@ class IDACReader(BaseReader):
 
                 # lol use the profile connection for items, dirty hack
                 conflict = sql.on_duplicate_key_update(**data)
-                result = self.data.profile.execute(conflict)
+                result = await self.data.profile.execute(conflict)
 
                 if result is None:
                     self.logger.error(f"Failed to insert data into table {name}")

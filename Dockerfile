@@ -15,7 +15,6 @@ COPY dbutils.py dbutils.py
 COPY read.py read.py
 ADD core core
 ADD titles titles
-ADD config config
 ADD logs logs
 ADD cert cert
 
