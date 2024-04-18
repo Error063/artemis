@@ -129,7 +129,13 @@ tech_count = Table(
 
 class OngekiScoreData(BaseData):
     async def get_tech_count(self, aime_id: int) -> Optional[List[Dict]]:
-        return []
+        sql = select(tech_count).where(tech_count.c.user == aime_id)
+        
+        result = self.execute(sql)
+        
+        if result is None:
+            return None
+        return result.fetchall()
 
     async def put_tech_count(self, aime_id: int, tech_count_data: Dict) -> Optional[int]:
         tech_count_data["user"] = aime_id
