@@ -811,6 +811,12 @@ class ChuniBase:
         upsert = data["upsertUserAll"]
         user_id = data["userId"]
 
+        if int(user_id) & 0x1000000000001 == 0x1000000000001:
+            place_id = int(user_id) & 0xFFFC00000000
+            
+            self.logger.info("Guest play from place ID %d, ignoring.", place_id)
+            return {"returnCode": "1"}
+
         if "userData" in upsert:
             try:
                 upsert["userData"][0]["userName"] = self.read_wtf8(

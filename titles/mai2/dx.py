@@ -121,8 +121,10 @@ class Mai2DX(Mai2Base):
         user_id = data["userId"]
         upsert = data["upsertUserAll"]
         
-        if int(user_id) & 1000000000001 == 1000000000001:
-            self.logger.info("Guest play, ignoring.")
+        if int(user_id) & 0x1000000000001 == 0x1000000000001:
+            place_id = int(user_id) & 0xFFFC00000000
+            
+            self.logger.info("Guest play from place ID %d, ignoring.", place_id)
             return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
 
         if "userData" in upsert and len(upsert["userData"]) > 0:

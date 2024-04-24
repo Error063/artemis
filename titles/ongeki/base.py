@@ -293,7 +293,9 @@ class OngekiBase:
 
     async def handle_upsert_user_gplog_api_request(self, data: Dict) -> Dict:
         user = data["userId"]
-        if user >= 200000000000000:  # Account for guest play
+
+        # If playing as guest, the user ID is or(0x1000000000001, (placeId & 65535) << 32)
+        if user & 0x1000000000001 == 0x1000000000001:
             user = None
 
         await self.data.log.put_gp_log(
@@ -944,6 +946,12 @@ class OngekiBase:
     async def handle_upsert_user_all_api_request(self, data: Dict) -> Dict:
         upsert = data["upsertUserAll"]
         user_id = data["userId"]
+
+        if user_id & 0x1000000000001 == 0x1000000000001:
+            place_id = int(user_id) & 0xFFFC00000000
+            
+            self.logger.info("Guest play from place ID %d, ignoring.", place_id)
+            return {"returnCode": 1, "apiName": "UpsertUserAllApi"}
 
         # The isNew fields are new as of Red and up. We just won't use them for now.
 
