@@ -6,9 +6,13 @@ import inflection
 import yaml
 import logging, coloredlogs
 import zlib
+import string
 from logging.handlers import TimedRotatingFileHandler
 from os import path, mkdir
 from typing import Tuple, List, Dict
+from Crypto.Hash import MD5
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 from core.config import CoreConfig
 from core.utils import Utils
@@ -32,6 +36,7 @@ class Mai2Servlet(BaseServlet):
     def __init__(self, core_cfg: CoreConfig, cfg_dir: str) -> None:
         super().__init__(core_cfg, cfg_dir)
         self.game_cfg = Mai2Config()
+        self.hash_table: Dict[int, Dict[str, str]] = {}
         if path.exists(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"):
             self.game_cfg.update(
                 yaml.safe_load(open(f"{cfg_dir}/{Mai2Constants.CONFIG_NAME}"))
@@ -86,6 +91,37 @@ class Mai2Servlet(BaseServlet):
                 level=self.game_cfg.server.loglevel, logger=self.logger, fmt=log_fmt_str
             )
             self.logger.initted = True
+        
+        for version, keys in self.game_cfg.crypto.keys.items():
+            if version < Mai2Constants.VER_MAIMAI_DX:
+                continue
+
+            if len(keys) < 3:
+                continue
+
+            self.hash_table[version] = {}
+            method_list = [
+                method
+                for method in dir(self.versions[version])
+                if not method.startswith("__")
+            ]
+
+            for method in method_list:
+                # handle_method_api_request -> HandleMethodApiRequest
+                # remove the first 6 chars and the final 7 chars to get the canonical
+                # endpoint name.
+                method_fixed = inflection.camelize(method)[6:-7]
+                hash = MD5.new((method_fixed + keys[2]).encode())
+
+                # truncate unused bytes like the game does
+                hashed_name = hash.hexdigest()
+                self.hash_table[version][hashed_name] = method_fixed
+
+                self.logger.debug(
+                    "Hashed v%s method %s with %s to get %s",
+                    version, method_fixed, keys[2], hashed_name
+                )
+
 
     @classmethod
     def is_game_enabled(
@@ -234,7 +270,7 @@ class Mai2Servlet(BaseServlet):
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
                 return Response(zlib.compress(b'{"returnCode": "0"}'))
 
-        if resp == None:
+        if resp is None:
             resp = {"returnCode": 1}
 
         self.logger.debug(f"Response {resp}")
@@ -252,6 +288,8 @@ class Mai2Servlet(BaseServlet):
         req_raw = await request.body()
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
+        encrypted = False
+
         if version < 105:  # 1.0
             internal_ver = Mai2Constants.VER_MAIMAI_DX
         elif version >= 105 and version < 110:  # PLUS
@@ -271,19 +309,54 @@ class Mai2Servlet(BaseServlet):
         elif version >= 140:  # BUDDiES
             internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
 
+        if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
+            # If we get a 32 character long hex string, it's a hash and we're
+            # dealing with an encrypted request. False positives shouldn't happen
+            # as long as requests are suffixed with `Api`.
+            if internal_ver not in self.hash_table:
+                self.logger.error(
+                    "v%s does not support encryption or no keys entered",
+                    version,
+                )
+                return Response(zlib.compress(b'{"stat": "0"}'))
+            elif endpoint.lower() not in self.hash_table[internal_ver]:
+                self.logger.error(
+                    "No hash found for v%s endpoint %s",
+                    version, endpoint
+                )
+                return Response(zlib.compress(b'{"stat": "0"}'))
+            
+            endpoint = self.hash_table[internal_ver][endpoint.lower()]
+
+            try:
+                crypt = AES.new(
+                    bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
+                    AES.MODE_CBC,
+                    bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
+                )
+
+                req_raw = crypt.decrypt(req_raw)
+
+            except Exception as e:
+                self.logger.error(
+                    "Failed to decrypt v%s request to %s",
+                    version, endpoint,
+                    exc_info=e,
+                )
+                return Response(zlib.compress(b'{"stat": "0"}'))
+
+            encrypted = True
+        
         if (
-            request.headers.get("Mai-Encoding") is not None
-            or request.headers.get("X-Mai-Encoding") is not None
+            not encrypted
+            and self.game_cfg.crypto.encrypted_only
+            and version >= 110
         ):
-            # The has is some flavor of MD5 of the endpoint with a constant bolted onto the end of it.
-            # See cake.dll's Obfuscator function for details. Hopefully most DLL edits will remove
-            # these two(?) headers to not cause issues, but given the general quality of SEGA data...
-            enc_ver = request.headers.get("Mai-Encoding")
-            if enc_ver is None:
-                enc_ver = request.headers.get("X-Mai-Encoding")
-            self.logger.debug(
-                f"Encryption v{enc_ver} - User-Agent: {request.headers.get('User-Agent')}"
+            self.logger.error(
+                "Unencrypted v%s %s request, but config is set to encrypted only: %r",
+                version, endpoint, req_raw
             )
+            return Response(zlib.compress(b'{"stat": "0"}'))            
 
         try:
             unzip = zlib.decompress(req_raw)
@@ -320,12 +393,26 @@ class Mai2Servlet(BaseServlet):
                 self.logger.error(f"Error handling v{version} method {endpoint} - {e}")
                 return Response(zlib.compress(b'{"stat": "0"}'))
 
-        if resp == None:
+        if resp is None:
             resp = {"returnCode": 1}
 
         self.logger.debug(f"Response {resp}")
 
-        return Response(zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8")))
+        zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
+
+        if not encrypted or version < 110:
+            return Response(zipped)
+        
+        padded = pad(zipped, 16)
+
+        crypt = AES.new(
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
+            AES.MODE_CBC,
+            bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
+        )
+
+        return Response(crypt.encrypt(padded))
+
 
     async def handle_old_srv(self, request: Request) -> bytes:
         endpoint = request.path_params.get('endpoint')

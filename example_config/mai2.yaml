@@ -12,3 +12,6 @@ uploads:
   photos_dir: ""
   movies: False
   movies_dir: ""
+
+crypto:
+  encrypted_only: False

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from core.config import CoreConfig
 
 
@@ -70,8 +72,32 @@ class Mai2UploadsConfig:
         )
 
 
+class Mai2CryptoConfig:
+    def __init__(self, parent_config: "Mai2Config") -> None:
+        self.__config = parent_config
+
+    @property
+    def keys(self) -> Dict[int, list[str]]:
+        """
+        in the form of:
+        internal_version: [key, iv, salt]
+        key and iv are hex strings
+        salt is a normal UTF-8 string
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "mai2", "crypto", "keys", default={}
+        )
+
+    @property
+    def encrypted_only(self) -> bool:
+        return CoreConfig.get_config_field(
+            self.__config, "mai2", "crypto", "encrypted_only", default=False
+        )
+
+
 class Mai2Config(dict):
     def __init__(self) -> None:
         self.server = Mai2ServerConfig(self)
         self.deliver = Mai2DeliverConfig(self)
         self.uploads = Mai2UploadsConfig(self)
+        self.crypto = Mai2CryptoConfig(self)
