@@ -44,11 +44,12 @@ class ShopOwner():
         self.permissions = perms
 
 class UserSession():
-    def __init__(self, usr_id: int = 0, ip: str = "", perms: int = 0, ongeki_ver: int = 7):
+    def __init__(self, usr_id: int = 0, ip: str = "", perms: int = 0, ongeki_ver: int = 7, chunithm_ver: int = -1):
         self.user_id = usr_id
         self.current_ip = ip
         self.permissions = perms
         self.ongeki_version = ongeki_ver
+        self.chunithm_version = chunithm_ver
 
 class FrontendServlet():
     def __init__(self, cfg: CoreConfig, config_dir: str) -> None:
@@ -213,7 +214,8 @@ class FE_Base():
             sesh.user_id = tk['user_id']
             sesh.current_ip = tk['current_ip']
             sesh.permissions = tk['permissions']
-            
+            sesh.chunithm_version = tk['chunithm_version']
+
             if sesh.user_id <= 0:
                 self.logger.error("User session failed to validate due to an invalid ID!")
                 return UserSession()
@@ -252,12 +254,12 @@ class FE_Base():
         if usr_sesh.permissions <= 0 or usr_sesh.permissions > 255:
             self.logger.error(f"User session failed to validate due to an invalid permission value! {usr_sesh.permissions}")
             return None
-        
+
         return usr_sesh
     
     def encode_session(self, sesh: UserSession, exp_seconds: int = 86400) -> str:
         try:
-            return jwt.encode({ "user_id": sesh.user_id, "current_ip": sesh.current_ip, "permissions": sesh.permissions, "ongeki_version": sesh.ongeki_version, "exp": int(datetime.now(tz=timezone.utc).timestamp()) + exp_seconds }, b64decode(self.core_config.frontend.secret), algorithm="HS256")
+            return jwt.encode({ "user_id": sesh.user_id, "current_ip": sesh.current_ip, "permissions": sesh.permissions, "ongeki_version": sesh.ongeki_version, "chunithm_version": sesh.chunithm_version, "exp": int(datetime.now(tz=timezone.utc).timestamp()) + exp_seconds }, b64decode(self.core_config.frontend.secret), algorithm="HS256")
         except jwt.InvalidKeyError:
             self.logger.error("Failed to encode User session because the secret is invalid!")
             return ""

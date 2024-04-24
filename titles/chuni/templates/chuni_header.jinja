@@ -1,0 +1,24 @@
+<div class="chuni-header">
+  <h1>Chunithm</h1>
+  <ul class="chuni-navi">
+    <li><a class="nav-link" href="/game/chuni">PROFILE</a></li>
+    <li><a class="nav-link" href="/game/chuni/rating">RATING</a></li>
+    <li><a class="nav-link" href="/game/chuni/playlog">RECORD</a></li>
+    <li><a class="nav-link" href="/game/chuni/musics">MUSICS</a></li>
+    <li><a class="nav-link" href="/game/chuni/userbox">USER BOX</a></li>
+  </ul>
+</div>
+<script>
+  $(document).ready(function () {
+    var currentPath = window.location.pathname;
+    if (currentPath === '/game/chuni/') {
+      $('.nav-link[href="/game/chuni"]').addClass('active');
+    } else if (currentPath.startsWith('/game/chuni/playlog')) {
+      $('.nav-link[href="/game/chuni/playlog"]').addClass('active');
+    } else if (currentPath.startsWith('/game/chuni/rating')) {
+      $('.nav-link[href="/game/chuni/rating"]').addClass('active');
+    } else if (currentPath.startsWith('/game/chuni/musics')) {
+      $('.nav-link[href="/game/chuni/musics"]').addClass('active');
+    }
+  });
+</script>

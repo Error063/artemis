@@ -757,3 +757,26 @@ class ChuniProfileData(BaseData):
             return
         
         return result.lastrowid
+
+    async def get_profile_rating(self, aime_id: int, version: int) -> Optional[List[Row]]:
+        sql = select(rating).where(and_(
+                rating.c.user == aime_id,
+                rating.c.version <= version,
+            ))
+
+        result = await self.execute(sql)
+        if result is None:
+            self.logger.warning(f"Rating of user {aime_id}, version {version} was None")
+            return None
+        return result.fetchall()
+
+    async def get_all_profile_versions(self, aime_id: int) -> Optional[List[Row]]:
+        sql = select([profile.c.version]).where(profile.c.user == aime_id)
+        result = await self.execute(sql)
+        if result is None:
+            self.logger.warning(f"user {aime_id}, has no profile")
+            return None
+        else:
+            versions_raw = result.fetchall()
+            versions = [row[0] for row in versions_raw]
+        return sorted(versions, reverse=True)

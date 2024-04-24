@@ -1,43 +1,150 @@
 {% extends "core/templates/index.jinja" %}
 {% block content %}
-<h1>Chunithm</h1>
-{% if profile is defined and profile is not none and profile.id > 0 %}
-<script type="text/javascript">
-function toggle_new_name_form() {
-  let frm = document.getElementById("new_name_form");
-  let btn = document.getElementById("btn_toggle_form");
-
-  if (frm.style['display'] != "") {
-    frm.style['display'] = "";
-    frm.style['max-height'] = "";
-    btn.innerText = "Cancel";
-  } else {
-    frm.style['display'] = "none";
-    frm.style['max-height'] = "0px";
-    btn.innerText = "Edit";
-  }
-}
-</script>
-<h3>Profile for {{ profile.userName }}&nbsp;<button onclick="toggle_new_name_form()" class="btn btn-secondary" id="btn_toggle_form">Edit</button></h3>
-{% if error is defined %}
-{% include "core/templates/widgets/err_banner.jinja" %}
-{% endif %}
-{% if success is defined and success == 1 %}
-<div style="background-color: #00AA00; padding: 20px; margin-bottom: 10px; width: 15%;">
-Update successful
-</div>
-{% endif %}
-<form style="max-width: 33%; display: none; max-height: 0px;" action="/game/chuni/update.name" method="post" id="new_name_form">
-  <div class="mb-3">
-    <label for="new_name" class="form-label">New Trainer Name</label>
-    <input type="text" class="form-control" id="new_name" name="new_name" aria-describedby="new_name_help" maxlength="14">
-    <div id="new_name_help" class="form-text">Must be 14 characters or less</div>
+<style>
+  {% include 'titles/chuni/templates/css/chuni_style.css' %}
+</style>
+<div class="container">
+  {% include 'titles/chuni/templates/chuni_header.jinja' %}
+  {% if profile is defined and profile is not none and profile.id > 0 %}
+  <div class="row">
+    <div class="col-lg-8 m-auto mt-3">
+      <div class="card bg-card rounded">
+        <table class="table-large table-rowdistinct">
+          <caption align="top">OVERVIEW</caption>
+          <tr>
+            <th>{{ profile.userName }}</th>
+            <th>
+              <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#name_change">Edit</button>
+            </th>
+          </tr>
+          <tr>
+            <td>version:</td>
+            <td>
+              <select name="version" id="version" onChange="changeVersion(this)">
+                {% for ver in versions %}
+                {% if ver == cur_version %}
+                <option value="{{ ver }}" selected>{{ version_list[ver] }}</option>
+                {% else %}
+                <option value="{{ ver }}">{{ version_list[ver] }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+              {% if versions | length > 1 %}
+              <p style="margin-block-end: 0;">You have {{ versions | length }} versions.</p>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Level:</td>
+            <td>{{ profile.level }}</td>
+          </tr>
+          <tr>
+            <td>Rating:</td>
+            <td>
+              <span class="{% if profile.playerRating >= 1600 %}rainbow{% elif profile.playerRating < 1600 and profile.playerRating >= 1525 %}platinum{% elif profile.playerRating < 1525 and profile.playerRating >=1500 %}platinum{% endif %}">
+                {{ profile.playerRating|float/100 }}
+              </span>
+              <span>
+                (highest: {{ profile.highestRating|float/100 }})
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td>Over Power:</td>
+            <td>{{ profile.overPowerPoint|float/100 }}({{ profile.overPowerRate|float/100 }})</td>
+          </tr>
+          <tr>
+            <td>Current Point:</td>
+            <td>{{ profile.point }}</td>
+          </tr>
+          <tr>
+            <td>Total Point:</td>
+            <td>{{ profile.totalPoint }}</td>
+          </tr>
+          <tr>
+            <td>Play Counts:</td>
+            <td>{{ profile.playCount }}</td>
+          </tr>
+          <tr>
+            <td>Last Play Date:</td>
+            <td>{{ profile.lastPlayDate }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <div class="col-lg-8 m-auto mt-3"> 
+      <div class="card bg-card rounded">
+          <table class="table-large table-rowdistinct">
+            <caption align="top">SCORE</caption>
+            <tr>
+              <td>Total High Score:</td>
+              <td>{{ profile.totalHiScore }}</td>
+            </tr>
+            <tr>
+              <td>Total Basic High Score:</td>
+              <td>{{ profile.totalBasicHighScore }}</td>
+            </tr>
+            <tr>
+              <td>Total Advanced High Score:</td>
+              <td>{{ profile.totalAdvancedHighScore }}</td>
+            </tr>
+            <tr>
+              <td>Total Expert High Score:</td>
+              <td>{{ profile.totalExpertHighScore }}</td>
+            </tr>
+            <tr>
+              <td>Total Master High Score:</td>
+              <td>{{ profile.totalMasterHighScore }}</td>
+            </tr>
+            <tr>
+              <td>Total Ultima High Score :</td>
+              <td>{{ profile.totalUltimaHighScore }}</td>
+            </tr>
+          </table>
+      </div>
+    </div>
   </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-{% elif sesh is defined and sesh is not none and sesh.user_id > 0 %}
-No profile information found for this account.
-{% else %}
-Login to view profile information.
-{% endif %}
+  {% if error is defined %}
+  {% include "core/templates/widgets/err_banner.jinja" %}
+  {% endif %}
+  {% elif sesh is defined and sesh is not none and sesh.user_id > 0 %}
+  No profile information found for this account.
+  {% else %}
+  Login to view profile information.
+  {% endif %}
+</div>
+<div class="modal fade" id="name_change" tabindex="-1" aria-labelledby="name_change_label" data-bs-theme="dark"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Name change</h5>
+      </div>
+      <div class="modal-body">
+        <form id="new_name_form" action="/game/chuni/update.name" method="post" style="outline: 0;">
+          <label class="form-label" for="new_name">new name:</label>
+          <input class="form-control" aria-describedby="newNameHelp" form="new_name_form" id="new_name"
+            name="new_name" maxlength="14" type="text" required>
+          <div id="newNameHelp" class="form-text">name must be full-width character string.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <input type=submit class="btn btn-primary" type="button" form="new_name_form">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function changeVersion(sel) {
+    $.post("/game/chuni/version.change", { version: sel.value })
+      .done(function (data) {
+        location.reload();
+      })
+      .fail(function () {
+        alert("Failed to update version.");
+      });
+  }
+</script>
 {% endblock content %}

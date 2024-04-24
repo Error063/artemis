@@ -1,0 +1,79 @@
+{% extends "core/templates/index.jinja" %}
+{% block content %}
+<style>
+  {% include 'titles/chuni/templates/css/chuni_style.css' %}
+</style>
+<div class="container">
+  {% include 'titles/chuni/templates/chuni_header.jinja' %}
+  {% if profile is defined and profile is not none and profile.id > 0 %}
+  <h4 style="text-align: center;">Rating: {{ profile.playerRating|float/100 }}&nbsp&nbsp&nbsp&nbspPlayer Counts: {{
+    profile.playCount }}</h4>
+  <div class="row">
+    {% if hot_list %}
+    <div class="col-lg-6 mt-3">
+      <div class="card  bg-card rounded">
+        <table class="table-large table-rowdistinct">
+          <caption align="top">Recent 10</caption>
+          <tr>
+            <th>Music</th>
+            <th>Difficulty</th>
+            <th>Score</th>
+            <th>Rating</th>
+          </tr>
+          {% for row in hot_list %}
+          <tr>
+            <td>{{ row.title }}</td>
+            <td
+              class="{% if row.difficultId == 0 %}basic{% elif row.difficultId == 1 %}{% elif row.difficultId == 2 %}expert{% elif row.difficultId == 3 %}master{% else %}{% endif %}">
+              {{ row.level }}
+            </td>
+            <td>{{ row.score }}</td>
+            <td class="{% if row.song_rating >= 16 %}rainbow{% endif %}">
+              {{ row.song_rating }}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <p>No r10 found</p>
+    {% endif %}
+    {% if base_list %}
+    <div class="col-lg-6 mt-3">
+      <div class="card bg-card rounded">
+        <table class="table-large table-rowdistinct">
+          <caption align="top">Best 30</caption>
+          <tr>
+            <th>Music</th>
+            <th>Difficulty</th>
+            <th>Score</th>
+            <th>Rating</th>
+          </tr>
+          {% for row in base_list %}
+          <tr>
+            <td>{{ row.title }}</td>
+            <td
+              class="{% if row.difficultId == 0 %}normal{% elif row.difficultId == 1 %}hard{% elif row.difficultId == 2 %}expert{% elif row.difficultId == 3 %}master{% else %}{% endif %}">
+              {{ row.level }}
+            </td>
+            <td>{{ row.score }}</td>
+            <td class="{% if row.song_rating >= 16 %}rainbow{% endif %}">
+              {{ row.song_rating }}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <p>No b30 found</p>
+    {% endif %}
+  </div>
+  {% elif sesh is defined and sesh is not none and sesh.user_id > 0 %}
+  No profile information found for this account.
+  {% else %}
+  Login to view profile information.
+  {% endif %}
+</div>
+{% endblock content %}
