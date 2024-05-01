@@ -131,7 +131,7 @@ class OngekiScoreData(BaseData):
     async def get_tech_count(self, aime_id: int) -> Optional[List[Dict]]:
         sql = select(tech_count).where(tech_count.c.user == aime_id)
         
-        result = self.execute(sql)
+        result = await self.execute(sql)
         
         if result is None:
             return None
