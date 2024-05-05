@@ -132,7 +132,7 @@ class AllnetServlet:
     async def handle_poweron(self, request: Request):
         request_ip = Utils.get_ip_addr(request)
         pragma_header = request.headers.get('Pragma', "")
-        is_dfi = pragma_header is not None and pragma_header == "DFI"
+        is_dfi = pragma_header == "DFI"
         data = await request.body()
         
         try:
@@ -276,20 +276,23 @@ class AllnetServlet:
         self.logger.info(msg)
 
         resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
-        resp_str = urllib.parse.unquote(urllib.parse.urlencode(resp_dict))
+        resp_str = urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n"
         self.logger.debug(f"Allnet response: {resp_dict}")        
-        resp_str += "\n"
 
-        """if is_dfi:
-            request.responseHeaders.addRawHeader('Pragma', 'DFI')
-            return self.to_dfi(resp_str)"""
+        if is_dfi:
+            return PlainTextResponse(
+                content=self.to_dfi(resp_str) + b"\r\n",
+                headers={
+                    "Pragma": "DFI",
+                },
+            )
 
         return PlainTextResponse(resp_str)
 
     async def handle_dlorder(self, request: Request):
         request_ip = Utils.get_ip_addr(request)
         pragma_header = request.headers.get('Pragma', "")
-        is_dfi = pragma_header is not None and pragma_header == "DFI"
+        is_dfi = pragma_header == "DFI"
         data = await request.body()
         
         try:
@@ -341,9 +344,14 @@ class AllnetServlet:
             await self.data.base.log_event("allnet", "DLORDER_REQ_SUCCESS", logging.INFO, f"{Utils.get_ip_addr(request)} requested DL Order for {req.serial} {req.game_id} v{req.ver}")
 
             res_str = urllib.parse.unquote(urllib.parse.urlencode(vars(resp))) + "\n"
-            """if is_dfi:
-                request.responseHeaders.addRawHeader('Pragma', 'DFI')
-                return self.to_dfi(res_str)"""
+            
+            if is_dfi:
+                return PlainTextResponse(
+                    content=self.to_dfi(res_str) + b"\r\n",
+                    headers={
+                        "Pragma": "DFI",
+                    },
+                )
 
             return PlainTextResponse(res_str)
 
