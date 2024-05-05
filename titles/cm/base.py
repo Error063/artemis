@@ -51,7 +51,7 @@ class CardMakerBase:
                 {
                     "modelKind": 1,
                     "type": 1,
-                    "titleUri": f"{uri}/{self._parse_int_ver(games_ver['maimai'])}/Maimai2Servlet/",
+                    "titleUri": f"{uri}/SDEZ/{self._parse_int_ver(games_ver['maimai'])}/Maimai2Servlet/",
                 },
                 # ONGEKI
                 {

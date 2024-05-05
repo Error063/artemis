@@ -141,31 +141,26 @@ class Mai2Servlet(BaseServlet):
     
     def get_routes(self) -> List[Route]:
         return [
-            Route("/{version:int}/MaimaiServlet/api/movie/{endpoint:str}", self.handle_movie, methods=['GET', 'POST']),
-            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}", self.handle_old_srv),
-            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{placeid:str}/{keychip:str}/{userid:int}", self.handle_old_srv_userdata),
-            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
-            Route("/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
-            Route("/{version:int}/MaimaiServlet/usbdl/{endpoint:str}", self.handle_usbdl),
-            Route("/{version:int}/MaimaiServlet/deliver/{endpoint:str}", self.handle_deliver),
-            Route("/{version:int}/MaimaiServlet/{endpoint:str}", self.handle_mai, methods=['POST']),
+            Route("/{game:str}/{version:int}/MaimaiServlet/api/movie/{endpoint:str}", self.handle_movie, methods=['GET', 'POST']),
+            Route("/{game:str}/{version:int}/MaimaiServlet/old/{endpoint:str}", self.handle_old_srv),
+            Route("/{game:str}/{version:int}/MaimaiServlet/old/{endpoint:str}/{placeid:str}/{keychip:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{game:str}/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{game:str}/{version:int}/MaimaiServlet/old/{endpoint:str}/{userid:int}", self.handle_old_srv_userdata),
+            Route("/{game:str}/{version:int}/MaimaiServlet/usbdl/{endpoint:str}", self.handle_usbdl),
+            Route("/{game:str}/{version:int}/MaimaiServlet/deliver/{endpoint:str}", self.handle_deliver),
+            Route("/{game:str}/{version:int}/MaimaiServlet/{endpoint:str}", self.handle_mai, methods=['POST']),
             Route("/{game:str}/{version:int}/Maimai2Servlet/{endpoint:str}", self.handle_mai2, methods=['POST']),
         ]
         
     def get_allnet_info(self, game_code: str, game_ver: int, keychip: str) -> Tuple[str, str]:
-        if game_code in {Mai2Constants.GAME_CODE_DX, Mai2Constants.GAME_CODE_DX_INT}:
-            path = f"{game_code}/{game_ver}"
-        else:
-            path = game_ver
-
         if not self.core_cfg.server.is_using_proxy and Utils.get_title_port(self.core_cfg) != 80:
             return (
-                f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{path}/",
+                f"http://{self.core_cfg.server.hostname}:{Utils.get_title_port(self.core_cfg)}/{game_code}/{game_ver}/",
                 f"{self.core_cfg.server.hostname}",
             )
 
         return (
-            f"http://{self.core_cfg.server.hostname}/{path}/",
+            f"http://{self.core_cfg.server.hostname}/{game_code}/{game_ver}/",
             f"{self.core_cfg.server.hostname}",
         )
 
@@ -289,25 +284,43 @@ class Mai2Servlet(BaseServlet):
         internal_ver = 0
         client_ip = Utils.get_ip_addr(request)
         encrypted = False
-
-        if version < 105:  # 1.0
-            internal_ver = Mai2Constants.VER_MAIMAI_DX
-        elif version >= 105 and version < 110:  # PLUS
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
-        elif version >= 110 and version < 115:  # Splash
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
-        elif version >= 115 and version < 120:  # Splash PLUS
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
-        elif version >= 120 and version < 125:  # UNiVERSE
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
-        elif version >= 125 and version < 130:  # UNiVERSE PLUS
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
-        elif version >= 130 and version < 135:  # FESTiVAL
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
-        elif version >= 135 and version < 140:  # FESTiVAL PLUS
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
-        elif version >= 140:  # BUDDiES
-            internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
+        
+        if game_code == "SDEZ": # JP
+          if version < 110:  # 1.0
+              internal_ver = Mai2Constants.VER_MAIMAI_DX
+          elif version >= 110 and version < 114:  # PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
+          elif version >= 114 and version < 117:  # Splash
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
+          elif version >= 117 and version < 120:  # Splash PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
+          elif version >= 120 and version < 125:  # UNiVERSE
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
+          elif version >= 125 and version < 130:  # UNiVERSE PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
+          elif version >= 130 and version < 135:  # FESTiVAL
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+          elif version >= 135 and version < 140:  # FESTiVAL PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
+          elif version >= 140:  # BUDDiES
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
+        elif game_code == "SDGA": # Int
+          if version < 105:  # 1.0
+              internal_ver = Mai2Constants.VER_MAIMAI_DX
+          elif version >= 105 and version < 110:  # PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_PLUS
+          elif version >= 110 and version < 115:  # Splash
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH
+          elif version >= 115 and version < 120:  # Splash PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_SPLASH_PLUS
+          elif version >= 120 and version < 125:  # UNiVERSE
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE
+          elif version >= 125 and version < 130:  # UNiVERSE PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_UNIVERSE_PLUS
+          elif version >= 130 and version < 135:  # FESTiVAL
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+          elif version >= 135 and version < 140:  # FESTiVAL PLUS
+              internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're

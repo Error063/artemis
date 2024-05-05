@@ -26,10 +26,10 @@ class Mai2Base:
         self.date_time_format = "%Y-%m-%d %H:%M:%S"
 
         if not self.core_config.server.is_using_proxy and Utils.get_title_port(self.core_config) != 80:
-            self.old_server = f"http://{self.core_config.server.hostname}:{Utils.get_title_port(cfg)}/197/MaimaiServlet/"
+            self.old_server = f"http://{self.core_config.server.hostname}:{Utils.get_title_port(cfg)}/SDEY/197/MaimaiServlet/"
 
         else:
-            self.old_server = f"http://{self.core_config.server.hostname}/197/MaimaiServlet/"
+            self.old_server = f"http://{self.core_config.server.hostname}/SDEY/197/MaimaiServlet/"
 
     async def handle_get_game_setting_api_request(self, data: Dict):
         # if reboot start/end time is not defined use the default behavior of being a few hours ago

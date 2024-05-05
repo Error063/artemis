@@ -5,6 +5,7 @@ import json
 from random import randint
 
 from core.config import CoreConfig
+from core.utils import Utils
 from titles.mai2.base import Mai2Base
 from titles.mai2.config import Mai2Config
 from titles.mai2.const import Mai2Constants
@@ -14,6 +15,15 @@ class Mai2DX(Mai2Base):
     def __init__(self, cfg: CoreConfig, game_cfg: Mai2Config) -> None:
         super().__init__(cfg, game_cfg)
         self.version = Mai2Constants.VER_MAIMAI_DX
+
+        # DX earlier version need a efficient old server uri to work
+        # game will auto add MaimaiServlet endpoint behind return uri
+        # so do not add "MaimaiServlet"
+        if not self.core_config.server.is_using_proxy and Utils.get_title_port(self.core_config) != 80:
+            self.old_server = f"http://{self.core_config.server.hostname}:{Utils.get_title_port(cfg)}/SDEY/197/"
+
+        else:
+            self.old_server = f"http://{self.core_config.server.hostname}/SDEY/197/"
 
     async def handle_get_game_setting_api_request(self, data: Dict):
         # if reboot start/end time is not defined use the default behavior of being a few hours ago
@@ -48,10 +58,10 @@ class Mai2DX(Mai2Base):
                 "rebootEndTime": reboot_end,
                 "movieUploadLimit": 100,
                 "movieStatus": 1,
-                "movieServerUri": self.old_server + "movie/",
-                "deliverServerUri": self.old_server + "deliver/" if self.can_deliver and self.game_config.deliver.enable else "",
-                "oldServerUri": self.old_server + "old",
-                "usbDlServerUri": self.old_server + "usbdl/" if self.can_deliver and self.game_config.deliver.udbdl_enable else "",
+                "movieServerUri": "",
+                "deliverServerUri": "",
+                "oldServerUri": self.old_server,
+                "usbDlServerUri": "",
                 "rebootInterval": 0,
             },
             "isAouAccession": False,

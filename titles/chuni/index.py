@@ -272,7 +272,11 @@ class ChuniServlet(BaseServlet):
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
-        endpoint = endpoint.replace("C3Exp", "") if game_code == "SDGS" else endpoint
+        endpoint = (
+            endpoint.replace("C3Exp", "")
+            if game_code == "SDGS"
+            else endpoint
+        )
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
