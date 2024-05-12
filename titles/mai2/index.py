@@ -11,12 +11,11 @@ from logging.handlers import TimedRotatingFileHandler
 from os import path, mkdir
 from typing import Tuple, List, Dict
 from Crypto.Hash import MD5
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 
 from core.config import CoreConfig
 from core.utils import Utils
 from core.title import BaseServlet
+from core.crypto import CipherAES
 from .config import Mai2Config
 from .const import Mai2Constants
 from .base import Mai2Base
@@ -321,6 +320,19 @@ class Mai2Servlet(BaseServlet):
               internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
           elif version >= 135 and version < 140:  # FESTiVAL PLUS
               internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
+        elif game_code == "SDGB": # CN
+            if 130 <= version < 135:  # Maimai DX CN 2023 (FESTiVAL)
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+
+        try:
+            unzip = zlib.decompress(req_raw)
+
+        except zlib.error as e:
+            self.logger.error(
+                f"Failed to decompress v{version} {endpoint} request -> {e}"
+            )
+            return Response(zlib.compress(b'{"stat": "0"}'))
+
 
         if all(c in string.hexdigits for c in endpoint) and len(endpoint) == 32:
             # If we get a 32 character long hex string, it's a hash and we're
@@ -342,13 +354,12 @@ class Mai2Servlet(BaseServlet):
             endpoint = self.hash_table[internal_ver][endpoint.lower()]
 
             try:
-                crypt = AES.new(
+                crypt = CipherAES(
                     bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
-                    AES.MODE_CBC,
                     bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
                 )
 
-                req_raw = crypt.decrypt(req_raw)
+                decrypted = crypt.decrypt(unzip)
 
             except Exception as e:
                 self.logger.error(
@@ -359,6 +370,10 @@ class Mai2Servlet(BaseServlet):
                 return Response(zlib.compress(b'{"stat": "0"}'))
 
             encrypted = True
+
+
+        req_data = json.loads(decrypted if encrypted else unzip)
+
         
         if (
             not encrypted
@@ -371,25 +386,17 @@ class Mai2Servlet(BaseServlet):
             )
             return Response(zlib.compress(b'{"stat": "0"}'))            
 
-        try:
-            unzip = zlib.decompress(req_raw)
 
-        except zlib.error as e:
-            self.logger.error(
-                f"Failed to decompress v{version} {endpoint} request -> {e}"
-            )
-            return Response(zlib.compress(b'{"stat": "0"}'))
-
-        req_data = json.loads(unzip)
 
         self.logger.info(f"v{version} {endpoint} request from {client_ip}")
         self.logger.debug(req_data)
 
-        endpoint = (
-            endpoint.replace("MaimaiExp", "")
-            if game_code == Mai2Constants.GAME_CODE_DX_INT
-            else endpoint
-        )
+        if game_code == Mai2Constants.GAME_CODE_DX_INT:
+            endpoint = endpoint.replace("MaimaiExp", "")
+        elif game_code == Mai2Constants.GAME_CODE_DX_CHN:
+            endpoint = endpoint.replace("MaimaiChn", "")
+
+
         func_to_find = "handle_" + inflection.underscore(endpoint) + "_request"
         handler_cls = self.versions[internal_ver](self.core_cfg, self.game_cfg)
 
@@ -411,20 +418,19 @@ class Mai2Servlet(BaseServlet):
 
         self.logger.debug(f"Response {resp}")
 
-        zipped = zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8"))
-
         if not encrypted or version < 110:
-            return Response(zipped)
+            return Response(zlib.compress(json.dumps(resp, ensure_ascii=False).encode("utf-8")))
         
-        padded = pad(zipped, 16)
+        # padded = pad(zipped, 16)
 
-        crypt = AES.new(
+        crypt = CipherAES(
             bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][0]),
-            AES.MODE_CBC,
             bytes.fromhex(self.game_cfg.crypto.keys[internal_ver][1]),
         )
 
-        return Response(crypt.encrypt(padded))
+        return Response(
+            zlib.compress(crypt.encrypt(json.dumps(resp, ensure_ascii=False).encode("utf-8")))
+        )
 
 
     async def handle_old_srv(self, request: Request) -> bytes:

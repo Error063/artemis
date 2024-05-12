@@ -16,4 +16,5 @@ game_codes = [
     Mai2Constants.GAME_CODE_GREEN,
     Mai2Constants.GAME_CODE,
     Mai2Constants.GAME_CODE_DX_INT,
+    Mai2Constants.GAME_CODE_DX_CHN,
 ]

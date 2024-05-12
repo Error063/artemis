@@ -10,6 +10,7 @@ from os import environ, path, mkdir, W_OK, access
 from typing import List
 
 from core import CoreConfig, TitleServlet, MuchaServlet, AllnetServlet, BillingServlet, AimedbServlette
+from core.chimedb import ChimeServlet
 from core.frontend import FrontendServlet
 
 async def dummy_rt(request: Request):
@@ -85,6 +86,15 @@ if not cfg.allnet.standalone:
             Route("/report-api/Report", allnet.handle_dlorder_report, methods=["POST"]),
             Route("/dl/ini/{file:str}", allnet.handle_dlorder_ini),
         ]
+
+if cfg.chimedb.enable:
+    chimedb = ChimeServlet(cfg, cfg_dir)
+    route_lst += [
+        Route("/wc_aime/api/alive_check", chimedb.handle_qr_alive, methods=["POST"]),
+        Route("/qrcode/api/alive_check", chimedb.handle_qr_alive, methods=["POST"]),
+        Route("/wc_aime/api/get_data", chimedb.handle_qr_lookup, methods=["POST"])
+    ]
+
 
 for code, game in title.title_registry.items():
     route_lst += game.get_routes()
