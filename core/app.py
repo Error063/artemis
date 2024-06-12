@@ -9,7 +9,7 @@ from starlette.responses import PlainTextResponse
 from os import environ, path, mkdir, W_OK, access
 from typing import List
 
-from core import CoreConfig, TitleServlet, MuchaServlet, AllnetServlet, BillingServlet, AimedbServlette
+from core import CoreConfig, TitleServlet, MuchaServlet, AllnetServlet, BillingServlet, AimedbServlet
 from core.chimedb import ChimeServlet
 from core.frontend import FrontendServlet
 

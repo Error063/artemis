@@ -6,7 +6,7 @@ import uvicorn
 import logging
 import asyncio
 
-from core import CoreConfig, AimedbServlette
+from core import CoreConfig, AimedbServlet
 
 async def launch_main(cfg: CoreConfig, ssl: bool) -> None:
     if ssl:
@@ -79,7 +79,7 @@ async def launcher(cfg: CoreConfig, ssl: bool) -> None:
     if cfg.allnet.standalone:
         task_list.append(asyncio.create_task(launch_allnet(cfg)))
     if cfg.aimedb.enable:
-        AimedbServlette(cfg).start()
+        AimedbServlet(cfg).start()
     
     done, pending = await asyncio.wait(
         task_list,

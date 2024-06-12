@@ -263,6 +263,24 @@ class AllnetConfig:
         )
 
     @property
+    def enable_game_id_whitelist(self) -> int:
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "enable_game_id_whitelist", default=False
+        )
+
+    @property
+    def game_id_whitelist(self) -> list[str]:
+        """
+        in the form of:
+        internal_version: [key, iv, salt]
+        key and iv are hex strings
+        salt is a normal UTF-8 string
+        """
+        return CoreConfig.get_config_field(
+            self.__config, "core", "allnet", "game_id_whitelist", default=[]
+        )
+
+    @property
     def update_cfg_folder(self) -> str:
         return CoreConfig.get_config_field(
             self.__config, "core", "allnet", "update_cfg_folder", default=""

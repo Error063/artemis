@@ -22,7 +22,7 @@ title:
 
 database:
   host: "localhost"
-  username: "aime"
+  username: "root"
   password: "aime"
   name: "aime"
   port: 3306
@@ -44,6 +44,9 @@ allnet:
   loglevel: "info"
   allow_online_updates: False
   update_cfg_folder: ""
+  enable_game_id_whitelist: False
+  game_id_whitelist:
+    - ""
 
 billing:
   standalone: True

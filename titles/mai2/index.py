@@ -321,8 +321,12 @@ class Mai2Servlet(BaseServlet):
           elif version >= 135 and version < 140:  # FESTiVAL PLUS
               internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL_PLUS
         elif game_code == "SDGB": # CN
+            if version < 130:  # Maimai DX CN 2023 (FESTiVAL)
+                internal_ver = Mai2Constants.VER_MAIMAI_DX
             if 130 <= version < 135:  # Maimai DX CN 2023 (FESTiVAL)
                 internal_ver = Mai2Constants.VER_MAIMAI_DX_FESTIVAL
+            if 140 <= version < 145:  # Maimai DX CN 2023 (FESTiVAL)
+                internal_ver = Mai2Constants.VER_MAIMAI_DX_BUDDIES
 
         try:
             unzip = zlib.decompress(req_raw)

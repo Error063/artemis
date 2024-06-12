@@ -8,6 +8,7 @@ import coloredlogs
 from starlette.responses import PlainTextResponse
 from twisted.web.http import Request
 
+from core.adb_handlers.base import ChimeDBStatus
 from core.config import CoreConfig
 from core.data import Data
 
@@ -61,7 +62,7 @@ class ChimeServlet:
             userId = await self._lookup(access_code)
             data = json.dumps({
                 "userID": userId,
-                "errorID": 0,
+                "errorID": await self._lookup_user_status(access_code),
                 "timestamp": timestamp,
                 "key": self._hash_key(userId, timestamp)
             })
@@ -71,7 +72,7 @@ class ChimeServlet:
 
             data = json.dumps({
                 "userID": -1,
-                "errorID": 1,
+                "errorID": ChimeDBStatus.DB_ACCESS_FAIL,
                 "timestamp": timestamp,
                 "key": self._hash_key(-1, timestamp)
             })
@@ -97,6 +98,17 @@ class ChimeServlet:
             user_id = await self._register(access_code)
 
         return user_id
+
+    async def _lookup_user_status(self, access_code):
+        is_banned = await self.data.card.get_card_banned(access_code)
+        is_locked = await self.data.card.get_card_locked(access_code)
+
+        if is_banned and is_locked:
+            return ChimeDBStatus.LOCK_BAN_SYSTEM_USER
+        elif is_banned:
+            return ChimeDBStatus.LOCK_BAN_SYSTEM
+        elif is_locked:
+            return ChimeDBStatus.LOCK_USER
 
     async def _register(self, access_code):
         user_id = -1

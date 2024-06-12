@@ -29,6 +29,24 @@ class ADBStatus(Enum):
     LOCK_SYS = 9
     LOCK_USER = 10
 
+class ChimeDBStatus(Enum):
+    NONE = 0
+    READER_SETUP_FAIL = 1
+    READER_ACCESS_FAIL = 2
+    READER_INCOMPATIBLE = 3
+    DB_RESOLVE_FAIL = 4
+    DB_ACCESS_TIMEOUT = 5
+    DB_ACCESS_FAIL = 6
+    AIME_ID_INVALID = 7
+    NO_BOARD_INFO = 8
+    LOCK_BAN_SYSTEM_USER = 9
+    LOCK_BAN_SYSTEM = 10
+    LOCK_BAN_USER = 11
+    LOCK_BAN = 12
+    LOCK_SYSTEM_USER = 13
+    LOCK_SYSTEM = 14
+    LOCK_USER = 15
+
 class CompanyCodes(Enum):
     NONE = 0
     SEGA = 1

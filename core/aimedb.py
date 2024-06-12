@@ -9,7 +9,7 @@ from core.utils import create_sega_auth_key
 from core.data import Data
 from .adb_handlers import *
 
-class AimedbServlette():
+class AimedbServlet():
     request_list: Dict[int, Tuple[Callable[[bytes, int], Union[ADBBaseResponse, bytes]], int, str]] = {}
     def __init__(self, core_cfg: CoreConfig) -> None:        
         self.config = core_cfg        

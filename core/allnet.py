@@ -136,9 +136,9 @@ class AllnetServlet:
         data = await request.body()
         
         try:
-            if is_dfi:
+            try:
                 req_urlencode = self.from_dfi(data)
-            else:
+            except:
                 req_urlencode = data
 
             req_dict = self.allnet_req_to_dict(req_urlencode)
@@ -178,6 +178,7 @@ class AllnetServlet:
             resp.stat = ALLNET_STAT.bad_machine.value
             resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
             return PlainTextResponse(urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n")
+
 
         if machine is not None:
             arcade = await self.data.arcade.get_arcade(machine["arcade"])
@@ -260,6 +261,29 @@ class AllnetServlet:
                 
                 self.logger.debug(f"Allnet response: {resp_str}")
                 return PlainTextResponse(resp_str + "\n")
+        elif self.config.allnet.enable_game_id_whitelist  and req.game_id not in self.config.allnet.game_id_whitelist:
+            if not self.config.server.is_develop:
+                msg = f"disallowed game {req.game_id} attempted allnet auth from {request_ip}."
+                await self.data.base.log_event(
+                    "allnet", "ALLNET_AUTH_DISALLOWED_GAME", logging.WARN, msg
+                )
+                self.logger.warning(msg)
+
+                resp.stat = ALLNET_STAT.bad_game.value
+                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                return PlainTextResponse(urllib.parse.unquote(urllib.parse.urlencode(resp_dict)) + "\n")
+            else:
+                self.logger.info(
+                    f"Allowed the disallowed game {req.game_id} v{req.ver} to authenticate from {request_ip} due to 'is_develop' being enabled. S/N: {req.serial}"
+                )
+                resp.uri = f"http://{self.config.server.hostname}:{self.config.server.port}/{req.game_id}/{req.ver.replace('.', '')}/"
+                resp.host = f"{self.config.server.hostname}:{self.config.server.port}"
+
+                resp_dict = {k: v for k, v in vars(resp).items() if v is not None}
+                resp_str = urllib.parse.unquote(urllib.parse.urlencode(resp_dict))
+
+                self.logger.debug(f"Allnet response: {resp_str}")
+                return PlainTextResponse(resp_str + "\n")
 
         
         int_ver = req.ver.replace(".", "")
@@ -296,9 +320,9 @@ class AllnetServlet:
         data = await request.body()
         
         try:
-            if is_dfi:
+            try:
                 req_urlencode = self.from_dfi(data)
-            else:
+            except:
                 req_urlencode = data.decode()
 
             req_dict = self.allnet_req_to_dict(req_urlencode)

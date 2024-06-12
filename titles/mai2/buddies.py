@@ -17,7 +17,15 @@ class Mai2Buddies(Mai2FestivalPlus):
         # hardcode lastDataVersion for CardMaker
         user_data["lastDataVersion"] = "1.40.00"
         return user_data
-    
+
+    async def handle_get_game_ng_word_list_api_request(self, data: Dict) -> Dict:
+        return {
+            "ngWordExactMatchLength":0,
+            "ngWordExactMatchList":[],
+            "ngWordPartialMatchLength":0,
+            "ngWordPartialMatchList":[]
+        }
+
     async def handle_get_user_new_item_api_request(self, data: Dict) -> Dict:
         # TODO: Added in 1.41, implement this?
         user_id = data["userId"]
